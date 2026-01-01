@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Emergenza - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-red-50 to-orange-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
+        <div class="text-center mb-8">
+            <div class="bg-gradient-to-r from-red-600 to-orange-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Reset di Emergenza</h1>
+            <p class="text-gray-600">Questa pagina NON richiede autenticazione</p>
+        </div>
+
+        <!-- Stato Corrente -->
+        <div id="status" class="mb-8 p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
+            <h2 class="text-lg font-bold text-blue-800 mb-3">📊 Stato Attuale Sistema</h2>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Utenti registrati:</span>
+                    <span id="userCount" class="font-bold text-blue-600">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Fatture caricate:</span>
+                    <span id="fattureCount" class="font-bold text-blue-600">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Sessione attiva:</span>
+                    <span id="sessionStatus" class="font-bold text-blue-600">No</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Azioni Rapide -->
+        <div class="space-y-4 mb-6">
+            <!-- Reset Utenti con Nuove Credenziali -->
+            <div class="p-6 bg-green-50 rounded-xl border-2 border-green-200">
+                <h3 class="text-lg font-bold text-green-800 mb-2">✅ Reset Utenti (CONSIGLIATO)</h3>
+                <p class="text-sm text-gray-700 mb-3">
+                    Cancella tutti gli utenti e crea l'admin con le NUOVE credenziali:
+                </p>
+                <div class="bg-white p-3 rounded-lg mb-4 border border-green-200">
+                    <p class="text-sm font-mono"><strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="88e1e6eee7c8effae9f8f8e7e4e1ede4fdf8f8e7e4e1a6e1fc">[email&#160;protected]</a></p>
+                    <p class="text-sm font-mono"><strong>Password:</strong> DccPnt60!</p>
+                </div>
+                <button onclick="resetUsers()" class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors">
+                    🔄 Reset Utenti e Crea Admin
+                </button>
+            </div>
+
+            <!-- Cancella Solo Sessione -->
+            <div class="p-6 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+                <h3 class="text-lg font-bold text-yellow-800 mb-2">🚪 Cancella Sessione</h3>
+                <p class="text-sm text-gray-700 mb-4">Termina la sessione corrente (utile se sei bloccato)</p>
+                <button onclick="resetSession()" class="w-full px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors">
+                    Cancella Sessione
+                </button>
+            </div>
+
+            <!-- Reset Completo -->
+            <div class="p-6 bg-red-50 rounded-xl border-2 border-red-200">
+                <h3 class="text-lg font-bold text-red-800 mb-2">⚠️ Reset TUTTO</h3>
+                <p class="text-sm text-gray-700 mb-4">Cancella TUTTI i dati (utenti + fatture + sessioni)</p>
+                <button onclick="resetAll()" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors">
+                    ⚠️ Reset Completo Sistema
+                </button>
+            </div>
+        </div>
+
+        <!-- Link -->
+        <div class="text-center space-y-2">
+            <a href="dashboard.html" class="block text-blue-600 hover:text-blue-700 font-medium">
+                → Vai alla Dashboard
+            </a>
+            <a href="utenti.html" class="block text-gray-600 hover:text-gray-700 text-sm">
+                → Gestione Utenti
+            </a>
+        </div>
+
+        <!-- Messaggio di Successo -->
+        <div id="successMessage" class="hidden mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+            <div class="flex items-center text-green-800">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span id="successText" class="font-medium"></span>
+            </div>
+        </div>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        const USERS_KEY = 'authorized_users';
+        const SESSION_KEY = 'app_authenticated';
+        const FATTURE_KEY = 'fatture_elettroniche';
+
+        // Aggiorna stato
+        function updateStatus() {
+            try {
+                const users = localStorage.getItem(USERS_KEY);
+                const userCount = users ? JSON.parse(users).length : 0;
+                document.getElementById('userCount').textContent = userCount;
+
+                const fatture = localStorage.getItem(FATTURE_KEY);
+                const fattureCount = fatture ? JSON.parse(fatture).length : 0;
+                document.getElementById('fattureCount').textContent = fattureCount;
+
+                const session = localStorage.getItem(SESSION_KEY);
+                document.getElementById('sessionStatus').textContent = session ? 'Sì' : 'No';
+            } catch (e) {
+                console.error('Errore aggiornamento stato:', e);
+            }
+        }
+
+        // Reset utenti con nuove credenziali
+        function resetUsers() {
+            if (!confirm('Conferma: Vuoi resettare tutti gli utenti?\n\nVerrà creato admin con:\nEmail: domenicoprenesti@gmail.com\nPassword: DccPnt60!')) {
+                return;
+            }
+
+            // Cancella utenti esistenti
+            localStorage.removeItem(USERS_KEY);
+
+            // Crea nuovo admin con NUOVE credenziali
+            const newUsers = [{
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                nome: 'admin',
+                email: 'domenicoprenesti@gmail.com',
+                password: 'DccPnt60!',
+                ruolo: 'Amministratore',
+                attivo: true,
+                dataCreazione: new Date().toISOString()
+            }];
+
+            localStorage.setItem(USERS_KEY, JSON.stringify(newUsers));
+
+            showSuccess('✅ Admin creato! Email: domenicoprenesti@gmail.com | Password: DccPnt60!');
+            updateStatus();
+            
+            // Cancella anche la sessione
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem('prodotti_authenticated');
+        }
+
+        // Reset sessione
+        function resetSession() {
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem('prodotti_authenticated');
+            showSuccess('✅ Sessione cancellata! Puoi fare login di nuovo.');
+            updateStatus();
+        }
+
+        // Reset completo
+        function resetAll() {
+            if (!confirm('⚠️ ATTENZIONE!\n\nQuesto cancellerà:\n- Tutti gli utenti\n- Tutte le fatture\n- Tutte le sessioni\n\nConfermi?')) {
+                return;
+            }
+
+            if (!confirm('ULTIMA CONFERMA: Sei DAVVERO sicuro?')) {
+                return;
+            }
+
+            // Cancella tutto
+            localStorage.removeItem(USERS_KEY);
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem('prodotti_authenticated');
+            localStorage.removeItem(FATTURE_KEY);
+
+            // Ricrea admin
+            const newUsers = [{
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                nome: 'admin',
+                email: 'domenicoprenesti@gmail.com',
+                password: 'DccPnt60!',
+                ruolo: 'Amministratore',
+                attivo: true,
+                dataCreazione: new Date().toISOString()
+            }];
+
+            localStorage.setItem(USERS_KEY, JSON.stringify(newUsers));
+
+            showSuccess('✅ Sistema resettato completamente! Admin ricreato.');
+            updateStatus();
+        }
+
+        // Mostra messaggio successo
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            
+            successText.textContent = message;
+            successDiv.cla

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #092A37 0%, #0a3d4f 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full">
+        <!-- Logo e Header -->
+        <div class="text-center mb-8">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Grappoli & Luppoli</h1>
+            <p class="text-gray-600">Gestione Contabile</p>
+        </div>
+
+        <!-- Form di Login -->
+        <form onsubmit="handleLogin(event)" class="space-y-5">
+            <div>
+                <label for="loginEmail" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                <input 
+                    type="email" 
+                    id="loginEmail" 
+                    autocomplete="email"
+                    placeholder="Inserisci la tua email"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    required
+                >
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    autocomplete="current-password"
+                    placeholder="Inserisci la password"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    required
+                >
+            </div>
+            
+            <!-- Messaggio di errore -->
+            <div id="errorMessage" class="hidden bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span id="errorText">Credenziali errate. Riprova.</span>
+                </div>
+            </div>
+            
+            <!-- Pulsante Login -->
+            <button 
+                type="submit" 
+                class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] shadow-lg"
+            >
+                Accedi
+            </button>
+            
+            <!-- Accesso Rapido Admin -->
+            <div class="mt-6 pt-6 border-t-2 border-gray-100">
+                <p class="text-xs text-gray-500 text-center mb-3">Accesso rapido</p>
+                <button 
+                    type="button"
+                    onclick="loginAsAdmin()"
+                    class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all font-medium"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold">Accedi come Admin</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Link Utilità -->
+        <div class="mt-6 text-center">
+            <a href="reset-emergenza.html" class="text-sm text-gray-500 hover:text-gray-700">
+                Problemi di accesso? Reset sistema
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const USERS_KEY = 'authorized_users';
+        const SESSION_KEY = 'app_authenticated';
+        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
+
+        // Verifica se già loggato
+        function checkExistingSession() {
+            const auth = localStorage.getItem(SESSION_KEY);
+            if (auth) {
+                try {
+                    const authData = JSON.parse(auth);
+                    const now = new Date().getTime();
+                    
+                    if (now - authData.timestamp < SESSION_DURATION) {
+                        // Sessione valida - redirect alla dashboard
+                        window.location.href = 'dashboard.html';
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Errore verifica sessione:', e);
+                }
+            }
+            return false;
+        }
+
+        // Carica utenti autorizzati
+        function getAuthorizedUsers() {
+            try {
+                const saved = localStorage.getItem(USERS_KEY);
+                let users = saved ? JSON.parse(saved) : [];
+                
+                // Se non ci sono utenti, crea l'admin automaticamente
+                if (users.length === 0) {
+                    console.log('⚠️ Nessun utente trovato, creo admin automaticamente...');
+                    users = [{
+                        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                        nome: 'admin',
+                        email: 'domenicoprenesti@gmail.com',
+                        password: 'DccPnt60!',
+                        ruolo: 'Amministratore',
+                        attivo: true,
+                        dataCreazione: new Date().toISOString()
+                    }];
+                    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                    console.log('✅ Admin creato: domenicoprenesti@gmail.com / DccPnt60!');
+                }
+                
+                return users;
+            } catch (e) {
+                console.error('Errore caricamento utenti:', e);
+                return [];
+            }
+        }
+
+        // Gestisce il login
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('password');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            const enteredEmail = emailInput.value.trim().toLowerCase();
+            const enteredPassword = passwordInput.value;
+            
+            const users = getAuthorizedUsers();
+            
+            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
+            
+            if (!user) {
+                errorText.textContent = 'Email non registrata.';
+                errorMessage.classList.remove('hidden');
+                emailInput.classList.add('border-red-500');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                
+                setTimeout(() => {
+                    emailInput.classList.remove('border-red-500');
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            if (!user.attivo) {
+                errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
+                errorMessage.classList.remove('hidden');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                
+                setTimeout(() => errorMessage.classList.add('hidden'), 3000);
+                return;
+            }
+            
+            if (user.password !== enteredPassword) {
+                errorText.textContent = 'Password errata.';
+                errorMessage.classList.remove('hidden');
+                passwordInput.value = '';
+                passwordInput.focus();
+                passwordInput.classList.add('border-red-500');
+                
+                setTimeout(() => {
+                    passwordInput.classList.remove('border-red-500');
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            // Login riuscito
+            const authData = {
+                authenticated: true,
+                timestamp: new Date().getTime(),
+                userId: user.id,
+                userName: user.nome,
+                userEmail: user.email,
+                userRole: user.ruolo
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
+            
+            // Redirect alla dashboard
+            window.location.href = 'dashboard.html';
+        }
+
+        // Accesso rapido admin
+        window.loginAsAdmin = function() {
+            document.getElementById('loginEmail').value = 'domenicoprenesti@gmail.com';
+            document.getElementById('password').value = 'DccPnt60!';
+            
+            const form = document.querySelector('form');
+            const event = new Event('submit', { bubbles: true, cancelable: true });
+            form.dispatchEvent(event);
+        };
+
+        // Controlla sessione esistente all'avvio
+        checkExistingSession();
+    </script>
+</body>
+</html>

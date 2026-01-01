@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Fatture Elettroniche</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Accesso Protetto</h2>
+                <p class="text-sm text-gray-600">Inserisci le tue credenziali per accedere</p>
+            </div>
+            
+            <form onsubmit="checkPassword(event)" class="space-y-4">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input 
+                        type="email" 
+                        id="loginEmail" 
+                        autocomplete="email"
+                        placeholder="Inserisci la tua email"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                    >
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        autocomplete="current-password"
+                        placeholder="Inserisci la password"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                    >
+                </div>
+                
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span id="errorText">Credenziali errate. Riprova.</span>
+                    </div>
+                </div>
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105"
+                >
+                    Accedi
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Navbar Fissa -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold text-gray-800">Grappoli & Luppoli</span>
+                    </button>
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                            Dashboard
+                        </a>
+                        <a class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">
+                            Fatture
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Dashboard</span>
+                    </button>
+                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Esci</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenuto -->
+    <div id="app" class="pt-20 p-8"></div>
+
+    <script>
+        // ========== REDIRECT SE NON AUTENTICATO ==========
+        (function() {
+            const SESSION_KEY = 'app_authenticated';
+            const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
+            
+            const auth = localStorage.getItem(SESSION_KEY);
+            
+            if (!auth) {
+                console.log('❌ Nessuna sessione trovata - redirect a index.html');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                
+                if (now - authData.timestamp >= SESSION_DURATION) {
+                    console.log('⏰ Sessione scaduta - redirect a index.html');
+                    localStorage.removeItem(SESSION_KEY);
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                console.log('✅ Sessione valida:', authData.userName, '-', authData.userRole);
+            } catch (e) {
+                console.error('❌ Errore parsing sessione - redirect a index.html');
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = 'index.html';
+                return;
+            }
+        })();
+        
+        // ========== RESTO DEL CODICE APPLICAZIONE ==========
+        
+        // ========== SISTEMA DI AUTENTICAZIONE ==========
+        const USERS_KEY = 'authorized_users';
+        const SESSION_KEY = 'app_authenticated';
+        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
+        
+        function getAuthorizedUsers() {
+            try {
+                const saved = localStorage.getItem(USERS_KEY);
+                return saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+        
+        function checkAuth() {
+            const auth = localStorage.getItem(SESSION_KEY);
+            if (auth) {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                
+                if (now - authData.timestamp < SESSION_DURATION) {
+                    document.getElementById('loginModal').style.display = 'none';
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        window.checkPassword = function(event) {
+            event.preventDefault();
+            
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('password');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            const enteredEmail = emailInput.value.trim().toLowerCase();
+            const enteredPassword = passwordInput.value;
+            
+            const users = getAuthorizedUsers();
+            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
+            
+            if (!user) {
+                errorText.textContent = 'Email non registrata.';
+                errorMessage.classList.remove('hidden');
+                emailInput.classList.add('border-red-500');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                
+                setTimeout(() => {
+                    emailInput.classList.remove('border-red-500');
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            if (!user.attivo) {
+                errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
+                errorMessage.classList.remove('hidden');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            if (user.password !== enteredPassword) {
+                errorText.textContent = 'Password errata.';
+                errorMessage.classList.remove('hidden');
+                passwordInput.value = '';
+                passwordInput.focus();
+                passwordInput.classList.add('border-red-500');
+                
+                setTimeout(() => {
+                    passwordInput.classList.remove('border-red-500');
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            const authData = {
+                authenticated: true,
+                timestamp: new Date().getTime(),
+                userId: user.id,
+                userName: user.nome,
+                userEmail: user.email,
+                userRole: user.ruolo
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
+            
+            const modal = document.getElementById('loginModal');
+            modal.style.opacity = '0';
+            modal.style.transition = 'opacity 0.3s';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        };
+        
+        window.logout = function() {
+            localStorage.removeItem(SESSION_KEY);
+            window.location.href = "index.html";
+        };
+        
+        window.getCurrentUser = function() {
+            const auth = localStorage.getItem(SESSION_KEY);
+            return auth ? JSON.parse(auth) : null;
+        };
+        
+        checkAuth();
+        
+        // ========== APPLICAZIONE PRINCIPALE ==========
+        
+        // Stato globale
+        let state = {
+            fatture: [],
+            selectedFattura: null,
+            error: '',
+            uploading: false,
+            uploadProgress: null,
+            selectedIds: new Set(),
+            filters: {
+                invoiceYear: 'all',
+                invoiceMonth: 'all',
+                paymentYear: 'all',
+                paymentMonth: 'all',
+                supplier: 'all',
+                minAmount: '',
+                maxAmount: ''
+            }
+        };
+
+        // Carica fatture
+        function loadFatture() {
+            try {
+                const saved = localStorage.getItem('fatture_elettroniche');
+                state.fatture = saved ? JSON.parse(saved) : [];
+                
+                // Assicura che tutte le fatture abbiano il campo dtPag
+                state.fatture = state.fatture.map(f => ({
+                    ...f,
+                    dtPag: f.dtPag || ''
+                }));
+                
+            } catch (e) {
+                state.fatture = [];
+            }
+        }
+
+        // Salva fatture
+        function saveFatture() {
+            try {
+                localStorage.setItem('fatture_elettroniche', JSON.stringify(state.fatture));
+            } catch (e) {
+                state.error = 'Errore salvataggio: ' + e.message;
+            }
+        }
+
+        // Utility
+        function parseXML(xmlString) {
+            const parser = new DOMParser();
+            return parser.parseFromString(xmlString, 'text/xml');
+        }
+
+        function getTextContent(element, tagName) {
+            if (!element) return '';
+            const el = element.getElementsByTagName(tagName)[0];
+            return el ? el.textContent.trim() : '';
+        }
+
+        // Genera tag automatici per i prodotti
+        function generateTag(description) {
+            const desc = description.toLowerCase();
+            
+            // Vini
+            if (desc.includes('vino') || desc.includes('wine') || desc.includes('rosso') || 
+                desc.includes('bianco') || desc.includes('prosecco') || desc.includes('champagne') ||
+                desc.includes('spumante') || desc.includes('barolo') || desc.includes('chianti')) {
+                return 'Vini';
+            }
+            
+            // Birre
+            if (desc.includes('birra') || desc.includes('beer') || desc.includes('ale') || 
+                desc.includes('lager') || desc.includes('ipa')) {
+                return 'Birre';
+            }
+            
+            // Spirits
+            if (desc.includes('whisky') || desc.includes('whiskey') || desc.includes('gin') || 
+                desc.includes('vodka') || desc.includes('rum') || desc.includes('liquore') ||
+                desc.includes('grappa') || desc.includes('amaro') || desc.includes('cognac')) {
+                return 'Spirits';
+            }
+            
+            // Bevande analcoliche
+            if (desc.includes('acqua') || desc.includes('succo') || desc.includes('soft drink') ||
+                desc.includes('bibita') || desc.includes('coca') || desc.includes('pepsi') ||
+                desc.includes('aranciata') || desc.includes('limonata')) {
+                return 'Bevande';
+            }
+            
+            // Snack e cibo
+            if (desc.includes('patatine') || desc.includes('chips') || desc.includes('olive') ||
+                desc.includes('noccioline') || desc.includes('arachidi') || desc.includes('taralli') ||
+                desc.includes('cracker') || desc.includes('snack')) {
+                return 'Snacks';
+            }
+            
+            // Formaggi e salumi
+            if (desc.includes('formaggio') || desc.includes('cheese') || desc.includes('prosciutto') ||
+                desc.includes('salame') || desc.includes('bresaola') || desc.includes('salumi')) {
+                return 'Salumi & Formaggi';
+            }
+            
+            // Materiali di consumo
+            if (desc.includes('bicchiere') || desc.includes('bicchieri') || desc.includes('tovaglioli') ||
+                desc.includes('piatti') || desc.includes('posate') || desc.includes('carta') ||
+                desc.includes('plastica') || desc.includes('packaging')) {
+                return 'Materiali';
+            }
+            
+            // Attrezzature
+            if (desc.includes('macchina') || desc.includes('attrezzatura') || desc.includes('frigorifero') ||
+                desc.includes('scaffale') || desc.includes('arredamento')) {
+                return 'Attrezzature';
+            }
+            
+            // Servizi
+            if (desc.includes('servizio') || desc.includes('consulenza') || desc.includes('manutenzione') ||
+                desc.includes('pulizia') || desc.includes('affitto') || desc.includes('canone')) {
+                return 'Servizi';
+            }
+            
+            // Default
+            return 'Altro';
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(value || 0);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            return new Date(dateString).toLocaleDateString('it-IT');
+        }
+
+        // Ottieni lista fornitori unici
+        function getUniqueSuppliers() {
+            const suppliers = new Set();
+            state.fatture.forEach(f => {
+                if (f.ced && f.ced.nm) {
+                    suppliers.add(f.ced.nm);
+                }
+            });
+            return Array.from(suppliers).sort();
+        }
+
+        // Ottieni anni disponibili per fatture
+        function getAvailableInvoiceYears() {
+            if (state.fatture.length === 0) return [];
+            const years = new Set(state.fatture.map(f => new Date(f.dt).getFullYear()));
+            return Array.from(years).sort((a, b) => b - a);
+        }
+
+        // Ottieni anni disponibili per pagamenti
+        function getAvailablePaymentYears() {
+            if (state.fatture.length === 0) return [];
+            const years = new Set();
+            state.fatture.forEach(f => {
+                if (f.dtPag) {
+                    years.add(new Date(f.dtPag).getFullYear());
+                }
+            });
+            return Array.from(years).sort((a, b) => b - a);
+        }
+
+        // Filtra fatture
+        function getFilteredFatture() {
+            return state.fatture.filter(f => {
+                const fatturaDate = new Date(f.dt);
+                const fatturaYear = fatturaDate.getFullYear();
+                const fatturaMonth = fatturaDate.getMonth() + 1;
+
+                // Filtro anno fattura
+                if (state.filters.invoiceYear !== 'all' && fatturaYear !== parseInt(state.filters.invoiceYear)) {
+                    return false;
+                }
+
+                // Filtro mese fattura
+                if (state.filters.invoiceMonth !== 'all' && fatturaMonth !== parseInt(state.filters.invoiceMonth)) {
+                    return false;
+                }
+
+                // Filtro anno e mese scadenza pagamento
+                if (state.filters.paymentYear !== 'all' || state.filters.paymentMonth !== 'all') {
+                    if (!f.dtPag) {
+                        return false;
+                    }
+                    const paymentDate = new Date(f.dtPag);
+                    const paymentYear = paymentDate.getFullYear();
+                    const paymentMonth = paymentDate.getMonth() + 1;
+
+                    if (state.filters.paymentYear !== 'all' && paymentYear !== parseInt(state.filters.paymentYear)) {
+                        return false;
+                    }
+
+                    if (state.filters.paymentMonth !== 'all' && paymentMonth !== parseInt(state.filters.paymentMonth)) {
+                        return false;
+                    }
+                }
+
+                // Filtro fornitore
+                if (state.filters.supplier !== 'all' && f.ced.nm !== state.filters.supplier) {
+                    return false;
+                }
+
+                // Filtro importo minimo
+                if (state.filters.minAmount !== '' && f.tot < parseFloat(state.filters.minAmount)) {
+                    return false;
+                }
+
+                // Filtro importo massimo
+                if (state.filters.maxAmount !== '' && f.tot > parseFloat(state.filters.maxAmount)) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        // Calcola totale filtrato
+        function getFilteredTotal() {
+            return getFilteredFatture().reduce((sum, f) => sum + f.tot, 0);
+        }
+
+        window.setFilter = function(type, value) {
+            state.filters[type] = value;
+            state.selectedIds.clear();
+            render();
+        };
+
+        window.resetFilters = function() {
+            state.filters = {
+                invoiceYear: 'all',
+                invoiceMonth: 'all',
+                paymentYear: 'all',
+                paymentMonth: 'all',
+                supplier: 'all',
+                minAmount: '',
+                maxAmount: ''
+            };
+            state.selectedIds.clear();
+            render();
+        };
+
+        // Upload singolo
+        window.handleFileUpload = async function(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            await processFiles(files);
+        };
+
+        // Upload cartella
+        window.handleFolderUpload = async function(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            await processFiles(files);
+        };
+
+        // Processa files
+        async function processFiles(files) {
+            state.uploading = true;
+            state.error = '';
+            state.uploadProgress = { current: 0, total: files.length, errors: [], duplicates: [] };
+            render();
+
+            let successCount = 0;
+            let duplicateCount = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                state.uploadProgress.current = i + 1;
+                render();
+
+                try {
+                    await processFile(files[i]);
+                    successCount++;
+                } catch (err) {
+                    if (err.message.startsWith('Duplicato:')) {
+                        duplicateCount++;
+                        state.uploadProgress.duplicates.push({ file: files[i].name, error: err.message });
+                    } else {
+                        state.uploadProgress.errors.push({ file: files[i].name, error: err.message });
+                    }
+                }
+            }
+
+            state.uploading = false;
+            
+            let message = `✓ ${successCount} fatture caricate!`;
+            if (duplicateCount > 0) {
+                message += ` | ⚠️ ${duplicateCount} duplicati saltati`;
+            }
+            if (state.uploadProgress.errors.length > 0) {
+                message += ` | ❌ ${state.uploadProgress.errors.length} errori`;
+            }
+            
+            state.error = message;
+            state.uploadProgress = null;
+            
+            setTimeout(() => {
+                state.error = '';
+                render();
+            }, 5000);
+            
+            render();
+        }
+
+        // Processa singolo file
+        async function processFile(file) {
+            const text = await file.text();
+            const xmlDoc = parseXML(text);
+
+            if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                throw new Error('XML non valido');
+            }
+
+            const cedente = xmlDoc.getElementsByTagName('CedentePrestatore')[0];
+            const cessionario = xmlDoc.getElementsByTagName('CessionarioCommittente')[0];
+            const datiGenerali = xmlDoc.getElementsByTagName('DatiGeneraliDocumento')[0];
+
+            if (!cedente || !cessionario || !datiGenerali) {
+                throw new Error('Formato non riconosciuto');
+            }
+
+            const numeroFattura = getTextContent(datiGenerali, 'Numero');
+            const dataFattura = getTextContent(datiGenerali, 'Data');
+            const datiCedente = cedente.getElementsByTagName('DatiAnagrafici')[0];
+            const partitaIVACedente = getTextContent(datiCedente.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice');
+
+            // VERIFICA DUPLICATI
+            const isDuplicate = state.fatture.some(f => 
+                f.num === numeroFattura && 
+                f.dt === dataFattura && 
+                f.ced.pi === partitaIVACedente
+            );
+
+            if (isDuplicate) {
+                throw new Error(`Duplicato: Fattura ${numeroFattura} già presente`);
+            }
+
+            const sedeCedente = cedente.getElementsByTagName('Sede')[0];
+            const datiCessionario = cessionario.getElementsByTagName('DatiAnagrafici')[0];
+            const sedeCessionario = cessionario.getElementsByTagName('Sede')[0];
+
+            const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
+            const prodotti = [];
+            
+            for (let i = 0; i < dettaglioLinee.length; i++) {
+                const linea = dettaglioLinee[i];
+                const unitaMisura = getTextContent(linea, 'UnitaMisura');
+                const descrizione = getTextContent(linea, 'Descrizione');
+                prodotti.push({
+                    n: getTextContent(linea, 'NumeroLinea'),
+                    d: descrizione,
+                    q: parseFloat(getTextContent(linea, 'Quantita') || '0'),
+                    um: unitaMisura || '-',
+                    pu: parseFloat(getTextContent(linea, 'PrezzoUnitario') || '0'),
+                    pt: parseFloat(getTextContent(linea, 'PrezzoTotale') || '0'),
+                    iva: parseFloat(getTextContent(linea, 'AliquotaIVA') || '0'),
+                    tag: generateTag(descrizione)
+                });
+            }
+
+            const datiRiepilogo = xmlDoc.getElementsByTagName('DatiRiepilogo')[0];
+
+            // Estrai data pagamento
+            const datiPagamento = xmlDoc.getElementsByTagName('DettaglioPagamento')[0];
+            let dataPagamento = '';
+            if (datiPagamento) {
+                dataPagamento = getTextContent(datiPagamento, 'DataScadenzaPagamento') || 
+                               getTextContent(datiPagamento, 'DataRiferimentoTerminiPagamento') || '';
+            }
+
+            const fattura = {
+                id: `${numeroFattura}_${Date.now()}`,
+                num: numeroFattura,
+                dt: dataFattura,
+                dtPag: dataPagamento,
+                tot: parseFloat(getTextContent(datiGenerali, 'ImportoTotaleDocumento') || '0'),
+                
+                ced: {
+                    nm: getTextContent(datiCedente.getElementsByTagName('Anagrafica')[0], 'Denominazione'),
+                    pi: partitaIVACedente,
+                    cf: getTextContent(datiCedente, 'CodiceFiscale'),
+                    ad: `${getTextContent(sedeCedente, 'Indirizzo')} ${getTextContent(sedeCedente, 'NumeroCivico')}`.trim(),
+                    ct: `${getTextContent(sedeCedente, 'CAP')} ${getTextContent(sedeCedente, 'Comune')} (${getTextContent(sedeCedente, 'Provincia')})`.trim()
+                },
+                
+                ces: {
+                    nm: getTextContent(datiCessionario.getElementsByTagName('Anagrafica')[0], 'Denominazione'),
+                    pi: getTextContent(datiCessionario.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice'),
+                    cf: getTextContent(datiCessionario, 'CodiceFiscale'),
+                    ad: getTextContent(sedeCessionario, 'Indirizzo'),
+                    ct: `${getTextContent(sedeCessionario, 'CAP')} ${getTextContent(sedeCessionario, 'Comune')} (${getTextContent(sedeCessionario, 'Provincia')})`.trim()
+                },
+                
+                itm: prodotti,
+                
+                riv: {
+                    imp: parseFloat(getTextContent(datiRiepilogo, 'ImponibileImporto') || '0'),
+                    iva: parseFloat(getTextContent(datiRiepilogo, 'Imposta') || '0'),
+                    alq: parseFloat(getTextContent(datiRiepilogo, 'AliquotaIVA') || '0')
+                }
+            };
+
+            state.fatture.push(fattura);
+            state.fatture.sort((a, b) => new Date(b.dt) - new Date(a.dt));
+            saveFatture();
+        }
+
+        window.deleteFattura = function(id) {
+            if (!confirm('Eliminare questa fattura?')) return;
+            state.fatture = state.fatture.filter(f => f.id !== id);
+            saveFatture();
+            render();
+        };
+
+        window.toggleSelect = function(id) {
+            if (state.selectedIds.has(id)) {
+                state.selectedIds.delete(id);
+            } else {
+                state.selectedIds.add(id);
+            }
+            render();
+        };
+
+        window.toggleSelectAll = function() {
+            const filtered = getFilteredFatture();
+            if (state.selectedIds.size === filtered.length && filtered.length > 0) {
+                state.selectedIds.clear();
+            } else {
+                state.selectedIds = new Set(filtered.map(f => f.id));
+            }
+            render();
+        };
+
+        window.deleteSelected = function() {
+            if (state.selectedIds.size === 0) {
+                alert('Seleziona almeno una fattura da eliminare');
+                return;
+            }
+            
+            const count = state.selectedIds.size;
+            if (!confirm(`Eliminare ${count} fattura/e selezionata/e?`)) return;
+            
+            state.fatture = state.fatture.filter(f => !state.selectedIds.has(f.id));
+            state.selectedIds.clear();
+            saveFatture();
+            render();
+        };
+
+        window.showDetails = function(id) {
+            state.selectedFattura = state.fatture.find(f => f.id === id);
+            render();
+        };
+
+        window.closeModal = function() {
+            state.selectedFattura = null;
+            render();
+        };
+
+        // Render
+        function render() {
+            const app = document.getElementById('app');
+            const filteredFatture = getFilteredFatture();
+            const filteredTotal = getFilteredTotal();
+            const invoiceYears = getAvailableInvoiceYears();
+            const paymentYears = getAvailablePaymentYears();
+            const suppliers = getUniqueSuppliers();
+            
+            // Controlla se ci sono filtri attivi
+            const hasActiveFilters = state.filters.invoiceYear !== 'all' || 
+                                     state.filters.invoiceMonth !== 'all' || 
+                                     state.filters.paymentYear !== 'all' || 
+                                     state.filters.paymentMonth !== 'all' || 
+                                     state.filters.supplier !== 'all' || 
+                                     state.filters.minAmount !== '' || 
+                                     state.filters.maxAmount !== '';
+            
+            app.innerHTML = `
+                <div class="max-w-7xl mx-auto">
+                    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+                        <!-- Header con titolo -->
+                        <div class="flex items-center space-x-3 mb-6">
+                            <div class="bg-blue-600 p-3 rounded-xl">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-800">Gestione Fatture</h1>
+                                <p class="text-sm text-gray-600">Formato FatturaPA XML</p>
+                            </div>
+                        </div>
+
+                        <!-- Statistiche e Upload in una riga -->
+                        <div class="grid lg:grid-cols-2 gap-4 mb-6">
+                            <!-- Statistiche -->
+                            <div class="flex gap-3">
+                                <div class="bg-blue-50 px-4 py-3 rounded-xl flex items-center space-x-3 flex-1">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <div>
+                                        <p class="text-xs text-gray-600">Fatture ${hasActiveFilters ? 'filtrate' : ''}</p>
+                                        <p class="text-2xl font-bold text-blue-600">${filteredFatture.length} ${state.fatture.length !== filteredFatture.length ? `/ ${state.fatture.length}` : ''}</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-green-50 px-4 py-3 rounded-xl flex items-center space-x-3 flex-1">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <p class="text-xs text-gray-600">Totale ${hasActiveFilters ? 'filtrato' : ''}</p>
+                                        <p class="text-2xl font-bold text-green-600">${formatCurrency(filteredTotal)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pulsanti Upload -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex flex-col items-center justify-center border-2 border-dashed border-blue-300 rounded-xl cursor-pointer hover:border-blue-500 transition-colors bg-blue-50 hover:bg-blue-100 py-3">
+                                    <svg class="w-6 h-6 text-blue-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    <p class="text-sm text-blue-600 font-medium">${state.uploading ? 'Caricamento...' : 'File singolo'}</p>
+                                    <p class="text-xs text-gray-500">Carica un XML</p>
+                                    <input type="file" accept=".xml" onchange="handleFileUpload(event)" ${state.uploading ? 'disabled' : ''} class="hidden">
+                                </label>
+
+                                <label class="flex flex-col items-center justify-center border-2 border-dashed border-green-300 rounded-xl cursor-pointer hover:border-green-500 transition-colors bg-green-50 hover:bg-green-100 py-3">
+                                    <svg class="w-6 h-6 text-green-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                    </svg>
+                                    <p class="text-sm text-green-600 font-medium">${state.uploading ? 'Caricamento...' : 'Da cartella'}</p>
+                                    <p class="text-xs text-gray-500">Import multiplo</p>
+                                    <input type="file" accept=".xml" webkitdirectory directory multiple onchange="handleFolderUpload(event)" ${state.uploading ? 'disabled' : ''} class="hidden">
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Filtri -->
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                                    </svg>
+                                    <span class="text-sm font-semibold text-gray-700">Filtri avanzati</span>
+                                </div>
+                                ${hasActiveFilters ? `
+                                    <button onclick="resetFilters()" class="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs font-medium flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        <span>Azzera tutti i filtri</span>
+                                    </button>
+                                ` : ''}
+                            </div>
+
+                            <div class="grid lg:grid-cols-3 gap-4">
+                                <!-- Sezione Data Fattura -->
+                                <div class="bg-white rounded-lg p-5 border-t-4 border-blue-500 shadow-sm">
+                                    <div class="flex items-center space-x-2 mb-4">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        <h3 class="text-sm font-bold text-gray-800">Data Fattura</h3>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <!-- Anno fattura -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-2">Anno</label>
+                                            <select onchange="setFilter('invoiceYear', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                                <option value="all" ${state.filters.invoiceYear === 'all' ? 'selected' : ''}>Tutti</option>
+                                                ${invoiceYears.map(year => `
+                                                    <option value="${year}" ${state.filters.invoiceYear === year ? 'selected' : ''}>${year}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+
+                                        <!-- Mese fattura -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-2">Mese</label>
+                                            <select onchange="setFilter('invoiceMonth', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                                <option value="all" ${state.filters.invoiceMonth === 'all' ? 'selected' : ''}>Tutti</option>
+                                                <option value="1" ${state.filters.invoiceMonth === '1' ? 'selected' : ''}>Gennaio</option>
+                                                <option value="2" ${state.filters.invoiceMonth === '2' ? 'selected' : ''}>Febbraio</option>
+                                                <option value="3" ${state.filters.invoiceMonth === '3' ? 'selected' : ''}>Marzo</option>
+                                                <option value="4" ${state.filters.invoiceMonth === '4' ? 'selected' : ''}>Aprile</option>
+                                                <option value="5" ${state.filters.invoiceMonth === '5' ? 'selected' : ''}>Maggio</option>
+                                                <option value="6" ${state.filters.invoiceMonth === '6' ? 'selected' : ''}>Giugno</option>
+                                                <option value="7" ${state.filters.invoiceMonth === '7' ? 'selected' : ''}>Luglio</option>
+                                                <option value="8" ${state.filters.invoiceMonth === '8' ? 'selected' : ''}>Agosto</option>
+                                                <option value="9" ${state.filters.invoiceMonth === '9' ? 'selected' : ''}>Settembre</option>
+                                                <option value="10" ${state.filters.invoiceMonth === '10' ? 'selected' : ''}>Ottobre</option>
+                                                <option value="11" ${state.filters.invoiceMonth === '11' ? 'selected' : ''}>Novembre</option>
+                                                <option value="12" ${state.filters.invoiceMonth === '12' ? 'selected' : ''}>Dicembre</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sezione Data Pagamento -->
+                                <div class="bg-white rounded-lg p-5 border-t-4 border-orange-500 shadow-sm">
+                                    <div class="flex items-center space-x-2 mb-4">
+                                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <h3 class="text-sm font-bold text-gray-800">Data Pagamento</h3>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <!-- Anno pagamento -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-2">Anno</label>
+                                            <select onchange="setFilter('paymentYear', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white">
+                                                <option value="all" ${state.filters.paymentYear === 'all' ? 'selected' : ''}>Tutti</option>
+                                                ${paymentYears.map(year => `
+                                                    <option value="${year}" ${state.filters.paymentYear === year ? 'selected' : ''}>${year}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+
+                                        <!-- Mese pagamento -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-2">Mese</label>
+                                            <select onchange="setFilter('paymentMonth', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white">
+                                                <option value="all" ${state.filters.paymentMonth === 'all' ? 'selected' : ''}>Tutti</option>
+                                                <option value="1" ${state.filters.paymentMonth === '1' ? 'selected' : ''}>Gennaio</option>
+                                                <option value="2" ${state.filters.paymentMonth === '2' ? 'selected' : ''}>Febbraio</option>
+                                                <option value="3" ${state.filters.paymentMonth === '3' ? 'selected' : ''}>Marzo</option>
+                                                <option value="4" ${state.filters.paymentMonth === '4' ? 'selected' : ''}>Aprile</option>
+                                                <option value="5" ${state.filters.paymentMonth === '5' ? 'selected' : ''}>Maggio</option>
+                                                <option value="6" ${state.filters.paymentMonth === '6' ? 'selected' : ''}>Giugno</option>
+                                                <option value="7" ${state.filters.paymentMonth === '7' ? 'selected' : ''}>Luglio</option>
+                                                <option value="8" ${state.filters.paymentMonth === '8' ? 'selected' : ''}>Agosto</option>
+                                                <option value="9" ${state.filters.paymentMonth === '9' ? 'selected' : ''}>Settembre</option>
+                                                <option value="10" ${state.filters.paymentMonth === '10' ? 'selected' : ''}>Ottobre</option>
+                                                <option value="11" ${state.filters.paymentMonth === '11' ? 'selected' : ''}>Novembre</option>
+                                                <option value="12" ${state.filters.paymentMonth === '12' ? 'selected' : ''}>Dicembre</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Altri filtri -->
+                                <div class="bg-white rounded-lg p-5 border-t-4 border-purple-500 shadow-sm">
+                                    <div class="flex items-center space-x-2 mb-4">
+                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                                        </svg>
+                                        <h3 class="text-sm font-bold text-gray-800">Altri Filtri</h3>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <!-- Fornitore -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-2">Fornitore</label>
+                                            <select onchange="setFilter('supplier', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white">
+                                                <option value="all" ${state.filters.supplier === 'all' ? 'selected' : ''}>Tutti</option>
+                                                ${suppliers.map(supplier => `
+                                                    <option value="${supplier}" ${state.filters.supplier === supplier ? 'selected' : ''}>${supplier}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+
+                                        <!-- Importo minimo -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-2">Min (€)</label>
+                                            <input type="number" 
+                                                   step="0.01" 
+                                                   placeholder="100.00"
+                                                   value="${state.filters.minAmount}"
+                                                   onchange="setFilter('minAmount', this.value)" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white">
+                                        </div>
+
+                                        <!-- Importo massimo -->
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-2">Max (€)</label>
+                                            <input type="number" 
+                                                   step="0.01" 
+                                                   placeholder="1000.00"
+                                                   value="${state.filters.maxAmount}"
+                                                   onchange="setFilter('maxAmount', this.value)" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${state.uploadProgress ? `
+                            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-medium text-gray-700">Caricamento...</span>
+                                    <span class="text-xs text-gray-600">${state.uploadProgress.current} / ${state.uploadProgress.total}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                    <div class="bg-blue-600 h-1.5 rounded-full transition-all" style="width: ${(state.uploadProgress.current / state.uploadProgress.total * 100).toFixed(0)}%"></div>
+                                </div>
+                                ${state.uploadProgress.duplicates.length > 0 ? `
+                                    <details class="mt-2">
+                                        <summary class="text-xs text-orange-600 cursor-pointer font-medium">⚠️ Duplicati saltati (${state.uploadProgress.duplicates.length})</summary>
+                                        <div class="mt-2 space-y-1 max-h-20 overflow-y-auto">
+                                            ${state.uploadProgress.duplicates.map(e => `
+                                                <p class="text-xs text-orange-500">• ${e.file}: ${e.error.replace('Duplicato: ', '')}</p>
+                                            `).join('')}
+                                        </div>
+                                    </details>
+                                ` : ''}
+                                ${state.uploadProgress.errors.length > 0 ? `
+                                    <details class="mt-2">
+                                        <summary class="text-xs text-red-600 cursor-pointer font-medium">❌ Errori (${state.uploadProgress.errors.length})</summary>
+                                        <div class="mt-2 space-y-1 max-h-20 overflow-y-auto">
+                                            ${state.uploadProgress.errors.map(e => `
+                                                <p class="text-xs text-red-500">• ${e.file}: ${e.error}</p>
+                                            `).join('')}
+                                        </div>
+                                    </details>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+
+                        ${state.error ? `
+                            <div class="mt-3 ${state.error.startsWith('✓') ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border rounded-lg p-3">
+                                <p class="${state.error.startsWith('✓') ? 'text-green-600' : 'text-red-600'} text-xs">${state.error}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    ${state.fatture.length > 0 ? `
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" 
+                                           onchange="toggleSelectAll()" 
+                                           ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}
+                                           class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">Seleziona tutto</span>
+                                </label>
+                                <span class="text-sm text-gray-500">
+                                    ${state.selectedIds.size > 0 ? `${state.selectedIds.size} selezionate` : ''}
+                                </span>
+                            </div>
+                            ${state.selectedIds.size > 0 ? `
+                                <button onclick="deleteSelected()" 
+                                        class="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    <span class="font-medium">Elimina selezionate</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+
+                    ${filteredFatture.length === 0 ? `
+                        <div class="bg-white rounded-2xl shadow-xl p-12 text-center">
+                            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">
+                                ${state.fatture.length === 0 ? 'Nessuna fattura' : 'Nessun risultato'}
+                            </h3>
+                            <p class="text-gray-500">
+                                ${state.fatture.length === 0 ? 'Carica il primo file XML' : 'Prova a modificare i filtri'}
+                            </p>
+                        </div>
+                    ` : `
+                        <div class="bg-white rounded-2xl shadow-xl overflow-x-auto">
+                            <table class="w-full table-fixed">
+                                <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                                    <tr>
+                                        <th class="w-12 px-2 py-3 text-center">
+                                            <input type="checkbox" 
+                                                   onchange="toggleSelectAll()" 
+                                                   ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}
+                                                   class="w-4 h-4 rounded cursor-pointer">
+                                        </th>
+                                        <th class="w-28 px-2 py-3 text-left text-xs font-semibold">N°</th>
+                                        <th class="w-24 px-2 py-3 text-left text-xs font-semibold">Data</th>
+                                        <th class="w-24 px-2 py-3 text-left text-xs font-semibold">Scadenza</th>
+                                        <th class="w-44 px-2 py-3 text-left text-xs font-semibold">Fornitore</th>
+                                        <th class="w-44 px-2 py-3 text-left text-xs font-semibold">Cliente</th>
+                                        <th class="w-16 px-2 py-3 text-center text-xs font-semibold">Righe</th>
+                                        <th class="w-24 px-2 py-3 text-right text-xs font-semibold">Totale</th>
+                                        <th class="w-36 px-2 py-3 text-center text-xs font-semibold">Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${filteredFatture.map(f => `
+                                        <tr class="hover:bg-blue-50 transition-colors ${state.selectedIds.has(f.id) ? 'bg-blue-50' : ''}">
+                                            <td class="px-2 py-3 text-center">
+                                                <input type="checkbox" 
+                                                       onchange="toggleSelect('${f.id}')" 
+                                                       ${state.selectedIds.has(f.id) ? 'checked' : ''}
+                                                       class="w-4 h-4 text-blue-600 rounded cursor-pointer focus:ring-2 focus:ring-blue-500">
+                                            </td>
+                                            <td class="px-2 py-3 font-semibold text-gray-800 text-xs truncate" title="${f.num}">${f.num}</td>
+                                            <td class="px-2 py-3 text-gray-600 text-xs">${formatDate(f.dt)}</td>
+                                            <td class="px-2 py-3 text-xs ${f.dtPag ? 'text-orange-600 font-medium' : 'text-gray-400'}">${f.dtPag ? formatDate(f.dtPag) : '-'}</td>
+                                            <td class="px-2 py-3 truncate" title="${f.ced.nm}">
+                                                <p class="font-medium text-gray-800 text-xs truncate">${f.ced.nm}</p>
+                                                <p class="text-xs text-gray-500 truncate">${f.ced.pi}</p>
+                                            </td>
+                                            <td class="px-2 py-3 truncate" title="${f.ces.nm}">
+                                                <p class="font-medium text-gray-800 text-xs truncate">${f.ces.nm}</p>
+                                                <p class="text-xs text-gray-500 truncate">${f.ces.pi}</p>
+                                            </td>
+                                            <td class="px-2 py-3 text-gray-600 text-xs text-center">${f.itm.length}</td>
+                                            <td class="px-2 py-3 text-right font-bold text-green-600 text-xs">${formatCurrency(f.tot)}</td>
+                                            <td class="px-2 py-3">
+                                                <div class="flex justify-center space-x-1">
+                                                    <button onclick="showDetails('${f.id}')" class="px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 text-xs">
+                                                        Vedi
+                                                    </button>
+                                                    <button onclick="deleteFattura('${f.id}')" class="px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-xs">
+                                                        Elimina
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
+                </div>
+
+                ${state.selectedFattura ? `
+                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onclick="if(event.target === this) closeModal()">
+                        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                            <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-2xl font-bold">Fattura ${state.selectedFattura.num}</h2>
+                                    <p class="text-blue-100">${formatDate(state.selectedFattura.dt)}</p>
+                                </div>
+                                <button onclick="closeModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="p-6 space-y-6">
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <div class="bg-blue-50 rounded-xl p-4">
+                                        <h3 class="font-semibold text-gray-800 mb-3">Fornitore</h3>
+                                        <div class="space-y-2 text-sm">
+                                            <p class="font-medium">${state.selectedFattura.ced.nm}</p>
+                                            <p class="text-gray-600">P.IVA: ${state.selectedFattura.ced.pi}</p>
+                                            <p class="text-gray-600">CF: ${state.selectedFattura.ced.cf}</p>
+                                            <p class="text-gray-600">${state.selectedFattura.ced.ad}</p>
+                                            <p class="text-gray-600">${state.selectedFattura.ced.ct}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-green-50 rounded-xl p-4">
+                                        <h3 class="font-semibold text-gray-800 mb-3">Cliente</h3>
+                                        <div class="space-y-2 text-sm">
+                                            <p class="font-medium">${state.selectedFattura.ces.nm}</p>
+                                            <p class="text-gray-600">P.IVA: ${state.selectedFattura.ces.pi}</p>
+                                            <p class="text-gray-600">CF: ${state.selectedFattura.ces.cf}</p>
+                                            <p class="text-gray-600">${state.selectedFattura.ces.ad}</p>
+                                            <p class="text-gray-600">${state.selectedFattura.ces.ct}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                ${state.selectedFattura.dtPag ? `
+                                    <div class="bg-orange-50 border-l-4 border-orange-400 rounded-lg p-4">
+                                        <div class="flex items-center space-x-2">
+                                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <div>
+                                                <p class="text-sm font-semibold text-gray-800">Data Scadenza Pagamento</p>
+                                                <p class="text-lg font-bold text-orange-600">${formatDate(state.selectedFattura.dtPag)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 mb-3">Prodotti/Servizi</h3>
+                                    <div class="bg-gray-50 rounded-xl overflow-hidden">
+                                        <table class="w-full text-sm">
+                                            <thead class="bg-gray-200">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left">#</th>
+                                                    <th class="px-4 py-3 text-left">Descrizione</th>
+                                                    <th class="px-4 py-3 text-right">Quantità</th>
+                                                    <th class="px-4 py-3 text-center">U.M.</th>
+                                                    <th class="px-4 py-3 text-right">Prezzo Unit.</th>
+                                                    <th class="px-4 py-3 text-right">IVA</th>
+                                                    <th class="px-4 py-3 text-right">Totale</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y">
+                                                ${state.selectedFattura.itm.map(p => `
+                                                    <tr class="hover:bg-white">
+                                                        <td class="px-4 py-3 font-medium">${p.n}</td>
+                                                        <td class="px-4 py-3">${p.d}</td>
+                                                        <td class="px-4 py-3 text-right">${p.q}</td>
+                                                        <td class="px-4 py-3 text-center text-gray-600">${p.um}</td>
+                                                        <td class="px-4 py-3 text-right">${formatCurrency(p.pu)}</td>
+                                                        <td class="px-4 py-3 text-right">${p.iva}%</td>
+                                                        <td class="px-4 py-3 text-right font-semibold">${formatCurrency(p.pt)}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
+                                    <h3 class="font-semibold text-gray-800 mb-3">Riepilogo</h3>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Imponibile:</span>
+                                            <span class="font-semibold">${formatCurrency(state.selectedFattura.riv.imp)}</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">IVA (${state.selectedFattura.riv.alq}%):</span>
+                                            <span class="font-semibold">${formatCurrency(state.selectedFattura.riv.iva)}</span>
+                                        </div>
+                                        <div class="flex justify-between text-lg pt-2 border-t-2 border-green-200">
+                                            <span class="font-bold">Totale:</span>
+                                            <span class="font-bold text-green-600">${formatCurrency(state.selectedFattura.tot)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Inizializzazione con gestione errori
+        function init() {
+            try {
+                loadFatture();
+                render();
+                console.log('✓ App inizializzata con successo');
+                console.log('Fatture caricate:', state.fatture.length);
+            } catch (err) {
+                console.error('❌ Errore inizializzazione:', err);
+                alert('Errore nel caricamento. Controlla la console (F12) per dettagli.');
+                // Prova a resettare lo stato
+                state.fatture = [];
+                render();
+            }
+        }
+
+        // Avvia l'app
+        init();
+    </script>
+</body>
+</html>

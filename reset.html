@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Sistema - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen flex items-center justify-center p-4">
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Accesso Amministratore</h2>
+                <p class="text-sm text-gray-600">Solo amministratori possono accedere a questa pagina</p>
+            </div>
+            
+            <form onsubmit="checkPassword(event)" class="space-y-4">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input 
+                        type="email" 
+                        id="loginEmail" 
+                        autocomplete="email"
+                        placeholder="Inserisci la tua email"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                    >
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        autocomplete="current-password"
+                        placeholder="Inserisci la password"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                    >
+                </div>
+                
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span id="errorText">Credenziali errate. Riprova.</span>
+                    </div>
+                </div>
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105"
+                >
+                    Accedi
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
+        <div class="text-center mb-8">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Reset Sistema</h1>
+            <p class="text-gray-600">Gestisci i dati e le credenziali del sistema</p>
+        </div>
+
+        <!-- Stato Corrente -->
+        <div id="status" class="mb-8 p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
+            <h2 class="text-lg font-bold text-blue-800 mb-3">📊 Stato Corrente</h2>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Utenti registrati:</span>
+                    <span id="userCount" class="font-bold text-blue-600">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Fatture caricate:</span>
+                    <span id="fattureCount" class="font-bold text-blue-600">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Sessione attiva:</span>
+                    <span id="sessionStatus" class="font-bold text-blue-600">No</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Azioni -->
+        <div class="space-y-4 mb-6">
+            <!-- Reset Solo Utenti -->
+            <div class="p-6 bg-orange-50 rounded-xl border-2 border-orange-200">
+                <h3 class="text-lg font-bold text-orange-800 mb-2">🔄 Reset Utenti</h3>
+                <p class="text-sm text-gray-700 mb-4">Cancella tutti gli utenti e ricrea l'admin con le nuove credenziali:<br>
+                <strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1071747d797e5077627160607f7c79757c6560607f7c793e7964">[email&#160;protected]</a><br>
+                <strong>Password:</strong> DccPnt60!</p>
+                <button onclick="resetUsers()" class="w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors">
+                    Reset Utenti
+                </button>
+            </div>
+
+            <!-- Reset Sessione -->
+            <div class="p-6 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+                <h3 class="text-lg font-bold text-yellow-800 mb-2">🚪 Logout</h3>
+                <p class="text-sm text-gray-700 mb-4">Termina la sessione corrente (richiederà nuovo login)</p>
+                <button onclick="resetSession()" class="w-full px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors">
+                    Termina Sessione
+                </button>
+            </div>
+
+            <!-- Reset Completo -->
+            <div class="p-6 bg-red-50 rounded-xl border-2 border-red-200">
+                <h3 class="text-lg font-bold text-red-800 mb-2">⚠️ Reset Completo</h3>
+                <p class="text-sm text-gray-700 mb-4">ATTENZIONE: Cancella TUTTI i dati (utenti, fatture, sessioni). Questa azione è irreversibile!</p>
+                <button onclick="resetAll()" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors">
+                    Reset Completo Sistema
+                </button>
+            </div>
+        </div>
+
+        <!-- Link -->
+        <div class="text-center space-y-2">
+            <a href="utenti.html" class="block text-blue-600 hover:text-blue-700 font-medium">
+                → Vai alla Gestione Utenti
+            </a>
+            <a href="dashboard.html" class="block text-gray-600 hover:text-gray-700 text-sm">
+            <button onclick="logout()" class="mt-2 block w-full text-center text-red-600 hover:text-red-700 text-sm font-medium">
+                🚪 Esci (Termina sessione)
+            </button>
+                ← Torna alla Dashboard
+            </a>
+        </div>
+
+        <!-- Messaggio di Successo -->
+        <div id="successMessage" class="hidden mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+            <div class="flex items-center text-green-800">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span id="successText" class="font-medium"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== REDIRECT SE NON AUTENTICATO ==========
+        (function() {
+            const SESSION_KEY = 'app_authenticated';
+            const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
+            
+            const auth = localStorage.getItem(SESSION_KEY);
+            
+            if (!auth) {
+                console.log('❌ Nessuna sessione trovata - redirect a index.html');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                
+                if (now - authData.timestamp >= SESSION_DURATION) {
+                    console.log('⏰ Sessione scaduta - redirect a index.html');
+                    localStorage.removeItem(SESSION_KEY);
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                console.log('✅ Sessione valida:', authData.userName, '-', authData.userRole);
+            } catch (e) {
+                console.error('❌ Errore parsing sessione - redirect a index.html');
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = 'index.html';
+                return;
+            }
+        })();
+        
+        // ========== RESTO DEL CODICE APPLICAZIONE ==========
+        
+        // Verifica che sia amministratore
+        const currentUser = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
+        if (currentUser && currentUser.userRole !== 'Amministratore') {
+            alert('Accesso negato. Solo amministratori.');
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // ========== SISTEMA DI AUTENTICAZIONE ==========
+        const USERS_KEY = 'authorized_users';
+        const SESSION_KEY = 'app_authenticated';
+        const FATTURE_KEY = 'fatture_elettroniche';
+        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
+        
+        function getAuthorizedUsers() {
+            try {
+                const saved = localStorage.getItem(USERS_KEY);
+                return saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+        
+        function checkAuth() {
+            const auth = localStorage.getItem(SESSION_KEY);
+            if (auth) {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                
+                if (now - authData.timestamp < SESSION_DURATION) {
+                    // Verifica che sia amministratore
+                    if (authData.userRole === 'Amministratore') {
+                        document.getElementById('loginModal').style.display = 'none';
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        window.checkPassword = function(event) {
+            event.preventDefault();
+            
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('password');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            const enteredEmail = emailInput.value.trim().toLowerCase();
+            const enteredPassword = passwordInput.value;
+            
+            const users = getAuthorizedUsers();
+            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
+            
+            if (!user) {
+                errorText.textContent = 'Email non registrata.';
+                errorMessage.classList.remove('hidden');
+                emailInput.classList.add('border-red-500');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                
+                setTimeout(() => {
+                    emailInput.classList.remove('border-red-500');
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            if (!user.attivo) {
+                errorText.textContent = 'Utente disattivato.';
+                errorMessage.classList.remove('hidden');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            // Verifica che sia amministratore
+            if (user.ruolo !== 'Amministratore') {
+                errorText.textContent = 'Accesso negato. Solo amministratori.';
+                errorMessage.classList.remove('hidden');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            if (user.password !== enteredPassword) {
+                errorText.textContent = 'Password errata.';
+                errorMessage.classList.remove('hidden');
+                passwordInput.value = '';
+                passwordInput.focus();
+                passwordInput.classList.add('border-red-500');
+                
+                setTimeout(() => {
+                    passwordInput.classList.remove('border-red-500');
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            const authData = {
+                authenticated: true,
+                timestamp: new Date().getTime(),
+                userId: user.id,
+                userName: user.nome,
+                userEmail: user.email,
+                userRole: user.ruolo
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
+            
+            const modal = document.getElementById('loginModal');
+            modal.style.opacity = '0';
+            modal.style.transition = 'opacity 0.3s';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        };
+        
+        checkAuth();
+        
+        // ========== GESTIONE RESET ==========
+        
+
+        // Aggiorna stato
+        function updateStatus() {
+            try {
+                // Conta utenti
+                const users = localStorage.getItem(USERS_KEY);
+                const userCount = users ? JSON.parse(users).length : 0;
+                document.getElementById('userCount').textContent = userCount;
+
+                // Conta fatture
+                const fatture = localStorage.getItem(FATTURE_KEY);
+                const fattureCount = fatture ? JSON.parse(fatture).length : 0;
+                document.getElementById('fattureCount').textContent = fattureCount;
+
+                // Verifica sessione
+                const session = localStorage.getItem(SESSION_KEY);
+                document.getElementById('sessionStatus').textContent = session ? 'Sì' : 'No';
+            } catch (e) {
+                console.error('Errore aggiornamento stato:', e);
+            }
+        }
+
+        // Reset solo utenti
+        function resetUsers() {
+            if (!confirm('Sei sicuro di voler resettare tutti gli utenti?\n\nVerrà creato un nuovo admin con:\nEmail: admin@grappolieluppoli.it\nPassword: DccPnt60!')) {
+                return;
+            }
+
+            // Cancella utenti esistenti
+            localStorage.removeItem(USERS_KEY);
+
+            // Crea nuovo admin
+            const newUsers = [{
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                nome: 'admin',
+                email: 'admin@grappolieluppoli.it',
+                password: 'DccPnt60!',
+                ruolo: 'Amministratore',
+                attivo: true,
+                dataCreazione: new Date().toISOString()
+            }];
+
+            localStorage.setItem(USERS_KEY, JSON.stringify(newUsers));
+
+            showSuccess('✅ Utenti resettati! Admin creato con successo.');
+            updateStatus();
+        }
+
+        // Reset sessione
+        function resetSession() {
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem('prodotti_authenticated'); // Vecchia chiave prodotti
+            showSuccess('✅ Sessione terminata! Sarà richiesto nuovo login.');
+            updateStatus();
+        }
+
+        // Reset completo
+        function resetAll() {
+            if (!confirm('⚠️ ATTENZIONE!\n\nQuesto cancellerà:\n- Tutti gli utenti\n- Tutte le fatture\n- Tutte le sessioni\n\nQuesta azione è IRREVERSIBILE!\n\nSei sicuro?')) {
+                return;
+            }
+
+            if (!confirm('Conferma ancora una volta: vuoi davvero cancellare TUTTI i dati?')) {
+                return;
+            }
+
+            // Cancella tutto
+            localStorage.removeItem(USERS_KEY);
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem('prodotti_authenticated');
+            localStorage.removeItem(FATTURE_KEY);
+
+            // Ricrea admin
+            const newUsers = [{
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                nome: 'admin',
+                email: 'admin@grappolieluppoli.it',
+                password: 'DccPnt60!',
+                ruolo: 'Amministratore',
+                attivo: true,
+                dataCreazione: new Date().toISOString()
+            }];
+
+            localStorage.setItem(USERS_KEY, JSON.stringify(newUsers));
+
+            showSuccess('✅ Sistema resettato completamente! Admin ricreato.');
+            updateStatus();
+        }
+
+        // Mostra messaggio successo
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            
+            successText.textContent = message;
+            su
