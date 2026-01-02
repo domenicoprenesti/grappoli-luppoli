@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             background: linear-gradient(135deg, #092A37 0%, #0a3d4f 100%);
@@ -63,6 +65,7 @@
             <!-- Pulsante Login -->
             <button 
                 type="submit" 
+                id="loginButton"
                 class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] shadow-lg"
             >
                 Accedi
@@ -93,11 +96,20 @@
     </div>
 
     <script>
-        const USERS_KEY = 'authorized_users';
+        // =============================================
+        // CONFIGURAZIONE SUPABASE
+        // =============================================
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        
         const SESSION_KEY = 'app_authenticated';
-        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
+        const SESSION_DURATION = 24 * 60 * 60 * 1000;
 
-        // Verifica se già loggato
+        // Inizializza Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase inizializzato');
+
+        // Verifica sessione esistente
         function checkExistingSession() {
             const auth = localStorage.getItem(SESSION_KEY);
             if (auth) {
@@ -106,7 +118,7 @@
                     const now = new Date().getTime();
                     
                     if (now - authData.timestamp < SESSION_DURATION) {
-                        // Sessione valida - redirect alla dashboard
+                        console.log('✅ Sessione valida trovata');
                         window.location.href = 'dashboard.html';
                         return true;
                     }
@@ -117,104 +129,106 @@
             return false;
         }
 
-        // Carica utenti autorizzati
-        function getAuthorizedUsers() {
-            try {
-                const saved = localStorage.getItem(USERS_KEY);
-                let users = saved ? JSON.parse(saved) : [];
-                
-                // Se non ci sono utenti, crea l'admin automaticamente
-                if (users.length === 0) {
-                    console.log('⚠️ Nessun utente trovato, creo admin automaticamente...');
-                    users = [{
-                        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-                        nome: 'admin',
-                        email: 'domenicoprenesti@gmail.com',
-                        password: 'mico',
-                        ruolo: 'Amministratore',
-                        attivo: true,
-                        dataCreazione: new Date().toISOString()
-                    }];
-                    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                    console.log('✅ Admin creato: domenicoprenesti@gmail.com / mico');
-                }
-                
-                return users;
-            } catch (e) {
-                console.error('Errore caricamento utenti:', e);
-                return [];
-            }
-        }
-
-        // Gestisce il login
-        function handleLogin(event) {
+        // Gestione login con Supabase
+        async function handleLogin(event) {
             event.preventDefault();
             
             const emailInput = document.getElementById('loginEmail');
             const passwordInput = document.getElementById('password');
             const errorMessage = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
+            const loginButton = document.getElementById('loginButton');
             
             const enteredEmail = emailInput.value.trim().toLowerCase();
             const enteredPassword = passwordInput.value;
             
-            const users = getAuthorizedUsers();
+            loginButton.disabled = true;
+            loginButton.textContent = 'Accesso in corso...';
             
-            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
-            
-            if (!user) {
-                errorText.textContent = 'Email non registrata.';
-                errorMessage.classList.remove('hidden');
-                emailInput.classList.add('border-red-500');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
+            try {
+                console.log('🔍 Ricerca utente:', enteredEmail);
                 
-                setTimeout(() => {
-                    emailInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (!user.attivo) {
-                errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
-                errorMessage.classList.remove('hidden');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
+                // Query a Supabase
+                const { data, error } = await supabase
+                    .from('utenti')
+                    .select('*')
+                    .eq('email', enteredEmail)
+                    .single();
                 
-                setTimeout(() => errorMessage.classList.add('hidden'), 3000);
-                return;
-            }
-            
-            if (user.password !== enteredPassword) {
-                errorText.textContent = 'Password errata.';
-                errorMessage.classList.remove('hidden');
-                passwordInput.value = '';
-                passwordInput.focus();
-                passwordInput.classList.add('border-red-500');
+                if (error) {
+                    console.error('Errore Supabase:', error);
+                    if (error.code === 'PGRST116') {
+                        errorText.textContent = 'Email non registrata.';
+                    } else {
+                        errorText.textContent = 'Errore di connessione al database.';
+                    }
+                    errorMessage.classList.remove('hidden');
+                    emailInput.classList.add('border-red-500');
+                    
+                    setTimeout(() => {
+                        emailInput.classList.remove('border-red-500');
+                        errorMessage.classList.add('hidden');
+                    }, 3000);
+                    
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Accedi';
+                    return;
+                }
                 
-                setTimeout(() => {
-                    passwordInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
+                console.log('✅ Utente trovato:', data);
+                
+                if (!data.attivo) {
+                    errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
+                    errorMessage.classList.remove('hidden');
+                    
+                    setTimeout(() => errorMessage.classList.add('hidden'), 3000);
+                    
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Accedi';
+                    return;
+                }
+                
+                if (data.password !== enteredPassword) {
+                    console.log('❌ Password errata');
+                    errorText.textContent = 'Password errata.';
+                    errorMessage.classList.remove('hidden');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                    passwordInput.classList.add('border-red-500');
+                    
+                    setTimeout(() => {
+                        passwordInput.classList.remove('border-red-500');
+                        errorMessage.classList.add('hidden');
+                    }, 3000);
+                    
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Accedi';
+                    return;
+                }
+                
+                // Login riuscito!
+                console.log('✅ Login riuscito!');
+                const authData = {
+                    authenticated: true,
+                    timestamp: new Date().getTime(),
+                    userId: data.id,
+                    userName: data.nome,
+                    userSurname: data.cognome,
+                    userEmail: data.email,
+                    userRole: data.ruolo
+                };
+                localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
+                
+                window.location.href = 'dashboard.html';
+                
+            } catch (err) {
+                console.error('❌ Errore imprevisto:', err);
+                errorText.textContent = 'Errore di sistema. Riprova.';
+                errorMessage.classList.remove('hidden');
+                
+                loginButton.disabled = false;
+                loginButton.textContent = 'Accedi';
             }
-            
-            // Login riuscito
-            const authData = {
-                authenticated: true,
-                timestamp: new Date().getTime(),
-                userId: user.id,
-                userName: user.nome,
-                userEmail: user.email,
-                userRole: user.ruolo
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
-            
-            // Redirect alla dashboard
-            window.location.href = 'dashboard.html';
         }
 
         // Accesso rapido admin
@@ -227,8 +241,8 @@
             form.dispatchEvent(event);
         };
 
-        // Controlla sessione esistente all'avvio
         checkExistingSession();
+        console.log('📱 Pagina login caricata (con Supabase)');
     </script>
 </body>
 </html>
