@@ -7,9 +7,48 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        // ========== REDIRECT SE NON AUTENTICATO ==========
+        (function() {
+            const SESSION_KEY = 'app_authenticated';
+            const SESSION_DURATION = 24 * 60 * 60 * 1000;
+            
+            const auth = localStorage.getItem(SESSION_KEY);
+            
+            if (!auth) {
+                console.log('❌ Nessuna sessione - redirect a index.html');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                
+                if (now - authData.timestamp >= SESSION_DURATION) {
+                    console.log('⏰ Sessione scaduta');
+                    localStorage.removeItem(SESSION_KEY);
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                if (authData.userRole !== 'Amministratore') {
+                    alert('Accesso negato. Solo amministratori.');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+                
+                console.log('✅ Sessione valida:', authData.userName);
+            } catch (e) {
+                console.error('❌ Errore sessione');
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = 'index.html';
+            }
+        })();
+    </script>
 
-    <!-- Navbar Fissa -->
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -22,28 +61,20 @@
                         <span class="text-lg font-bold text-gray-800">Grappoli & Luppoli</span>
                     </button>
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
-                        <a href="dashboard.html" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                            Dashboard
-                        </a>
-                        <a href="fatture.html" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                            Fatture
-                        </a>
-                        <a href="prodotti.html" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                            Prodotti
-                        </a>
-                        <a class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">
-                            Utenti
-                        </a>
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
+                        <a class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Utenti</a>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
                         <span class="text-sm font-medium">Dashboard</span>
                     </button>
-                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                         </svg>
@@ -54,561 +85,208 @@
         </div>
     </nav>
 
-    <!-- Contenuto -->
-    <div id="app" class="pt-20 p-8"></div>
+    <!-- Contenuto Principale -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestione Utenti Autorizzati</h1>
+            <p class="text-gray-600">Visualizza e gestisci tutti gli utenti del sistema</p>
+        </div>
+
+        <!-- Pulsante Nuovo Utente -->
+        <div class="mb-6">
+            <button onclick="window.location.href='crea-utente.html'" class="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span class="font-semibold">Nuovo Utente</span>
+            </button>
+        </div>
+
+        <!-- Statistiche -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Totali</p>
+                        <p id="totalUsers" class="text-3xl font-bold text-blue-600">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Attivi</p>
+                        <p id="activeUsers" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Disattivati</p>
+                        <p id="inactiveUsers" class="text-3xl font-bold text-red-600">0</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella Utenti -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Nome</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Cognome</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Email</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Password</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Ruolo</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Stato</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Data Creazione</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="divide-y divide-gray-200">
+                        <!-- I dati vengono inseriti qui da JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // ========== REDIRECT SE NON AUTENTICATO ==========
-        (function() {
-            const SESSION_KEY = 'app_authenticated';
-            const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-            
-            const auth = localStorage.getItem(SESSION_KEY);
-            
-            if (!auth) {
-                console.log('❌ Nessuna sessione trovata - redirect a index.html');
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            try {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp >= SESSION_DURATION) {
-                    console.log('⏰ Sessione scaduta - redirect a index.html');
-                    localStorage.removeItem(SESSION_KEY);
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                console.log('✅ Sessione valida:', authData.userName, '-', authData.userRole);
-            } catch (e) {
-                console.error('❌ Errore parsing sessione - redirect a index.html');
-                localStorage.removeItem(SESSION_KEY);
-                window.location.href = 'index.html';
-                return;
-            }
-        })();
-        
-        // ========== RESTO DEL CODICE APPLICAZIONE ==========
-        
-        // Verifica che sia amministratore
-        const currentUser = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
-        if (currentUser && currentUser.userRole !== 'Amministratore') {
-            alert('Accesso negato. Solo amministratori possono accedere a questa pagina.');
-            window.location.href = 'dashboard.html';
-        }
-        // ========== SISTEMA DI AUTENTICAZIONE ==========
         const USERS_KEY = 'authorized_users';
         const SESSION_KEY = 'app_authenticated';
-        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-        
-        function getAuthorizedUsers() {
+
+        function logout() {
+            localStorage.removeItem(SESSION_KEY);
+            window.location.href = 'index.html';
+        }
+
+        function getUsers() {
             try {
                 const saved = localStorage.getItem(USERS_KEY);
                 return saved ? JSON.parse(saved) : [];
             } catch (e) {
+                console.error('Errore caricamento utenti:', e);
                 return [];
             }
         }
-        
-        function checkAuth() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            if (auth) {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp < SESSION_DURATION) {
-                    // Verifica che sia amministratore
-                    if (authData.userRole === 'Amministratore') {
-                        document.getElementById('loginModal').style.display = 'none';
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        
-        window.checkPassword = function(event) {
-            event.preventDefault();
-            
-            const emailInput = document.getElementById('loginEmail');
-            const passwordInput = document.getElementById('password');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            
-            const enteredEmail = emailInput.value.trim().toLowerCase();
-            const enteredPassword = passwordInput.value;
-            
-            const users = getAuthorizedUsers();
-            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
-            
-            if (!user) {
-                errorText.textContent = 'Email non registrata.';
-                errorMessage.classList.remove('hidden');
-                emailInput.classList.add('border-red-500');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    emailInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (!user.attivo) {
-                errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
-                errorMessage.classList.remove('hidden');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            // Verifica che sia amministratore
-            if (user.ruolo !== 'Amministratore') {
-                errorText.textContent = 'Accesso negato. Solo amministratori possono gestire gli utenti.';
-                errorMessage.classList.remove('hidden');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (user.password !== enteredPassword) {
-                errorText.textContent = 'Password errata.';
-                errorMessage.classList.remove('hidden');
-                passwordInput.value = '';
-                passwordInput.focus();
-                passwordInput.classList.add('border-red-500');
-                
-                setTimeout(() => {
-                    passwordInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            const authData = {
-                authenticated: true,
-                timestamp: new Date().getTime(),
-                userId: user.id,
-                userName: user.nome,
-                userEmail: user.email,
-                userRole: user.ruolo
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
-            
-            const modal = document.getElementById('loginModal');
-            modal.style.opacity = '0';
-            modal.style.transition = 'opacity 0.3s';
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        };
-        
-        window.logout = function() {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.href = "index.html";
-        };
-        
-        window.getCurrentUser = function() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            return auth ? JSON.parse(auth) : null;
-        };
-        
-        checkAuth();
-        
-        // ========== APPLICAZIONE PRINCIPALE ==========
-        
-        // Chiave per il localStorage
-        const USERS_KEY = 'authorized_users';
-        
-        // Stato globale
-        let state = {
-            users: [],
-            editingUser: null
-        };
 
-        // Carica utenti dal localStorage
-        function loadUsers() {
-            try {
-                const saved = localStorage.getItem(USERS_KEY);
-                state.users = saved ? JSON.parse(saved) : [];
-                
-                // Se non ci sono utenti, crea l'utente admin di default
-                if (state.users.length === 0) {
-                    state.users = [
-                        {
-                            id: generateId(),
-                            nome: 'admin',
-                            email: 'admin@grappolieluppoli.it',
-                            password: 'DccPnt60!',
-                            ruolo: 'Amministratore',
-                            attivo: true,
-                            dataCreazione: new Date().toISOString()
-                        }
-                    ];
-                    saveUsers();
-                }
-            } catch (e) {
-                console.error('Errore caricamento utenti:', e);
-                state.users = [];
-            }
-        }
-
-        // Salva utenti nel localStorage
-        function saveUsers() {
-            try {
-                localStorage.setItem(USERS_KEY, JSON.stringify(state.users));
-            } catch (e) {
-                console.error('Errore salvataggio utenti:', e);
-                alert('Errore nel salvataggio degli utenti');
-            }
-        }
-
-        // Genera ID univoco
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
-
-        // Formatta data
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('it-IT', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
-        // Aggiungi/Modifica utente
-        window.saveUser = function(event) {
-            event.preventDefault();
-            
-            const nome = document.getElementById('userName').value.trim();
-            const email = document.getElementById('userEmail').value.trim();
-            const password = document.getElementById('userPassword').value;
-            const ruolo = document.getElementById('userRole').value;
-            const attivo = document.getElementById('userActive').checked;
-            
-            if (!nome || !email || !password) {
-                alert('Compila tutti i campi obbligatori');
-                return;
-            }
-            
-            // Verifica email duplicata
-            const emailExists = state.users.some(u => 
-                u.email === email && u.id !== state.editingUser?.id
-            );
-            
-            if (emailExists) {
-                alert('Email già in uso da un altro utente');
-                return;
-            }
-            
-            if (state.editingUser) {
-                // Modifica utente esistente
-                const index = state.users.findIndex(u => u.id === state.editingUser.id);
-                state.users[index] = {
-                    ...state.users[index],
-                    nome,
-                    email,
-                    password,
-                    ruolo,
-                    attivo,
-                    dataModifica: new Date().toISOString()
-                };
-            } else {
-                // Nuovo utente
-                state.users.push({
-                    id: generateId(),
-                    nome,
-                    email,
-                    password,
-                    ruolo,
-                    attivo,
-                    dataCreazione: new Date().toISOString()
-                });
-            }
-            
-            saveUsers();
-            closeModal();
-            render();
-        };
-
-        // Elimina utente
-        window.deleteUser = function(id) {
+        function deleteUser(userId) {
             if (!confirm('Sei sicuro di voler eliminare questo utente?')) {
                 return;
             }
-            
-            state.users = state.users.filter(u => u.id !== id);
-            saveUsers();
-            render();
-        };
 
-        // Apri modal per nuovo utente
-        window.openAddModal = function() {
-            state.editingUser = null;
-            document.getElementById('modalTitle').textContent = 'Nuovo Utente';
-            document.getElementById('userName').value = '';
-            document.getElementById('userEmail').value = '';
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userRole').value = 'Utente';
-            document.getElementById('userActive').checked = true;
-            document.getElementById('userModal').classList.remove('hidden');
-        };
-
-        // Apri modal per modifica utente
-        window.openEditModal = function(id) {
-            const user = state.users.find(u => u.id === id);
-            if (!user) return;
-            
-            state.editingUser = user;
-            document.getElementById('modalTitle').textContent = 'Modifica Utente';
-            document.getElementById('userName').value = user.nome;
-            document.getElementById('userEmail').value = user.email;
-            document.getElementById('userPassword').value = user.password;
-            document.getElementById('userRole').value = user.ruolo;
-            document.getElementById('userActive').checked = user.attivo;
-            document.getElementById('userModal').classList.remove('hidden');
-        };
-
-        // Chiudi modal
-        window.closeModal = function() {
-            state.editingUser = null;
-            document.getElementById('userModal').classList.add('hidden');
-        };
-
-        // Mostra/nascondi password
-        window.togglePassword = function() {
-            const input = document.getElementById('userPassword');
-            const icon = document.getElementById('toggleIcon');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
-            } else {
-                input.type = 'password';
-                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-            }
-        };
-
-        // Toggle stato attivo
-        window.toggleActive = function(id) {
-            const user = state.users.find(u => u.id === id);
-            if (user) {
-                user.attivo = !user.attivo;
-                saveUsers();
-                render();
-            }
-        };
-
-        // Render
-        function render() {
-            const app = document.getElementById('app');
-            
-            app.innerHTML = `
-                <div class="max-w-7xl mx-auto">
-                    <!-- Header -->
-                    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="bg-blue-600 p-3 rounded-xl">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h1 class="text-2xl font-bold text-gray-800">Gestione Utenti Autorizzati</h1>
-                                    <p class="text-sm text-gray-600">Gestisci gli accessi alla sezione Prodotti</p>
-                                </div>
-                            </div>
-                            <button onclick="window.location.href='crea-utente.html'" class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                <span class="font-medium">Nuovo Utente</span>
-                            </button>
-                        </div>
-
-                        <!-- Statistiche -->
-                        <div class="grid md:grid-cols-3 gap-4 mt-6">
-                            <div class="bg-blue-50 px-4 py-3 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Utenti totali</p>
-                                <p class="text-2xl font-bold text-blue-600">${state.users.length}</p>
-                            </div>
-                            <div class="bg-green-50 px-4 py-3 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Utenti attivi</p>
-                                <p class="text-2xl font-bold text-green-600">${state.users.filter(u => u.attivo).length}</p>
-                            </div>
-                            <div class="bg-orange-50 px-4 py-3 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Utenti inattivi</p>
-                                <p class="text-2xl font-bold text-orange-600">${state.users.filter(u => !u.attivo).length}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tabella Utenti -->
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left text-sm font-semibold">Nome</th>
-                                        <th class="px-6 py-4 text-left text-sm font-semibold">Email</th>
-                                        <th class="px-6 py-4 text-left text-sm font-semibold">Password</th>
-                                        <th class="px-6 py-4 text-center text-sm font-semibold">Ruolo</th>
-                                        <th class="px-6 py-4 text-center text-sm font-semibold">Stato</th>
-                                        <th class="px-6 py-4 text-center text-sm font-semibold">Data Creazione</th>
-                                        <th class="px-6 py-4 text-center text-sm font-semibold">Azioni</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    ${state.users.length === 0 ? `
-                                        <tr>
-                                            <td colspan="7" class="px-6 py-12 text-center">
-                                                <div class="text-gray-400">
-                                                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                                    </svg>
-                                                    <p class="text-lg font-medium">Nessun utente registrato</p>
-                                                    <p class="text-sm mt-1">Clicca su "Nuovo Utente" per iniziare</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ` : state.users.map(user => `
-                                        <tr class="hover:bg-blue-50 transition-colors">
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center space-x-3">
-                                                    <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center">
-                                                        <span class="text-blue-600 font-bold text-sm">${user.nome.charAt(0).toUpperCase()}</span>
-                                                    </div>
-                                                    <span class="font-medium text-gray-800">${user.nome}</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-gray-700">${user.email}</td>
-                                            <td class="px-6 py-4">
-                                                <code class="bg-gray-100 px-3 py-1 rounded text-sm font-mono">${user.password}</code>
-                                            </td>
-                                            <td class="px-6 py-4 text-center">
-                                                <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                                                    user.ruolo === 'Amministratore' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                                                }">
-                                                    ${user.ruolo}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 text-center">
-                                                <button onclick="toggleActive('${user.id}')" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                                                    user.attivo ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'
-                                                }">
-                                                    ${user.attivo ? '✓ Attivo' : '✗ Inattivo'}
-                                                </button>
-                                            </td>
-                                            <td class="px-6 py-4 text-center text-sm text-gray-600">
-                                                ${formatDate(user.dataCreazione)}
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center justify-center space-x-2">
-                                                    <button onclick="openEditModal('${user.id}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Modifica">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                        </svg>
-                                                    </button>
-                                                    <button onclick="deleteUser('${user.id}')" class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Elimina">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal Aggiungi/Modifica Utente -->
-                <div id="userModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onclick="if(event.target === this) closeModal()">
-                    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 id="modalTitle" class="text-xl font-bold text-gray-800">Nuovo Utente</h2>
-                            <button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg">
-                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-
-                        <form onsubmit="saveUser(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
-                                <input type="text" id="userName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="userEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
-                                <div class="relative">
-                                    <input type="password" id="userPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-12">
-                                    <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                        <svg id="toggleIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Ruolo</label>
-                                <select id="userRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="Utente">Utente</option>
-                                    <option value="Amministratore">Amministratore</option>
-                                </select>
-                            </div>
-
-                            <div class="flex items-center">
-                                <input type="checkbox" id="userActive" checked class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <label for="userActive" class="ml-2 text-sm font-medium text-gray-700">Utente attivo</label>
-                            </div>
-
-                            <div class="flex gap-3 pt-4">
-                                <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
-                                    Annulla
-                                </button>
-                                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                                    Salva
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
+            let users = getUsers();
+            users = users.filter(u => u.id !== userId);
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            loadUsers();
         }
 
-        // Inizializzazione
+        function toggleUserStatus(userId) {
+            let users = getUsers();
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.attivo = !user.attivo;
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                loadUsers();
+            }
+        }
+
+        function loadUsers() {
+            const users = getUsers();
+            const tbody = document.getElementById('usersTableBody');
+            
+            // Aggiorna statistiche
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('activeUsers').textContent = users.filter(u => u.attivo).length;
+            document.getElementById('inactiveUsers').textContent = users.filter(u => !u.attivo).length;
+
+            // Se non ci sono utenti
+            if (users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center">
+                            <div class="text-gray-400">
+                                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                <p class="text-lg font-medium">Nessun utente registrato</p>
+                                <p class="text-sm mt-1">Clicca su "Nuovo Utente" per iniziare</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Mostra utenti
+            tbody.innerHTML = users.map(user => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center">
+                                <span class="text-blue-600 font-bold text-sm">${(user.nome || 'U').charAt(0).toUpperCase()}</span>
+                            </div>
+                            <span class="font-medium text-gray-800">${user.nome || '-'}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700">${user.cognome || '-'}</td>
+                    <td class="px-6 py-4 text-gray-700">${user.email}</td>
+                    <td class="px-6 py-4">
+                        <code class="bg-gray-100 px-3 py-1 rounded text-sm font-mono">${user.password}</code>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                            user.ruolo === 'Amministratore' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                        }">
+                            ${user.ruolo}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="toggleUserStatus('${user.id}')" class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                            user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }">
+                            ${user.attivo ? '✅ Attivo' : '❌ Disattivo'}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-center text-sm text-gray-600">
+                        ${new Date(user.dataCreazione).toLocaleDateString('it-IT')}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Elimina">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Carica utenti all'avvio
         loadUsers();
-        render();
+
+        console.log('✅ Pagina utenti caricata');
     </script>
 </body>
 </html>
