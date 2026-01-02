@@ -130,13 +130,13 @@
                         id: Date.now().toString(36) + Math.random().toString(36).substr(2),
                         nome: 'admin',
                         email: 'domenicoprenesti@gmail.com',
-                        password: 'DccPnt60!',
+                        password: 'mico',
                         ruolo: 'Amministratore',
                         attivo: true,
                         dataCreazione: new Date().toISOString()
                     }];
                     localStorage.setItem(USERS_KEY, JSON.stringify(users));
-                    console.log('✅ Admin creato: domenicoprenesti@gmail.com / DccPnt60!');
+                    console.log('✅ Admin creato: domenicoprenesti@gmail.com / mico');
                 }
                 
                 return users;
@@ -220,7 +220,7 @@
         // Accesso rapido admin
         window.loginAsAdmin = function() {
             document.getElementById('loginEmail').value = 'domenicoprenesti@gmail.com';
-            document.getElementById('password').value = 'DccPnt60!';
+            document.getElementById('password').value = 'mico';
             
             const form = document.querySelector('form');
             const event = new Event('submit', { bubbles: true, cancelable: true });
