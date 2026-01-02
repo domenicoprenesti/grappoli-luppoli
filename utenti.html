@@ -252,8 +252,9 @@
                     state.users = [
                         {
                             id: generateId(),
-                            nome: 'admin',
-                            email: 'admin@grappolieluppoli.it',
+                            nome: 'Domenico',
+                            cognome: 'Prenesti',
+                            email: 'domenicoprenesti@gmail.com',
                             password: 'DccPnt60!',
                             ruolo: 'Amministratore',
                             attivo: true,
@@ -299,6 +300,7 @@
             event.preventDefault();
             
             const nome = document.getElementById('userName').value.trim();
+            const cognome = document.getElementById('userSurname').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             const password = document.getElementById('userPassword').value;
             const ruolo = document.getElementById('userRole').value;
@@ -337,6 +339,7 @@
                     id: generateId(),
                     nome,
                     email,
+                    cognome,
                     password,
                     ruolo,
                     attivo,
@@ -365,6 +368,7 @@
             state.editingUser = null;
             document.getElementById('modalTitle').textContent = 'Nuovo Utente';
             document.getElementById('userName').value = '';
+            document.getElementById('userSurname').value = '';
             document.getElementById('userEmail').value = '';
             document.getElementById('userPassword').value = '';
             document.getElementById('userRole').value = 'Utente';
@@ -380,6 +384,7 @@
             state.editingUser = user;
             document.getElementById('modalTitle').textContent = 'Modifica Utente';
             document.getElementById('userName').value = user.nome;
+            document.getElementById('userSurname').value = user.cognome || '';
             document.getElementById('userEmail').value = user.email;
             document.getElementById('userPassword').value = user.password;
             document.getElementById('userRole').value = user.ruolo;
@@ -469,6 +474,7 @@
                                 <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                                     <tr>
                                         <th class="px-6 py-4 text-left text-sm font-semibold">Nome</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold">Cognome</th>
                                         <th class="px-6 py-4 text-left text-sm font-semibold">Email</th>
                                         <th class="px-6 py-4 text-left text-sm font-semibold">Password</th>
                                         <th class="px-6 py-4 text-center text-sm font-semibold">Ruolo</th>
@@ -480,7 +486,7 @@
                                 <tbody class="divide-y divide-gray-200">
                                     ${state.users.length === 0 ? `
                                         <tr>
-                                            <td colspan="7" class="px-6 py-12 text-center">
+                                            <td colspan="8" class="px-6 py-12 text-center">
                                                 <div class="text-gray-400">
                                                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -500,6 +506,7 @@
                                                     <span class="font-medium text-gray-800">${user.nome}</span>
                                                 </div>
                                             </td>
+                                            <td class="px-6 py-4 text-gray-700">${user.cognome || "-"}</td>
                                             <td class="px-6 py-4 text-gray-700">${user.email}</td>
                                             <td class="px-6 py-4">
                                                 <code class="bg-gray-100 px-3 py-1 rounded text-sm font-mono">${user.password}</code>
@@ -559,6 +566,11 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
                                 <input type="text" id="userName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Cognome *</label>
+                                <input type="text" id="userSurname" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
 
                             <div>
