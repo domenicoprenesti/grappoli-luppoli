@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crea Nuova Utenza - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        // ========== REDIRECT SE NON AUTENTICATO ==========
+        (function() {
+            const SESSION_KEY = 'app_authenticated';
+            const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
+            
+            const auth = localStorage.getItem(SESSION_KEY);
+            
+            if (!auth) {
+                console.log('❌ Nessuna sessione trovata - redirect a index.html');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                
+                if (now - authData.timestamp >= SESSION_DURATION) {
+                    console.log('⏰ Sessione scaduta - redirect a index.html');
+                    localStorage.removeItem(SESSION_KEY);
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // Verifica che sia amministratore
+                if (authData.userRole !== 'Amministratore') {
+                    alert('Accesso negato. Solo amministratori possono creare utenze.');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+                
+                console.log('✅ Sessione valida:', authData.userName, '-', authData.userRole);
+            } catch (e) {
+                console.error('❌ Errore parsing sessione - redirect a index.html');
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = 'index.html';
+                return;
+            }
+        })();
+    </script>
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold text-gray-800">Grappoli & Luppoli</span>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='utenti.html'" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Gestione Utenti</span>
+                    </button>
+                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Esci</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenuto Principale -->
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Crea Nuova Utenza</h1>
+            <p class="text-gray-600">Compila il modulo per aggiungere un nuovo utente al sistema</p>
+        </div>
+
+        <!-- Messaggio Successo/Errore -->
+        <div id="message" class="hidden mb-6 p-4 rounded-lg">
+            <div class="flex items-center">
+                <svg id="messageIcon" class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+                <span id="messageText" class="font-medium"></span>
+            </div>
+        </div>
+
+        <!-- Form Creazione Utenza -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <form id="createUserForm" class="space-y-6">
+                <!-- Nome -->
+                <div>
+                    <label for="nome" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Nome *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="nome" 
+                        required 
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="Inserisci il nome"
+                    >
+                </div>
+
+                <!-- Cognome -->
+                <div>
+                    <label for="cognome" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Cognome *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="cognome" 
+                        required 
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="Inserisci il cognome"
+                    >
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email *
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        required 
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="esempio@email.com"
+                    >
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Password *
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            required 
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-12"
+                            placeholder="Inserisci la password"
+                        >
+                        <button 
+                            type="button" 
+                            onclick="togglePassword()" 
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                            <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">Minimo 6 caratteri</p>
+                </div>
+
+                <!-- Ruolo -->
+                <div>
+                    <label for="ruolo" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Ruolo *
+                    </label>
+                    <select 
+                        id="ruolo" 
+                        required 
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    >
+                        <option value="">Seleziona un ruolo</option>
+                        <option value="Amministratore">Amministratore</option>
+                        <option value="Utente Standard">Utente Standard</option>
+                    </select>
+                </div>
+
+                <!-- Stato -->
+                <div>
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            id="attivo" 
+                            checked 
+                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                        >
+                        <span class="text-sm font-medium text-gray-700">Utente attivo</span>
+                    </label>
+                    <p class="mt-2 text-xs text-gray-500 ml-8">Se disabilitato, l'utente non potrà effettuare il login</p>
+                </div>
+
+                <!-- Pulsanti -->
+                <div class="flex space-x-4 pt-4">
+                    <button 
+                        type="submit" 
+                        class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] shadow-lg"
+                    >
+                        <div class="flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                            </svg>
+                            <span>Crea Utente</span>
+                        </div>
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="resetForm()" 
+                        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Box -->
+        <div class="mt-8 bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-semibold text-blue-900 mb-1">Informazioni sui Ruoli</h3>
+                    <ul class="text-sm text-blue-800 space-y-1">
+                        <li><strong>Amministratore:</strong> Accesso completo al sistema, può gestire utenti, fatture e prodotti</li>
+                        <li><strong>Utente Standard:</strong> Può visualizzare e gestire solo fatture e prodotti</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const USERS_KEY = 'authorized_users';
+        const SESSION_KEY = 'app_authenticated';
+
+        // Logout
+        function logout() {
+            localStorage.removeItem(SESSION_KEY);
+            window.location.href = 'index.html';
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                `;
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                `;
+            }
+        }
+
+        // Mostra messaggio
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            const messageText = document.getElementById('messageText');
+            const messageIcon = document.getElementById('messageIcon');
+            
+            messageText.textContent = text;
+            messageDiv.classList.remove('hidden', 'bg-green-50', 'border-green-200', 'text-green-800', 'bg-red-50', 'border-red-200', 'text-red-800');
+            
+            if (type === 'success') {
+                messageDiv.classList.add('bg-green-50', 'border-2', 'border-green-200', 'text-green-800');
+                messageIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                `;
+            } else {
+                messageDiv.classList.add('bg-red-50', 'border-2', 'border-red-200', 'text-red-800');
+                messageIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                `;
+            }
+            
+            // Auto-hide dopo 5 secondi
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('createUserForm').reset();
+            document.getElementById('message').classList.add('hidden');
+        }
+
+        // Carica utenti
+        function getUsers() {
+            try {
+                const saved = localStorage.getItem(USERS_KEY);
+                return saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                console.error('Errore caricamento utenti:', e);
+                return [];
+            }
+        }
+
+        // Salva utenti
+        function saveUsers(users) {
+            try {
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                return true;
+            } catch (e) {
+                console.error('Errore salvataggio utenti:', e);
+                return false;
+            }
+        }
+
+        // Genera ID univoco
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Gestione submit form
+        document.getElementById('createUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nome = document.getElementById('nome').value.trim();
+            const cognome = document.getElementById('cognome').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const ruolo = document.getElementById('ruolo').value;
+            const attivo = document.getElementById('attivo').checked;
+            
+            // Validazione
+            if (!nome || !cognome || !email || !password || !ruolo) {
+                showMessage('Compila tutti i campi obbligatori', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('La password deve contenere almeno 6 caratteri', 'error');
+                return;
+            }
+            
+            // Verifica email duplicata
+            const users = getUsers();
+            const emailExists = users.some(u => u.email === email);
+            
+            if (emailExists) {
+                showMessage('Email già utilizzata da un altro utente', 'error');
+                return;
+            }
+            
+            // Crea nuovo utente
+            const newUser = {
+                id: generateId(),
+                nome: nome,
+                cognome: cognome,
+                email: email,
+                password: password,
+                ruolo: ruolo,
+                attivo: attivo,
+                dataCreazione: new Date().toISOString()
+            };
+            
+            users.push(newUser);
+            
+            if (saveUsers(users)) {
+                showMessage(`✅ Utente ${nome} ${cognome} creato con successo!`, 'success');
+                resetForm();
+                
+                // Redirect dopo 2 secondi
+                setTimeout(() => {
+                    window.location.href = 'utenti.html';
+                }, 2000);
+            } else {
+                showMessage('Errore durante il salvataggio dell\'utente', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
