@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Database - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">🔍 Debug Database - Verifica Dati</h1>
+
+        <!-- Pulsanti Test -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Test Database</h2>
+            <div class="space-y-4">
+                <button onclick="testFatture()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mr-4">
+                    📄 Test Fatture
+                </button>
+                <button onclick="testProdotti()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 mr-4">
+                    📦 Test Prodotti
+                </button>
+                <button onclick="testCompleto()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 mr-4">
+                    🔬 Test Completo
+                </button>
+                <button onclick="testQueryLimits()" class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                    ⚠️ Test Limiti Query
+                </button>
+            </div>
+        </div>
+
+        <!-- Risultati -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Fatture -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">📄 Fatture</h3>
+                <div id="fattureResults" class="space-y-2 text-sm"></div>
+            </div>
+
+            <!-- Prodotti -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">📦 Prodotti</h3>
+                <div id="prodottiResults" class="space-y-2 text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Analisi Discrepanze -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-lg font-bold mb-4">⚠️ Analisi Discrepanze</h3>
+            <div id="discrepanzeResults" class="space-y-2 text-sm"></div>
+        </div>
+
+        <!-- Log Dettagliato -->
+        <div class="bg-gray-900 text-green-400 rounded-xl p-6 font-mono text-sm overflow-auto max-h-96">
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(msg, color = 'green') {
+            const logDiv = document.getElementById('logOutput');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="text-${color}-400">[${time}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        async function testFatture() {
+            log('🚀 TEST FATTURE - INIZIO', 'blue');
+            const results = document.getElementById('fattureResults');
+            results.innerHTML = '<p class="text-gray-400">Caricamento...</p>';
+
+            try {
+                // Count totale
+                const { count: totalCount, error: countError } = await supabaseClient
+                    .from('fatture')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countError) throw countError;
+                log(`✅ Fatture totali: ${totalCount}`);
+
+                // Carica tutte (con paginazione)
+                let allFatture = [];
+                const batchSize = 1000;
+                const numBatches = Math.ceil(totalCount / batchSize);
+
+                for (let i = 0; i < numBatches; i++) {
+                    const start = i * batchSize;
+                    const end = start + batchSize - 1;
+                    
+                    const { data, error } = await supabaseClient
+                        .from('fatture')
+                        .select('*')
+                        .range(start, end);
+
+                    if (error) throw error;
+                    allFatture = [...allFatture, ...data];
+                    log(`  Batch ${i + 1}/${numBatches}: ${data.length} fatture`);
+                }
+
+                log(`✅ Caricate ${allFatture.length} fatture in memoria`);
+
+                // Calcola statistiche
+                const importoTotale = allFatture.reduce((sum, f) => sum + (f.importo_totale || 0), 0);
+                const fornitori = new Set(allFatture.map(f => f.fornitore || f.cedente_denominazione).filter(Boolean));
+                
+                // Prime 5 e ultime 5
+                const prime5 = allFatture.slice(0, 5);
+                const ultime5 = allFatture.slice(-5);
+
+                results.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-blue-50 p-3 rounded">
+                            <p class="font-bold text-blue-900">Totale: ${allFatture.length}</p>
+                            <p class="text-blue-700">Importo: €${importoTotale.toFixed(2)}</p>
+                            <p class="text-blue-700">Fornitori unici: ${fornitori.size}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-1">Prime 5 fatture:</p>
+                            ${prime5.map(f => `<p class="text-xs text-gray-600">• ${f.numero_fattura} - ${f.fornitore || f.cedente_denominazione} - €${f.importo_totale}</p>`).join('')}
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-1">Ultime 5 fatture:</p>
+                            ${ultime5.map(f => `<p class="text-xs text-gray-600">• ${f.numero_fattura} - ${f.fornitore || f.cedente_denominazione} - €${f.importo_totale}</p>`).join('')}
+                        </div>
+                    </div>
+                `;
+
+                log('✅ TEST FATTURE - COMPLETATO', 'green');
+                return { totale: allFatture.length, importo: importoTotale, fornitori: fornitori.size };
+
+            } catch (err) {
+                log(`❌ ERRORE: ${err.message}`, 'red');
+                results.innerHTML = `<p class="text-red-600">Errore: ${err.message}</p>`;
+                return null;
+            }
+        }
+
+        async function testProdotti() {
+            log('🚀 TEST PRODOTTI - INIZIO', 'blue');
+            const results = document.getElementById('prodottiResults');
+            results.innerHTML = '<p class="text-gray-400">Caricamento...</p>';
+
+            try {
+                // Count totale
+                const { count: totalCount, error: countError } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countError) throw countError;
+                log(`✅ Prodotti totali nel DB: ${totalCount}`);
+
+                // Carica tutti (con paginazione)
+                let allProdotti = [];
+                const batchSize = 1000;
+                const numBatches = Math.ceil(totalCount / batchSize);
+
+                for (let i = 0; i < numBatches; i++) {
+                    const start = i * batchSize;
+                    const end = start + batchSize - 1;
+                    
+                    const { data, error } = await supabaseClient
+                        .from('prodotti')
+                        .select('*')
+                        .range(start, end);
+
+                    if (error) throw error;
+                    allProdotti = [...allProdotti, ...data];
+                    log(`  Batch ${i + 1}/${numBatches}: ${data.length} prodotti`);
+                }
+
+                log(`✅ Caricati ${allProdotti.length} prodotti in memoria`);
+
+                // Calcola statistiche
+                const valore = allProdotti.reduce((sum, p) => sum + ((p.prezzo || 0) * (p.quantita || 0)), 0);
+                const categorie = new Set(allProdotti.map(p => p.categoria).filter(Boolean));
+                const fornitori = new Set(allProdotti.map(p => p.fornitore).filter(Boolean));
+                
+                // Raggruppa per fornitore
+                const perFornitore = {};
+                allProdotti.forEach(p => {
+                    const f = p.fornitore || 'N/D';
+                    perFornitore[f] = (perFornitore[f] || 0) + 1;
+                });
+                const topFornitori = Object.entries(perFornitore).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+                results.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-green-50 p-3 rounded">
+                            <p class="font-bold text-green-900">Totale: ${allProdotti.length}</p>
+                            <p class="text-green-700">Valore: €${valore.toFixed(2)}</p>
+                            <p class="text-green-700">Categorie: ${categorie.size}</p>
+                            <p class="text-green-700">Fornitori: ${fornitori.size}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-1">Top 5 fornitori per prodotti:</p>
+                            ${topFornitori.map(([f, count]) => `<p class="text-xs text-gray-600">• ${f}: ${count} prodotti</p>`).join('')}
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-1">Categorie:</p>
+                            ${[...categorie].slice(0, 7).map(c => `<span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded mr-1 mb-1">${c}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+
+                log('✅ TEST PRODOTTI - COMPLETATO', 'green');
+                return { totale: allProdotti.length, valore, categorie: categorie.size, fornitori: fornitori.size };
+
+            } catch (err) {
+                log(`❌ ERRORE: ${err.message}`, 'red');
+                results.innerHTML = `<p class="text-red-600">Errore: ${err.message}</p>`;
+                return null;
+            }
+        }
+
+        async function testCompleto() {
+            log('🔬 TEST COMPLETO - INIZIO', 'purple');
+            
+            const fattureStats = await testFatture();
+            const prodottiStats = await testProdotti();
+
+            if (!fattureStats || !prodottiStats) {
+                log('❌ Impossibile completare test', 'red');
+                return;
+            }
+
+            // Analisi discrepanze
+            const discrepanze = document.getElementById('discrepanzeResults');
+            
+            const diffProdotti = fattureStats.totale - prodottiStats.totale;
+            const diffFornitori = fattureStats.fornitori - prodottiStats.fornitori;
+
+            discrepanze.innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                        <p class="font-bold text-yellow-900 mb-2">⚠️ Discrepanze Rilevate:</p>
+                        
+                        <div class="space-y-2">
+                            <div>
+                                <p class="text-sm font-semibold">Fatture vs Prodotti:</p>
+                                <p class="text-sm">Fatture: ${fattureStats.totale}</p>
+                                <p class="text-sm">Prodotti: ${prodottiStats.totale}</p>
+                                <p class="text-sm ${diffProdotti > 0 ? 'text-red-600' : 'text-green-600'} font-bold">
+                                    Differenza: ${diffProdotti > 0 ? '+' : ''}${diffProdotti}
+                                </p>
+                            </div>
+
+                            <div class="border-t pt-2">
+                                <p class="text-sm font-semibold">Fornitori:</p>
+                                <p class="text-sm">Fornitori in fatture: ${fattureStats.fornitori}</p>
+                                <p class="text-sm">Fornitori in prodotti: ${prodottiStats.fornitori}</p>
+                                <p class="text-sm ${diffFornitori > 0 ? 'text-red-600' : 'text-green-600'} font-bold">
+                                    Differenza: ${diffFornitori > 0 ? '+' : ''}${diffFornitori}
+                                </p>
+                            </div>
+
+                            <div class="border-t pt-2">
+                                <p class="text-sm font-semibold">Possibili Cause:</p>
+                                <ul class="text-xs text-gray-600 list-disc ml-4 mt-1">
+                                    ${prodottiStats.totale === 1000 ? '<li class="text-red-600 font-bold">⚠️ LIMITE 1000 RAGGIUNTO - Probabilmente ci sono più prodotti nel DB</li>' : ''}
+                                    ${diffProdotti > 0 ? '<li>Alcune fatture potrebbero non avere prodotti estratti</li>' : ''}
+                                    ${diffFornitori > 0 ? '<li>Alcuni fornitori nelle fatture non hanno prodotti associati</li>' : ''}
+                                    <li>Verifica che l\'estrazione prodotti sia completata per tutte le fatture</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                        <p class="font-bold text-blue-900 mb-2">💡 Raccomandazioni:</p>
+                        <ul class="text-sm text-blue-800 list-disc ml-4">
+                            <li>Clicca "Test Limiti Query" per verificare se ci sono più di 1000 prodotti</li>
+                            <li>Se prodotti = 1000 esatti → limite raggiunto, aumenta batch size</li>
+                            <li>Controlla nella console del browser eventuali errori durante caricamento</li>
+                            <li>Verifica che ogni fattura abbia estratto correttamente i prodotti</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            log('✅ TEST COMPLETO - TERMINATO', 'green');
+        }
+
+        async function testQueryLimits() {
+            log('⚠️ TEST LIMITI QUERY - INIZIO', 'orange');
+            const discrepanze = document.getElementById('discrepanzeResults');
+
+            try {
+                // Test query senza limit
+                log('Test 1: Query standard (default limit)...');
+                const { data: data1, error: error1 } = await supabaseClient
+                    .from('prodotti')
+                    .select('id');
+                
+                if (error1) throw error1;
+                log(`Risultato: ${data1.length} righe`);
+
+                // Test con count
+                log('Test 2: Count esatto...');
+                const { count, error: error2 } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (error2) throw error2;
+                log(`Risultato: ${count} righe totali nel DB`);
+
+                // Test range 0-1500
+                log('Test 3: Range 0-1500...');
+                const { data: data3, error: error3 } = await supabaseClient
+                    .from('prodotti')
+                    .select('id')
+                    .range(0, 1500);
+                
+                if (error3) throw error3;
+                log(`Risultato: ${data3.length} righe`);
+
+                discrepanze.innerHTML = `
+                    <div class="bg-orange-50 border-l-4 border-orange-500 p-4">
+                        <p class="font-bold text-orange-900 mb-3">📊 Risultati Test Limiti:</p>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Query standard:</strong> ${data1.length} righe</p>
+                            <p><strong>Count totale DB:</strong> ${count} righe</p>
+                            <p><strong>Range 0-1500:</strong> ${data3.length} righe</p>
+                            
+                            <div class="mt-4 pt-4 border-t">
+                                <p class="font-bold mb-2">🎯 Diagnosi:</p>
+                                ${data1.length === 1000 && count > 1000 ? 
+                                    `<p class="text-red-600 font-bold">⚠️ PROBLEMA TROVATO: Supabase restituisce max 1000 righe per default!</p>
+                                     <p class="text-red-600">Nel DB ci sono ${count} prodotti ma la query ne restituisce solo 1000.</p>
+                                     <p class="text-green-600 font-bold mt-2">✅ SOLUZIONE: Il nuovo codice con paginazione risolve questo problema!</p>` 
+                                    : 
+                                    `<p class="text-green-600">✅ Nessun limite raggiunto - dati completi</p>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                log('✅ TEST LIMITI - COMPLETATO', 'green');
+
+            } catch (err) {
+                log(`❌ ERRORE: ${err.message}`, 'red');
+                discrepanze.innerHTML = `<p class="text-red-600">Errore: ${err.message}</p>`;
+            }
+        }
+
+        log('🔧 Debug tool pronto. Clicca un pulsante per iniziare.', 'blue');
+    </script>
+</body>
+</html>
