@@ -46,12 +46,9 @@
 
         if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
 
-        // ===== CONFIGURAZIONE PAGINAZIONE =====
-        const PAGE_SIZE = 50; // Carica 50 fatture alla volta
-        let currentPage = 0;
-        let hasMore = true;
-        let isLoading = false;
-
+        // ===== CONFIGURAZIONE =====
+        const BATCH_SIZE = 500; // Carica 500 fatture per batch (sotto il limite di 1000)
+        
         const state = {
             fatture: [],
             stats: { total: 0, importo: 0, fornitori: 0 },
@@ -66,7 +63,8 @@
             },
             uploading: false,
             uploadProgress: null,
-            error: ''
+            error: '',
+            loadingProgress: { loaded: 0, total: 0, isLoading: false }
         };
 
         function logout() {
@@ -94,125 +92,96 @@
             return 'Altro';
         }
 
-        // ===== CARICAMENTO OTTIMIZZATO CON PAGINAZIONE =====
-        async function loadStatistiche() {
+        // ===== CARICAMENTO COMPLETO CON BATCH AUTOMATICI =====
+        async function loadAllFatture() {
             try {
-                console.log('📊 Caricamento statistiche...');
+                console.log('🚀 Inizio caricamento TUTTE le fatture...');
                 
-                // Conta totale (veloce, senza caricare dati)
+                // 1. Conta totale
                 const { count, error: countError } = await supabaseClient
                     .from('fatture')
                     .select('*', { count: 'exact', head: true });
 
                 if (countError) throw countError;
                 
-                state.stats.total = count || 0;
-                console.log(`✅ Totale fatture: ${count}`);
+                const totalCount = count || 0;
+                state.stats.total = totalCount;
+                state.loadingProgress = { loaded: 0, total: totalCount, isLoading: true };
+                
+                console.log(`📊 Totale fatture da caricare: ${totalCount}`);
+                render();
 
-                // Somma importi (usa query aggregata)
-                const { data: sumData, error: sumError } = await supabaseClient
-                    .from('fatture')
-                    .select('importo_totale');
+                // 2. Calcola numero di batch necessari
+                const numBatches = Math.ceil(totalCount / BATCH_SIZE);
+                console.log(`📦 Numero batch: ${numBatches} (${BATCH_SIZE} fatture per batch)`);
 
-                if (!sumError && sumData) {
-                    state.stats.importo = sumData.reduce((sum, f) => sum + (f.importo_totale || 0), 0);
-                }
-
-                // Conta fornitori unici
-                const { data: fornData } = await supabaseClient
-                    .from('fatture')
-                    .select('fornitore');
-
-                if (fornData) {
-                    state.stats.fornitori = new Set(fornData.map(f => f.fornitore).filter(Boolean)).size;
-                }
-
-                console.log('✅ Statistiche caricate');
-            } catch (err) {
-                console.error('❌ Errore caricamento statistiche:', err);
-            }
-        }
-
-        async function loadFatturePaginate(reset = false) {
-            if (isLoading || (!hasMore && !reset)) return;
-            
-            isLoading = true;
-            if (reset) {
-                currentPage = 0;
                 state.fatture = [];
-                hasMore = true;
-            }
 
-            try {
-                console.log(`📄 Caricando pagina ${currentPage + 1} (${PAGE_SIZE} fatture)...`);
+                // 3. Carica ogni batch sequenzialmente
+                for (let batchNum = 0; batchNum < numBatches; batchNum++) {
+                    const start = batchNum * BATCH_SIZE;
+                    const end = start + BATCH_SIZE - 1;
 
-                const start = currentPage * PAGE_SIZE;
-                const end = start + PAGE_SIZE - 1;
+                    console.log(`⏳ Caricamento batch ${batchNum + 1}/${numBatches} (righe ${start}-${end})...`);
 
-                const { data, error } = await supabaseClient
-                    .from('fatture')
-                    .select('id, numero_fattura, data_fattura, fornitore, cedente_denominazione, cedente_piva, importo_totale, importo_imponibile, importo_iva')
-                    .order('data_fattura', { ascending: false })
-                    .range(start, end);
+                    const { data, error } = await supabaseClient
+                        .from('fatture')
+                        .select('id, numero_fattura, data_fattura, fornitore, cedente_denominazione, cedente_piva, importo_totale, importo_imponibile, importo_iva')
+                        .order('data_fattura', { ascending: false })
+                        .range(start, end);
 
-                if (error) throw error;
+                    if (error) {
+                        console.error(`❌ Errore batch ${batchNum + 1}:`, error);
+                        throw error;
+                    }
 
-                if (data && data.length > 0) {
-                    const newFatture = data.map(f => ({
-                        id: f.id,
-                        num: f.numero_fattura || '',
-                        dt: f.data_fattura || '',
-                        tot: parseFloat(f.importo_totale || 0),
-                        ced: {
-                            nm: f.cedente_denominazione || f.fornitore || '',
-                            pi: f.cedente_piva || ''
-                        },
-                        riv: {
-                            imp: parseFloat(f.importo_imponibile || 0),
-                            iva: parseFloat(f.importo_iva || 0)
-                        }
-                    }));
+                    if (data && data.length > 0) {
+                        const newFatture = data.map(f => ({
+                            id: f.id,
+                            num: f.numero_fattura || '',
+                            dt: f.data_fattura || '',
+                            tot: parseFloat(f.importo_totale || 0),
+                            ced: {
+                                nm: f.cedente_denominazione || f.fornitore || '',
+                                pi: f.cedente_piva || ''
+                            },
+                            riv: {
+                                imp: parseFloat(f.importo_imponibile || 0),
+                                iva: parseFloat(f.importo_iva || 0)
+                            }
+                        }));
 
-                    state.fatture = [...state.fatture, ...newFatture];
-                    currentPage++;
-                    hasMore = data.length === PAGE_SIZE;
+                        state.fatture = [...state.fatture, ...newFatture];
+                        state.loadingProgress.loaded = state.fatture.length;
 
-                    console.log(`✅ Caricate ${data.length} fatture (totale in memoria: ${state.fatture.length})`);
-                } else {
-                    hasMore = false;
-                    console.log('📭 Nessuna altra fattura da caricare');
+                        console.log(`✅ Batch ${batchNum + 1} caricato: ${data.length} fatture (totale: ${state.fatture.length}/${totalCount})`);
+                        render(); // Aggiorna UI dopo ogni batch
+                    }
+
+                    // Piccola pausa tra batch per evitare rate limiting
+                    if (batchNum < numBatches - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
                 }
 
+                // 4. Calcola statistiche
+                state.stats.importo = state.fatture.reduce((sum, f) => sum + f.tot, 0);
+                state.stats.fornitori = new Set(state.fatture.map(f => f.ced.nm).filter(Boolean)).size;
+                state.loadingProgress.isLoading = false;
+
+                console.log(`🎉 COMPLETATO! ${state.fatture.length} fatture caricate`);
+                console.log(`💰 Importo totale: €${state.stats.importo.toFixed(2)}`);
+                console.log(`🏢 Fornitori: ${state.stats.fornitori}`);
+                
                 render();
+
             } catch (err) {
-                console.error('❌ Errore caricamento:', err);
+                console.error('❌ Errore caricamento fatture:', err);
                 state.error = 'Errore caricamento fatture da database';
-                hasMore = false;
+                state.loadingProgress.isLoading = false;
                 render();
-            } finally {
-                isLoading = false;
             }
         }
-
-        async function loadFatture() {
-            console.log('🚀 Inizializzazione caricamento fatture...');
-            await loadStatistiche();
-            await loadFatturePaginate(true);
-        }
-
-        // ===== SCROLL INFINITO =====
-        window.addEventListener('scroll', () => {
-            if (isLoading || !hasMore) return;
-            
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollHeight = document.documentElement.scrollHeight;
-            const clientHeight = document.documentElement.clientHeight;
-            
-            // Carica quando arriva a 80% della pagina
-            if (scrollTop + clientHeight >= scrollHeight * 0.8) {
-                loadFatturePaginate();
-            }
-        });
 
         // ===== UPLOAD FATTURE =====
         async function processFiles(files) {
@@ -251,7 +220,8 @@
             state.uploadProgress = null;
             setTimeout(() => { state.error = ''; render(); }, 5000);
             
-            await loadFatture();
+            // Ricarica tutto
+            await loadAllFatture();
         }
 
         async function processFile(file) {
@@ -275,7 +245,6 @@
             const datiCedente = cedente.getElementsByTagName('DatiAnagrafici')[0];
             const partitaIVACedente = getTextContent(datiCedente.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice');
             
-            // Verifica duplicati
             const { data: existing } = await supabaseClient
                 .from('fatture')
                 .select('id')
@@ -301,7 +270,6 @@
             const importoImponibile = parseFloat(getTextContent(datiRiepilogo, 'ImponibileImporto') || '0');
             const importoIva = parseFloat(getTextContent(datiRiepilogo, 'Imposta') || '0');
 
-            // Salva fattura
             const fatturaData = {
                 numero_fattura: numeroFattura,
                 data_fattura: dataFattura,
@@ -324,7 +292,6 @@
             const { error } = await supabaseClient.from('fatture').insert([fatturaData]);
             if (error) throw new Error(`Errore database: ${error.message}`);
 
-            // Estrai prodotti
             await extractAndSaveProducts(xmlDoc, cedenteNome);
         }
 
@@ -376,7 +343,7 @@
             try {
                 const { error } = await supabaseClient.from('fatture').delete().eq('id', id);
                 if (error) throw error;
-                await loadFatture();
+                await loadAllFatture();
             } catch (err) {
                 console.error('Errore eliminazione:', err);
                 alert('Errore durante l\'eliminazione');
@@ -395,7 +362,7 @@
                     await supabaseClient.from('fatture').delete().eq('id', id);
                 }
                 state.selectedIds.clear();
-                await loadFatture();
+                await loadAllFatture();
             } catch (err) {
                 console.error('Errore:', err);
                 alert('Errore eliminazione');
@@ -517,6 +484,19 @@
                             </div>
                         </div>
 
+                        ${state.loadingProgress.isLoading ? `
+                            <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-blue-900">Caricamento fatture in corso...</span>
+                                    <span class="text-sm text-blue-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span>
+                                </div>
+                                <div class="w-full bg-blue-200 rounded-full h-3">
+                                    <div class="bg-blue-600 h-3 rounded-full transition-all" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div>
+                                </div>
+                                <p class="text-xs text-blue-600 mt-2">Caricamento automatico di tutte le fatture (batch da ${BATCH_SIZE})...</p>
+                            </div>
+                        ` : ''}
+
                         <div class="grid md:grid-cols-3 gap-4 mb-6">
                             <div class="bg-blue-50 px-4 py-3 rounded-xl">
                                 <p class="text-xs text-gray-600">Fatture ${hasActiveFilters ? 'filtrate' : 'totali'}</p>
@@ -596,7 +576,9 @@
                                 </thead>
                                 <tbody>
                                     ${filteredFatture.length === 0 ? `
-                                        <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Nessuna fattura</td></tr>
+                                        <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                                            ${state.loadingProgress.isLoading ? 'Caricamento in corso...' : 'Nessuna fattura'}
+                                        </td></tr>
                                     ` : filteredFatture.map(f => `
                                         <tr class="hover:bg-gray-50${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}">
                                             <td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td>
@@ -616,19 +598,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        ${isLoading ? `
-                            <div class="py-8 text-center">
-                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                <p class="mt-2 text-sm text-gray-600">Caricamento...</p>
-                            </div>
-                        ` : hasMore ? `
-                            <div class="py-8 text-center">
-                                <button onclick="loadFatturePaginate()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                    Carica altre fatture
-                                </button>
-                                <p class="mt-2 text-xs text-gray-500">Caricate ${state.fatture.length} di ${state.stats.total}</p>
-                            </div>
-                        ` : ''}
                     </div>
                 </div>
             `;
@@ -638,8 +607,8 @@
             // Modal placeholder
         }
 
-        loadFatture();
-        console.log('✅ Gestione Fatture (Ottimizzata per 1200+)');
+        loadAllFatture();
+        console.log('✅ Gestione Fatture (Caricamento completo automatico)');
     </script>
 </body>
 </html>
