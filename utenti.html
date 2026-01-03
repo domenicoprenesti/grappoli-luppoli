@@ -5,49 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Utenti - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        // ========== REDIRECT SE NON AUTENTICATO ==========
-        (function() {
-            const SESSION_KEY = 'app_authenticated';
-            const SESSION_DURATION = 24 * 60 * 60 * 1000;
-            
-            const auth = localStorage.getItem(SESSION_KEY);
-            
-            if (!auth) {
-                console.log('❌ Nessuna sessione - redirect a index.html');
-                window.location.href = 'index.html';
-                return;
-            }
-            
+        const SESSION_KEY = 'app_authenticated';
+        const SESSION_DURATION = 24 * 60 * 60 * 1000;
+        
+        const auth = localStorage.getItem(SESSION_KEY);
+        if (!auth) {
+            window.location.href = 'index.html';
+        } else {
             try {
                 const authData = JSON.parse(auth);
                 const now = new Date().getTime();
-                
                 if (now - authData.timestamp >= SESSION_DURATION) {
-                    console.log('⏰ Sessione scaduta');
                     localStorage.removeItem(SESSION_KEY);
                     window.location.href = 'index.html';
-                    return;
-                }
-                
-                if (authData.userRole !== 'Amministratore') {
+                } else if (authData.userRole !== 'Amministratore') {
                     alert('Accesso negato. Solo amministratori.');
                     window.location.href = 'dashboard.html';
-                    return;
                 }
-                
-                console.log('✅ Sessione valida:', authData.userName);
             } catch (e) {
-                console.error('❌ Errore sessione');
                 localStorage.removeItem(SESSION_KEY);
                 window.location.href = 'index.html';
             }
-        })();
+        }
     </script>
 
-    <!-- Navbar -->
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -85,15 +70,12 @@
         </div>
     </nav>
 
-    <!-- Contenuto Principale -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestione Utenti Autorizzati</h1>
             <p class="text-gray-600">Visualizza e gestisci tutti gli utenti del sistema</p>
         </div>
 
-        <!-- Pulsante Nuovo Utente -->
         <div class="mb-6">
             <button onclick="window.location.href='crea-utente.html'" class="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +85,6 @@
             </button>
         </div>
 
-        <!-- Statistiche -->
         <div class="grid md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex items-center justify-between">
@@ -148,7 +129,6 @@
             </div>
         </div>
 
-        <!-- Tabella Utenti -->
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -164,129 +144,119 @@
                             <th class="px-6 py-4 text-center text-sm font-semibold">Azioni</th>
                         </tr>
                     </thead>
-                    <tbody id="usersTableBody" class="divide-y divide-gray-200">
-                        <!-- I dati vengono inseriti qui da JavaScript -->
-                    </tbody>
+                    <tbody id="usersTableBody" class="divide-y divide-gray-200"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        const USERS_KEY = 'authorized_users';
-        const SESSION_KEY = 'app_authenticated';
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function logout() {
-            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem('app_authenticated');
             window.location.href = 'index.html';
         }
 
-        function getUsers() {
+        async function deleteUser(userId) {
+            if (!confirm('Sei sicuro di voler eliminare questo utente?')) return;
+
             try {
-                const saved = localStorage.getItem(USERS_KEY);
-                return saved ? JSON.parse(saved) : [];
-            } catch (e) {
-                console.error('Errore caricamento utenti:', e);
-                return [];
-            }
-        }
-
-        function deleteUser(userId) {
-            if (!confirm('Sei sicuro di voler eliminare questo utente?')) {
-                return;
-            }
-
-            let users = getUsers();
-            users = users.filter(u => u.id !== userId);
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
-            loadUsers();
-        }
-
-        function toggleUserStatus(userId) {
-            let users = getUsers();
-            const user = users.find(u => u.id === userId);
-            if (user) {
-                user.attivo = !user.attivo;
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                const { error } = await supabaseClient.from('utenti').delete().eq('id', userId);
+                if (error) throw error;
                 loadUsers();
+            } catch (err) {
+                console.error('Errore eliminazione:', err);
+                alert('Errore durante l\'eliminazione dell\'utente');
             }
         }
 
-        function loadUsers() {
-            const users = getUsers();
-            const tbody = document.getElementById('usersTableBody');
-            
-            // Aggiorna statistiche
-            document.getElementById('totalUsers').textContent = users.length;
-            document.getElementById('activeUsers').textContent = users.filter(u => u.attivo).length;
-            document.getElementById('inactiveUsers').textContent = users.filter(u => !u.attivo).length;
+        async function toggleUserStatus(userId, currentStatus) {
+            try {
+                const { error } = await supabaseClient.from('utenti').update({ attivo: !currentStatus }).eq('id', userId);
+                if (error) throw error;
+                loadUsers();
+            } catch (err) {
+                console.error('Errore aggiornamento stato:', err);
+                alert('Errore durante l\'aggiornamento dello stato');
+            }
+        }
 
-            // Se non ci sono utenti
-            if (users.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
-                            <div class="text-gray-400">
-                                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                </svg>
-                                <p class="text-lg font-medium">Nessun utente registrato</p>
-                                <p class="text-sm mt-1">Clicca su "Nuovo Utente" per iniziare</p>
+        async function loadUsers() {
+            try {
+                const { data, error } = await supabaseClient.from('utenti').select('*').order('data_creazione', { ascending: false });
+                
+                if (error) throw error;
+
+                const tbody = document.getElementById('usersTableBody');
+                document.getElementById('totalUsers').textContent = data.length;
+                document.getElementById('activeUsers').textContent = data.filter(u => u.attivo).length;
+                document.getElementById('inactiveUsers').textContent = data.filter(u => !u.attivo).length;
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="text-gray-400">
+                                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium">Nessun utente registrato</p>
+                                    <p class="text-sm mt-1">Clicca su "Nuovo Utente" per iniziare</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = data.map(user => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center">
+                                    <span class="text-blue-600 font-bold text-sm">${(user.nome || 'U').charAt(0).toUpperCase()}</span>
+                                </div>
+                                <span class="font-medium text-gray-800">${user.nome || '-'}</span>
                             </div>
                         </td>
+                        <td class="px-6 py-4 text-gray-700">${user.cognome || '-'}</td>
+                        <td class="px-6 py-4 text-gray-700">${user.email}</td>
+                        <td class="px-6 py-4">
+                            <code class="bg-gray-100 px-3 py-1 rounded text-sm font-mono">${user.password}</code>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${user.ruolo === 'Amministratore' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+                                ${user.ruolo}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="toggleUserStatus('${user.id}', ${user.attivo})" class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${user.attivo ? '✅ Attivo' : '❌ Disattivo'}
+                            </button>
+                        </td>
+                        <td class="px-6 py-4 text-center text-sm text-gray-600">
+                            ${new Date(user.data_creazione).toLocaleDateString('it-IT')}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Elimina">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </td>
                     </tr>
-                `;
-                return;
+                `).join('');
+            } catch (err) {
+                console.error('Errore caricamento utenti:', err);
+                alert('Errore durante il caricamento degli utenti');
             }
-
-            // Mostra utenti
-            tbody.innerHTML = users.map(user => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center">
-                                <span class="text-blue-600 font-bold text-sm">${(user.nome || 'U').charAt(0).toUpperCase()}</span>
-                            </div>
-                            <span class="font-medium text-gray-800">${user.nome || '-'}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-gray-700">${user.cognome || '-'}</td>
-                    <td class="px-6 py-4 text-gray-700">${user.email}</td>
-                    <td class="px-6 py-4">
-                        <code class="bg-gray-100 px-3 py-1 rounded text-sm font-mono">${user.password}</code>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                            user.ruolo === 'Amministratore' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                        }">
-                            ${user.ruolo}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="toggleUserStatus('${user.id}')" class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                            user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }">
-                            ${user.attivo ? '✅ Attivo' : '❌ Disattivo'}
-                        </button>
-                    </td>
-                    <td class="px-6 py-4 text-center text-sm text-gray-600">
-                        ${new Date(user.dataCreazione).toLocaleDateString('it-IT')}
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Elimina">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
         }
 
-        // Carica utenti all'avvio
         loadUsers();
-
-        console.log('✅ Pagina utenti caricata');
+        console.log('✅ Pagina utenti caricata (con Supabase)');
     </script>
 </body>
 </html>
