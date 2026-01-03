@@ -14,7 +14,6 @@
         if (!auth) window.location.href = 'index.html';
     </script>
 
-    <!-- Navbar -->
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -45,6 +44,18 @@
     <div class="max-w-7xl mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
         <p class="text-gray-600 mb-8">Prodotti estratti dalle fatture</p>
+
+        <!-- Progress Caricamento -->
+        <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-blue-900">Caricamento prodotti in corso...</span>
+                <span id="progressText" class="text-sm text-blue-700">0 / 0</span>
+            </div>
+            <div class="w-full bg-blue-200 rounded-full h-3">
+                <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+            <p class="text-xs text-blue-600 mt-2">Caricamento automatico di tutti i prodotti (batch da 500)...</p>
+        </div>
 
         <!-- Statistiche -->
         <div class="grid md:grid-cols-4 gap-6 mb-8">
@@ -163,19 +174,102 @@
         const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const BATCH_SIZE = 500;
         let allProdotti = [];
+        let loadingProgress = { loaded: 0, total: 0, isLoading: false };
 
         function logout() {
             localStorage.removeItem('app_authenticated');
             window.location.href = 'index.html';
         }
 
-        async function loadProdotti() {
-            const { data } = await supabaseClient.from('prodotti').select('*').order('nome');
-            allProdotti = data || [];
-            updateStats();
-            updateFilters();
-            applyFilters();
+        // ===== CARICAMENTO COMPLETO A BATCH =====
+        async function loadAllProdotti() {
+            try {
+                console.log('🚀 Inizio caricamento TUTTI i prodotti...');
+                
+                // 1. Conta totale
+                const { count, error: countError } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countError) throw countError;
+                
+                const totalCount = count || 0;
+                loadingProgress = { loaded: 0, total: totalCount, isLoading: true };
+                
+                console.log(`📊 Totale prodotti da caricare: ${totalCount}`);
+                updateLoadingUI();
+
+                // 2. Calcola batch
+                const numBatches = Math.ceil(totalCount / BATCH_SIZE);
+                console.log(`📦 Numero batch: ${numBatches} (${BATCH_SIZE} prodotti per batch)`);
+
+                allProdotti = [];
+
+                // 3. Carica ogni batch
+                for (let batchNum = 0; batchNum < numBatches; batchNum++) {
+                    const start = batchNum * BATCH_SIZE;
+                    const end = start + BATCH_SIZE - 1;
+
+                    console.log(`⏳ Caricamento batch ${batchNum + 1}/${numBatches} (righe ${start}-${end})...`);
+
+                    const { data, error } = await supabaseClient
+                        .from('prodotti')
+                        .select('*')
+                        .order('nome', { ascending: true })
+                        .range(start, end);
+
+                    if (error) {
+                        console.error(`❌ Errore batch ${batchNum + 1}:`, error);
+                        throw error;
+                    }
+
+                    if (data && data.length > 0) {
+                        allProdotti = [...allProdotti, ...data];
+                        loadingProgress.loaded = allProdotti.length;
+
+                        console.log(`✅ Batch ${batchNum + 1} caricato: ${data.length} prodotti (totale: ${allProdotti.length}/${totalCount})`);
+                        updateLoadingUI();
+                    }
+
+                    // Pausa tra batch
+                    if (batchNum < numBatches - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+
+                loadingProgress.isLoading = false;
+                console.log(`🎉 COMPLETATO! ${allProdotti.length} prodotti caricati`);
+                
+                updateStats();
+                updateFilters();
+                applyFilters();
+                hideLoadingUI();
+
+            } catch (err) {
+                console.error('❌ Errore caricamento prodotti:', err);
+                loadingProgress.isLoading = false;
+                hideLoadingUI();
+            }
+        }
+
+        function updateLoadingUI() {
+            const progressDiv = document.getElementById('loadingProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            if (loadingProgress.isLoading) {
+                progressDiv.classList.remove('hidden');
+                const percentage = (loadingProgress.loaded / loadingProgress.total * 100).toFixed(1);
+                progressBar.style.width = `${percentage}%`;
+                progressText.textContent = `${loadingProgress.loaded} / ${loadingProgress.total}`;
+            }
+        }
+
+        function hideLoadingUI() {
+            document.getElementById('loadingProgress').classList.add('hidden');
         }
 
         function updateStats() {
@@ -212,6 +306,12 @@
 
         function renderTable(prodotti) {
             const tbody = document.getElementById('prodottiTableBody');
+            
+            if (loadingProgress.isLoading) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Caricamento in corso...</td></tr>`;
+                return;
+            }
+            
             if (!prodotti.length) {
                 tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`;
                 return;
@@ -288,21 +388,21 @@
                 await supabaseClient.from('prodotti').insert([prod]);
             }
             closeModal();
-            await loadProdotti();
+            await loadAllProdotti();
         }
 
         async function deleteProdotto(id) {
             if (!confirm('Eliminare?')) return;
             await supabaseClient.from('prodotti').delete().eq('id', id);
-            await loadProdotti();
+            await loadAllProdotti();
         }
 
         function closeModal() {
             document.getElementById('modalProdotto').classList.add('hidden');
         }
 
-        loadProdotti();
-        console.log('✅ Prodotti (Supabase)');
+        loadAllProdotti();
+        console.log('✅ Prodotti (Caricamento completo automatico)');
     </script>
 </body>
 </html>
