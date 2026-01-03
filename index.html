@@ -14,6 +14,7 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full">
+        <!-- Logo e Header -->
         <div class="text-center mb-8">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,17 +25,33 @@
             <p class="text-gray-600">Gestione Contabile</p>
         </div>
 
+        <!-- Form di Login -->
         <form onsubmit="handleLogin(event)" class="space-y-5">
             <div>
                 <label for="loginEmail" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                <input type="email" id="loginEmail" autocomplete="email" placeholder="Inserisci la tua email" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                <input 
+                    type="email" 
+                    id="loginEmail" 
+                    autocomplete="email"
+                    placeholder="Inserisci la tua email"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    required
+                >
             </div>
             
             <div>
                 <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                <input type="password" id="password" autocomplete="current-password" placeholder="Inserisci la password" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                <input 
+                    type="password" 
+                    id="password" 
+                    autocomplete="current-password"
+                    placeholder="Inserisci la password"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    required
+                >
             </div>
             
+            <!-- Messaggio di errore -->
             <div id="errorMessage" class="hidden bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                 <div class="flex items-center">
                     <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,13 +61,23 @@
                 </div>
             </div>
             
-            <button type="submit" id="loginButton" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] shadow-lg">
+            <!-- Pulsante Login -->
+            <button 
+                type="submit" 
+                id="loginButton"
+                class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] shadow-lg"
+            >
                 Accedi
             </button>
             
+            <!-- Accesso Rapido Admin -->
             <div class="mt-6 pt-6 border-t-2 border-gray-100">
                 <p class="text-xs text-gray-500 text-center mb-3">Accesso rapido</p>
-                <button type="button" onclick="loginAsAdmin()" class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all font-medium">
+                <button 
+                    type="button"
+                    onclick="loginAsAdmin()"
+                    class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all font-medium"
+                >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -59,25 +86,33 @@
             </div>
         </form>
 
+        <!-- Link Utilità -->
         <div class="mt-6 text-center">
-            <a href="reset-emergenza.html" class="text-sm text-gray-500 hover:text-gray-700">Problemi di accesso? Reset sistema</a>
+            <a href="reset-emergenza.html" class="text-sm text-gray-500 hover:text-gray-700">
+                Problemi di accesso? Reset sistema
+            </a>
         </div>
     </div>
 
     <script>
+        // Configurazione Supabase
         const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
         const SESSION_KEY = 'app_authenticated';
         const SESSION_DURATION = 24 * 60 * 60 * 1000;
+
+        // Inizializza Supabase
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ Supabase inizializzato');
 
+        // Verifica sessione esistente
         function checkExistingSession() {
             const auth = localStorage.getItem(SESSION_KEY);
             if (auth) {
                 try {
                     const authData = JSON.parse(auth);
                     const now = new Date().getTime();
+                    
                     if (now - authData.timestamp < SESSION_DURATION) {
                         console.log('✅ Sessione valida trovata');
                         window.location.href = 'dashboard.html';
@@ -90,13 +125,16 @@
             return false;
         }
 
+        // Gestione login
         async function handleLogin(event) {
             event.preventDefault();
+            
             const emailInput = document.getElementById('loginEmail');
             const passwordInput = document.getElementById('password');
             const errorMessage = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
             const loginButton = document.getElementById('loginButton');
+            
             const enteredEmail = emailInput.value.trim().toLowerCase();
             const enteredPassword = passwordInput.value;
             
@@ -105,13 +143,24 @@
             
             try {
                 console.log('🔍 Ricerca utente:', enteredEmail);
-                const { data, error } = await supabaseClient.from('utenti').select('*').eq('email', enteredEmail).single();
+                
+                const { data, error } = await supabaseClient
+                    .from('utenti')
+                    .select('*')
+                    .eq('email', enteredEmail)
+                    .single();
                 
                 if (error) {
                     console.error('Errore Supabase:', error);
-                    errorText.textContent = error.code === 'PGRST116' ? 'Email non registrata.' : 'Errore di connessione al database.';
+                    if (error.code === 'PGRST116') {
+                        errorText.textContent = 'Email non registrata.';
+                    } else {
+                        errorText.textContent = 'Errore di connessione al database.';
+                    }
                     errorMessage.classList.remove('hidden');
+                    
                     setTimeout(() => errorMessage.classList.add('hidden'), 3000);
+                    
                     loginButton.disabled = false;
                     loginButton.textContent = 'Accedi';
                     return;
@@ -140,6 +189,7 @@
                 }
                 
                 console.log('✅ Login riuscito!');
+                
                 const authData = {
                     authenticated: true,
                     timestamp: new Date().getTime(),
@@ -149,8 +199,10 @@
                     userEmail: data.email,
                     userRole: data.ruolo
                 };
+                
                 localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
                 window.location.href = 'dashboard.html';
+                
             } catch (err) {
                 console.error('❌ Errore:', err);
                 errorText.textContent = 'Errore di sistema.';
@@ -160,15 +212,15 @@
             }
         }
 
+        // Accesso admin rapido
         function loginAsAdmin() {
             document.getElementById('loginEmail').value = 'domenicoprenesti@gmail.com';
             document.getElementById('password').value = 'mico';
         }
 
+        // Verifica sessione all'avvio
         checkExistingSession();
         console.log('📱 Pagina login caricata');
     </script>
 </body>
 </html>
-```
-

@@ -3,537 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grappoli & Luppoli - Gestione Contabile</title>
+    <title>Dashboard - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-            <div class="text-center mb-6">
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+    <script>
+        const SESSION_KEY = 'app_authenticated';
+        const auth = localStorage.getItem(SESSION_KEY);
+        if (!auth) window.location.href = 'index.html';
+    </script>
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </div>
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a class="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Prodotti</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Utenti</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="userName" class="text-sm text-gray-600"></span>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">Dashboard</h1>
+            <p class="text-gray-600">Panoramica del sistema</p>
+        </div>
+
+        <!-- Statistiche Principali -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Fatture</p>
+                        <p id="totalFatture" class="text-4xl font-bold">0</p>
+                    </div>
+                    <svg class="w-12 h-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Accesso Protetto</h2>
-                <p class="text-sm text-gray-600">Inserisci le tue credenziali per accedere</p>
             </div>
-            
-            <form onsubmit="checkPassword(event)" class="space-y-4">
-                <div>
-                    <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input 
-                        type="email" 
-                        id="loginEmail" 
-                        autocomplete="email"
-                        placeholder="Inserisci la tua email"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                    >
-                </div>
-                
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        autocomplete="current-password"
-                        placeholder="Inserisci la password"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                    >
-                </div>
-                
-                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span id="errorText">Credenziali errate. Riprova.</span>
+
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Importo Totale</p>
+                        <p id="importoTotale" class="text-4xl font-bold">€0</p>
                     </div>
+                    <svg class="w-12 h-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
                 </div>
-                
-                <button 
-                    type="submit" 
-                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105"
-                >
-                    Accedi
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Prodotti</p>
+                        <p id="totalProdotti" class="text-4xl font-bold">0</p>
+                    </div>
+                    <svg class="w-12 h-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Utenti</p>
+                        <p id="totalUtenti" class="text-4xl font-bold">0</p>
+                    </div>
+                    <svg class="w-12 h-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dettagli Fatture -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">Fatture per Mese</h3>
+                <div id="fatturePerMese" class="space-y-2"></div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">Top 5 Fornitori</h3>
+                <div id="topFornitori" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4">Azioni Rapide</h3>
+            <div class="grid md:grid-cols-4 gap-4">
+                <button onclick="window.location.href='fatture.html'" class="px-6 py-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p class="text-sm font-medium text-gray-800">Gestisci Fatture</p>
                 </button>
-            </form>
+
+                <button onclick="window.location.href='prodotti.html'" class="px-6 py-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                    <p class="text-sm font-medium text-gray-800">Gestisci Prodotti</p>
+                </button>
+
+                <button onclick="window.location.href='utenti.html'" class="px-6 py-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <p class="text-sm font-medium text-gray-800">Gestisci Utenti</p>
+                </button>
+
+                <button onclick="window.location.href='crea-utente.html'" class="px-6 py-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                    <p class="text-sm font-medium text-gray-800">Crea Utente</p>
+                </button>
+            </div>
         </div>
     </div>
-    
-    <div id="app"></div>
 
     <script>
-        // ========== REDIRECT SE NON AUTENTICATO ==========
-        (function() {
-            const SESSION_KEY = 'app_authenticated';
-            const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-            
-            const auth = localStorage.getItem(SESSION_KEY);
-            
-            if (!auth) {
-                console.log('❌ Nessuna sessione trovata - redirect a index.html');
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            try {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp >= SESSION_DURATION) {
-                    console.log('⏰ Sessione scaduta - redirect a index.html');
-                    localStorage.removeItem(SESSION_KEY);
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                console.log('✅ Sessione valida:', authData.userName, '-', authData.userRole);
-            } catch (e) {
-                console.error('❌ Errore parsing sessione - redirect a index.html');
-                localStorage.removeItem(SESSION_KEY);
-                window.location.href = 'index.html';
-                return;
-            }
-        })();
-        
-        // ========== RESTO DEL CODICE APPLICAZIONE ==========
-        
-        // ========== SISTEMA DI AUTENTICAZIONE ==========
-        const USERS_KEY = 'authorized_users';
-        const SESSION_KEY = 'app_authenticated';
-        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-        
-        function getAuthorizedUsers() {
-            try {
-                const saved = localStorage.getItem(USERS_KEY);
-                return saved ? JSON.parse(saved) : [];
-            } catch (e) {
-                return [];
-            }
-        }
-        
-        function checkAuth() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            if (auth) {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp < SESSION_DURATION) {
-                    document.getElementById('loginModal').style.display = 'none';
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        window.checkPassword = function(event) {
-            event.preventDefault();
-            
-            const emailInput = document.getElementById('loginEmail');
-            const passwordInput = document.getElementById('password');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            
-            const enteredEmail = emailInput.value.trim().toLowerCase();
-            const enteredPassword = passwordInput.value;
-            
-            const users = getAuthorizedUsers();
-            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
-            
-            if (!user) {
-                errorText.textContent = 'Email non registrata.';
-                errorMessage.classList.remove('hidden');
-                emailInput.classList.add('border-red-500');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    emailInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (!user.attivo) {
-                errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
-                errorMessage.classList.remove('hidden');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (user.password !== enteredPassword) {
-                errorText.textContent = 'Password errata.';
-                errorMessage.classList.remove('hidden');
-                passwordInput.value = '';
-                passwordInput.focus();
-                passwordInput.classList.add('border-red-500');
-                
-                setTimeout(() => {
-                    passwordInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            const authData = {
-                authenticated: true,
-                timestamp: new Date().getTime(),
-                userId: user.id,
-                userName: user.nome,
-                userEmail: user.email,
-                userRole: user.ruolo
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
-            
-            const modal = document.getElementById('loginModal');
-            modal.style.opacity = '0';
-            modal.style.transition = 'opacity 0.3s';
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        };
-        
-        window.logout = function() {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.href = "index.html";
-        };
-        
-        window.getCurrentUser = function() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            return auth ? JSON.parse(auth) : null;
-        };
-        
-        checkAuth();
-        
-        // ========== APPLICAZIONE PRINCIPALE ==========
-        
-        // Stato globale
-        let state = {
-            currentPage: 'dashboard', // dashboard, fatture, prodotti
-            fatture: [],
-            stats: {
-                totaleEntrate: 0,
-                totaleUscite: 0,
-                fattureCaricate: 0,
-                fattureDelMese: 0,
-                prodottiUnici: 0
-            }
-        };
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Carica dati
-        function loadData() {
-            try {
-                const saved = localStorage.getItem('fatture_elettroniche');
-                state.fatture = saved ? JSON.parse(saved) : [];
-                calculateStats();
-            } catch (e) {
-                state.fatture = [];
-            }
+        function logout() {
+            localStorage.removeItem('app_authenticated');
+            window.location.href = 'index.html';
         }
 
-        // Calcola statistiche
-        function calculateStats() {
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
+        async function loadDashboard() {
+            try {
+                // Carica utente
+                const auth = JSON.parse(localStorage.getItem('app_authenticated'));
+                document.getElementById('userName').textContent = `${auth.userName} ${auth.userSurname}`;
 
-            state.stats.fattureCaricate = state.fatture.length;
-            state.stats.totaleEntrate = 0;
-            state.stats.totaleUscite = 0;
-            state.stats.fattureDelMese = 0;
+                // Carica fatture
+                const { data: fatture } = await supabaseClient.from('fatture').select('*');
+                document.getElementById('totalFatture').textContent = fatture?.length || 0;
+                const importo = (fatture || []).reduce((s, f) => s + (f.importo_totale || 0), 0);
+                document.getElementById('importoTotale').textContent = `€${importo.toFixed(0)}`;
 
-            // Conta prodotti unici
-            const prodottiSet = new Set();
-            
-            state.fatture.forEach(f => {
-                const fatturaData = new Date(f.dt);
-                
-                // Totale generale (assumiamo tutte uscite per semplicità)
-                state.stats.totaleUscite += f.tot;
-
-                // Fatture del mese corrente
-                if (fatturaData.getMonth() === currentMonth && 
-                    fatturaData.getFullYear() === currentYear) {
-                    state.stats.fattureDelMese++;
-                }
-
-                // Prodotti unici
-                f.itm.forEach(item => {
-                    prodottiSet.add(item.d.toLowerCase().trim());
+                // Fatture per mese
+                const byMonth = {};
+                (fatture || []).forEach(f => {
+                    const month = new Date(f.data_fattura).toLocaleDateString('it-IT', {month: 'long', year: 'numeric'});
+                    byMonth[month] = (byMonth[month] || 0) + 1;
                 });
-            });
+                document.getElementById('fatturePerMese').innerHTML = Object.entries(byMonth).slice(0, 6).map(([m, c]) => `
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span class="text-sm">${m}</span>
+                        <span class="font-bold text-blue-600">${c}</span>
+                    </div>
+                `).join('');
 
-            state.stats.prodottiUnici = prodottiSet.size;
-        }
+                // Top fornitori
+                const bySupplier = {};
+                (fatture || []).forEach(f => {
+                    const s = f.fornitore || f.cedente_denominazione || 'N/D';
+                    bySupplier[s] = (bySupplier[s] || 0) + (f.importo_totale || 0);
+                });
+                const top = Object.entries(bySupplier).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                document.getElementById('topFornitori').innerHTML = top.map(([s, v]) => `
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span class="text-sm">${s}</span>
+                        <span class="font-bold text-green-600">€${v.toFixed(0)}</span>
+                    </div>
+                `).join('');
 
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('it-IT', {
-                style: 'currency',
-                currency: 'EUR'
-            }).format(value || 0);
-        }
+                // Carica prodotti
+                const { data: prodotti } = await supabaseClient.from('prodotti').select('*');
+                document.getElementById('totalProdotti').textContent = prodotti?.length || 0;
 
-        window.navigateTo = function(page) {
-            if (page === 'fatture') {
-                window.location.href = 'fatture.html';
-            } else if (page === 'prodotti') {
-                window.location.href = 'prodotti.html';
-            } else {
-                state.currentPage = page;
-                render();
+                // Carica utenti
+                const { data: utenti } = await supabaseClient.from('utenti').select('*');
+                document.getElementById('totalUtenti').textContent = utenti?.length || 0;
+
+            } catch (err) {
+                console.error('Errore caricamento:', err);
             }
-        };
-
-        function render() {
-            const app = document.getElementById('app');
-            
-            app.innerHTML = `
-                <!-- Navbar -->
-                <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div class="flex justify-between h-16">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 flex items-center">
-                                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                                        </svg>
-                                    </div>
-                                    <span class="ml-3 text-xl font-bold text-gray-800">Grappoli & Luppoli</span>
-                                </div>
-                                <div class="hidden md:ml-10 md:flex md:space-x-4">
-                                    <a onclick="navigateTo('dashboard')" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium ${state.currentPage === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}">
-                                        Dashboard
-                                    </a>
-                                    <a onclick="navigateTo('fatture')" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                                        Fatture
-                                    </a>
-                                    <a onclick="navigateTo('prodotti')" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                                        Prodotti
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <span class="text-sm text-gray-600">${new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                                ${getCurrentUser()?.userRole === 'Amministratore' ? `<a href="utenti.html" class="flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg><span class="text-sm font-medium">Admin</span></a>` : ''}
-                                <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                    </svg>
-                                    <span class="text-sm font-medium">Esci</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
-
-                <!-- Main Content -->
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
-                    <!-- Header -->
-                    <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-gray-900">Dashboard Contabile</h1>
-                        <p class="mt-2 text-gray-600">Panoramica generale della situazione economica</p>
-                    </div>
-
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <!-- Card Entrate -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Entrate Totali</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${formatCurrency(state.stats.totaleEntrate)}</p>
-                                </div>
-                                <div class="bg-green-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Uscite -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Uscite Totali</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${formatCurrency(state.stats.totaleUscite)}</p>
-                                </div>
-                                <div class="bg-red-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Bilancio -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Bilancio</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${formatCurrency(state.stats.totaleEntrate - state.stats.totaleUscite)}</p>
-                                </div>
-                                <div class="bg-blue-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Fatture -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Fatture Caricate</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${state.stats.fattureCaricate}</p>
-                                    <p class="text-xs text-gray-500 mt-1">${state.stats.fattureDelMese} questo mese</p>
-                                </div>
-                                <div class="bg-purple-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <!-- Gestione Fatture -->
-                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-xl p-6 text-white cursor-pointer transform hover:scale-105 transition-transform" onclick="navigateTo('fatture')">
-                            <div class="flex items-center justify-between mb-4">
-                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                                    ${state.stats.fattureCaricate}
-                                </div>
-                            </div>
-                            <h3 class="text-xl font-bold mb-2">Gestione Fatture</h3>
-                            <p class="text-blue-100 text-sm mb-4">Carica e visualizza le fatture elettroniche in formato XML</p>
-                            <div class="flex items-center text-sm font-medium">
-                                <span>Vai al portale</span>
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Analisi Prodotti -->
-                        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-xl p-6 text-white cursor-pointer transform hover:scale-105 transition-transform" onclick="navigateTo('prodotti')">
-                            <div class="flex items-center justify-between mb-4">
-                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                </svg>
-                                <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                                    ${state.stats.prodottiUnici}
-                                </div>
-                            </div>
-                            <h3 class="text-xl font-bold mb-2">Analisi Prodotti</h3>
-                            <p class="text-purple-100 text-sm mb-4">Esplora tutti i prodotti acquistati e le statistiche</p>
-                            <div class="flex items-center text-sm font-medium">
-                                <span>Vai all'analisi</span>
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Report Mensile -->
-                        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-xl p-6 text-white cursor-pointer transform hover:scale-105 transition-transform">
-                            <div class="flex items-center justify-between mb-4">
-                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                                    Presto
-                                </div>
-                            </div>
-                            <h3 class="text-xl font-bold mb-2">Report Mensile</h3>
-                            <p class="text-green-100 text-sm mb-4">Genera report dettagliati delle entrate e uscite</p>
-                            <div class="flex items-center text-sm font-medium">
-                                <span>Prossimamente</span>
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold text-gray-900">Attività Recente</h2>
-                            <button onclick="navigateTo('fatture')" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center">
-                                Vedi tutto
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        ${state.fatture.length === 0 ? `
-                            <div class="text-center py-12">
-                                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                </svg>
-                                <p class="text-gray-600 text-lg font-medium">Nessuna attività recente</p>
-                                <p class="text-gray-500 text-sm mt-2">Carica la tua prima fattura per iniziare</p>
-                                <button onclick="navigateTo('fatture')" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                    Carica Fattura
-                                </button>
-                            </div>
-                        ` : `
-                            <div class="space-y-4">
-                                ${state.fatture.slice(0, 5).map(f => `
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <div class="flex items-center space-x-4">
-                                            <div class="bg-blue-100 p-3 rounded-lg">
-                                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="font-semibold text-gray-900">Fattura ${f.num}</p>
-                                                <p class="text-sm text-gray-600">${f.ced.nm}</p>
-                                                <p class="text-xs text-gray-500">${new Date(f.dt).toLocaleDateString('it-IT')}</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-bold text-red-600">${formatCurrency(f.tot)}</p>
-                                            <p class="text-xs text-gray-500">${f.itm.length} prodotti</p>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `}
-                    </div>
-                </div>
-            `;
         }
 
-        // Inizializzazione
-        loadData();
-        render();
-        
-        // Aggiorna ogni 30 secondi
-        setInterval(() => {
-            loadData();
-            render();
-        }, 30000);
+        loadDashboard();
+        console.log('✅ Dashboard (Supabase)');
     </script>
 </body>
 </html>

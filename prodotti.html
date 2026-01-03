@@ -3,1204 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisi Prodotti - Grappoli & Luppoli</title>
+    <title>Gestione Prodotti - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-   
-    
-    <!-- Navbar Fissa -->
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        const SESSION_KEY = 'app_authenticated';
+        const auth = localStorage.getItem(SESSION_KEY);
+        if (!auth) window.location.href = 'index.html';
+    </script>
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
                         <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                             </svg>
                         </div>
-                        <span class="text-lg font-bold text-gray-800">Grappoli & Luppoli</span>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
                     </button>
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
-                        <a href="dashboard.html" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                            Dashboard
-                        </a>
-                        <a href="fatture.html" class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                            Fatture
-                        </a>
-                        <a class="cursor-pointer px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">
-                            Prodotti
-                        </a>
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a class="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700">Prodotti</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        <span class="text-sm font-medium">Dashboard</span>
-                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
-                        <span class="text-sm font-medium">Esci</span>
-                    </button>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Contenuto -->
-    <div id="app" class="pt-20 p-8"></div>
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
+        <p class="text-gray-600 mb-8">Prodotti estratti dalle fatture</p>
+
+        <!-- Statistiche -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <p class="text-sm text-gray-600">Totale Prodotti</p>
+                <p id="totalProdotti" class="text-3xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <p class="text-sm text-gray-600">Categorie</p>
+                <p id="totalCategorie" class="text-3xl font-bold text-green-600">0</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <p class="text-sm text-gray-600">Fornitori</p>
+                <p id="totalFornitori" class="text-3xl font-bold text-purple-600">0</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <p class="text-sm text-gray-600">Valore Totale</p>
+                <p id="valoreTotale" class="text-3xl font-bold text-orange-600">€0</p>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="font-bold mb-4">Filtri</h3>
+            <div class="grid md:grid-cols-4 gap-4">
+                <input type="text" id="searchNome" placeholder="Cerca prodotto..." class="px-4 py-2 border rounded-lg" onkeyup="applyFilters()">
+                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutte le categorie</option>
+                </select>
+                <select id="filterFornitore" class="px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutti i fornitori</option>
+                </select>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg">Pulisci</button>
+            </div>
+        </div>
+
+        <!-- Azioni -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <button onclick="showAddModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                + Nuovo Prodotto
+            </button>
+        </div>
+
+        <!-- Tabella Prodotti -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                    <tr>
+                        <th class="px-6 py-4 text-left">Nome</th>
+                        <th class="px-6 py-4 text-left">Categoria</th>
+                        <th class="px-6 py-4 text-left">Fornitore</th>
+                        <th class="px-6 py-4 text-right">Prezzo</th>
+                        <th class="px-6 py-4 text-right">Quantità</th>
+                        <th class="px-6 py-4 text-center">Stato</th>
+                        <th class="px-6 py-4 text-center">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="prodottiTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Prodotto -->
+    <div id="modalProdotto" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6">Nuovo Prodotto</h2>
+            <form onsubmit="saveProdotto(event)" class="space-y-4">
+                <input type="hidden" id="prodottoId">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Nome *</label>
+                        <input type="text" id="prodottoNome" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Categoria</label>
+                        <input type="text" id="prodottoCategoria" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Prezzo</label>
+                        <input type="number" step="0.01" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Quantità</label>
+                        <input type="number" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Codice</label>
+                        <input type="text" id="prodottoCodice" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Fornitore</label>
+                        <input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Descrizione</label>
+                    <textarea id="prodottoDescrizione" rows="3" class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Note</label>
+                    <textarea id="prodottoNote" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="prodottoAttivo" checked class="w-5 h-5 mr-2">
+                    <label class="text-sm font-medium">Prodotto attivo</label>
+                </div>
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salva</button>
+                    <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
-        // ========== REDIRECT SE NON AUTENTICATO ==========
-        (function() {
-            const SESSION_KEY = 'app_authenticated';
-            const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-            
-            const auth = localStorage.getItem(SESSION_KEY);
-            
-            if (!auth) {
-                console.log('❌ Nessuna sessione trovata - redirect a index.html');
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            try {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp >= SESSION_DURATION) {
-                    console.log('⏰ Sessione scaduta - redirect a index.html');
-                    localStorage.removeItem(SESSION_KEY);
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                console.log('✅ Sessione valida:', authData.userName, '-', authData.userRole);
-            } catch (e) {
-                console.error('❌ Errore parsing sessione - redirect a index.html');
-                localStorage.removeItem(SESSION_KEY);
-                window.location.href = 'index.html';
-                return;
-            }
-        })();
-        
-        // ========== RESTO DEL CODICE APPLICAZIONE ==========
-        
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let allProdotti = [];
 
-        // ========== SISTEMA DI AUTENTICAZIONE ==========
-        const USERS_KEY = 'authorized_users';
-        const SESSION_KEY = 'prodotti_authenticated';
-        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-        
-        // Carica utenti autorizzati
-        function getAuthorizedUsers() {
-            try {
-                const saved = localStorage.getItem(USERS_KEY);
-                return saved ? JSON.parse(saved) : [];
-            } catch (e) {
-                console.error('Errore caricamento utenti:', e);
-                return [];
-            }
+        function logout() {
+            localStorage.removeItem('app_authenticated');
+            window.location.href = 'index.html';
         }
-        
-        // Verifica autenticazione all'avvio
-        function checkAuth() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            if (auth) {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp < SESSION_DURATION) {
-                    document.getElementById('loginModal').style.display = 'none';
-                    return true;
-                }
-            }
-            return false;
+
+        async function loadProdotti() {
+            const { data } = await supabaseClient.from('prodotti').select('*').order('nome');
+            allProdotti = data || [];
+            updateStats();
+            updateFilters();
+            applyFilters();
         }
-        
-        // Verifica credenziali
-        window.checkPassword = function(event) {
-            event.preventDefault();
-            
-            const emailInput = document.getElementById('loginEmail');
-            const passwordInput = document.getElementById('password');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            
-            const enteredEmail = emailInput.value.trim().toLowerCase();
-            const enteredPassword = passwordInput.value;
-            
-            // Carica utenti autorizzati
-            const users = getAuthorizedUsers();
-            
-            // Trova utente con email corrispondente
-            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
-            
-            if (!user) {
-                // Utente non trovato
-                errorText.textContent = 'Email non registrata.';
-                errorMessage.classList.remove('hidden');
-                emailInput.classList.add('border-red-500');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    emailInput.classList.remove('border-red-500');
-                }, 500);
-                
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 3000);
+
+        function updateStats() {
+            document.getElementById('totalProdotti').textContent = allProdotti.length;
+            document.getElementById('totalCategorie').textContent = new Set(allProdotti.map(p => p.categoria).filter(Boolean)).size;
+            document.getElementById('totalFornitori').textContent = new Set(allProdotti.map(p => p.fornitore).filter(Boolean)).size;
+            document.getElementById('valoreTotale').textContent = `€${allProdotti.reduce((s, p) => s + ((p.prezzo || 0) * (p.quantita || 0)), 0).toFixed(2)}`;
+        }
+
+        function updateFilters() {
+            const cat = [...new Set(allProdotti.map(p => p.categoria).filter(Boolean))].sort();
+            const forn = [...new Set(allProdotti.map(p => p.fornitore).filter(Boolean))].sort();
+            document.getElementById('filterCategoria').innerHTML = '<option value="">Tutte le categorie</option>' + cat.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('filterFornitore').innerHTML = '<option value="">Tutti i fornitori</option>' + forn.map(f => `<option value="${f}">${f}</option>`).join('');
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('searchNome').value.toLowerCase();
+            const cat = document.getElementById('filterCategoria').value;
+            const forn = document.getElementById('filterFornitore').value;
+            let filtered = allProdotti;
+            if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
+            if (cat) filtered = filtered.filter(p => p.categoria === cat);
+            if (forn) filtered = filtered.filter(p => p.fornitore === forn);
+            renderTable(filtered);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchNome').value = '';
+            document.getElementById('filterCategoria').value = '';
+            document.getElementById('filterFornitore').value = '';
+            applyFilters();
+        }
+
+        function renderTable(prodotti) {
+            const tbody = document.getElementById('prodottiTableBody');
+            if (!prodotti.length) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`;
                 return;
             }
-            
-            // Verifica se l'utente è attivo
-            if (!user.attivo) {
-                errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
-                errorMessage.classList.remove('hidden');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            // Verifica password
-            if (user.password !== enteredPassword) {
-                errorText.textContent = 'Password errata.';
-                errorMessage.classList.remove('hidden');
-                passwordInput.value = '';
-                passwordInput.focus();
-                passwordInput.classList.add('border-red-500');
-                
-                setTimeout(() => {
-                    passwordInput.classList.remove('border-red-500');
-                }, 500);
-                
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            // Login corretto - salva sessione
-            const authData = {
-                authenticated: true,
-                timestamp: new Date().getTime(),
-                userId: user.id,
-                userName: user.nome,
-                userEmail: user.email,
-                userRole: user.ruolo
+            tbody.innerHTML = prodotti.map(p => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium">${p.nome}</td>
+                    <td class="px-6 py-4">${p.categoria || '-'}</td>
+                    <td class="px-6 py-4">${p.fornitore || '-'}</td>
+                    <td class="px-6 py-4 text-right">€${(p.prezzo || 0).toFixed(2)}</td>
+                    <td class="px-6 py-4 text-right">${p.quantita || 0}</td>
+                    <td class="px-6 py-4 text-center"><span class="px-3 py-1 rounded-full text-xs ${p.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.attivo ? 'Attivo' : 'Disattivo'}</span></td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="editProdotto('${p.id}')" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <button onclick="deleteProdotto('${p.id}')" class="text-red-600 hover:text-red-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddModal() {
+            document.getElementById('modalTitle').textContent = 'Nuovo Prodotto';
+            document.getElementById('prodottoId').value = '';
+            document.getElementById('prodottoNome').value = '';
+            document.getElementById('prodottoCategoria').value = '';
+            document.getElementById('prodottoPrezzo').value = '';
+            document.getElementById('prodottoQuantita').value = '';
+            document.getElementById('prodottoCodice').value = '';
+            document.getElementById('prodottoFornitore').value = '';
+            document.getElementById('prodottoDescrizione').value = '';
+            document.getElementById('prodottoNote').value = '';
+            document.getElementById('prodottoAttivo').checked = true;
+            document.getElementById('modalProdotto').classList.remove('hidden');
+        }
+
+        function editProdotto(id) {
+            const p = allProdotti.find(pr => pr.id === id);
+            if (!p) return;
+            document.getElementById('modalTitle').textContent = 'Modifica Prodotto';
+            document.getElementById('prodottoId').value = p.id;
+            document.getElementById('prodottoNome').value = p.nome || '';
+            document.getElementById('prodottoCategoria').value = p.categoria || '';
+            document.getElementById('prodottoPrezzo').value = p.prezzo || '';
+            document.getElementById('prodottoQuantita').value = p.quantita || '';
+            document.getElementById('prodottoCodice').value = p.codice || '';
+            document.getElementById('prodottoFornitore').value = p.fornitore || '';
+            document.getElementById('prodottoDescrizione').value = p.descrizione || '';
+            document.getElementById('prodottoNote').value = p.note || '';
+            document.getElementById('prodottoAttivo').checked = p.attivo;
+            document.getElementById('modalProdotto').classList.remove('hidden');
+        }
+
+        async function saveProdotto(e) {
+            e.preventDefault();
+            const id = document.getElementById('prodottoId').value;
+            const prod = {
+                nome: document.getElementById('prodottoNome').value,
+                categoria: document.getElementById('prodottoCategoria').value || null,
+                prezzo: parseFloat(document.getElementById('prodottoPrezzo').value) || null,
+                quantita: parseInt(document.getElementById('prodottoQuantita').value) || 0,
+                codice: document.getElementById('prodottoCodice').value || null,
+                fornitore: document.getElementById('prodottoFornitore').value || null,
+                descrizione: document.getElementById('prodottoDescrizione').value || null,
+                note: document.getElementById('prodottoNote').value || null,
+                attivo: document.getElementById('prodottoAttivo').checked
             };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
-            
-            // Nascondi modal con animazione
-            const modal = document.getElementById('loginModal');
-            modal.style.opacity = '0';
-            modal.style.transition = 'opacity 0.3s';
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        };
-        
-        // Logout
-        window.logout = function() {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.href = "index.html";
-        };
-        
-        // Ottieni utente corrente
-        window.getCurrentUser = function() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            if (auth) {
-                return JSON.parse(auth);
-            }
-            return null;
-        };
-        
-        // Controlla autenticazione all'avvio della pagina
-        checkAuth();
-        
-        // ========== APPLICAZIONE PRINCIPALE ==========
-        
-        // Stato globale
-        let state = {
-            fatture: [],
-            products: [],
-            groupedProducts: {},
-            selectedProduct: null,
-            viewMode: 'grouped', // 'grouped' o 'list'
-            filters: {
-                year: 'all',
-                month: 'all',
-                supplier: 'all',
-                tag: 'all',
-                searchText: '',
-                sortBy: 'quantity' // 'quantity', 'amount', 'name'
-            }
-        };
-
-        // Genera tag automatici per i prodotti
-        function generateTag(description) {
-            const desc = description.toLowerCase();
-            
-            // Vini
-            if (desc.includes('vino') || desc.includes('wine') || desc.includes('rosso') || 
-                desc.includes('bianco') || desc.includes('prosecco') || desc.includes('champagne') ||
-                desc.includes('spumante') || desc.includes('barolo') || desc.includes('chianti')) {
-                return 'Vini';
-            }
-            
-            // Birre
-            if (desc.includes('birra') || desc.includes('beer') || desc.includes('ale') || 
-                desc.includes('lager') || desc.includes('ipa')) {
-                return 'Birre';
-            }
-            
-            // Spirits
-            if (desc.includes('whisky') || desc.includes('whiskey') || desc.includes('gin') || 
-                desc.includes('vodka') || desc.includes('rum') || desc.includes('liquore') ||
-                desc.includes('grappa') || desc.includes('amaro') || desc.includes('cognac')) {
-                return 'Spirits';
-            }
-            
-            // Bevande analcoliche
-            if (desc.includes('acqua') || desc.includes('succo') || desc.includes('soft drink') ||
-                desc.includes('bibita') || desc.includes('coca') || desc.includes('pepsi') ||
-                desc.includes('aranciata') || desc.includes('limonata')) {
-                return 'Bevande';
-            }
-            
-            // Snack e cibo
-            if (desc.includes('patatine') || desc.includes('chips') || desc.includes('olive') ||
-                desc.includes('noccioline') || desc.includes('arachidi') || desc.includes('taralli') ||
-                desc.includes('cracker') || desc.includes('snack')) {
-                return 'Snacks';
-            }
-            
-            // Formaggi e salumi
-            if (desc.includes('formaggio') || desc.includes('cheese') || desc.includes('prosciutto') ||
-                desc.includes('salame') || desc.includes('bresaola') || desc.includes('salumi')) {
-                return 'Salumi & Formaggi';
-            }
-            
-            // Materiali di consumo
-            if (desc.includes('bicchiere') || desc.includes('bicchieri') || desc.includes('tovaglioli') ||
-                desc.includes('piatti') || desc.includes('posate') || desc.includes('carta') ||
-                desc.includes('plastica') || desc.includes('packaging')) {
-                return 'Materiali';
-            }
-            
-            // Attrezzature
-            if (desc.includes('macchina') || desc.includes('attrezzatura') || desc.includes('frigorifero') ||
-                desc.includes('scaffale') || desc.includes('arredamento')) {
-                return 'Attrezzature';
-            }
-            
-            // Servizi
-            if (desc.includes('servizio') || desc.includes('consulenza') || desc.includes('manutenzione') ||
-                desc.includes('pulizia') || desc.includes('affitto') || desc.includes('canone')) {
-                return 'Servizi';
-            }
-            
-            // Default
-            return 'Altro';
-        }
-
-        // Aggiorna i tag delle fatture esistenti (solo quelli senza tag)
-        function updateFattureWithTags() {
-            let updated = false;
-            
-            state.fatture = state.fatture.map(fattura => {
-                const items = fattura.itm.map(item => {
-                    // Solo se NON ha già un tag
-                    if (!item.tag || item.tag === '') {
-                        updated = true;
-                        return {
-                            ...item,
-                            tag: generateTag(item.d)
-                        };
-                    }
-                    return item;
-                });
-                
-                return {
-                    ...fattura,
-                    itm: items
-                };
-            });
-            
-            if (updated) {
-                saveFatture();
-            }
-        }
-
-        // Salva fatture
-        function saveFatture() {
-            try {
-                localStorage.setItem('fatture_elettroniche', JSON.stringify(state.fatture));
-            } catch (e) {
-                console.error('Errore salvataggio:', e);
-            }
-        }
-
-        // Carica fatture dal localStorage
-        function loadFatture(skipTagUpdate = false) {
-            try {
-                const saved = localStorage.getItem('fatture_elettroniche');
-                state.fatture = saved ? JSON.parse(saved) : [];
-                if (!skipTagUpdate) {
-                    updateFattureWithTags(); // Aggiungi tag solo alle fatture senza tag
-                }
-            } catch (e) {
-                state.fatture = [];
-            }
-        }
-
-        // Estrai tutti i prodotti dalle fatture
-        function extractProducts() {
-            const products = [];
-            
-            state.fatture.forEach(fattura => {
-                const fatturaDate = new Date(fattura.dt);
-                
-                fattura.itm.forEach(item => {
-                    products.push({
-                        // Dati prodotto
-                        description: item.d,
-                        quantity: item.q,
-                        unitPrice: item.pu,
-                        totalPrice: item.pt,
-                        unitOfMeasure: item.um,
-                        vatRate: item.iva,
-                        tag: item.tag || 'Altro',
-                        
-                        // Dati fattura di origine
-                        invoiceNumber: fattura.num,
-                        invoiceDate: fattura.dt,
-                        invoiceYear: fatturaDate.getFullYear(),
-                        invoiceMonth: fatturaDate.getMonth() + 1,
-                        invoiceId: fattura.id,
-                        
-                        // Dati fornitore
-                        supplierName: fattura.ced.nm,
-                        supplierVat: fattura.ced.pi
-                    });
-                });
-            });
-            
-            state.products = products;
-        }
-
-        // Raggruppa prodotti per descrizione
-        function groupProducts() {
-            const grouped = {};
-            
-            state.products.forEach(product => {
-                const key = product.description.toLowerCase().trim();
-                
-                if (!grouped[key]) {
-                    grouped[key] = {
-                        description: product.description,
-                        totalQuantity: 0,
-                        totalAmount: 0,
-                        purchases: [],
-                        suppliers: new Set(),
-                        tags: new Set(),
-                        avgPrice: 0,
-                        minPrice: Infinity,
-                        maxPrice: -Infinity,
-                        unitOfMeasure: product.unitOfMeasure
-                    };
-                }
-                
-                grouped[key].totalQuantity += product.quantity;
-                grouped[key].totalAmount += product.totalPrice;
-                grouped[key].purchases.push(product);
-                grouped[key].suppliers.add(product.supplierName);
-                grouped[key].tags.add(product.tag);
-                
-                if (product.unitPrice < grouped[key].minPrice) {
-                    grouped[key].minPrice = product.unitPrice;
-                }
-                if (product.unitPrice > grouped[key].maxPrice) {
-                    grouped[key].maxPrice = product.unitPrice;
-                }
-            });
-            
-            // Calcola prezzi medi e converti Set in Array
-            Object.keys(grouped).forEach(key => {
-                const group = grouped[key];
-                group.avgPrice = group.totalAmount / group.totalQuantity;
-                group.suppliers = Array.from(group.suppliers);
-                group.tags = Array.from(group.tags);
-                
-                // Usa il tag dell'acquisto più recente
-                const sortedByDate = [...group.purchases].sort((a, b) => 
-                    new Date(b.invoiceDate) - new Date(a.invoiceDate)
-                );
-                group.tag = sortedByDate[0].tag;
-            });
-            
-            state.groupedProducts = grouped;
-        }
-
-        // Filtra prodotti
-        function getFilteredProducts() {
-            let filtered = [...state.products];
-            
-            // Filtro anno
-            if (state.filters.year !== 'all') {
-                filtered = filtered.filter(p => p.invoiceYear === parseInt(state.filters.year));
-            }
-            
-            // Filtro mese
-            if (state.filters.month !== 'all') {
-                filtered = filtered.filter(p => p.invoiceMonth === parseInt(state.filters.month));
-            }
-            
-            // Filtro fornitore
-            if (state.filters.supplier !== 'all') {
-                filtered = filtered.filter(p => p.supplierName === state.filters.supplier);
-            }
-            
-            // Filtro tag
-            if (state.filters.tag !== 'all') {
-                filtered = filtered.filter(p => p.tag === state.filters.tag);
-            }
-            
-            // Filtro testo di ricerca
-            if (state.filters.searchText) {
-                const search = state.filters.searchText.toLowerCase();
-                filtered = filtered.filter(p => 
-                    p.description.toLowerCase().includes(search)
-                );
-            }
-            
-            return filtered;
-        }
-
-        // Raggruppa prodotti filtrati
-        function getFilteredGroupedProducts() {
-            const filtered = getFilteredProducts();
-            const grouped = {};
-            
-            filtered.forEach(product => {
-                const key = product.description.toLowerCase().trim();
-                
-                if (!grouped[key]) {
-                    grouped[key] = {
-                        description: product.description,
-                        totalQuantity: 0,
-                        totalAmount: 0,
-                        purchases: [],
-                        suppliers: new Set(),
-                        tags: new Set(),
-                        avgPrice: 0,
-                        minPrice: Infinity,
-                        maxPrice: -Infinity,
-                        unitOfMeasure: product.unitOfMeasure
-                    };
-                }
-                
-                grouped[key].totalQuantity += product.quantity;
-                grouped[key].totalAmount += product.totalPrice;
-                grouped[key].purchases.push(product);
-                grouped[key].suppliers.add(product.supplierName);
-                grouped[key].tags.add(product.tag);
-                
-                if (product.unitPrice < grouped[key].minPrice) {
-                    grouped[key].minPrice = product.unitPrice;
-                }
-                if (product.unitPrice > grouped[key].maxPrice) {
-                    grouped[key].maxPrice = product.unitPrice;
-                }
-            });
-            
-            // Calcola prezzi medi e converti Set in Array
-            Object.keys(grouped).forEach(key => {
-                const group = grouped[key];
-                group.avgPrice = group.totalAmount / group.totalQuantity;
-                group.suppliers = Array.from(group.suppliers);
-                group.tags = Array.from(group.tags);
-                
-                // Usa il tag dell'acquisto più recente
-                const sortedByDate = [...group.purchases].sort((a, b) => 
-                    new Date(b.invoiceDate) - new Date(a.invoiceDate)
-                );
-                group.tag = sortedByDate[0].tag;
-            });
-            
-            // Ordina
-            let sorted = Object.entries(grouped);
-            
-            switch(state.filters.sortBy) {
-                case 'quantity':
-                    sorted.sort((a, b) => b[1].totalQuantity - a[1].totalQuantity);
-                    break;
-                case 'amount':
-                    sorted.sort((a, b) => b[1].totalAmount - a[1].totalAmount);
-                    break;
-                case 'name':
-                    sorted.sort((a, b) => a[1].description.localeCompare(b[1].description));
-                    break;
-            }
-            
-            return sorted;
-        }
-
-        // Ottieni anni disponibili
-        function getAvailableYears() {
-            const years = new Set(state.products.map(p => p.invoiceYear));
-            return Array.from(years).sort((a, b) => b - a);
-        }
-
-        // Ottieni fornitori unici
-        function getUniqueSuppliers() {
-            const suppliers = new Set(state.products.map(p => p.supplierName));
-            return Array.from(suppliers).sort();
-        }
-
-        // Ottieni tag unici
-        function getUniqueTags() {
-            const tags = new Set(state.products.map(p => p.tag));
-            return Array.from(tags).sort();
-        }
-
-        // Utility
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('it-IT', {
-                style: 'currency',
-                currency: 'EUR'
-            }).format(value || 0);
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return '';
-            return new Date(dateString).toLocaleDateString('it-IT');
-        }
-
-        function formatNumber(value, decimals = 2) {
-            return new Intl.NumberFormat('it-IT', {
-                minimumFractionDigits: decimals,
-                maximumFractionDigits: decimals
-            }).format(value || 0);
-        }
-
-        // Event handlers
-        window.setFilter = function(type, value) {
-            state.filters[type] = value;
-            
-            // Se è il campo di ricerca, mantieni il focus
-            if (type === 'searchText') {
-                const currentInput = document.activeElement;
-                const cursorPosition = currentInput.selectionStart;
-                
-                render();
-                
-                // Ripristina il focus e la posizione del cursore
-                const newInput = document.querySelector('input[type="text"]');
-                if (newInput) {
-                    newInput.focus();
-                    newInput.setSelectionRange(cursorPosition, cursorPosition);
-                }
+            if (id) {
+                await supabaseClient.from('prodotti').update(prod).eq('id', id);
             } else {
-                render();
+                await supabaseClient.from('prodotti').insert([prod]);
             }
-        };
-
-        window.resetFilters = function() {
-            state.filters = {
-                year: 'all',
-                month: 'all',
-                supplier: 'all',
-                tag: 'all',
-                searchText: '',
-                sortBy: 'quantity'
-            };
-            render();
-        };
-
-        window.setViewMode = function(mode) {
-            state.viewMode = mode;
-            render();
-        };
-
-        window.showProductDetails = function(description) {
-            const key = description.toLowerCase().trim();
-            const filtered = getFilteredGroupedProducts();
-            const product = filtered.find(([k, v]) => k === key);
-            
-            if (product) {
-                state.selectedProduct = product[1];
-                render();
-            }
-        };
-
-        window.closeModal = function() {
-            state.selectedProduct = null;
-            render();
-        };
-
-        window.changeProductTag = function(description, newTag) {
-            console.log('=== CHANGE TAG START ===');
-            console.log('Description:', description);
-            console.log('New tag:', newTag);
-            
-            // Aggiorna visivamente SUBITO il tag nel DOM (prima del re-render)
-            document.querySelectorAll('button[onclick*="openTagEditor"]').forEach(btn => {
-                const onclickAttr = btn.getAttribute('onclick');
-                if (onclickAttr && onclickAttr.includes(description.replace(/'/g, "\\'"))) {
-                    // Trova lo span con il testo del tag
-                    const span = btn.querySelector('span');
-                    if (span) {
-                        span.textContent = newTag;
-                        console.log('✓ Aggiornato visualmente nel DOM');
-                    }
-                }
-            });
-            
-            // Aggiorna il tag in TUTTE le occorrenze del prodotto
-            let totalUpdated = 0;
-            
-            for (let i = 0; i < state.fatture.length; i++) {
-                const fattura = state.fatture[i];
-                for (let j = 0; j < fattura.itm.length; j++) {
-                    const item = fattura.itm[j];
-                    if (item.d.toLowerCase().trim() === description.toLowerCase().trim()) {
-                        console.log(`Updating fattura[${i}].itm[${j}]: "${item.d}"`);
-                        console.log(`  Old: "${item.tag}" -> New: "${newTag}"`);
-                        state.fatture[i].itm[j].tag = newTag;
-                        totalUpdated++;
-                    }
-                }
-            }
-            
-            console.log(`Total updated: ${totalUpdated}`);
-            
-            if (totalUpdated === 0) {
-                console.error('NESSUN ITEM TROVATO!');
-                alert('Errore: prodotto non trovato per aggiornamento tag');
-                return;
-            }
-            
-            // Salva
-            try {
-                localStorage.setItem('fatture_elettroniche', JSON.stringify(state.fatture));
-                console.log('✓ Salvato in localStorage');
-            } catch (e) {
-                console.error('✗ Errore salvataggio:', e);
-                alert('Errore nel salvataggio: ' + e.message);
-                return;
-            }
-            
-            // Verifica salvataggio
-            try {
-                const saved = JSON.parse(localStorage.getItem('fatture_elettroniche'));
-                let verified = 0;
-                saved.forEach(f => {
-                    f.itm.forEach(item => {
-                        if (item.d.toLowerCase().trim() === description.toLowerCase().trim()) {
-                            console.log(`✓ Verifica: tag = "${item.tag}"`);
-                            verified++;
-                        }
-                    });
-                });
-                console.log(`✓ Verificati ${verified} items in localStorage`);
-            } catch (e) {
-                console.error('✗ Errore verifica:', e);
-            }
-            
-            // Ricalcola prodotti
-            extractProducts();
-            groupProducts();
-            
-            console.log('✓ Prodotti ricalcolati');
-            
-            // Verifica stato
-            const prod = state.products.find(p => 
-                p.description.toLowerCase().trim() === description.toLowerCase().trim()
-            );
-            console.log(`✓ Tag in state.products: "${prod?.tag}"`);
-            
-            const key = description.toLowerCase().trim();
-            const grouped = state.groupedProducts[key];
-            console.log(`✓ Tag in groupedProducts: "${grouped?.tag}"`);
-            
-            // Aggiorna modal se aperto
-            if (state.selectedProduct && 
-                state.selectedProduct.description.toLowerCase().trim() === description.toLowerCase().trim()) {
-                const filtered = getFilteredGroupedProducts();
-                const product = filtered.find(([k, v]) => k === key);
-                if (product) {
-                    state.selectedProduct = product[1];
-                }
-            }
-            
-            // Re-render
-            render();
-            
-            // Conferma visiva
-            console.log(`✓ Tag aggiornato a: ${newTag} (${totalUpdated} occorrenze)`);
-            
-            console.log('=== CHANGE TAG COMPLETE ===');
-        };
-
-        window.openTagEditor = function(description, currentTag) {
-            const tags = [
-                'Vini', 'Birre', 'Spirits', 'Bevande', 'Snacks', 
-                'Salumi & Formaggi', 'Materiali', 'Attrezzature', 'Servizi', 'Altro'
-            ];
-            
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
-            modal.onclick = (e) => {
-                if (e.target === modal) modal.remove();
-            };
-            
-            modal.innerHTML = `
-                <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">Modifica Categoria</h3>
-                    <p class="text-sm text-gray-600 mb-4">${description}</p>
-                    
-                    <!-- Tag esistenti -->
-                    <div class="space-y-2 mb-4 max-h-80 overflow-y-auto" id="tagList">
-                        ${tags.map(tag => `
-                            <button onclick="changeProductTag('${description.replace(/'/g, "\\'")}', '${tag}'); this.closest('.fixed').remove();" 
-                                    class="w-full px-4 py-2 text-left rounded-lg transition-colors ${tag === currentTag ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}">
-                                ${tag}
-                            </button>
-                        `).join('')}
-                    </div>
-                    
-                    <!-- Pulsante Aggiungi Tag -->
-                    <button onclick="showAddTagInput(this)" 
-                            class="w-full px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 mb-3 font-medium flex items-center justify-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Aggiungi nuovo tag
-                    </button>
-                    
-                    <!-- Campo input nascosto per nuovo tag -->
-                    <div id="newTagInput" class="hidden mb-3">
-                        <div class="flex gap-2">
-                            <input type="text" 
-                                   id="customTagName" 
-                                   placeholder="Nome nuovo tag..."
-                                   maxlength="30"
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                            <button onclick="addCustomTag('${description.replace(/'/g, "\\'")}', this)" 
-                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
-                                Salva
-                            </button>
-                            <button onclick="hideAddTagInput(this)" 
-                                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm">
-                                ✕
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">Max 30 caratteri</p>
-                    </div>
-                    
-                    <button onclick="this.closest('.fixed').remove()" 
-                            class="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
-                        Annulla
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        };
-
-        window.showAddTagInput = function(button) {
-            const inputDiv = document.getElementById('newTagInput');
-            inputDiv.classList.remove('hidden');
-            button.classList.add('hidden');
-            document.getElementById('customTagName').focus();
-        };
-
-        window.hideAddTagInput = function(button) {
-            const inputDiv = document.getElementById('newTagInput');
-            const addButton = inputDiv.previousElementSibling;
-            inputDiv.classList.add('hidden');
-            addButton.classList.remove('hidden');
-            document.getElementById('customTagName').value = '';
-        };
-
-        window.addCustomTag = function(description, button) {
-            const input = document.getElementById('customTagName');
-            const newTag = input.value.trim();
-            
-            if (!newTag) {
-                alert('Inserisci un nome per il tag');
-                return;
-            }
-            
-            if (newTag.length > 30) {
-                alert('Il nome del tag è troppo lungo (max 30 caratteri)');
-                return;
-            }
-            
-            // Applica il nuovo tag
-            changeProductTag(description, newTag);
-            
-            // Chiudi il modal
-            button.closest('.fixed').remove();
-        };
-
-        // Render
-        function render() {
-            const app = document.getElementById('app');
-            const filteredProducts = getFilteredProducts();
-            const groupedProducts = getFilteredGroupedProducts();
-            const availableYears = getAvailableYears();
-            const suppliers = getUniqueSuppliers();
-            const tags = getUniqueTags();
-            
-            const totalQuantity = filteredProducts.reduce((sum, p) => sum + p.quantity, 0);
-            const totalAmount = filteredProducts.reduce((sum, p) => sum + p.totalPrice, 0);
-            
-            const hasActiveFilters = state.filters.year !== 'all' || 
-                                     state.filters.month !== 'all' || 
-                                     state.filters.supplier !== 'all' || 
-                                     state.filters.tag !== 'all' ||
-                                     state.filters.searchText !== '';
-            
-            app.innerHTML = `
-                <div class="max-w-7xl mx-auto">
-                    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
-                        <!-- Header -->
-                        <div class="flex items-center space-x-3 mb-6">
-                            <div class="bg-purple-600 p-3 rounded-xl">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h1 class="text-2xl font-bold text-gray-800">Analisi Prodotti</h1>
-                                <p class="text-sm text-gray-600">Prodotti acquistati dalle fatture</p>
-                            </div>
-                        </div>
-
-                        <!-- Statistiche -->
-                        <div class="grid md:grid-cols-4 gap-4 mb-6">
-                            <div class="bg-purple-50 px-4 py-3 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Prodotti unici</p>
-                                <p class="text-2xl font-bold text-purple-600">${groupedProducts.length}</p>
-                            </div>
-                            
-                            <div class="bg-blue-50 px-4 py-3 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Acquisti totali</p>
-                                <p class="text-2xl font-bold text-blue-600">${filteredProducts.length}</p>
-                            </div>
-                            
-                            <div class="bg-orange-50 px-4 py-3 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Quantità totale</p>
-                                <p class="text-2xl font-bold text-orange-600">${formatNumber(totalQuantity, 0)}</p>
-                            </div>
-                            
-                            <div class="bg-green-50 px-4 py-3 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Valore totale</p>
-                                <p class="text-2xl font-bold text-green-600">${formatCurrency(totalAmount)}</p>
-                            </div>
-                        </div>
-
-                        <!-- Filtri -->
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center space-x-2">
-                                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                                    </svg>
-                                    <span class="text-sm font-semibold text-gray-700">Filtri</span>
-                                </div>
-                                ${hasActiveFilters ? `
-                                    <button onclick="resetFilters()" class="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs font-medium">
-                                        Azzera filtri
-                                    </button>
-                                ` : ''}
-                            </div>
-
-                            <div class="grid md:grid-cols-6 gap-4">
-                                <!-- Ricerca -->
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-medium text-gray-700 mb-2">Cerca prodotto</label>
-                                    <input type="text" 
-                                           placeholder="Es: vino, birra..."
-                                           value="${state.filters.searchText}"
-                                           oninput="setFilter('searchText', this.value)" 
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                                </div>
-
-                                <!-- Tag -->
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-2">Categoria</label>
-                                    <select onchange="setFilter('tag', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                                        <option value="all" ${state.filters.tag === 'all' ? 'selected' : ''}>Tutte</option>
-                                        ${tags.map(tag => `
-                                            <option value="${tag}" ${state.filters.tag === tag ? 'selected' : ''}>${tag}</option>
-                                        `).join('')}
-                                    </select>
-                                </div>
-
-                                <!-- Anno -->
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-2">Anno</label>
-                                    <select onchange="setFilter('year', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="all" ${state.filters.year === 'all' ? 'selected' : ''}>Tutti</option>
-                                        ${availableYears.map(year => `
-                                            <option value="${year}" ${state.filters.year === year ? 'selected' : ''}>${year}</option>
-                                        `).join('')}
-                                    </select>
-                                </div>
-
-                                <!-- Mese -->
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-2">Mese</label>
-                                    <select onchange="setFilter('month', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="all" ${state.filters.month === 'all' ? 'selected' : ''}>Tutti</option>
-                                        <option value="1" ${state.filters.month === '1' ? 'selected' : ''}>Gennaio</option>
-                                        <option value="2" ${state.filters.month === '2' ? 'selected' : ''}>Febbraio</option>
-                                        <option value="3" ${state.filters.month === '3' ? 'selected' : ''}>Marzo</option>
-                                        <option value="4" ${state.filters.month === '4' ? 'selected' : ''}>Aprile</option>
-                                        <option value="5" ${state.filters.month === '5' ? 'selected' : ''}>Maggio</option>
-                                        <option value="6" ${state.filters.month === '6' ? 'selected' : ''}>Giugno</option>
-                                        <option value="7" ${state.filters.month === '7' ? 'selected' : ''}>Luglio</option>
-                                        <option value="8" ${state.filters.month === '8' ? 'selected' : ''}>Agosto</option>
-                                        <option value="9" ${state.filters.month === '9' ? 'selected' : ''}>Settembre</option>
-                                        <option value="10" ${state.filters.month === '10' ? 'selected' : ''}>Ottobre</option>
-                                        <option value="11" ${state.filters.month === '11' ? 'selected' : ''}>Novembre</option>
-                                        <option value="12" ${state.filters.month === '12' ? 'selected' : ''}>Dicembre</option>
-                                    </select>
-                                </div>
-
-                                <!-- Fornitore -->
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-2">Fornitore</label>
-                                    <select onchange="setFilter('supplier', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                                        <option value="all" ${state.filters.supplier === 'all' ? 'selected' : ''}>Tutti</option>
-                                        ${suppliers.map(supplier => `
-                                            <option value="${supplier}" ${state.filters.supplier === supplier ? 'selected' : ''}>${supplier}</option>
-                                        `).join('')}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Ordinamento -->
-                            <div class="mt-4 flex items-center space-x-2">
-                                <span class="text-xs font-medium text-gray-700">Ordina per:</span>
-                                <div class="flex gap-2">
-                                    <button onclick="setFilter('sortBy', 'quantity')" 
-                                            class="px-3 py-1.5 text-xs rounded-lg ${state.filters.sortBy === 'quantity' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}">
-                                        Quantità
-                                    </button>
-                                    <button onclick="setFilter('sortBy', 'amount')" 
-                                            class="px-3 py-1.5 text-xs rounded-lg ${state.filters.sortBy === 'amount' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}">
-                                        Importo
-                                    </button>
-                                    <button onclick="setFilter('sortBy', 'name')" 
-                                            class="px-3 py-1.5 text-xs rounded-lg ${state.filters.sortBy === 'name' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}">
-                                        Nome A-Z
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${groupedProducts.length === 0 ? `
-                        <div class="bg-white rounded-2xl shadow-xl p-12 text-center">
-                            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                            </svg>
-                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Nessun prodotto trovato</h3>
-                            <p class="text-gray-500">
-                                ${state.products.length === 0 ? 'Carica alcune fatture per visualizzare i prodotti' : 'Prova a modificare i filtri'}
-                            </p>
-                        </div>
-                    ` : `
-                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                            <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                                        <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold">Prodotto</th>
-                                            <th class="px-4 py-3 text-center text-xs font-semibold">Categoria</th>
-                                            <th class="px-4 py-3 text-center text-xs font-semibold">U.M.</th>
-                                            <th class="px-4 py-3 text-right text-xs font-semibold">Quantità Tot.</th>
-                                            <th class="px-4 py-3 text-right text-xs font-semibold">Prezzo Medio</th>
-                                            <th class="px-4 py-3 text-right text-xs font-semibold">Min/Max</th>
-                                            <th class="px-4 py-3 text-right text-xs font-semibold">Totale</th>
-                                            <th class="px-4 py-3 text-center text-xs font-semibold">Fornitori</th>
-                                            <th class="px-4 py-3 text-center text-xs font-semibold">Acquisti</th>
-                                            <th class="px-4 py-3 text-center text-xs font-semibold">Azioni</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-200">
-                                        ${groupedProducts.map(([key, product]) => `
-                                            <tr class="hover:bg-purple-50 transition-colors">
-                                                <td class="px-4 py-3">
-                                                    <p class="font-medium text-gray-800 text-sm">${product.description}</p>
-                                                </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <button onclick="openTagEditor('${product.description.replace(/'/g, "\\'")}', '${product.tag}')" 
-                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 cursor-pointer transition-colors">
-                                                        <span>${product.tag}</span>
-                                                        <svg class="w-3 h-3 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                                                        </svg>
-                                                    </button>
-                                                </td>
-                                                <td class="px-4 py-3 text-center text-xs text-gray-600">${product.unitOfMeasure}</td>
-                                                <td class="px-4 py-3 text-right font-semibold text-sm text-gray-800">${formatNumber(product.totalQuantity)}</td>
-                                                <td class="px-4 py-3 text-right text-sm text-gray-800">${formatCurrency(product.avgPrice)}</td>
-                                                <td class="px-4 py-3 text-right text-xs text-gray-600">
-                                                    ${formatCurrency(product.minPrice)}<br/>
-                                                    ${formatCurrency(product.maxPrice)}
-                                                </td>
-                                                <td class="px-4 py-3 text-right font-bold text-sm text-green-600">${formatCurrency(product.totalAmount)}</td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        ${product.suppliers.length}
-                                                    </span>
-                                                </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                        ${product.purchases.length}
-                                                    </span>
-                                                </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <button onclick="showProductDetails('${product.description.replace(/'/g, "\\'")}')" 
-                                                            class="px-3 py-1 bg-purple-100 text-purple-600 rounded hover:bg-purple-200 text-xs font-medium">
-                                                        Dettagli
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    `}
-                </div>
-
-                ${state.selectedProduct ? `
-                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onclick="if(event.target === this) closeModal()">
-                        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-                            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 flex justify-between items-center">
-                                <div>
-                                    <h2 class="text-2xl font-bold">${state.selectedProduct.description}</h2>
-                                    <p class="text-purple-100">${state.selectedProduct.purchases.length} acquisti - ${formatNumber(state.selectedProduct.totalQuantity)} ${state.selectedProduct.unitOfMeasure}</p>
-                                </div>
-                                <button onclick="closeModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div class="p-6">
-                                <!-- Riepilogo -->
-                                <div class="grid md:grid-cols-4 gap-4 mb-6">
-                                    <div class="bg-purple-50 rounded-lg p-4">
-                                        <p class="text-xs text-gray-600 mb-1">Quantità totale</p>
-                                        <p class="text-xl font-bold text-purple-600">${formatNumber(state.selectedProduct.totalQuantity)}</p>
-                                    </div>
-                                    <div class="bg-blue-50 rounded-lg p-4">
-                                        <p class="text-xs text-gray-600 mb-1">Prezzo medio</p>
-                                        <p class="text-xl font-bold text-blue-600">${formatCurrency(state.selectedProduct.avgPrice)}</p>
-                                    </div>
-                                    <div class="bg-orange-50 rounded-lg p-4">
-                                        <p class="text-xs text-gray-600 mb-1">Range prezzi</p>
-                                        <p class="text-sm font-semibold text-orange-600">
-                                            ${formatCurrency(state.selectedProduct.minPrice)} - ${formatCurrency(state.selectedProduct.maxPrice)}
-                                        </p>
-                                    </div>
-                                    <div class="bg-green-50 rounded-lg p-4">
-                                        <p class="text-xs text-gray-600 mb-1">Valore totale</p>
-                                        <p class="text-xl font-bold text-green-600">${formatCurrency(state.selectedProduct.totalAmount)}</p>
-                                    </div>
-                                </div>
-
-                                <!-- Fornitori -->
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Fornitori (${state.selectedProduct.suppliers.length})</h3>
-                                    <div class="flex flex-wrap gap-2">
-                                        ${state.selectedProduct.suppliers.map(supplier => `
-                                            <span class="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
-                                                ${supplier}
-                                            </span>
-                                        `).join('')}
-                                    </div>
-                                </div>
-
-                                <!-- Storico acquisti -->
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Storico Acquisti</h3>
-                                    <div class="bg-gray-50 rounded-xl overflow-hidden">
-                                        <table class="w-full text-sm">
-                                            <thead class="bg-gray-200">
-                                                <tr>
-                                                    <th class="px-4 py-3 text-left text-xs font-semibold">Data</th>
-                                                    <th class="px-4 py-3 text-left text-xs font-semibold">Fattura</th>
-                                                    <th class="px-4 py-3 text-left text-xs font-semibold">Fornitore</th>
-                                                    <th class="px-4 py-3 text-right text-xs font-semibold">Quantità</th>
-                                                    <th class="px-4 py-3 text-right text-xs font-semibold">Prezzo Unit.</th>
-                                                    <th class="px-4 py-3 text-right text-xs font-semibold">Totale</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y">
-                                                ${state.selectedProduct.purchases.sort((a, b) => new Date(b.invoiceDate) - new Date(a.invoiceDate)).map(purchase => `
-                                                    <tr class="hover:bg-white">
-                                                        <td class="px-4 py-3">${formatDate(purchase.invoiceDate)}</td>
-                                                        <td class="px-4 py-3 font-medium">${purchase.invoiceNumber}</td>
-                                                        <td class="px-4 py-3">${purchase.supplierName}</td>
-                                                        <td class="px-4 py-3 text-right">${formatNumber(purchase.quantity)} ${purchase.unitOfMeasure}</td>
-                                                        <td class="px-4 py-3 text-right">${formatCurrency(purchase.unitPrice)}</td>
-                                                        <td class="px-4 py-3 text-right font-semibold">${formatCurrency(purchase.totalPrice)}</td>
-                                                    </tr>
-                                                `).join('')}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ` : ''}
-            `;
+            closeModal();
+            await loadProdotti();
         }
 
-        // Inizializzazione
-        function init() {
-            try {
-                loadFatture();
-                extractProducts();
-                groupProducts();
-                render();
-                console.log('✓ Analisi prodotti inizializzata');
-                console.log('Fatture:', state.fatture.length);
-                console.log('Prodotti estratti:', state.products.length);
-                console.log('Prodotti unici:', Object.keys(state.groupedProducts).length);
-            } catch (err) {
-                console.error('❌ Errore inizializzazione:', err);
-                alert('Errore nel caricamento. Controlla la console (F12) per dettagli.');
-                state.products = [];
-                state.groupedProducts = {};
-                render();
-            }
+        async function deleteProdotto(id) {
+            if (!confirm('Eliminare?')) return;
+            await supabaseClient.from('prodotti').delete().eq('id', id);
+            await loadProdotti();
         }
 
-        // Avvia l'app
-        init();
+        function closeModal() {
+            document.getElementById('modalProdotto').classList.add('hidden');
+        }
+
+        loadProdotti();
+        console.log('✅ Prodotti (Supabase)');
     </script>
 </body>
 </html>
