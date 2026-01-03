@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-6">🧪 Test Connessione Supabase</h1>
+        
+        <div class="space-y-4">
+            <button onclick="testConnection()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Test Connessione Database
+            </button>
+            
+            <button onclick="testLogin()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 ml-2">
+                Test Login Admin
+            </button>
+        </div>
+
+        <div id="result" class="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-bold mb-2">Risultato:</h3>
+            <pre id="resultText" class="text-sm overflow-auto">Clicca un pulsante per testare...</pre>
+        </div>
+
+        <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <h3 class="font-bold text-yellow-800 mb-2">📋 Credenziali configurate:</h3>
+            <p class="text-sm">URL: https://fqnzoxttbzzlgjxefelx.supabase.co</p>
+            <p class="text-sm">Email: domenicoprenesti@gmail.com</p>
+            <p class="text-sm">Password: mico</p>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function showResult(text) {
+            document.getElementById('resultText').textContent = JSON.stringify(text, null, 2);
+        }
+
+        async function testConnection() {
+            showResult('Testando connessione...');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('utenti')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    showResult({
+                        status: 'ERRORE',
+                        error: error,
+                        message: 'Controlla le policies del database o verifica che la tabella esista'
+                    });
+                } else {
+                    showResult({
+                        status: 'SUCCESSO ✅',
+                        message: 'Database connesso correttamente!',
+                        utenti_trovati: data.length,
+                        dati: data
+                    });
+                }
+            } catch (err) {
+                showResult({
+                    status: 'ERRORE CRITICO',
+                    error: err.message
+                });
+            }
+        }
+
+        async function testLogin() {
+            showResult('Testando login admin...');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('utenti')
+                    .select('*')
+                    .eq('email', 'domenicoprenesti@gmail.com')
+                    .single();
+                
+                if (error) {
+                    showResult({
+                        status: 'ERRORE',
+                        error: error,
+                        message: error.code === 'PGRST116' ? 'Utente non trovato nel database!' : 'Errore di query'
+                    });
+                } else {
+                    if (data.password === 'mico') {
+                        showResult({
+                            status: 'LOGIN RIUSCITO ✅',
+                            message: 'Credenziali corrette!',
+                            utente: {
+                                nome: data.nome,
+                                cognome: data.cognome,
+                                email: data.email,
+                                ruolo: data.ruolo,
+                                attivo: data.attivo
+                            }
+                        });
+                    } else {
+                        showResult({
+                            status: 'PASSWORD ERRATA ❌',
+                            message: 'Utente trovato ma password non corrisponde',
+                            password_database: data.password,
+                            password_testata: 'mico'
+                        });
+                    }
+                }
+            } catch (err) {
+                showResult({
+                    status: 'ERRORE CRITICO',
+                    error: err.message
+                });
+            }
+        }
+
+        console.log('✅ Supabase test page caricata');
+        console.log('URL:', SUPABASE_URL);
+    </script>
+</body>
+</html>
