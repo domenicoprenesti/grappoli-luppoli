@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi Delta Fatture-Prodotti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">💰 Analisi Delta Fatture vs Prodotti</h1>
+
+        <!-- Pulsante Analisi -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <button onclick="analizzaDelta()" class="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-lg font-bold">
+                🔬 Avvia Analisi Completa
+            </button>
+        </div>
+
+        <!-- Progress -->
+        <div id="progress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-medium">Analisi in corso...</span>
+                <span id="progressText">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Riepilogo Delta -->
+        <div id="deltaRiepilogo" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8"></div>
+
+        <!-- Analisi Dettagliata -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Fatture Problematiche -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">⚠️ Fatture Problematiche</h3>
+                <div id="fattureProblematiche" class="text-sm"></div>
+            </div>
+
+            <!-- Prodotti Problematici -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">🔍 Dettagli Prodotti</h3>
+                <div id="prodottiDettagli" class="text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Tabella Fatture Senza Prodotti -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-lg font-bold mb-4">📄 Fatture Senza Prodotti Estratti</h3>
+            <div id="fattureSenzaProdotti" class="overflow-auto max-h-96"></div>
+        </div>
+
+        <!-- Log Console -->
+        <div class="bg-gray-900 text-green-400 rounded-xl p-6 font-mono text-xs overflow-auto max-h-96">
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(msg) {
+            const logDiv = document.getElementById('logOutput');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${time}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function updateProgress(pct, text) {
+            document.getElementById('progress').classList.remove('hidden');
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressText').textContent = Math.round(pct) + '%';
+        }
+
+        async function analizzaDelta() {
+            log('🚀 INIZIO ANALISI DELTA');
+
+            try {
+                // 1. CARICA TUTTE LE FATTURE
+                log('📄 Caricamento fatture...');
+                updateProgress(10, 'Caricamento fatture...');
+
+                const { count: fattureCount } = await supabaseClient
+                    .from('fatture')
+                    .select('*', { count: 'exact', head: true });
+
+                let allFatture = [];
+                const batchSize = 500;
+                const numBatches = Math.ceil(fattureCount / batchSize);
+
+                for (let i = 0; i < numBatches; i++) {
+                    const { data } = await supabaseClient
+                        .from('fatture')
+                        .select('id, numero_fattura, data_fattura, fornitore, cedente_denominazione, importo_totale, xml_content')
+                        .range(i * batchSize, (i + 1) * batchSize - 1);
+                    allFatture = [...allFatture, ...data];
+                    updateProgress(10 + (i / numBatches) * 30);
+                }
+
+                log(`✅ Caricate ${allFatture.length} fatture`);
+
+                // 2. CARICA TUTTI I PRODOTTI
+                log('📦 Caricamento prodotti...');
+                updateProgress(40, 'Caricamento prodotti...');
+
+                const { count: prodottiCount } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+
+                let allProdotti = [];
+                const prodBatches = Math.ceil(prodottiCount / batchSize);
+
+                for (let i = 0; i < prodBatches; i++) {
+                    const { data } = await supabaseClient
+                        .from('prodotti')
+                        .select('*')
+                        .range(i * batchSize, (i + 1) * batchSize - 1);
+                    allProdotti = [...allProdotti, ...data];
+                    updateProgress(40 + (i / prodBatches) * 20);
+                }
+
+                log(`✅ Caricati ${allProdotti.length} prodotti`);
+
+                // 3. ANALIZZA DELTA
+                log('🔬 Analisi delta in corso...');
+                updateProgress(60, 'Analisi delta...');
+
+                const importoFatture = allFatture.reduce((sum, f) => sum + (f.importo_totale || 0), 0);
+                const valoreProdotti = allProdotti.reduce((sum, p) => sum + ((p.prezzo || 0) * (p.quantita || 0)), 0);
+                const delta = importoFatture - valoreProdotti;
+
+                log(`💰 Importo fatture: €${importoFatture.toFixed(2)}`);
+                log(`📦 Valore prodotti: €${valoreProdotti.toFixed(2)}`);
+                log(`❌ Delta: €${delta.toFixed(2)}`);
+
+                // 4. ANALIZZA PRODOTTI DA XML
+                log('🔍 Analisi prodotti negli XML...');
+                updateProgress(70, 'Analisi XML...');
+
+                const fattureSenzaProdottiDB = [];
+                const fattureConDelta = [];
+                let totaleProdottiXML = 0;
+
+                for (let i = 0; i < allFatture.length; i++) {
+                    const fattura = allFatture[i];
+                    
+                    if (!fattura.xml_content) {
+                        fattureSenzaProdottiDB.push({ ...fattura, motivo: 'XML mancante' });
+                        continue;
+                    }
+
+                    try {
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(fattura.xml_content, 'text/xml');
+                        const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
+
+                        if (dettaglioLinee.length === 0) {
+                            fattureSenzaProdottiDB.push({ ...fattura, motivo: 'Nessun DettaglioLinee in XML' });
+                            continue;
+                        }
+
+                        let importoRigheXML = 0;
+                        for (let j = 0; j < dettaglioLinee.length; j++) {
+                            const linea = dettaglioLinee[j];
+                            const prezzoTotale = parseFloat(linea.getElementsByTagName('PrezzoTotale')[0]?.textContent || 0);
+                            importoRigheXML += prezzoTotale;
+                        }
+
+                        totaleProdottiXML += importoRigheXML;
+
+                        // Confronta importo fattura con somma righe
+                        const deltaFattura = fattura.importo_totale - importoRigheXML;
+                        if (Math.abs(deltaFattura) > 1) { // Tollera differenze < €1
+                            fattureConDelta.push({
+                                numero: fattura.numero_fattura,
+                                fornitore: fattura.fornitore || fattura.cedente_denominazione,
+                                importoFattura: fattura.importo_totale,
+                                importoRighe: importoRigheXML,
+                                delta: deltaFattura,
+                                numRighe: dettaglioLinee.length
+                            });
+                        }
+
+                    } catch (err) {
+                        fattureSenzaProdottiDB.push({ ...fattura, motivo: 'Errore parsing XML: ' + err.message });
+                    }
+
+                    if (i % 100 === 0) {
+                        updateProgress(70 + (i / allFatture.length) * 25);
+                    }
+                }
+
+                // 5. ANALIZZA PRODOTTI SENZA PREZZO
+                log('💵 Analisi prodotti senza prezzo...');
+                updateProgress(95, 'Analisi prezzi...');
+
+                const prodottiSenzaPrezzo = allProdotti.filter(p => !p.prezzo || p.prezzo === 0);
+                const prodottiSenzaQuantita = allProdotti.filter(p => !p.quantita || p.quantita === 0);
+
+                // 6. MOSTRA RISULTATI
+                updateProgress(100, 'Completato!');
+                log('✅ ANALISI COMPLETATA');
+
+                mostraRisultati({
+                    importoFatture,
+                    valoreProdotti,
+                    totaleProdottiXML,
+                    delta,
+                    fattureSenzaProdottiDB,
+                    fattureConDelta,
+                    prodottiSenzaPrezzo,
+                    prodottiSenzaQuantita,
+                    numFatture: allFatture.length,
+                    numProdotti: allProdotti.length
+                });
+
+                setTimeout(() => {
+                    document.getElementById('progress').classList.add('hidden');
+                }, 2000);
+
+            } catch (err) {
+                log('❌ ERRORE: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        function mostraRisultati(risultati) {
+            // Riepilogo Delta
+            const deltaRiepilogo = document.getElementById('deltaRiepilogo');
+            deltaRiepilogo.classList.remove('hidden');
+
+            const deltaProdottiXML = risultati.importoFatture - risultati.totaleProdottiXML;
+            const deltaProdottiDB = risultati.totaleProdottiXML - risultati.valoreProdotti;
+
+            deltaRiepilogo.innerHTML = `
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-bold">📊 Riepilogo Delta</h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Importo Fatture</p>
+                            <p class="text-2xl font-bold text-blue-600">€${risultati.importoFatture.toFixed(2)}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Valore Prodotti XML</p>
+                            <p class="text-2xl font-bold text-purple-600">€${risultati.totaleProdottiXML.toFixed(2)}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Valore Prodotti DB</p>
+                            <p class="text-2xl font-bold text-green-600">€${risultati.valoreProdotti.toFixed(2)}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                        <p class="font-bold text-red-900 mb-2">❌ Delta Totale: €${risultati.delta.toFixed(2)}</p>
+                        <div class="text-sm text-red-800 space-y-1">
+                            <p>• Delta Fatture → Prodotti XML: €${deltaProdottiXML.toFixed(2)} 
+                               ${Math.abs(deltaProdottiXML) > 100 ? '<span class="font-bold">(SPESE/BOLLI/TRASPORTI)</span>' : ''}</p>
+                            <p>• Delta Prodotti XML → DB: €${deltaProdottiDB.toFixed(2)}
+                               ${Math.abs(deltaProdottiDB) > 100 ? '<span class="font-bold">(ESTRAZIONE INCOMPLETA)</span>' : ''}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                        <p class="font-bold text-yellow-900 mb-2">🔍 Cause Principali:</p>
+                        <ul class="text-sm text-yellow-800 list-disc ml-4 space-y-1">
+                            <li><strong>${risultati.fattureConDelta.length} fatture</strong> hanno delta tra importo e righe (spese trasporto, bollo, sconti)</li>
+                            <li><strong>${risultati.fattureSenzaProdottiDB.length} fatture</strong> non hanno prodotti estratti o XML mancante</li>
+                            <li><strong>${risultati.prodottiSenzaPrezzo.length} prodotti</strong> senza prezzo nel database</li>
+                            <li><strong>${risultati.prodottiSenzaQuantita.length} prodotti</strong> senza quantità nel database</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            // Fatture Problematiche
+            const fattureProblematiche = document.getElementById('fattureProblematiche');
+            fattureProblematiche.innerHTML = `
+                <div class="space-y-3">
+                    <div class="bg-orange-50 p-3 rounded">
+                        <p class="font-semibold mb-2">Top 10 Fatture con Delta Maggiore:</p>
+                        <div class="space-y-1 max-h-64 overflow-auto">
+                            ${risultati.fattureConDelta
+                                .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+                                .slice(0, 10)
+                                .map(f => `
+                                    <div class="text-xs bg-white p-2 rounded">
+                                        <p class="font-semibold">${f.numero} - ${f.fornitore}</p>
+                                        <p>Fattura: €${f.importoFattura.toFixed(2)} | Righe: €${f.importoRighe.toFixed(2)}</p>
+                                        <p class="text-red-600 font-bold">Delta: €${f.delta.toFixed(2)}</p>
+                                    </div>
+                                `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Prodotti Dettagli
+            const prodottiDettagli = document.getElementById('prodottiDettagli');
+            prodottiDettagli.innerHTML = `
+                <div class="space-y-3">
+                    <div class="bg-blue-50 p-3 rounded">
+                        <p class="font-semibold">Prodotti senza prezzo:</p>
+                        <p class="text-2xl font-bold text-blue-600">${risultati.prodottiSenzaPrezzo.length}</p>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded">
+                        <p class="font-semibold">Prodotti senza quantità:</p>
+                        <p class="text-2xl font-bold text-purple-600">${risultati.prodottiSenzaQuantita.length}</p>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded">
+                        <p class="font-semibold">Prodotti validi:</p>
+                        <p class="text-2xl font-bold text-green-600">${risultati.numProdotti - risultati.prodottiSenzaPrezzo.length}</p>
+                    </div>
+                </div>
+            `;
+
+            // Fatture Senza Prodotti
+            const fattureSenzaProdotti = document.getElementById('fattureSenzaProdotti');
+            if (risultati.fattureSenzaProdottiDB.length > 0) {
+                fattureSenzaProdotti.innerHTML = `
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Numero</th>
+                                <th class="px-4 py-2 text-left">Fornitore</th>
+                                <th class="px-4 py-2 text-right">Importo</th>
+                                <th class="px-4 py-2 text-left">Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${risultati.fattureSenzaProdottiDB.slice(0, 20).map(f => `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">${f.numero_fattura}</td>
+                                    <td class="px-4 py-2">${f.fornitore || f.cedente_denominazione || '-'}</td>
+                                    <td class="px-4 py-2 text-right">€${(f.importo_totale || 0).toFixed(2)}</td>
+                                    <td class="px-4 py-2 text-red-600">${f.motivo}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    ${risultati.fattureSenzaProdottiDB.length > 20 ? 
+                        `<p class="text-xs text-gray-500 mt-2">Mostrate 20 di ${risultati.fattureSenzaProdottiDB.length} fatture</p>` 
+                        : ''}
+                `;
+            } else {
+                fattureSenzaProdotti.innerHTML = '<p class="text-green-600">✅ Tutte le fatture hanno prodotti estratti!</p>';
+            }
+        }
+
+        log('🔧 Tool pronto. Clicca "Avvia Analisi Completa"');
+    </script>
+</body>
+</html>
