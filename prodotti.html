@@ -344,8 +344,17 @@
             const modal = document.getElementById('deleteModal');
             const message = document.getElementById('deleteMessage');
             const prodotto = allProdotti.find(p => p.id === id);
+            
+            if (!prodotto) {
+                console.error('Prodotto non trovato:', id);
+                alert('Errore: prodotto non trovato');
+                return;
+            }
+            
             message.textContent = `Vuoi eliminare il prodotto "${prodotto.nome}"?`;
             deleteAction = { type: 'single', ids: [id] };
+            
+            console.log('Delete action impostata:', deleteAction);
             modal.classList.remove('hidden');
         }
 
@@ -362,11 +371,14 @@
 
         async function confirmDelete() {
             if (!deleteAction) return;
+            
+            // Salva i dati PRIMA di chiudere il modal
+            const idsToDelete = deleteAction.ids;
+            const total = idsToDelete.length;
+            
             closeDeleteModal();
             
             try {
-                const idsToDelete = deleteAction.ids;
-                const total = idsToDelete.length;
                 let deletedCount = 0;
                 
                 const tbody = document.getElementById('prodottiTableBody');
@@ -378,15 +390,21 @@
                 for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
                     const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
                     
+                    console.log(`Eliminando batch ${i / BATCH_DELETE_SIZE + 1}: ${batch.length} prodotti`);
+                    
                     // Usa .in() per eliminazione batch più efficiente
                     const { error, count } = await supabaseClient
                         .from('prodotti')
                         .delete()
                         .in('id', batch);
                     
-                    if (!error) {
-                        deletedCount += batch.length;
+                    if (error) {
+                        console.error('Errore eliminazione batch:', error);
+                        throw error;
                     }
+                    
+                    deletedCount += batch.length;
+                    console.log(`Eliminati ${deletedCount} / ${total}`);
                     
                     // Aggiorna progress
                     const progressSpan = document.getElementById('deleteProgress');
