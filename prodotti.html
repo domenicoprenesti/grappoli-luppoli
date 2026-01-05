@@ -97,10 +97,6 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <button onclick="showAddModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ Nuovo Prodotto</button>
-        </div>
-
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
                 <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
@@ -237,8 +233,12 @@
             document.getElementById('totalCategorie').textContent = new Set(allProdotti.map(p => p.categoria).filter(Boolean)).size;
             const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo || 0) * (p.quantita || 0)), 0);
             const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
+            
+            // Calcola percentuale IVA media
+            const percentualeIVA = valoreSenzaIVA > 0 ? ((valoreConIVA - valoreSenzaIVA) / valoreSenzaIVA * 100) : 0;
+            
             document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}  (${percentualeIVA.toFixed(2)}%)`;
         }
         function updateFilters() {
             const cat = [...new Set(allProdotti.map(p => p.categoria).filter(Boolean))].sort();
