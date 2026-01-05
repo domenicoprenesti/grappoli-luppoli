@@ -37,6 +37,34 @@
 
     <div class="pt-20 pb-12" id="app"></div>
 
+    <!-- Modal Conferma Eliminazione -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div class="text-center mb-6">
+                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
+                <p id="deleteMessage" class="text-gray-600"></p>
+            </div>
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <p class="text-sm text-yellow-800">
+                    <strong⚠️ Attenzione:</strong> Questa azione è irreversibile!
+                </p>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                    Annulla
+                </button>
+                <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
+                    Elimina
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
@@ -55,7 +83,8 @@
             uploading: false,
             uploadProgress: null,
             error: '',
-            loadingProgress: { loaded: 0, total: 0, isLoading: false }
+            loadingProgress: { loaded: 0, total: 0, isLoading: false },
+            deleteAction: null // { type: 'single'|'multiple', ids: [] }
         };
 
         function logout() {
@@ -233,7 +262,7 @@
             await extractAndSaveProducts(xmlDoc, cedenteNome);
         }
 
-        // ===== PARSER MIGLIORATO =====
+        // ===== PARSER CON GESTIONE IVA COMPLETA =====
         async function extractAndSaveProducts(xmlDoc, fornitore) {
             const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
             
@@ -251,6 +280,10 @@
                 prezzoText = prezzoText.replace(',', '.');
                 let prezzoUnitario = parseFloat(prezzoText) || 0;
                 
+                let aliquotaIVAText = getTextContent(linea, 'AliquotaIVA') || '22.00';
+                aliquotaIVAText = aliquotaIVAText.replace(',', '.');
+                const aliquotaIVA = parseFloat(aliquotaIVAText) || 22.00;
+                
                 if (prezzoUnitario === 0 && quantita > 0) {
                     let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
                     totaleText = totaleText.replace(',', '.');
@@ -266,25 +299,43 @@
                 const categoria = generateTag(descrizione);
 
                 try {
-                    const { data: existing } = await supabaseClient.from('prodotti').select('id, quantita, prezzo').eq('nome', descrizione).eq('fornitore', fornitore).single();
+                    const { data: existing } = await supabaseClient
+                        .from('prodotti')
+                        .select('id, quantita, prezzo, aliquota_iva')
+                        .eq('nome', descrizione)
+                        .eq('fornitore', fornitore)
+                        .single();
 
                     if (existing) {
                         const nuovaQuantita = (existing.quantita || 0) + quantita;
                         const nuovoPrezzo = prezzoUnitario > 0 ? prezzoUnitario : existing.prezzo;
+                        const nuovaAliquota = aliquotaIVA > 0 ? aliquotaIVA : existing.aliquota_iva;
                         
-                        await supabaseClient.from('prodotti').update({ quantita: nuovaQuantita, prezzo: nuovoPrezzo }).eq('id', existing.id);
-                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo})`);
+                        await supabaseClient
+                            .from('prodotti')
+                            .update({ 
+                                quantita: nuovaQuantita,
+                                prezzo: nuovoPrezzo,
+                                aliquota_iva: nuovaAliquota
+                            })
+                            .eq('id', existing.id);
+                            
+                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo}, IVA: ${nuovaAliquota}%)`);
                     } else {
-                        await supabaseClient.from('prodotti').insert([{
-                            nome: descrizione,
-                            descrizione: descrizione,
-                            categoria: categoria,
-                            prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
-                            quantita: quantita > 0 ? quantita : 0,
-                            fornitore: fornitore,
-                            attivo: true
-                        }]);
-                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario})`);
+                        await supabaseClient
+                            .from('prodotti')
+                            .insert([{
+                                nome: descrizione,
+                                descrizione: descrizione,
+                                categoria: categoria,
+                                prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
+                                aliquota_iva: aliquotaIVA,
+                                quantita: quantita > 0 ? quantita : 0,
+                                fornitore: fornitore,
+                                attivo: true
+                            }]);
+                            
+                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
                     }
                 } catch (err) {
                     console.error(`❌ Errore prodotto "${descrizione}":`, err);
@@ -292,18 +343,70 @@
             }
         }
 
-        window.deleteFattura = async function(id) {
-            if (!confirm('Eliminare?')) return;
-            await supabaseClient.from('fatture').delete().eq('id', id);
-            await loadAllFatture();
+        // ===== GESTIONE ELIMINAZIONE =====
+        window.showDeleteModal = function(type, id = null) {
+            const modal = document.getElementById('deleteModal');
+            const message = document.getElementById('deleteMessage');
+            
+            if (type === 'single') {
+                const fattura = state.fatture.find(f => f.id === id);
+                message.textContent = `Vuoi eliminare la fattura ${fattura.num}?`;
+                state.deleteAction = { type: 'single', ids: [id] };
+            } else if (type === 'multiple') {
+                const count = state.selectedIds.size;
+                message.textContent = `Vuoi eliminare ${count} fatture selezionate?`;
+                state.deleteAction = { type: 'multiple', ids: Array.from(state.selectedIds) };
+            }
+            
+            modal.classList.remove('hidden');
         };
 
-        window.deleteSelected = async function() {
-            if (!state.selectedIds.size) { alert('Seleziona fatture'); return; }
-            if (!confirm(`Eliminare ${state.selectedIds.size} fatture?`)) return;
-            for (const id of state.selectedIds) await supabaseClient.from('fatture').delete().eq('id', id);
-            state.selectedIds.clear();
-            await loadAllFatture();
+        window.closeDeleteModal = function() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            state.deleteAction = null;
+        };
+
+        window.confirmDelete = async function() {
+            if (!state.deleteAction) return;
+            
+            closeDeleteModal();
+            
+            try {
+                state.error = '🗑️ Eliminazione in corso...';
+                render();
+                
+                const idsToDelete = state.deleteAction.ids;
+                let deletedCount = 0;
+                
+                for (const id of idsToDelete) {
+                    const { error } = await supabaseClient.from('fatture').delete().eq('id', id);
+                    if (!error) deletedCount++;
+                }
+                
+                state.selectedIds.clear();
+                state.error = `✅ ${deletedCount} fatture eliminate con successo!`;
+                
+                await loadAllFatture();
+                
+                setTimeout(() => { state.error = ''; render(); }, 3000);
+                
+            } catch (err) {
+                console.error('Errore eliminazione:', err);
+                state.error = '❌ Errore durante l\'eliminazione';
+                render();
+            }
+        };
+
+        window.deleteFattura = function(id) {
+            showDeleteModal('single', id);
+        };
+
+        window.deleteSelected = function() {
+            if (!state.selectedIds.size) {
+                alert('Seleziona almeno una fattura da eliminare');
+                return;
+            }
+            showDeleteModal('multiple');
         };
 
         window.toggleSelect = function(id) {
@@ -355,7 +458,7 @@
                     <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
                         <div class="flex items-center space-x-3 mb-6">
                             <div class="bg-blue-600 p-3 rounded-xl"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
-                            <div><h1 class="text-2xl font-bold">Gestione Fatture</h1><p class="text-sm text-gray-600">Formato FatturaPA XML</p></div>
+                            <div><h1 class="text-2xl font-bold">Gestione Fatture</h1><p class="text-sm text-gray-600">Con estrazione IVA e cancellazione</p></div>
                         </div>
 
                         ${state.loadingProgress.isLoading ? `
@@ -375,10 +478,11 @@
                             <input type="file" id="fileInput" accept=".xml,.p7m" multiple class="hidden" onchange="handleFileUpload(event)">
                             <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-lg font-semibold mb-2">Carica Fatture XML</p>
+                            <p class="text-xs text-gray-500">Con estrazione IVA automatica</p>
                         </div>
 
                         ${state.uploading ? `<div class="mt-4 bg-blue-50 border p-4 rounded"><div class="flex justify-between mb-2"><span>Caricamento...</span><span>${state.uploadProgress.current} di ${state.uploadProgress.total}</span></div><div class="w-full bg-blue-200 rounded h-2"><div class="bg-blue-600 h-2 rounded" style="width: ${(state.uploadProgress.current / state.uploadProgress.total) * 100}%"></div></div></div>` : ''}
-                        ${state.error ? `<div class="mt-4 bg-green-50 border text-green-800 px-4 py-3 rounded">${state.error}</div>` : ''}
+                        ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
                     </div>
 
                     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -392,10 +496,18 @@
                     </div>
 
                     <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                        ${state.selectedIds.size > 0 ? `<div class="bg-blue-50 border-b px-6 py-4 flex justify-between"><span class="text-sm font-medium text-blue-900">${state.selectedIds.size} selezionate</span><button onclick="deleteSelected()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Elimina</button></div>` : ''}
+                        ${state.selectedIds.size > 0 ? `
+                            <div class="bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
+                                <span class="text-sm font-medium text-blue-900">${state.selectedIds.size} fatture selezionate</span>
+                                <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    <span>Elimina Selezionate</span>
+                                </button>
+                            </div>
+                        ` : ''}
                         <table class="w-full">
                             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white"><tr><th class="px-4 py-3"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}></th><th class="px-6 py-3 text-left text-sm">Data</th><th class="px-6 py-3 text-left text-sm">Numero</th><th class="px-6 py-3 text-left text-sm">Fornitore</th><th class="px-6 py-3 text-right text-sm">Importo</th><th class="px-6 py-3 text-center text-sm">Azioni</th></tr></thead>
-                            <tbody>${!filteredFatture.length ? `<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `<tr class="hover:bg-gray-50${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}"><td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td><td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td><td class="px-6 py-4 text-sm font-medium">${f.num}</td><td class="px-6 py-4 text-sm">${f.ced.nm}</td><td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td><td class="px-6 py-4 text-center"><button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></td></tr>`).join('')}</tbody>
+                            <tbody>${!filteredFatture.length ? `<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `<tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}"><td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td><td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td><td class="px-6 py-4 text-sm font-medium">${f.num}</td><td class="px-6 py-4 text-sm">${f.ced.nm}</td><td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td><td class="px-6 py-4 text-center"><button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors" title="Elimina fattura"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></td></tr>`).join('')}</tbody>
                         </table>
                     </div>
                 </div>
@@ -403,7 +515,7 @@
         }
 
         loadAllFatture();
-        console.log('✅ Gestione Fatture (Parser Migliorato)');
+        console.log('✅ Gestione Fatture (Con IVA + Eliminazione)');
     </script>
 </body>
 </html>
