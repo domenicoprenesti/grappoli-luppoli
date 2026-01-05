@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiorna IVA Prodotti da Fatture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">🔄 Aggiorna IVA Prodotti da Fatture</h1>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 mb-8">
+            <h2 class="font-bold text-yellow-900 mb-2">⚠️ Cosa fa questo script:</h2>
+            <ul class="text-sm text-yellow-800 list-disc ml-4 space-y-1">
+                <li>Legge TUTTE le fatture dal database</li>
+                <li>Estrae AliquotaIVA da ogni riga prodotto nell'XML</li>
+                <li>Aggiorna la colonna <code>aliquota_iva</code> di ogni prodotto</li>
+                <li>Il campo <code>prezzo_ivato</code> si ricalcola automaticamente</li>
+            </ul>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <button onclick="avviaAggiornamento()" class="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-lg font-bold">
+                🚀 Avvia Aggiornamento IVA
+            </button>
+        </div>
+
+        <!-- Progress -->
+        <div id="progress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-medium">Elaborazione in corso...</span>
+                <span id="progressText">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+            <p id="progressDetail" class="text-xs text-gray-600 mt-2"></p>
+        </div>
+
+        <!-- Statistiche -->
+        <div id="statistiche" class="hidden grid md:grid-cols-3 gap-6 mb-8"></div>
+
+        <!-- Riepilogo Modifiche -->
+        <div id="riepilogo" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8"></div>
+
+        <!-- Log -->
+        <div class="bg-gray-900 text-green-400 rounded-xl p-6 font-mono text-xs overflow-auto max-h-96">
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(msg, color = 'green') {
+            const logDiv = document.getElementById('logOutput');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="text-${color}-400">[${time}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function updateProgress(pct, text, detail = '') {
+            document.getElementById('progress').classList.remove('hidden');
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressText').textContent = Math.round(pct) + '%';
+            document.getElementById('progressDetail').textContent = detail;
+        }
+
+        function parseXML(xmlString) {
+            const parser = new DOMParser();
+            return parser.parseFromString(xmlString, 'text/xml');
+        }
+
+        function getTextContent(element, tagName) {
+            if (!element) return '';
+            const el = element.getElementsByTagName(tagName)[0];
+            return el ? el.textContent.trim() : '';
+        }
+
+        async function avviaAggiornamento() {
+            log('🚀 INIZIO AGGIORNAMENTO IVA DA FATTURE', 'blue');
+
+            const stats = {
+                fattureProcessate: 0,
+                prodottiAggiornati: 0,
+                prodottiNonTrovati: 0,
+                errori: 0,
+                mappingIVA: {} // fornitore+prodotto → IVA
+            };
+
+            try {
+                // 1. CARICA TUTTE LE FATTURE
+                log('📄 Caricamento fatture con XML...', 'blue');
+                updateProgress(5, 'Caricamento fatture...', 'Lettura database');
+
+                const { count: fattureCount } = await supabaseClient
+                    .from('fatture')
+                    .select('*', { count: 'exact', head: true });
+
+                log(`✅ Trovate ${fattureCount} fatture`);
+
+                let allFatture = [];
+                const batchSize = 500;
+                const numBatches = Math.ceil(fattureCount / batchSize);
+
+                for (let i = 0; i < numBatches; i++) {
+                    const { data } = await supabaseClient
+                        .from('fatture')
+                        .select('id, numero_fattura, fornitore, cedente_denominazione, xml_content')
+                        .range(i * batchSize, (i + 1) * batchSize - 1);
+                    allFatture = [...allFatture, ...data];
+                    updateProgress(5 + (i / numBatches) * 20, 'Caricamento fatture...', `Batch ${i + 1}/${numBatches}`);
+                }
+
+                log(`✅ Caricate ${allFatture.length} fatture`);
+
+                // 2. CARICA TUTTI I PRODOTTI
+                log('📦 Caricamento prodotti...', 'blue');
+                updateProgress(25, 'Caricamento prodotti...', 'Lettura database');
+
+                const { count: prodottiCount } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+
+                let allProdotti = [];
+                const prodBatches = Math.ceil(prodottiCount / batchSize);
+
+                for (let i = 0; i < prodBatches; i++) {
+                    const { data } = await supabaseClient
+                        .from('prodotti')
+                        .select('id, nome, fornitore, aliquota_iva')
+                        .range(i * batchSize, (i + 1) * batchSize - 1);
+                    allProdotti = [...allProdotti, ...data];
+                    updateProgress(25 + (i / prodBatches) * 15, 'Caricamento prodotti...', `Batch ${i + 1}/${prodBatches}`);
+                }
+
+                log(`✅ Caricati ${allProdotti.length} prodotti`);
+
+                // 3. ESTRAI IVA DA OGNI FATTURA
+                log('🔍 Estrazione IVA da XML...', 'blue');
+                updateProgress(40, 'Estrazione IVA...', 'Analisi XML');
+
+                for (let i = 0; i < allFatture.length; i++) {
+                    const fattura = allFatture[i];
+                    const fornitore = fattura.fornitore || fattura.cedente_denominazione;
+
+                    if (!fattura.xml_content) {
+                        log(`⚠️ Fattura ${fattura.numero_fattura}: XML mancante`, 'yellow');
+                        continue;
+                    }
+
+                    try {
+                        const xmlDoc = parseXML(fattura.xml_content);
+                        const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
+
+                        for (let j = 0; j < dettaglioLinee.length; j++) {
+                            const linea = dettaglioLinee[j];
+                            const descrizione = getTextContent(linea, 'Descrizione');
+                            
+                            if (!descrizione) continue;
+
+                            // ESTRAI ALIQUOTA IVA
+                            let aliquotaText = getTextContent(linea, 'AliquotaIVA') || '22.00';
+                            aliquotaText = aliquotaText.replace(',', '.');
+                            const aliquotaIVA = parseFloat(aliquotaText) || 22.00;
+
+                            // CREA CHIAVE UNIVOCA
+                            const key = `${fornitore}|||${descrizione}`;
+                            
+                            // SALVA MAPPING
+                            if (!stats.mappingIVA[key]) {
+                                stats.mappingIVA[key] = aliquotaIVA;
+                            }
+                        }
+
+                        stats.fattureProcessate++;
+
+                    } catch (err) {
+                        log(`❌ Errore fattura ${fattura.numero_fattura}: ${err.message}`, 'red');
+                        stats.errori++;
+                    }
+
+                    if (i % 50 === 0) {
+                        updateProgress(40 + (i / allFatture.length) * 40, 'Estrazione IVA...', `Fattura ${i + 1}/${allFatture.length}`);
+                    }
+                }
+
+                log(`✅ Estratte ${Object.keys(stats.mappingIVA).length} mappature prodotto → IVA`);
+
+                // 4. AGGIORNA PRODOTTI
+                log('💾 Aggiornamento prodotti...', 'blue');
+                updateProgress(80, 'Aggiornamento database...', 'Scrittura IVA');
+
+                for (let i = 0; i < allProdotti.length; i++) {
+                    const prodotto = allProdotti[i];
+                    const key = `${prodotto.fornitore}|||${prodotto.nome}`;
+
+                    if (stats.mappingIVA[key]) {
+                        const nuovaIVA = stats.mappingIVA[key];
+                        
+                        // AGGIORNA SOLO SE DIVERSA
+                        if (prodotto.aliquota_iva !== nuovaIVA) {
+                            try {
+                                await supabaseClient
+                                    .from('prodotti')
+                                    .update({ aliquota_iva: nuovaIVA })
+                                    .eq('id', prodotto.id);
+
+                                stats.prodottiAggiornati++;
+                                log(`✅ ${prodotto.nome}: IVA ${prodotto.aliquota_iva}% → ${nuovaIVA}%`, 'green');
+                            } catch (err) {
+                                log(`❌ Errore aggiornamento ${prodotto.nome}: ${err.message}`, 'red');
+                                stats.errori++;
+                            }
+                        }
+                    } else {
+                        stats.prodottiNonTrovati++;
+                    }
+
+                    if (i % 100 === 0) {
+                        updateProgress(80 + (i / allProdotti.length) * 15, 'Aggiornamento database...', `Prodotto ${i + 1}/${allProdotti.length}`);
+                    }
+                }
+
+                updateProgress(100, 'Completato!', 'Aggiornamento terminato');
+                log('✅ AGGIORNAMENTO COMPLETATO', 'green');
+
+                mostraRisultati(stats);
+
+                setTimeout(() => {
+                    document.getElementById('progress').classList.add('hidden');
+                }, 2000);
+
+            } catch (err) {
+                log(`❌ ERRORE CRITICO: ${err.message}`, 'red');
+                console.error(err);
+            }
+        }
+
+        function mostraRisultati(stats) {
+            // STATISTICHE
+            const statistiche = document.getElementById('statistiche');
+            statistiche.classList.remove('hidden');
+            statistiche.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <p class="text-sm text-gray-600">Fatture Processate</p>
+                    <p class="text-3xl font-bold text-blue-600">${stats.fattureProcessate}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <p class="text-sm text-gray-600">Prodotti Aggiornati</p>
+                    <p class="text-3xl font-bold text-green-600">${stats.prodottiAggiornati}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <p class="text-sm text-gray-600">Errori</p>
+                    <p class="text-3xl font-bold text-red-600">${stats.errori}</p>
+                </div>
+            `;
+
+            // RIEPILOGO
+            const riepilogo = document.getElementById('riepilogo');
+            riepilogo.classList.remove('hidden');
+
+            // Analisi distribuzione IVA
+            const ivaDistribution = {};
+            Object.values(stats.mappingIVA).forEach(iva => {
+                ivaDistribution[iva] = (ivaDistribution[iva] || 0) + 1;
+            });
+
+            riepilogo.innerHTML = `
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-bold">📊 Riepilogo Aggiornamento</h2>
+                    
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4">
+                        <p class="font-bold text-green-900 mb-2">✅ Completato con successo!</p>
+                        <div class="text-sm text-green-800 space-y-1">
+                            <p><strong>${stats.fattureProcessate}</strong> fatture analizzate</p>
+                            <p><strong>${stats.prodottiAggiornati}</strong> prodotti aggiornati con IVA corretta</p>
+                            <p><strong>${stats.prodottiNonTrovati}</strong> prodotti non trovati nelle fatture (mantenuta IVA default)</p>
+                            ${stats.errori > 0 ? `<p class="text-red-600"><strong>${stats.errori}</strong> errori riscontrati</p>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                        <p class="font-bold text-blue-900 mb-2">📈 Distribuzione Aliquote IVA:</p>
+                        <div class="text-sm text-blue-800 space-y-1">
+                            ${Object.entries(ivaDistribution)
+                                .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+                                .map(([iva, count]) => `
+                                    <p><strong>IVA ${iva}%:</strong> ${count} prodotti</p>
+                                `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="bg-purple-50 border-l-4 border-purple-500 p-4">
+                        <p class="font-bold text-purple-900 mb-2">🎯 Prossimi Passi:</p>
+                        <ul class="text-sm text-purple-800 list-disc ml-4 space-y-1">
+                            <li>Vai alla pagina Prodotti per verificare le aliquote IVA</li>
+                            <li>Il campo <code>prezzo_ivato</code> è stato ricalcolato automaticamente</li>
+                            <li>Le future fatture manterranno l'IVA corretta dall'XML</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        log('🔧 Script pronto. Clicca "Avvia Aggiornamento IVA"', 'blue');
+    </script>
+</body>
+</html>
