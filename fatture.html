@@ -488,6 +488,9 @@
                 quantitaText = quantitaText.replace(',', '.');
                 const quantita = parseFloat(quantitaText) || 0;
                 
+                // Estrai unità di misura dal XML
+                const unitaMisura = getTextContent(linea, 'UnitaMisura') || 'pz';
+                
                 let prezzoText = getTextContent(linea, 'PrezzoUnitario') || getTextContent(linea, 'UnitPrice') || getTextContent(linea, 'Prezzo') || '0';
                 prezzoText = prezzoText.replace(',', '.');
                 let prezzoUnitario = parseFloat(prezzoText) || 0;
@@ -528,11 +531,12 @@
                             .update({ 
                                 quantita: nuovaQuantita,
                                 prezzo: nuovoPrezzo,
-                                aliquota_iva: nuovaAliquota
+                                aliquota_iva: nuovaAliquota,
+                                unita_misura: unitaMisura
                             })
                             .eq('id', existing.id);
                             
-                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo}, IVA: ${nuovaAliquota}%)`);
+                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo}, IVA: ${nuovaAliquota}%, UM: ${unitaMisura})`);
                     } else {
                         await supabaseClient
                             .from('prodotti')
@@ -543,11 +547,12 @@
                                 prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
                                 aliquota_iva: aliquotaIVA,
                                 quantita: quantita > 0 ? quantita : 0,
+                                unita_misura: unitaMisura,
                                 fornitore: fornitore,
                                 attivo: true
                             }]);
                             
-                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
+                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%, UM: ${unitaMisura})`);
                     }
                 } catch (err) {
                     console.error(`❌ Errore prodotto "${descrizione}":`, err);
