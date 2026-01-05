@@ -130,7 +130,7 @@
 
     <div id="modalProdotto" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
-            <h2 id="modalTitle" class="text-2xl font-bold mb-6">Nuovo Prodotto</h2>
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6">Modifica Prodotto</h2>
             <form onsubmit="saveProdotto(event)" class="space-y-4">
                 <input type="hidden" id="prodottoId">
                 <div class="grid md:grid-cols-2 gap-4">
@@ -234,7 +234,6 @@
             const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo || 0) * (p.quantita || 0)), 0);
             const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
             
-            // Calcola percentuale IVA media
             const percentualeIVA = valoreSenzaIVA > 0 ? ((valoreConIVA - valoreSenzaIVA) / valoreSenzaIVA * 100) : 0;
             
             document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -317,7 +316,6 @@
             const message = document.getElementById('deleteMessage');
             message.textContent = `Vuoi eliminare il prodotto "${prodotto.nome}"?`;
             deleteAction = { type: 'single', ids: [id] };
-            console.log('Delete action impostata:', deleteAction);
             modal.classList.remove('hidden');
         }
 
@@ -330,72 +328,38 @@
             modal.classList.remove('hidden');
         };
 
-        function closeDeleteModal() { 
-            document.getElementById('deleteModal').classList.add('hidden'); 
-        }
+        function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
 
         async function confirmDelete() {
-            if (!deleteAction) { console.error('deleteAction is null'); return; }
-            
+            if (!deleteAction) return;
             const idsToDelete = deleteAction.ids;
             const total = idsToDelete.length;
-            
-            console.log('Inizio eliminazione:', { total, ids: idsToDelete });
-            
             deleteAction = null;
             closeDeleteModal();
-            
             try {
                 let deletedCount = 0;
                 const tbody = document.getElementById('prodottiTableBody');
                 tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
-                
                 const BATCH_DELETE_SIZE = 100;
-                
                 for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
                     const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
-                    console.log(`Eliminando batch ${Math.floor(i / BATCH_DELETE_SIZE) + 1}: ${batch.length} prodotti`);
-                    
                     const { error } = await supabaseClient.from('prodotti').delete().in('id', batch);
-                    
-                    if (error) { console.error('Errore eliminazione batch:', error); throw error; }
-                    
+                    if (error) throw error;
                     deletedCount += batch.length;
-                    console.log(`Eliminati ${deletedCount} / ${total}`);
-                    
                     const progressSpan = document.getElementById('deleteProgress');
                     if (progressSpan) progressSpan.textContent = `${deletedCount} / ${total}`;
-                    
                     if (i + BATCH_DELETE_SIZE < idsToDelete.length) await new Promise(resolve => setTimeout(resolve, 500));
                 }
-                
                 selectedIds.clear();
                 updateSelectionBar();
                 await loadAllProdotti();
-                
                 if (deletedCount === total) alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
                 else alert(`⚠️ Eliminati ${deletedCount} su ${total} prodotti`);
-                
             } catch (err) {
                 console.error('Errore eliminazione:', err);
                 alert(`❌ Errore durante l'eliminazione: ${err.message}`);
                 await loadAllProdotti();
             }
-        }
-
-        function showAddModal() {
-            document.getElementById('modalTitle').textContent = 'Nuovo Prodotto';
-            document.getElementById('prodottoId').value = '';
-            document.getElementById('prodottoNome').value = '';
-            document.getElementById('prodottoCategoria').value = '';
-            document.getElementById('prodottoPrezzo').value = '';
-            document.getElementById('prodottoAliquotaIVA').value = '22';
-            document.getElementById('prodottoQuantita').value = '';
-            document.getElementById('prodottoUnitaMisura').value = 'pz';
-            document.getElementById('prodottoFornitore').value = '';
-            document.getElementById('prodottoDescrizione').value = '';
-            document.getElementById('prodottoAttivo').checked = true;
-            document.getElementById('modalProdotto').classList.remove('hidden');
         }
 
         function editProdotto(id) {
@@ -438,7 +402,7 @@
         function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
 
         loadAllProdotti();
-        console.log('✅ Prodotti (Responsive + IVA + Eliminazione FIXED)');
+        console.log('✅ Prodotti FINALE');
     </script>
 </body>
 </html>
