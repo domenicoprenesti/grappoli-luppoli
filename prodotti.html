@@ -363,22 +363,56 @@
         async function confirmDelete() {
             if (!deleteAction) return;
             closeDeleteModal();
+            
             try {
                 const idsToDelete = deleteAction.ids;
+                const total = idsToDelete.length;
                 let deletedCount = 0;
+                
                 const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...</td></tr>`;
-                for (const id of idsToDelete) {
-                    const { error } = await supabaseClient.from('prodotti').delete().eq('id', id);
-                    if (!error) deletedCount++;
+                tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
+                
+                // Elimina in batch di 100 per evitare timeout
+                const BATCH_DELETE_SIZE = 100;
+                
+                for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
+                    const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
+                    
+                    // Usa .in() per eliminazione batch più efficiente
+                    const { error, count } = await supabaseClient
+                        .from('prodotti')
+                        .delete()
+                        .in('id', batch);
+                    
+                    if (!error) {
+                        deletedCount += batch.length;
+                    }
+                    
+                    // Aggiorna progress
+                    const progressSpan = document.getElementById('deleteProgress');
+                    if (progressSpan) {
+                        progressSpan.textContent = `${deletedCount} / ${total}`;
+                    }
+                    
+                    // Piccola pausa tra i batch
+                    if (i + BATCH_DELETE_SIZE < idsToDelete.length) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
                 }
+                
                 selectedIds.clear();
                 updateSelectionBar();
                 await loadAllProdotti();
-                alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
+                
+                if (deletedCount === total) {
+                    alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
+                } else {
+                    alert(`⚠️ Eliminati ${deletedCount} su ${total} prodotti`);
+                }
+                
             } catch (err) {
                 console.error('Errore eliminazione:', err);
-                alert('❌ Errore durante l\'eliminazione');
+                alert(`❌ Errore durante l'eliminazione: ${err.message}`);
                 await loadAllProdotti();
             }
         }
