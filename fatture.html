@@ -65,6 +65,65 @@
         </div>
     </div>
 
+    <!-- Modal Upload -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">
+                    <span id="uploadModalTitle">Carica Fatture XML</span>
+                </h2>
+                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Area Upload Singolo -->
+            <div id="modalUploadSingle" class="hidden">
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-500 cursor-pointer transition-colors" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" accept=".xml,.p7m" multiple class="hidden" onchange="handleFileUpload(event)">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-xl font-bold mb-2">Carica Fatture XML</p>
+                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o più file (anche drag & drop)</p>
+                    <p class="text-xs text-blue-600 font-medium">✓ Controllo duplicati automatico</p>
+                </div>
+            </div>
+
+            <!-- Area Upload Cartella -->
+            <div id="modalUploadFolder" class="hidden">
+                <div class="border-2 border-dashed border-purple-300 rounded-xl p-12 text-center hover:border-purple-500 cursor-pointer transition-colors" onclick="document.getElementById('folderInput').click()">
+                    <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden" onchange="handleFolderUpload(event)">
+                    <svg class="w-20 h-20 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                    </svg>
+                    <p class="text-xl font-bold mb-2 text-purple-700">📁 Carica Cartella Completa</p>
+                    <p class="text-sm text-gray-600 mb-3">Seleziona una cartella con tutte le fatture XML</p>
+                    <div class="space-y-1">
+                        <p class="text-xs text-purple-600 font-medium">✓ Elaborazione automatica in batch</p>
+                        <p class="text-xs text-purple-600 font-medium">✓ Skip automatico duplicati</p>
+                        <p class="text-xs text-gray-500 mt-2">Perfetto per importare centinaia di fatture</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar Upload (appare durante caricamento) -->
+            <div id="modalUploadProgress" class="hidden mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-medium text-blue-900">Caricamento in corso...</span>
+                    <span id="modalProgressText" class="text-sm text-blue-700">0 / 0</span>
+                </div>
+                <div class="w-full bg-blue-200 rounded-full h-3">
+                    <div id="modalProgressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">⚠️ 0 duplicati saltati</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
@@ -96,7 +155,29 @@
         // ===== SWITCH MODALITÀ UPLOAD =====
         window.switchUploadMode = function(mode) {
             state.uploadMode = mode;
-            render();
+            
+            // Apri modal
+            const modal = document.getElementById('uploadModal');
+            const modalSingle = document.getElementById('modalUploadSingle');
+            const modalFolder = document.getElementById('modalUploadFolder');
+            const modalTitle = document.getElementById('uploadModalTitle');
+            
+            if (mode === 'single') {
+                modalTitle.textContent = 'Carica Fatture XML';
+                modalSingle.classList.remove('hidden');
+                modalFolder.classList.add('hidden');
+            } else {
+                modalTitle.textContent = '📁 Carica Cartella Completa';
+                modalSingle.classList.add('hidden');
+                modalFolder.classList.remove('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+        };
+
+        window.closeUploadModal = function() {
+            const modal = document.getElementById('uploadModal');
+            modal.classList.add('hidden');
         };
 
         // ===== GESTIONE UPLOAD CARTELLA =====
@@ -196,12 +277,30 @@
             state.uploading = true;
             state.error = '';
             state.uploadProgress = { current: 0, total: files.length, errors: [], duplicates: [] };
+            
+            // Mostra progress nel modal
+            const modalProgress = document.getElementById('modalUploadProgress');
+            const modalProgressBar = document.getElementById('modalProgressBar');
+            const modalProgressText = document.getElementById('modalProgressText');
+            const modalDuplicatesText = document.getElementById('modalDuplicatesText');
+            
+            modalProgress.classList.remove('hidden');
+            modalProgressText.textContent = `0 / ${files.length}`;
+            modalProgressBar.style.width = '0%';
+            modalDuplicatesText.classList.add('hidden');
+            
             render();
 
             let successCount = 0;
 
             for (let i = 0; i < files.length; i++) {
                 state.uploadProgress.current = i + 1;
+                
+                // Aggiorna progress bar nel modal
+                const progress = ((i + 1) / files.length * 100).toFixed(0);
+                modalProgressBar.style.width = `${progress}%`;
+                modalProgressText.textContent = `${i + 1} / ${files.length}`;
+                
                 render();
 
                 try {
@@ -210,6 +309,12 @@
                 } catch (err) {
                     if (err.message.startsWith('Duplicato:')) {
                         state.uploadProgress.duplicates.push({ file: files[i].name, error: err.message });
+                        
+                        // Mostra contatore duplicati
+                        if (state.uploadProgress.duplicates.length > 0) {
+                            modalDuplicatesText.textContent = `⚠️ ${state.uploadProgress.duplicates.length} duplicati saltati`;
+                            modalDuplicatesText.classList.remove('hidden');
+                        }
                     } else {
                         state.uploadProgress.errors.push({ file: files[i].name, error: err.message });
                     }
@@ -220,6 +325,12 @@
             state.error = `✓ ${successCount} fatture caricate!`;
             if (state.uploadProgress.duplicates.length > 0) state.error += ` | ⚠️ ${state.uploadProgress.duplicates.length} duplicati`;
             if (state.uploadProgress.errors.length > 0) state.error += ` | ❌ ${state.uploadProgress.errors.length} errori`;
+            
+            // Chiudi modal dopo 2 secondi
+            setTimeout(() => {
+                closeUploadModal();
+                modalProgress.classList.add('hidden');
+            }, 2000);
             
             state.uploadProgress = null;
             setTimeout(() => { state.error = ''; render(); }, 5000);
@@ -527,28 +638,6 @@
                                 <p class="text-3xl font-bold text-purple-600">${state.stats.fornitori}</p>
                             </div>
                         </div>
-
-                        <!-- Area Upload Singolo -->
-                        <div class="${state.uploadMode === 'single' ? '' : 'hidden'} border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 cursor-pointer transition-colors" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('fileInput').click()">
-                            <input type="file" id="fileInput" accept=".xml,.p7m" multiple class="hidden" onchange="handleFileUpload(event)">
-                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <p class="text-lg font-semibold mb-2">Carica Fatture XML</p>
-                            <p class="text-xs text-gray-500 mb-2">Seleziona uno o più file (anche drag & drop)</p>
-                            <p class="text-xs text-blue-600 font-medium">✓ Controllo duplicati automatico</p>
-                        </div>
-
-                        <!-- Area Upload Cartella -->
-                        <div class="${state.uploadMode === 'folder' ? '' : 'hidden'} border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-500 cursor-pointer transition-colors" onclick="document.getElementById('folderInput').click()">
-                            <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden" onchange="handleFolderUpload(event)">
-                            <svg class="w-16 h-16 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                            <p class="text-xl font-bold mb-2 text-purple-700">📁 Carica Cartella Completa</p>
-                            <p class="text-sm text-gray-600 mb-2">Seleziona una cartella con tutte le fatture XML</p>
-                            <p class="text-xs text-purple-600 font-medium">✓ Elaborazione automatica in batch</p>
-                            <p class="text-xs text-purple-600 font-medium">✓ Skip automatico duplicati</p>
-                            <p class="text-xs text-gray-500 mt-3">Perfetto per importare centinaia di fatture</p>
-                        </div>
-
-                        ${state.uploading ? `<div class="mt-4 bg-blue-50 border p-4 rounded"><div class="flex justify-between mb-2"><span>Caricamento...</span><span>${state.uploadProgress.current} di ${state.uploadProgress.total}</span></div><div class="w-full bg-blue-200 rounded h-2"><div class="bg-blue-600 h-2 rounded" style="width: ${(state.uploadProgress.current / state.uploadProgress.total) * 100}%"></div></div>${state.uploadProgress.duplicates && state.uploadProgress.duplicates.length > 0 ? `<p class="text-xs text-yellow-600 mt-2">⚠️ ${state.uploadProgress.duplicates.length} duplicati saltati</p>` : ''}</div>` : ''}
                         ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
                     </div>
 
