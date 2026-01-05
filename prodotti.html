@@ -221,12 +221,12 @@
         }
         function hideLoadingUI() { document.getElementById('loadingProgress').classList.add('hidden'); }
         function updateStats() {
-            document.getElementById('totalProdotti').textContent = allProdotti.length;
+            document.getElementById('totalProdotti').textContent = allProdotti.length.toLocaleString('it-IT');
             document.getElementById('totalCategorie').textContent = new Set(allProdotti.map(p => p.categoria).filter(Boolean)).size;
             const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo || 0) * (p.quantita || 0)), 0);
             const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
-            document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toFixed(2)}`;
-            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toFixed(2)}`;
+            document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
         function updateFilters() {
             const cat = [...new Set(allProdotti.map(p => p.categoria).filter(Boolean))].sort();
@@ -281,9 +281,9 @@
                     <td class="col-nome truncate-cell" title="${p.nome}">${p.nome}</td>
                     <td class="col-categoria text-sm">${p.categoria || '-'}</td>
                     <td class="col-fornitore truncate-cell text-sm" title="${p.fornitore || '-'}">${p.fornitore || '-'}</td>
-                    <td class="col-prezzo text-sm">€${(p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm">€${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
-                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toFixed(2)}</td>
+                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
                     <td class="col-stato"><span class="px-2 py-1 rounded-full text-xs ${p.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.attivo ? 'Attivo' : 'Off'}</span></td>
                     <td class="col-azioni">
