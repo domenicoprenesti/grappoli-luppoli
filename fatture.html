@@ -144,7 +144,8 @@
             error: '',
             loadingProgress: { loaded: 0, total: 0, isLoading: false },
             deleteAction: null, // { type: 'single'|'multiple', ids: [] }
-            uploadMode: 'single' // 'single' o 'folder'
+            uploadMode: 'single', // 'single' o 'folder'
+            pagatoChanges: new Map() // Traccia modifiche pagato: id -> nuovo valore
         };
 
         function logout() {
@@ -178,6 +179,65 @@
         window.closeUploadModal = function() {
             const modal = document.getElementById('uploadModal');
             modal.classList.add('hidden');
+        };
+
+        // ===== GESTIONE STATO PAGATO =====
+        window.togglePagato = function(id) {
+            const fattura = state.fatture.find(f => f.id === id);
+            if (!fattura) return;
+            
+            // Inverti lo stato
+            const nuovoStato = !fattura.pagato;
+            fattura.pagato = nuovoStato;
+            
+            // Traccia modifica
+            state.pagatoChanges.set(id, nuovoStato);
+            
+            render();
+        };
+
+        window.savePagatoChanges = async function() {
+            if (state.pagatoChanges.size === 0) return;
+            
+            try {
+                state.error = '💾 Salvataggio in corso...';
+                render();
+                
+                // Salva tutte le modifiche
+                for (const [id, pagato] of state.pagatoChanges.entries()) {
+                    const { error } = await supabaseClient
+                        .from('fatture')
+                        .update({ pagato: pagato })
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                }
+                
+                state.pagatoChanges.clear();
+                state.error = '✅ Modifiche salvate con successo!';
+                
+                setTimeout(() => { state.error = ''; render(); }, 3000);
+                render();
+                
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                state.error = '❌ Errore durante il salvataggio';
+                render();
+            }
+        };
+
+        window.cancelPagatoChanges = function() {
+            // Ripristina valori originali
+            for (const [id, _] of state.pagatoChanges.entries()) {
+                const fattura = state.fatture.find(f => f.id === id);
+                if (fattura) {
+                    // Ricarica dalla copia originale (invertendo di nuovo)
+                    fattura.pagato = !fattura.pagato;
+                }
+            }
+            
+            state.pagatoChanges.clear();
+            render();
         };
 
         // ===== GESTIONE UPLOAD CARTELLA =====
@@ -234,7 +294,7 @@
 
                     const { data, error } = await supabaseClient
                         .from('fatture')
-                        .select('id, numero_fattura, data_fattura, fornitore, cedente_denominazione, cedente_piva, importo_totale, importo_imponibile, importo_iva')
+                        .select('id, numero_fattura, data_fattura, fornitore, cedente_denominazione, cedente_piva, importo_totale, importo_imponibile, importo_iva, pagato')
                         .order('data_fattura', { ascending: false })
                         .range(start, end);
 
@@ -247,7 +307,8 @@
                             dt: f.data_fattura || '',
                             tot: parseFloat(f.importo_totale || 0),
                             ced: { nm: f.cedente_denominazione || f.fornitore || '', pi: f.cedente_piva || '' },
-                            riv: { imp: parseFloat(f.importo_imponibile || 0), iva: parseFloat(f.importo_iva || 0) }
+                            riv: { imp: parseFloat(f.importo_imponibile || 0), iva: parseFloat(f.importo_iva || 0) },
+                            pagato: f.pagato || false
                         }));
 
                         state.fatture = [...state.fatture, ...newFatture];
@@ -661,9 +722,49 @@
                                 </button>
                             </div>
                         ` : ''}
+                        
+                        ${state.pagatoChanges.size > 0 ? `
+                            <div class="bg-orange-50 border-b px-6 py-4 flex justify-between items-center">
+                                <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
+                                <div class="flex space-x-2">
+                                    <button onclick="cancelPagatoChanges()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                                    <button onclick="savePagatoChanges()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center space-x-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span>Salva</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
                         <table class="w-full">
-                            <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white"><tr><th class="px-4 py-3"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}></th><th class="px-6 py-3 text-left text-sm">Data</th><th class="px-6 py-3 text-left text-sm">Numero</th><th class="px-6 py-3 text-left text-sm">Fornitore</th><th class="px-6 py-3 text-right text-sm">Importo</th><th class="px-6 py-3 text-center text-sm">Azioni</th></tr></thead>
-                            <tbody>${!filteredFatture.length ? `<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `<tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}"><td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td><td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td><td class="px-6 py-4 text-sm font-medium">${f.num}</td><td class="px-6 py-4 text-sm">${f.ced.nm}</td><td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td><td class="px-6 py-4 text-center"><button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors" title="Elimina fattura"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></td></tr>`).join('')}</tbody>
+                            <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                                <tr>
+                                    <th class="px-4 py-3"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}></th>
+                                    <th class="px-6 py-3 text-left text-sm">Data</th>
+                                    <th class="px-6 py-3 text-left text-sm">Numero</th>
+                                    <th class="px-6 py-3 text-left text-sm">Fornitore</th>
+                                    <th class="px-6 py-3 text-right text-sm">Importo</th>
+                                    <th class="px-6 py-3 text-center text-sm">Pagato</th>
+                                    <th class="px-6 py-3 text-center text-sm">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>${!filteredFatture.length ? `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `
+                                <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
+                                    <td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td>
+                                    <td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
+                                    <td class="px-6 py-4 text-sm font-medium">${f.num}</td>
+                                    <td class="px-6 py-4 text-sm">${f.ced.nm}</td>
+                                    <td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-5 h-5 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors" title="Elimina fattura">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}</tbody>
                         </table>
                     </div>
                 </div>
