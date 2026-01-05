@@ -196,6 +196,24 @@
             render();
         };
 
+        window.togglePagatoAll = function() {
+            const checkbox = document.getElementById('selectAllPagato');
+            const isChecked = checkbox.checked;
+            
+            // Ottieni fatture visibili (filtrate)
+            const filteredFatture = getFilteredFatture();
+            
+            // Applica lo stato a tutte le fatture visibili
+            filteredFatture.forEach(f => {
+                if (f.pagato !== isChecked) {
+                    f.pagato = isChecked;
+                    state.pagatoChanges.set(f.id, isChecked);
+                }
+            });
+            
+            render();
+        };
+
         window.savePagatoChanges = async function() {
             if (state.pagatoChanges.size === 0) return;
             
@@ -744,7 +762,12 @@
                                     <th class="px-6 py-3 text-left text-sm">Numero</th>
                                     <th class="px-6 py-3 text-left text-sm">Fornitore</th>
                                     <th class="px-6 py-3 text-right text-sm">Importo</th>
-                                    <th class="px-6 py-3 text-center text-sm">Pagato</th>
+                                    <th class="px-6 py-3 text-center text-sm">
+                                        <div class="flex items-center justify-center space-x-2">
+                                            <span>Pagato</span>
+                                            <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-4 h-4 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''} title="Seleziona/Deseleziona tutte le fatture visibili">
+                                        </div>
+                                    </th>
                                     <th class="px-6 py-3 text-center text-sm">Azioni</th>
                                 </tr>
                             </thead>
