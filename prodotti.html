@@ -6,6 +6,28 @@
     <title>Gestione Prodotti - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Ottimizzazione larghezze colonne */
+        .table-compact th, .table-compact td { padding: 0.5rem 0.75rem; }
+        .col-checkbox { width: 40px; }
+        .col-nome { min-width: 200px; max-width: 300px; }
+        .col-categoria { width: 100px; }
+        .col-fornitore { width: 140px; }
+        .col-prezzo { width: 90px; text-align: right; }
+        .col-iva { width: 60px; text-align: center; }
+        .col-prezzo-ivato { width: 100px; text-align: right; }
+        .col-qta { width: 70px; text-align: right; }
+        .col-stato { width: 80px; text-align: center; }
+        .col-azioni { width: 100px; text-align: center; }
+        
+        /* Testo troncato con ellipsis */
+        .truncate-cell { 
+            max-width: 0; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
@@ -40,7 +62,7 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="max-w-[1400px] mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
         <p class="text-gray-600 mb-8">Prodotti con IVA ed eliminazione</p>
 
@@ -97,21 +119,21 @@
                 </button>
             </div>
 
-            <!-- Tabella con scroll orizzontale -->
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-max">
+            <!-- Tabella ottimizzata -->
+            <div class="overflow-auto">
+                <table class="w-full table-compact">
                     <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                         <tr>
-                            <th class="px-4 py-4 min-w-[50px]"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-5 h-5"></th>
-                            <th class="px-6 py-4 text-left min-w-[250px]">Nome</th>
-                            <th class="px-6 py-4 text-left min-w-[120px]">Categoria</th>
-                            <th class="px-6 py-4 text-left min-w-[180px]">Fornitore</th>
-                            <th class="px-6 py-4 text-right min-w-[120px]">Prezzo (no IVA)</th>
-                            <th class="px-6 py-4 text-center min-w-[80px]">IVA %</th>
-                            <th class="px-6 py-4 text-right min-w-[140px]">Prezzo (IVA incl.)</th>
-                            <th class="px-6 py-4 text-right min-w-[100px]">Quantità</th>
-                            <th class="px-6 py-4 text-center min-w-[100px]">Stato</th>
-                            <th class="px-6 py-4 text-center min-w-[120px]">Azioni</th>
+                            <th class="col-checkbox"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4"></th>
+                            <th class="col-nome text-left text-sm">Nome</th>
+                            <th class="col-categoria text-left text-sm">Categoria</th>
+                            <th class="col-fornitore text-left text-sm">Fornitore</th>
+                            <th class="col-prezzo text-sm">€ netto</th>
+                            <th class="col-iva text-sm">IVA</th>
+                            <th class="col-prezzo-ivato text-sm">€ IVA</th>
+                            <th class="col-qta text-sm">Q.tà</th>
+                            <th class="col-stato text-sm">Stato</th>
+                            <th class="col-azioni text-sm">Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="prodottiTableBody"></tbody>
@@ -162,12 +184,8 @@
                 </p>
             </div>
             <div class="flex space-x-4">
-                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
-                    Annulla
-                </button>
-                <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
-                    Elimina
-                </button>
+                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Elimina</button>
             </div>
         </div>
     </div>
@@ -263,28 +281,18 @@
         function updateSelectionBar() {
             const bar = document.getElementById('selectionBar');
             const count = document.getElementById('selectionCount');
-            
-            if (selectedIds.size > 0) {
-                bar.classList.remove('hidden');
-                count.textContent = `${selectedIds.size} prodotti selezionati`;
-            } else {
-                bar.classList.add('hidden');
-            }
+            if (selectedIds.size > 0) { bar.classList.remove('hidden'); count.textContent = `${selectedIds.size} prodotti selezionati`; }
+            else { bar.classList.add('hidden'); }
         }
 
         function toggleSelect(id) {
-            if (selectedIds.has(id)) {
-                selectedIds.delete(id);
-            } else {
-                selectedIds.add(id);
-            }
+            selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
             updateSelectionBar();
             applyFilters();
         }
 
         function toggleSelectAll() {
             const checkbox = document.getElementById('selectAllCheckbox');
-            
             if (checkbox.checked) {
                 const search = document.getElementById('searchNome').value.toLowerCase();
                 const cat = document.getElementById('filterCategoria').value;
@@ -293,12 +301,8 @@
                 if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
                 if (cat) filtered = filtered.filter(p => p.categoria === cat);
                 if (forn) filtered = filtered.filter(p => p.fornitore === forn);
-                
                 selectedIds = new Set(filtered.map(p => p.id));
-            } else {
-                selectedIds.clear();
-            }
-            
+            } else { selectedIds.clear(); }
             updateSelectionBar();
             applyFilters();
         }
@@ -307,42 +311,29 @@
             const tbody = document.getElementById('prodottiTableBody');
             const selectAllCheckbox = document.getElementById('selectAllCheckbox');
             
-            if (loadingProgress.isLoading) { 
-                tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; 
-                return; 
-            }
-            
-            if (!prodotti.length) { 
-                tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; 
-                selectAllCheckbox.checked = false;
-                return; 
-            }
+            if (loadingProgress.isLoading) { tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; return; }
+            if (!prodotti.length) { tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; selectAllCheckbox.checked = false; return; }
             
             const allSelected = prodotti.every(p => selectedIds.has(p.id));
             selectAllCheckbox.checked = allSelected && prodotti.length > 0;
             
             tbody.innerHTML = prodotti.map(p => `
                 <tr class="hover:bg-gray-50 border-b ${selectedIds.has(p.id) ? 'bg-blue-50' : ''}">
-                    <td class="px-4 py-4">
-                        <input type="checkbox" 
-                               ${selectedIds.has(p.id) ? 'checked' : ''} 
-                               onchange="toggleSelect('${p.id}')"
-                               class="w-5 h-5">
-                    </td>
-                    <td class="px-6 py-4 font-medium">${p.nome}</td>
-                    <td class="px-6 py-4">${p.categoria || '-'}</td>
-                    <td class="px-6 py-4">${p.fornitore || '-'}</td>
-                    <td class="px-6 py-4 text-right">€${(p.prezzo || 0).toFixed(2)}</td>
-                    <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
-                    <td class="px-6 py-4 text-right font-bold text-green-600">€${(p.prezzo_ivato || 0).toFixed(2)}</td>
-                    <td class="px-6 py-4 text-right">${p.quantita || 0}</td>
-                    <td class="px-6 py-4 text-center"><span class="px-3 py-1 rounded-full text-xs ${p.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.attivo ? 'Attivo' : 'Disattivo'}</span></td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="editProdotto('${p.id}')" class="text-blue-600 hover:text-blue-800 mr-2 p-2 hover:bg-blue-50 rounded" title="Modifica">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <td class="col-checkbox"><input type="checkbox" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelect('${p.id}')" class="w-4 h-4"></td>
+                    <td class="col-nome truncate-cell" title="${p.nome}">${p.nome}</td>
+                    <td class="col-categoria text-sm">${p.categoria || '-'}</td>
+                    <td class="col-fornitore truncate-cell text-sm" title="${p.fornitore || '-'}">${p.fornitore || '-'}</td>
+                    <td class="col-prezzo text-sm">€${(p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
+                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toFixed(2)}</td>
+                    <td class="col-qta text-sm">${p.quantita || 0}</td>
+                    <td class="col-stato"><span class="px-2 py-1 rounded-full text-xs ${p.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.attivo ? 'Attivo' : 'Off'}</span></td>
+                    <td class="col-azioni">
+                        <button onclick="editProdotto('${p.id}')" class="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded inline-block" title="Modifica">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
-                        <button onclick="showDeleteModal('${p.id}')" class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded" title="Elimina">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <button onclick="showDeleteModal('${p.id}')" class="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded inline-block" title="Elimina">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </td>
                 </tr>
@@ -352,58 +343,39 @@
         function showDeleteModal(id) {
             const modal = document.getElementById('deleteModal');
             const message = document.getElementById('deleteMessage');
-            
             const prodotto = allProdotti.find(p => p.id === id);
             message.textContent = `Vuoi eliminare il prodotto "${prodotto.nome}"?`;
             deleteAction = { type: 'single', ids: [id] };
-            
             modal.classList.remove('hidden');
         }
 
         window.deleteSelected = function() {
-            if (selectedIds.size === 0) {
-                alert('Seleziona almeno un prodotto da eliminare');
-                return;
-            }
-            
+            if (selectedIds.size === 0) { alert('Seleziona almeno un prodotto da eliminare'); return; }
             const modal = document.getElementById('deleteModal');
             const message = document.getElementById('deleteMessage');
-            
             message.textContent = `Vuoi eliminare ${selectedIds.size} prodotti selezionati?`;
             deleteAction = { type: 'multiple', ids: Array.from(selectedIds) };
-            
             modal.classList.remove('hidden');
         };
 
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            deleteAction = null;
-        }
+        function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); deleteAction = null; }
 
         async function confirmDelete() {
             if (!deleteAction) return;
-            
             closeDeleteModal();
-            
             try {
                 const idsToDelete = deleteAction.ids;
                 let deletedCount = 0;
-                
                 const tbody = document.getElementById('prodottiTableBody');
                 tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...</td></tr>`;
-                
                 for (const id of idsToDelete) {
                     const { error } = await supabaseClient.from('prodotti').delete().eq('id', id);
                     if (!error) deletedCount++;
                 }
-                
                 selectedIds.clear();
                 updateSelectionBar();
-                
                 await loadAllProdotti();
-                
                 alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
-                
             } catch (err) {
                 console.error('Errore eliminazione:', err);
                 alert('❌ Errore durante l\'eliminazione');
@@ -463,7 +435,7 @@
         function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
 
         loadAllProdotti();
-        console.log('✅ Prodotti (Con IVA + Eliminazione)');
+        console.log('✅ Prodotti (Responsive + IVA + Eliminazione)');
     </script>
 </body>
 </html>
