@@ -88,7 +88,7 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            ${/* Barra selezione multipla */}
+            <!-- Barra selezione multipla -->
             <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
                 <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
                 <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
@@ -97,20 +97,21 @@
                 </button>
             </div>
 
+            <!-- Tabella con scroll orizzontale -->
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full min-w-max">
                     <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                         <tr>
-                            <th class="px-4 py-4"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-5 h-5"></th>
-                            <th class="px-6 py-4 text-left">Nome</th>
-                            <th class="px-6 py-4 text-left">Categoria</th>
-                            <th class="px-6 py-4 text-left">Fornitore</th>
-                            <th class="px-6 py-4 text-right">Prezzo (no IVA)</th>
-                            <th class="px-6 py-4 text-center">IVA %</th>
-                            <th class="px-6 py-4 text-right">Prezzo (IVA incl.)</th>
-                            <th class="px-6 py-4 text-right">Quantità</th>
-                            <th class="px-6 py-4 text-center">Stato</th>
-                            <th class="px-6 py-4 text-center">Azioni</th>
+                            <th class="px-4 py-4 min-w-[50px]"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-5 h-5"></th>
+                            <th class="px-6 py-4 text-left min-w-[250px]">Nome</th>
+                            <th class="px-6 py-4 text-left min-w-[120px]">Categoria</th>
+                            <th class="px-6 py-4 text-left min-w-[180px]">Fornitore</th>
+                            <th class="px-6 py-4 text-right min-w-[120px]">Prezzo (no IVA)</th>
+                            <th class="px-6 py-4 text-center min-w-[80px]">IVA %</th>
+                            <th class="px-6 py-4 text-right min-w-[140px]">Prezzo (IVA incl.)</th>
+                            <th class="px-6 py-4 text-right min-w-[100px]">Quantità</th>
+                            <th class="px-6 py-4 text-center min-w-[100px]">Stato</th>
+                            <th class="px-6 py-4 text-center min-w-[120px]">Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="prodottiTableBody"></tbody>
@@ -180,7 +181,7 @@
         let allProdotti = [];
         let loadingProgress = { loaded: 0, total: 0, isLoading: false };
         let selectedIds = new Set();
-        let deleteAction = null; // { type: 'single'|'multiple', ids: [] }
+        let deleteAction = null;
 
         function logout() { localStorage.removeItem('app_authenticated'); window.location.href = 'index.html'; }
 
@@ -285,7 +286,6 @@
             const checkbox = document.getElementById('selectAllCheckbox');
             
             if (checkbox.checked) {
-                // Seleziona tutti i prodotti visibili (filtrati)
                 const search = document.getElementById('searchNome').value.toLowerCase();
                 const cat = document.getElementById('filterCategoria').value;
                 const forn = document.getElementById('filterFornitore').value;
@@ -318,7 +318,6 @@
                 return; 
             }
             
-            // Aggiorna stato checkbox "seleziona tutti"
             const allSelected = prodotti.every(p => selectedIds.has(p.id));
             selectAllCheckbox.checked = allSelected && prodotti.length > 0;
             
@@ -350,7 +349,6 @@
             `).join('');
         }
 
-        // ===== GESTIONE ELIMINAZIONE =====
         function showDeleteModal(id) {
             const modal = document.getElementById('deleteModal');
             const message = document.getElementById('deleteMessage');
@@ -391,7 +389,6 @@
                 const idsToDelete = deleteAction.ids;
                 let deletedCount = 0;
                 
-                // Mostra loading
                 const tbody = document.getElementById('prodottiTableBody');
                 tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...</td></tr>`;
                 
@@ -414,7 +411,6 @@
             }
         }
 
-        // ===== GESTIONE FORM =====
         function showAddModal() {
             document.getElementById('modalTitle').textContent = 'Nuovo Prodotto';
             document.getElementById('prodottoId').value = '';
