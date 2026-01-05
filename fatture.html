@@ -478,9 +478,31 @@
             app.innerHTML = `
                 <div class="max-w-7xl mx-auto px-4">
                     <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
-                        <div class="flex items-center space-x-3 mb-6">
-                            <div class="bg-blue-600 p-3 rounded-xl"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
-                            <div><h1 class="text-2xl font-bold">Gestione Fatture</h1><p class="text-sm text-gray-600">Con estrazione IVA e cancellazione</p></div>
+                        <!-- Header con titolo e pulsanti -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-blue-600 p-3 rounded-xl">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 class="text-2xl font-bold">Gestione Fatture</h1>
+                                    <p class="text-sm text-gray-600">Con estrazione IVA e cancellazione</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Pulsanti Modalità Upload -->
+                            <div class="flex space-x-3">
+                                <button onclick="switchUploadMode('single')" class="px-4 py-2 ${state.uploadMode === 'single' ? 'bg-gray-200 text-gray-700' : 'bg-white border-2 border-gray-300 text-gray-600'} rounded-lg font-medium transition-all flex items-center space-x-2">
+                                    <span>📄</span>
+                                    <span>Upload Singolo</span>
+                                </button>
+                                <button onclick="switchUploadMode('folder')" class="px-4 py-2 ${state.uploadMode === 'folder' ? 'bg-purple-600 text-white' : 'bg-white border-2 border-gray-300 text-gray-600'} rounded-lg font-medium transition-all flex items-center space-x-2">
+                                    <span>📁</span>
+                                    <span>Upload Cartella</span>
+                                </button>
+                            </div>
                         </div>
 
                         ${state.loadingProgress.isLoading ? `
@@ -490,16 +512,20 @@
                             </div>
                         ` : ''}
 
-                        <div class="grid md:grid-cols-3 gap-4 mb-6">
-                            <div class="bg-blue-50 px-4 py-3 rounded-xl"><p class="text-xs text-gray-600">Fatture ${hasActiveFilters ? 'filtrate' : 'totali'}</p><p class="text-2xl font-bold text-blue-600">${filteredFatture.length}${state.stats.total !== filteredFatture.length ? ` / ${state.stats.total}` : ''}</p></div>
-                            <div class="bg-green-50 px-4 py-3 rounded-xl"><p class="text-xs text-gray-600">Importo ${hasActiveFilters ? 'filtrato' : 'totale'}</p><p class="text-2xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toFixed(2)}</p></div>
-                            <div class="bg-purple-50 px-4 py-3 rounded-xl"><p class="text-xs text-gray-600">Fornitori</p><p class="text-2xl font-bold text-purple-600">${state.stats.fornitori}</p></div>
-                        </div>
-
-                        <!-- Switcher Modalità Upload -->
-                        <div class="flex justify-center space-x-4 mb-6">
-                            <button onclick="switchUploadMode('single')" class="px-6 py-3 ${state.uploadMode === 'single' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700'} rounded-lg font-semibold transition-all">📄 Upload Singolo</button>
-                            <button onclick="switchUploadMode('folder')" class="px-6 py-3 ${state.uploadMode === 'folder' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700'} rounded-lg font-semibold transition-all">📁 Upload Cartella</button>
+                        <!-- Statistiche con formato numerico senza decimali -->
+                        <div class="grid md:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-blue-50 px-6 py-4 rounded-xl">
+                                <p class="text-xs text-gray-600 mb-1">Fatture ${hasActiveFilters ? 'filtrate' : 'totali'}</p>
+                                <p class="text-3xl font-bold text-blue-600">${filteredFatture.length.toLocaleString('it-IT')}${state.stats.total !== filteredFatture.length ? ` / ${state.stats.total.toLocaleString('it-IT')}` : ''}</p>
+                            </div>
+                            <div class="bg-green-50 px-6 py-4 rounded-xl">
+                                <p class="text-xs text-gray-600 mb-1">Importo ${hasActiveFilters ? 'filtrato' : 'totale'}</p>
+                                <p class="text-3xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                            </div>
+                            <div class="bg-purple-50 px-6 py-4 rounded-xl">
+                                <p class="text-xs text-gray-600 mb-1">Fornitori</p>
+                                <p class="text-3xl font-bold text-purple-600">${state.stats.fornitori}</p>
+                            </div>
                         </div>
 
                         <!-- Area Upload Singolo -->
