@@ -122,7 +122,7 @@
                             <th class="col-iva text-sm">IVA</th>
                             <th class="col-prezzo-ivato text-sm">€ IVA</th>
                             <th class="col-qta text-sm">Q.tà</th>
-                            <th class="col-stato text-sm">Stato</th>
+                            <th class="col-stato text-sm">U.M.</th>
                             <th class="col-azioni text-sm">Azioni</th>
                         </tr>
                     </thead>
@@ -143,6 +143,18 @@
                     <div><label class="block text-sm font-medium mb-2">Prezzo (senza IVA)</label><input type="number" step="0.01" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg"></div>
                     <div><label class="block text-sm font-medium mb-2">Aliquota IVA (%)</label><input type="number" step="0.01" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg"></div>
                     <div><label class="block text-sm font-medium mb-2">Quantità</label><input type="number" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium mb-2">Unità di Misura</label>
+                        <select id="prodottoUnitaMisura" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="pz">Pezzi (pz)</option>
+                            <option value="kg">Kilogrammi (kg)</option>
+                            <option value="lt">Litri (lt)</option>
+                            <option value="bt">Bottiglie (bt)</option>
+                            <option value="ct">Cartoni (ct)</option>
+                            <option value="cf">Confezioni (cf)</option>
+                            <option value="sc">Scatole (sc)</option>
+                            <option value="pacco">Pacchi (pacco)</option>
+                        </select>
+                    </div>
                     <div><label class="block text-sm font-medium mb-2">Fornitore</label><input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg"></div>
                 </div>
                 <div><label class="block text-sm font-medium mb-2">Descrizione</label><textarea id="prodottoDescrizione" rows="3" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
@@ -285,7 +297,7 @@
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
                     <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
-                    <td class="col-stato"><span class="px-2 py-1 rounded-full text-xs ${p.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.attivo ? 'Attivo' : 'Off'}</span></td>
+                    <td class="col-stato text-sm text-center">${p.unita_misura || 'pz'}</td>
                     <td class="col-azioni">
                         <button onclick="editProdotto('${p.id}')" class="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded inline-block" title="Modifica">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -379,6 +391,7 @@
             document.getElementById('prodottoPrezzo').value = '';
             document.getElementById('prodottoAliquotaIVA').value = '22';
             document.getElementById('prodottoQuantita').value = '';
+            document.getElementById('prodottoUnitaMisura').value = 'pz';
             document.getElementById('prodottoFornitore').value = '';
             document.getElementById('prodottoDescrizione').value = '';
             document.getElementById('prodottoAttivo').checked = true;
@@ -395,6 +408,7 @@
             document.getElementById('prodottoPrezzo').value = p.prezzo || '';
             document.getElementById('prodottoAliquotaIVA').value = p.aliquota_iva || 22;
             document.getElementById('prodottoQuantita').value = p.quantita || '';
+            document.getElementById('prodottoUnitaMisura').value = p.unita_misura || 'pz';
             document.getElementById('prodottoFornitore').value = p.fornitore || '';
             document.getElementById('prodottoDescrizione').value = p.descrizione || '';
             document.getElementById('prodottoAttivo').checked = p.attivo;
@@ -410,6 +424,7 @@
                 prezzo: parseFloat(document.getElementById('prodottoPrezzo').value) || null,
                 aliquota_iva: parseFloat(document.getElementById('prodottoAliquotaIVA').value) || 22,
                 quantita: parseInt(document.getElementById('prodottoQuantita').value) || 0,
+                unita_misura: document.getElementById('prodottoUnitaMisura').value || 'pz',
                 fornitore: document.getElementById('prodottoFornitore').value || null,
                 descrizione: document.getElementById('prodottoDescrizione').value || null,
                 attivo: document.getElementById('prodottoAttivo').checked
