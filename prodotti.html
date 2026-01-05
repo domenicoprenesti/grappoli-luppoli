@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Ottimizzazione larghezze colonne */
         .table-compact th, .table-compact td { padding: 0.5rem 0.75rem; }
         .col-checkbox { width: 40px; }
         .col-nome { min-width: 200px; max-width: 300px; }
@@ -19,14 +18,7 @@
         .col-qta { width: 70px; text-align: right; }
         .col-stato { width: 80px; text-align: center; }
         .col-azioni { width: 100px; text-align: center; }
-        
-        /* Testo troncato con ellipsis */
-        .truncate-cell { 
-            max-width: 0; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-        }
+        .truncate-cell { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -110,7 +102,6 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <!-- Barra selezione multipla -->
             <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
                 <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
                 <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
@@ -119,7 +110,6 @@
                 </button>
             </div>
 
-            <!-- Tabella ottimizzata -->
             <div class="overflow-auto">
                 <table class="w-full table-compact">
                     <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
@@ -142,7 +132,6 @@
         </div>
     </div>
 
-    <!-- Modal Prodotto -->
     <div id="modalProdotto" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
             <h2 id="modalTitle" class="text-2xl font-bold mb-6">Nuovo Prodotto</h2>
@@ -166,7 +155,6 @@
         </div>
     </div>
 
-    <!-- Modal Conferma Eliminazione -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div class="text-center mb-6">
@@ -179,9 +167,7 @@
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800">
-                    <strong>⚠️ Attenzione:</strong> Questa azione è irreversibile!
-                </p>
+                <p class="text-sm text-yellow-800"><strong>⚠️ Attenzione:</strong> Questa azione è irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -208,10 +194,8 @@
                 const { count } = await supabaseClient.from('prodotti').select('*', { count: 'exact', head: true });
                 loadingProgress = { loaded: 0, total: count || 0, isLoading: true };
                 updateLoadingUI();
-
                 const numBatches = Math.ceil(loadingProgress.total / BATCH_SIZE);
                 allProdotti = [];
-
                 for (let i = 0; i < numBatches; i++) {
                     const { data } = await supabaseClient.from('prodotti').select('*').order('nome', { ascending: true }).range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     allProdotti = [...allProdotti, ...data];
@@ -219,16 +203,12 @@
                     updateLoadingUI();
                     if (i < numBatches - 1) await new Promise(r => setTimeout(r, 100));
                 }
-
                 loadingProgress.isLoading = false;
                 updateStats();
                 updateFilters();
                 applyFilters();
                 hideLoadingUI();
-            } catch (err) {
-                console.error('Errore:', err);
-                hideLoadingUI();
-            }
+            } catch (err) { console.error('Errore:', err); hideLoadingUI(); }
         }
 
         function updateLoadingUI() {
@@ -239,27 +219,21 @@
                 document.getElementById('progressText').textContent = `${loadingProgress.loaded} / ${loadingProgress.total}`;
             }
         }
-
         function hideLoadingUI() { document.getElementById('loadingProgress').classList.add('hidden'); }
-
         function updateStats() {
             document.getElementById('totalProdotti').textContent = allProdotti.length;
             document.getElementById('totalCategorie').textContent = new Set(allProdotti.map(p => p.categoria).filter(Boolean)).size;
-            
             const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo || 0) * (p.quantita || 0)), 0);
             const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
-            
             document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toFixed(2)}`;
             document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toFixed(2)}`;
         }
-
         function updateFilters() {
             const cat = [...new Set(allProdotti.map(p => p.categoria).filter(Boolean))].sort();
             const forn = [...new Set(allProdotti.map(p => p.fornitore).filter(Boolean))].sort();
             document.getElementById('filterCategoria').innerHTML = '<option value="">Tutte le categorie</option>' + cat.map(c => `<option value="${c}">${c}</option>`).join('');
             document.getElementById('filterFornitore').innerHTML = '<option value="">Tutti i fornitori</option>' + forn.map(f => `<option value="${f}">${f}</option>`).join('');
         }
-
         function applyFilters() {
             const search = document.getElementById('searchNome').value.toLowerCase();
             const cat = document.getElementById('filterCategoria').value;
@@ -270,27 +244,14 @@
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
             renderTable(filtered);
         }
-
-        function clearFilters() {
-            document.getElementById('searchNome').value = '';
-            document.getElementById('filterCategoria').value = '';
-            document.getElementById('filterFornitore').value = '';
-            applyFilters();
-        }
-
+        function clearFilters() { document.getElementById('searchNome').value = ''; document.getElementById('filterCategoria').value = ''; document.getElementById('filterFornitore').value = ''; applyFilters(); }
         function updateSelectionBar() {
             const bar = document.getElementById('selectionBar');
             const count = document.getElementById('selectionCount');
             if (selectedIds.size > 0) { bar.classList.remove('hidden'); count.textContent = `${selectedIds.size} prodotti selezionati`; }
             else { bar.classList.add('hidden'); }
         }
-
-        function toggleSelect(id) {
-            selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
-            updateSelectionBar();
-            applyFilters();
-        }
-
+        function toggleSelect(id) { selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id); updateSelectionBar(); applyFilters(); }
         function toggleSelectAll() {
             const checkbox = document.getElementById('selectAllCheckbox');
             if (checkbox.checked) {
@@ -310,13 +271,10 @@
         function renderTable(prodotti) {
             const tbody = document.getElementById('prodottiTableBody');
             const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-            
             if (loadingProgress.isLoading) { tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; return; }
             if (!prodotti.length) { tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; selectAllCheckbox.checked = false; return; }
-            
             const allSelected = prodotti.every(p => selectedIds.has(p.id));
             selectAllCheckbox.checked = allSelected && prodotti.length > 0;
-            
             tbody.innerHTML = prodotti.map(p => `
                 <tr class="hover:bg-gray-50 border-b ${selectedIds.has(p.id) ? 'bg-blue-50' : ''}">
                     <td class="col-checkbox"><input type="checkbox" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelect('${p.id}')" class="w-4 h-4"></td>
@@ -341,19 +299,12 @@
         }
 
         function showDeleteModal(id) {
+            const prodotto = allProdotti.find(p => p.id === id);
+            if (!prodotto) { console.error('Prodotto non trovato:', id); alert('Errore: prodotto non trovato'); return; }
             const modal = document.getElementById('deleteModal');
             const message = document.getElementById('deleteMessage');
-            const prodotto = allProdotti.find(p => p.id === id);
-            
-            if (!prodotto) {
-                console.error('Prodotto non trovato:', id);
-                alert('Errore: prodotto non trovato');
-                return;
-            }
-            
             message.textContent = `Vuoi eliminare il prodotto "${prodotto.nome}"?`;
             deleteAction = { type: 'single', ids: [id] };
-            
             console.log('Delete action impostata:', deleteAction);
             modal.classList.remove('hidden');
         }
@@ -367,66 +318,51 @@
             modal.classList.remove('hidden');
         };
 
-        function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); deleteAction = null; }
+        function closeDeleteModal() { 
+            document.getElementById('deleteModal').classList.add('hidden'); 
+        }
 
         async function confirmDelete() {
-            if (!deleteAction) return;
+            if (!deleteAction) { console.error('deleteAction is null'); return; }
             
-            // Salva i dati PRIMA di chiudere il modal
             const idsToDelete = deleteAction.ids;
             const total = idsToDelete.length;
             
+            console.log('Inizio eliminazione:', { total, ids: idsToDelete });
+            
+            deleteAction = null;
             closeDeleteModal();
             
             try {
                 let deletedCount = 0;
-                
                 const tbody = document.getElementById('prodottiTableBody');
                 tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
                 
-                // Elimina in batch di 100 per evitare timeout
                 const BATCH_DELETE_SIZE = 100;
                 
                 for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
                     const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
+                    console.log(`Eliminando batch ${Math.floor(i / BATCH_DELETE_SIZE) + 1}: ${batch.length} prodotti`);
                     
-                    console.log(`Eliminando batch ${i / BATCH_DELETE_SIZE + 1}: ${batch.length} prodotti`);
+                    const { error } = await supabaseClient.from('prodotti').delete().in('id', batch);
                     
-                    // Usa .in() per eliminazione batch più efficiente
-                    const { error, count } = await supabaseClient
-                        .from('prodotti')
-                        .delete()
-                        .in('id', batch);
-                    
-                    if (error) {
-                        console.error('Errore eliminazione batch:', error);
-                        throw error;
-                    }
+                    if (error) { console.error('Errore eliminazione batch:', error); throw error; }
                     
                     deletedCount += batch.length;
                     console.log(`Eliminati ${deletedCount} / ${total}`);
                     
-                    // Aggiorna progress
                     const progressSpan = document.getElementById('deleteProgress');
-                    if (progressSpan) {
-                        progressSpan.textContent = `${deletedCount} / ${total}`;
-                    }
+                    if (progressSpan) progressSpan.textContent = `${deletedCount} / ${total}`;
                     
-                    // Piccola pausa tra i batch
-                    if (i + BATCH_DELETE_SIZE < idsToDelete.length) {
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    }
+                    if (i + BATCH_DELETE_SIZE < idsToDelete.length) await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 
                 selectedIds.clear();
                 updateSelectionBar();
                 await loadAllProdotti();
                 
-                if (deletedCount === total) {
-                    alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
-                } else {
-                    alert(`⚠️ Eliminati ${deletedCount} su ${total} prodotti`);
-                }
+                if (deletedCount === total) alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
+                else alert(`⚠️ Eliminati ${deletedCount} su ${total} prodotti`);
                 
             } catch (err) {
                 console.error('Errore eliminazione:', err);
@@ -487,7 +423,7 @@
         function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
 
         loadAllProdotti();
-        console.log('✅ Prodotti (Responsive + IVA + Eliminazione)');
+        console.log('✅ Prodotti (Responsive + IVA + Eliminazione FIXED)');
     </script>
 </body>
 </html>
