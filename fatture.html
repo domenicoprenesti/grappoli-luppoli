@@ -84,13 +84,35 @@
             uploadProgress: null,
             error: '',
             loadingProgress: { loaded: 0, total: 0, isLoading: false },
-            deleteAction: null // { type: 'single'|'multiple', ids: [] }
+            deleteAction: null, // { type: 'single'|'multiple', ids: [] }
+            uploadMode: 'single' // 'single' o 'folder'
         };
 
         function logout() {
             localStorage.removeItem(SESSION_KEY);
             window.location.href = 'index.html';
         }
+
+        // ===== SWITCH MODALITÀ UPLOAD =====
+        window.switchUploadMode = function(mode) {
+            state.uploadMode = mode;
+            render();
+        };
+
+        // ===== GESTIONE UPLOAD CARTELLA =====
+        window.handleFolderUpload = async function(event) {
+            const files = Array.from(event.target.files).filter(f => 
+                f.name.toLowerCase().endsWith('.xml') || f.name.toLowerCase().endsWith('.p7m')
+            );
+            
+            if (files.length === 0) {
+                alert('⚠️ Nessun file XML trovato nella cartella selezionata');
+                return;
+            }
+            
+            console.log(`📁 Upload cartella: ${files.length} file XML trovati`);
+            await processFiles(files);
+        };
 
         function parseXML(xmlString) {
             return new DOMParser().parseFromString(xmlString, 'text/xml');
@@ -474,14 +496,33 @@
                             <div class="bg-purple-50 px-4 py-3 rounded-xl"><p class="text-xs text-gray-600">Fornitori</p><p class="text-2xl font-bold text-purple-600">${state.stats.fornitori}</p></div>
                         </div>
 
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 cursor-pointer" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('fileInput').click()">
+                        <!-- Switcher Modalità Upload -->
+                        <div class="flex justify-center space-x-4 mb-6">
+                            <button onclick="switchUploadMode('single')" class="px-6 py-3 ${state.uploadMode === 'single' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700'} rounded-lg font-semibold transition-all">📄 Upload Singolo</button>
+                            <button onclick="switchUploadMode('folder')" class="px-6 py-3 ${state.uploadMode === 'folder' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700'} rounded-lg font-semibold transition-all">📁 Upload Cartella</button>
+                        </div>
+
+                        <!-- Area Upload Singolo -->
+                        <div class="${state.uploadMode === 'single' ? '' : 'hidden'} border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 cursor-pointer transition-colors" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('fileInput').click()">
                             <input type="file" id="fileInput" accept=".xml,.p7m" multiple class="hidden" onchange="handleFileUpload(event)">
                             <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-lg font-semibold mb-2">Carica Fatture XML</p>
-                            <p class="text-xs text-gray-500">Con estrazione IVA automatica</p>
+                            <p class="text-xs text-gray-500 mb-2">Seleziona uno o più file (anche drag & drop)</p>
+                            <p class="text-xs text-blue-600 font-medium">✓ Controllo duplicati automatico</p>
                         </div>
 
-                        ${state.uploading ? `<div class="mt-4 bg-blue-50 border p-4 rounded"><div class="flex justify-between mb-2"><span>Caricamento...</span><span>${state.uploadProgress.current} di ${state.uploadProgress.total}</span></div><div class="w-full bg-blue-200 rounded h-2"><div class="bg-blue-600 h-2 rounded" style="width: ${(state.uploadProgress.current / state.uploadProgress.total) * 100}%"></div></div></div>` : ''}
+                        <!-- Area Upload Cartella -->
+                        <div class="${state.uploadMode === 'folder' ? '' : 'hidden'} border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-500 cursor-pointer transition-colors" onclick="document.getElementById('folderInput').click()">
+                            <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden" onchange="handleFolderUpload(event)">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                            <p class="text-xl font-bold mb-2 text-purple-700">📁 Carica Cartella Completa</p>
+                            <p class="text-sm text-gray-600 mb-2">Seleziona una cartella con tutte le fatture XML</p>
+                            <p class="text-xs text-purple-600 font-medium">✓ Elaborazione automatica in batch</p>
+                            <p class="text-xs text-purple-600 font-medium">✓ Skip automatico duplicati</p>
+                            <p class="text-xs text-gray-500 mt-3">Perfetto per importare centinaia di fatture</p>
+                        </div>
+
+                        ${state.uploading ? `<div class="mt-4 bg-blue-50 border p-4 rounded"><div class="flex justify-between mb-2"><span>Caricamento...</span><span>${state.uploadProgress.current} di ${state.uploadProgress.total}</span></div><div class="w-full bg-blue-200 rounded h-2"><div class="bg-blue-600 h-2 rounded" style="width: ${(state.uploadProgress.current / state.uploadProgress.total) * 100}%"></div></div>${state.uploadProgress.duplicates && state.uploadProgress.duplicates.length > 0 ? `<p class="text-xs text-yellow-600 mt-2">⚠️ ${state.uploadProgress.duplicates.length} duplicati saltati</p>` : ''}</div>` : ''}
                         ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
                     </div>
 
