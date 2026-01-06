@@ -636,16 +636,26 @@ Categoria:`
         };
 
         window.confirmDelete = async function() {
-            if (!state.deleteAction) return;
+            if (!state.deleteAction) {
+                console.error('⚠️ deleteAction è null!');
+                return;
+            }
+            
+            // IMPORTANTE: Salva deleteAction PRIMA di chiudere il modal
+            const actionToExecute = state.deleteAction;
+            
             closeDeleteModal();
+            
             try {
                 state.error = '🗑️ Eliminazione in corso...';
                 render();
                 
-                const idsToDelete = state.deleteAction.ids;
+                const idsToDelete = actionToExecute.ids;
                 let deletedFatture = 0;
                 let deletedProdotti = 0;
                 const errors = [];
+                
+                console.log(`🗑️ Inizio eliminazione di ${idsToDelete.length} fatture`);
                 
                 for (const id of idsToDelete) {
                     try {
@@ -716,11 +726,13 @@ Categoria:`
                 
                 // Messaggio finale
                 if (errors.length > 0) {
-                    state.error = `⚠️ ${deletedFatture} fatture eliminate, ${errors.length} errori\n${errors.slice(0, 3).join('\n')}`;
+                    state.error = `⚠️ ${deletedFatture} fatture eliminate, ${errors.length} errori`;
                     console.error('❌ Errori durante eliminazione:', errors);
                 } else {
                     state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
                 }
+                
+                console.log(`✅ Eliminazione completata: ${deletedFatture} fatture, ${deletedProdotti} prodotti`);
                 
                 await loadAllFatture();
                 
