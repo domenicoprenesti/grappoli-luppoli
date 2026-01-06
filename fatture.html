@@ -591,19 +591,47 @@
                 render();
                 
                 const idsToDelete = actionToExecute.ids;
-                let deletedCount = 0;
+                let deletedFatture = 0;
+                let deletedProdotti = 0;
                 
                 for (const id of idsToDelete) {
-                    const { error } = await supabaseClient.from('fatture').delete().eq('id', id);
-                    if (!error) deletedCount++;
+                    // 1. Recupera info fattura PRIMA di eliminarla
+                    const { data: fattura } = await supabaseClient
+                        .from('fatture')
+                        .select('cedente_denominazione')
+                        .eq('id', id)
+                        .single();
+                    
+                    if (fattura && fattura.cedente_denominazione) {
+                        const fornitore = fattura.cedente_denominazione;
+                        
+                        // 2. Elimina TUTTI i prodotti di questo fornitore
+                        const { error: prodError, count } = await supabaseClient
+                            .from('prodotti')
+                            .delete({ count: 'exact' })
+                            .eq('fornitore', fornitore);
+                        
+                        if (!prodError && count) {
+                            deletedProdotti += count;
+                            console.log(`✅ Eliminati ${count} prodotti del fornitore: ${fornitore}`);
+                        }
+                    }
+                    
+                    // 3. Elimina la fattura
+                    const { error } = await supabaseClient
+                        .from('fatture')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (!error) deletedFatture++;
                 }
                 
                 state.selectedIds.clear();
-                state.error = `✅ ${deletedCount} fatture eliminate con successo!`;
+                state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
                 
                 await loadAllFatture();
                 
-                setTimeout(() => { state.error = ''; render(); }, 3000);
+                setTimeout(() => { state.error = ''; render(); }, 5000);
                 
             } catch (err) {
                 console.error('Errore eliminazione:', err);
