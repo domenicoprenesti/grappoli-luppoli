@@ -581,13 +581,16 @@
         window.confirmDelete = async function() {
             if (!state.deleteAction) return;
             
+            // IMPORTANTE: Salva deleteAction PRIMA di chiudere il modal
+            const actionToExecute = state.deleteAction;
+            
             closeDeleteModal();
             
             try {
                 state.error = '🗑️ Eliminazione in corso...';
                 render();
                 
-                const idsToDelete = state.deleteAction.ids;
+                const idsToDelete = actionToExecute.ids;
                 let deletedCount = 0;
                 
                 for (const id of idsToDelete) {
