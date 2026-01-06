@@ -6,7 +6,6 @@
     <title>Gestione Fatture Elettroniche</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
@@ -157,12 +156,19 @@
         // ========== FUNZIONE AI CATEGORIZZAZIONE ==========
         async function suggestCategoryWithAI(productName) {
             try {
-                // Usa API key dal file config.js
-                const apiKey = CONFIG.ANTHROPIC_API_KEY;
+                // Recupera o chiedi API key (salvata nel browser)
+                let apiKey = localStorage.getItem('anthropic_api_key');
                 
                 if (!apiKey) {
-                    console.log('⚠️ API key non configurata in config.js, uso categorizzazione standard');
-                    return generateTag(productName);
+                    apiKey = prompt('🤖 CATEGORIZZAZIONE AI\n\nPer usare la categorizzazione intelligente, inserisci la tua Anthropic API Key:\n\n(La trovi su: https://console.anthropic.com/settings/keys)\n\nLa chiave verrà salvata nel tuo browser e non dovrai più inserirla.');
+                    
+                    if (!apiKey) {
+                        console.log('⚠️ API key non fornita, uso categorizzazione standard');
+                        return generateTag(productName);
+                    }
+                    
+                    localStorage.setItem('anthropic_api_key', apiKey);
+                    console.log('✅ API key salvata nel browser');
                 }
                 
                 console.log(`🤖 Analizzo con AI: "${productName}"`);
@@ -213,7 +219,12 @@ Categoria:`
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('❌ Errore API Claude:', response.status, errorText);
-                    console.log('⚠️ Verifica che la API key in config.js sia corretta');
+                    
+                    // Se errore autenticazione, cancella la chiave e chiedi di nuovo
+                    if (response.status === 401) {
+                        localStorage.removeItem('anthropic_api_key');
+                        alert('❌ API key non valida!\n\nLa chiave salvata non è corretta. Al prossimo caricamento ti verrà chiesta una nuova chiave.\n\nVerifica la tua chiave su:\nhttps://console.anthropic.com/settings/keys');
+                    }
                     
                     return generateTag(productName);
                 }
