@@ -488,9 +488,6 @@
                 quantitaText = quantitaText.replace(',', '.');
                 const quantita = parseFloat(quantitaText) || 0;
                 
-                // Estrai unità di misura dal XML
-                const unitaMisura = getTextContent(linea, 'UnitaMisura') || 'pz';
-                
                 let prezzoText = getTextContent(linea, 'PrezzoUnitario') || getTextContent(linea, 'UnitPrice') || getTextContent(linea, 'Prezzo') || '0';
                 prezzoText = prezzoText.replace(',', '.');
                 let prezzoUnitario = parseFloat(prezzoText) || 0;
@@ -531,12 +528,11 @@
                             .update({ 
                                 quantita: nuovaQuantita,
                                 prezzo: nuovoPrezzo,
-                                aliquota_iva: nuovaAliquota,
-                                unita_misura: unitaMisura
+                                aliquota_iva: nuovaAliquota
                             })
                             .eq('id', existing.id);
                             
-                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo}, IVA: ${nuovaAliquota}%, UM: ${unitaMisura})`);
+                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo}, IVA: ${nuovaAliquota}%)`);
                     } else {
                         await supabaseClient
                             .from('prodotti')
@@ -547,12 +543,11 @@
                                 prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
                                 aliquota_iva: aliquotaIVA,
                                 quantita: quantita > 0 ? quantita : 0,
-                                unita_misura: unitaMisura,
                                 fornitore: fornitore,
                                 attivo: true
                             }]);
                             
-                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%, UM: ${unitaMisura})`);
+                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
                     }
                 } catch (err) {
                     console.error(`❌ Errore prodotto "${descrizione}":`, err);
@@ -593,49 +588,19 @@
                 render();
                 
                 const idsToDelete = state.deleteAction.ids;
-                let deletedFatture = 0;
-                let deletedProdotti = 0;
+                let deletedCount = 0;
                 
                 for (const id of idsToDelete) {
-                    // 1. Recupera info fattura prima di eliminarla
-                    const { data: fattura } = await supabaseClient
-                        .from('fatture')
-                        .select('cedente_denominazione, data_fattura')
-                        .eq('id', id)
-                        .single();
-                    
-                    if (fattura) {
-                        // 2. Elimina prodotti associati a questa fattura (stesso fornitore)
-                        const fornitore = fattura.cedente_denominazione;
-                        
-                        const { error: prodError, count } = await supabaseClient
-                            .from('prodotti')
-                            .delete({ count: 'exact' })
-                            .eq('fornitore', fornitore);
-                        
-                        if (!prodError && count) {
-                            deletedProdotti += count;
-                            console.log(`✅ Eliminati ${count} prodotti del fornitore: ${fornitore}`);
-                        }
-                        
-                        // 3. Elimina la fattura
-                        const { error: fatturaError } = await supabaseClient
-                            .from('fatture')
-                            .delete()
-                            .eq('id', id);
-                        
-                        if (!fatturaError) {
-                            deletedFatture++;
-                        }
-                    }
+                    const { error } = await supabaseClient.from('fatture').delete().eq('id', id);
+                    if (!error) deletedCount++;
                 }
                 
                 state.selectedIds.clear();
-                state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
+                state.error = `✅ ${deletedCount} fatture eliminate con successo!`;
                 
                 await loadAllFatture();
                 
-                setTimeout(() => { state.error = ''; render(); }, 5000);
+                setTimeout(() => { state.error = ''; render(); }, 3000);
                 
             } catch (err) {
                 console.error('Errore eliminazione:', err);
