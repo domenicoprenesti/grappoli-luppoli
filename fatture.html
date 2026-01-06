@@ -641,29 +641,94 @@ Categoria:`
             try {
                 state.error = '🗑️ Eliminazione in corso...';
                 render();
+                
                 const idsToDelete = state.deleteAction.ids;
                 let deletedFatture = 0;
                 let deletedProdotti = 0;
+                const errors = [];
+                
                 for (const id of idsToDelete) {
-                    const { data: fattura } = await supabaseClient.from('fatture').select('cedente_denominazione, data_fattura').eq('id', id).single();
-                    if (fattura) {
-                        const fornitore = fattura.cedente_denominazione;
-                        const { error: prodError, count } = await supabaseClient.from('prodotti').delete({ count: 'exact' }).eq('fornitore', fornitore);
-                        if (!prodError && count) {
-                            deletedProdotti += count;
-                            console.log(`✅ Eliminati ${count} prodotti del fornitore: ${fornitore}`);
+                    try {
+                        console.log(`🗑️ Eliminando fattura ID: ${id}`);
+                        
+                        // 1. Recupera info fattura
+                        const { data: fattura, error: fetchError } = await supabaseClient
+                            .from('fatture')
+                            .select('cedente_denominazione, data_fattura, numero_fattura')
+                            .eq('id', id)
+                            .single();
+                        
+                        if (fetchError) {
+                            console.error(`❌ Errore recupero fattura ${id}:`, fetchError);
+                            errors.push(`Fattura ${id}: ${fetchError.message}`);
+                            continue;
                         }
-                        const { error: fatturaError } = await supabaseClient.from('fatture').delete().eq('id', id);
-                        if (!fatturaError) deletedFatture++;
+                        
+                        if (!fattura) {
+                            console.warn(`⚠️ Fattura ${id} non trovata`);
+                            continue;
+                        }
+                        
+                        const fornitore = fattura.cedente_denominazione;
+                        const numeroFattura = fattura.numero_fattura;
+                        
+                        console.log(`📦 Eliminando prodotti del fornitore: ${fornitore}`);
+                        
+                        // 2. Elimina prodotti (NON bloccare se fallisce)
+                        try {
+                            const { error: prodError, count } = await supabaseClient
+                                .from('prodotti')
+                                .delete({ count: 'exact' })
+                                .eq('fornitore', fornitore);
+                            
+                            if (prodError) {
+                                console.warn(`⚠️ Errore eliminazione prodotti: ${prodError.message}`);
+                            } else if (count) {
+                                deletedProdotti += count;
+                                console.log(`✅ Eliminati ${count} prodotti`);
+                            }
+                        } catch (prodErr) {
+                            console.warn(`⚠️ Errore prodotti (continuo comunque):`, prodErr);
+                        }
+                        
+                        // 3. Elimina la fattura
+                        console.log(`🗑️ Eliminando fattura: ${numeroFattura}`);
+                        const { error: fatturaError } = await supabaseClient
+                            .from('fatture')
+                            .delete()
+                            .eq('id', id);
+                        
+                        if (fatturaError) {
+                            console.error(`❌ Errore eliminazione fattura ${numeroFattura}:`, fatturaError);
+                            errors.push(`Fattura ${numeroFattura}: ${fatturaError.message}`);
+                        } else {
+                            deletedFatture++;
+                            console.log(`✅ Fattura ${numeroFattura} eliminata`);
+                        }
+                        
+                    } catch (itemErr) {
+                        console.error(`❌ Errore elaborazione fattura ${id}:`, itemErr);
+                        errors.push(`Fattura ${id}: ${itemErr.message}`);
                     }
                 }
+                
                 state.selectedIds.clear();
-                state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
+                
+                // Messaggio finale
+                if (errors.length > 0) {
+                    state.error = `⚠️ ${deletedFatture} fatture eliminate, ${errors.length} errori\n${errors.slice(0, 3).join('\n')}`;
+                    console.error('❌ Errori durante eliminazione:', errors);
+                } else {
+                    state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
+                }
+                
                 await loadAllFatture();
-                setTimeout(() => { state.error = ''; render(); }, 5000);
+                
+                setTimeout(() => { state.error = ''; render(); }, 8000);
+                
             } catch (err) {
-                console.error('Errore eliminazione:', err);
-                state.error = '❌ Errore durante l\'eliminazione';
+                console.error('❌ Errore critico eliminazione:', err);
+                state.error = `❌ Errore: ${err.message}`;
                 render();
             }
         };
