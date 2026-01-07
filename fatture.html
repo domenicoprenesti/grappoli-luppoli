@@ -51,7 +51,7 @@
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                 <p class="text-sm text-yellow-800">
-                    <strongâš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!
+                    <strong⚠️ Attenzione:</strong> Questa azione è irreversibile!
                 </p>
             </div>
             <div class="flex space-x-4">
@@ -88,8 +88,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                     <p class="text-xl font-bold mb-2">Carica Fatture XML</p>
-                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o piÃ¹ file (anche drag & drop)</p>
-                    <p class="text-xs text-blue-600 font-medium">âœ“ Controllo duplicati automatico</p>
+                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o più file (anche drag & drop)</p>
+                    <p class="text-xs text-blue-600 font-medium">✓ Controllo duplicati automatico</p>
                 </div>
             </div>
 
@@ -100,11 +100,11 @@
                     <svg class="w-20 h-20 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                     </svg>
-                    <p class="text-xl font-bold mb-2 text-purple-700">ðŸ“ Carica Cartella Completa</p>
+                    <p class="text-xl font-bold mb-2 text-purple-700">📁 Carica Cartella Completa</p>
                     <p class="text-sm text-gray-600 mb-3">Seleziona una cartella con tutte le fatture XML</p>
                     <div class="space-y-1">
-                        <p class="text-xs text-purple-600 font-medium">âœ“ Elaborazione automatica in batch</p>
-                        <p class="text-xs text-purple-600 font-medium">âœ“ Skip automatico duplicati</p>
+                        <p class="text-xs text-purple-600 font-medium">✓ Elaborazione automatica in batch</p>
+                        <p class="text-xs text-purple-600 font-medium">✓ Skip automatico duplicati</p>
                         <p class="text-xs text-gray-500 mt-2">Perfetto per importare centinaia di fatture</p>
                     </div>
                 </div>
@@ -119,7 +119,7 @@
                 <div class="w-full bg-blue-200 rounded-full h-3">
                     <div id="modalProgressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
                 </div>
-                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">âš ï¸ 0 duplicati saltati</p>
+                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">⚠️ 0 duplicati saltati</p>
             </div>
         </div>
     </div>
@@ -153,7 +153,7 @@
             window.location.href = 'index.html';
         }
 
-        // ===== SWITCH MODALITÃ€ UPLOAD =====
+        // ===== SWITCH MODALITÀ UPLOAD =====
         window.switchUploadMode = function(mode) {
             state.uploadMode = mode;
             
@@ -168,7 +168,7 @@
                 modalSingle.classList.remove('hidden');
                 modalFolder.classList.add('hidden');
             } else {
-                modalTitle.textContent = 'ðŸ“ Carica Cartella Completa';
+                modalTitle.textContent = '📁 Carica Cartella Completa';
                 modalSingle.classList.add('hidden');
                 modalFolder.classList.remove('hidden');
             }
@@ -218,7 +218,7 @@
             if (state.pagatoChanges.size === 0) return;
             
             try {
-                state.error = 'ðŸ’¾ Salvataggio in corso...';
+                state.error = '💾 Salvataggio in corso...';
                 render();
                 
                 // Salva tutte le modifiche
@@ -232,14 +232,14 @@
                 }
                 
                 state.pagatoChanges.clear();
-                state.error = 'âœ… Modifiche salvate con successo!';
+                state.error = '✅ Modifiche salvate con successo!';
                 
                 setTimeout(() => { state.error = ''; render(); }, 3000);
                 render();
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                state.error = 'âŒ Errore durante il salvataggio';
+                state.error = '❌ Errore durante il salvataggio';
                 render();
             }
         };
@@ -265,11 +265,11 @@
             );
             
             if (files.length === 0) {
-                alert('âš ï¸ Nessun file XML trovato nella cartella selezionata');
+                alert('⚠️ Nessun file XML trovato nella cartella selezionata');
                 return;
             }
             
-            console.log(`ðŸ“ Upload cartella: ${files.length} file XML trovati`);
+            console.log(`📁 Upload cartella: ${files.length} file XML trovati`);
             await processFiles(files);
         };
 
@@ -391,7 +391,7 @@
                         
                         // Mostra contatore duplicati
                         if (state.uploadProgress.duplicates.length > 0) {
-                            modalDuplicatesText.textContent = `âš ï¸ ${state.uploadProgress.duplicates.length} duplicati saltati`;
+                            modalDuplicatesText.textContent = `⚠️ ${state.uploadProgress.duplicates.length} duplicati saltati`;
                             modalDuplicatesText.classList.remove('hidden');
                         }
                     } else {
@@ -401,9 +401,9 @@
             }
 
             state.uploading = false;
-            state.error = `âœ“ ${successCount} fatture caricate!`;
-            if (state.uploadProgress.duplicates.length > 0) state.error += ` | âš ï¸ ${state.uploadProgress.duplicates.length} duplicati`;
-            if (state.uploadProgress.errors.length > 0) state.error += ` | âŒ ${state.uploadProgress.errors.length} errori`;
+            state.error = `✓ ${successCount} fatture caricate!`;
+            if (state.uploadProgress.duplicates.length > 0) state.error += ` | ⚠️ ${state.uploadProgress.duplicates.length} duplicati`;
+            if (state.uploadProgress.errors.length > 0) state.error += ` | ❌ ${state.uploadProgress.errors.length} errori`;
             
             // Chiudi modal dopo 2 secondi
             setTimeout(() => {
@@ -434,7 +434,7 @@
             const partitaIVACedente = getTextContent(datiCedente.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice');
             
             const { data: existing } = await supabaseClient.from('fatture').select('id').eq('numero_fattura', numeroFattura).eq('data_fattura', dataFattura).eq('cedente_piva', partitaIVACedente).single();
-            if (existing) throw new Error(`Duplicato: Fattura ${numeroFattura} giÃ  presente`);
+            if (existing) throw new Error(`Duplicato: Fattura ${numeroFattura} già presente`);
 
             const cedenteNome = getTextContent(datiCedente.getElementsByTagName('Anagrafica')[0], 'Denominazione');
             const sedeCedente = cedente.getElementsByTagName('Sede')[0];
@@ -488,6 +488,9 @@
                 quantitaText = quantitaText.replace(',', '.');
                 const quantita = parseFloat(quantitaText) || 0;
                 
+                // Estrai unità di misura dal XML
+                const unitaMisura = getTextContent(linea, 'UnitaMisura') || 'pz';
+                
                 let prezzoText = getTextContent(linea, 'PrezzoUnitario') || getTextContent(linea, 'UnitPrice') || getTextContent(linea, 'Prezzo') || '0';
                 prezzoText = prezzoText.replace(',', '.');
                 let prezzoUnitario = parseFloat(prezzoText) || 0;
@@ -504,7 +507,7 @@
                 }
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
-                    console.log(`âš ï¸ Prodotto saltato (dati mancanti): ${descrizione}`);
+                    console.log(`⚠️ Prodotto saltato (dati mancanti): ${descrizione}`);
                     continue;
                 }
                 
@@ -528,11 +531,12 @@
                             .update({ 
                                 quantita: nuovaQuantita,
                                 prezzo: nuovoPrezzo,
-                                aliquota_iva: nuovaAliquota
+                                aliquota_iva: nuovaAliquota,
+                                unita_misura: unitaMisura
                             })
                             .eq('id', existing.id);
                             
-                        console.log(`âœ… Aggiornato: ${descrizione} (qtÃ : ${nuovaQuantita}, prezzo: â‚¬${nuovoPrezzo}, IVA: ${nuovaAliquota}%)`);
+                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo}, IVA: ${nuovaAliquota}%, UM: ${unitaMisura})`);
                     } else {
                         await supabaseClient
                             .from('prodotti')
@@ -543,14 +547,15 @@
                                 prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
                                 aliquota_iva: aliquotaIVA,
                                 quantita: quantita > 0 ? quantita : 0,
+                                unita_misura: unitaMisura,
                                 fornitore: fornitore,
                                 attivo: true
                             }]);
                             
-                        console.log(`âœ… Creato: ${descrizione} (qtÃ : ${quantita}, prezzo: â‚¬${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
+                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%, UM: ${unitaMisura})`);
                     }
                 } catch (err) {
-                    console.error(`âŒ Errore prodotto "${descrizione}":`, err);
+                    console.error(`❌ Errore prodotto "${descrizione}":`, err);
                 }
             }
         }
@@ -581,31 +586,28 @@
         window.confirmDelete = async function() {
             if (!state.deleteAction) return;
             
-            // IMPORTANTE: Salva deleteAction PRIMA di chiudere il modal
-            const actionToExecute = state.deleteAction;
-            
             closeDeleteModal();
             
             try {
-                state.error = 'ðŸ—‘ï¸ Eliminazione in corso...';
+                state.error = '🗑️ Eliminazione in corso...';
                 render();
                 
-                const idsToDelete = actionToExecute.ids;
+                const idsToDelete = state.deleteAction.ids;
                 let deletedFatture = 0;
                 let deletedProdotti = 0;
                 
                 for (const id of idsToDelete) {
-                    // 1. Recupera info fattura PRIMA di eliminarla
+                    // 1. Recupera info fattura prima di eliminarla
                     const { data: fattura } = await supabaseClient
                         .from('fatture')
-                        .select('cedente_denominazione')
+                        .select('cedente_denominazione, data_fattura')
                         .eq('id', id)
                         .single();
                     
-                    if (fattura && fattura.cedente_denominazione) {
+                    if (fattura) {
+                        // 2. Elimina prodotti associati a questa fattura (stesso fornitore)
                         const fornitore = fattura.cedente_denominazione;
                         
-                        // 2. Elimina TUTTI i prodotti di questo fornitore
                         const { error: prodError, count } = await supabaseClient
                             .from('prodotti')
                             .delete({ count: 'exact' })
@@ -613,21 +615,23 @@
                         
                         if (!prodError && count) {
                             deletedProdotti += count;
-                            console.log(`âœ… Eliminati ${count} prodotti del fornitore: ${fornitore}`);
+                            console.log(`✅ Eliminati ${count} prodotti del fornitore: ${fornitore}`);
+                        }
+                        
+                        // 3. Elimina la fattura
+                        const { error: fatturaError } = await supabaseClient
+                            .from('fatture')
+                            .delete()
+                            .eq('id', id);
+                        
+                        if (!fatturaError) {
+                            deletedFatture++;
                         }
                     }
-                    
-                    // 3. Elimina la fattura
-                    const { error } = await supabaseClient
-                        .from('fatture')
-                        .delete()
-                        .eq('id', id);
-                    
-                    if (!error) deletedFatture++;
                 }
                 
                 state.selectedIds.clear();
-                state.error = `âœ… ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
+                state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
                 
                 await loadAllFatture();
                 
@@ -635,7 +639,7 @@
                 
             } catch (err) {
                 console.error('Errore eliminazione:', err);
-                state.error = 'âŒ Errore durante l\'eliminazione';
+                state.error = '❌ Errore durante l\'eliminazione';
                 render();
             }
         };
@@ -713,14 +717,14 @@
                                 </div>
                             </div>
                             
-                            <!-- Pulsanti ModalitÃ  Upload -->
+                            <!-- Pulsanti Modalità Upload -->
                             <div class="flex space-x-3">
                                 <button onclick="switchUploadMode('single')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2">
-                                    <span>ðŸ“„</span>
+                                    <span>📄</span>
                                     <span>Upload Singolo</span>
                                 </button>
                                 <button onclick="switchUploadMode('folder')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 flex items-center space-x-2">
-                                    <span>ðŸ“</span>
+                                    <span>📁</span>
                                     <span>Upload Cartella</span>
                                 </button>
                             </div>
@@ -741,14 +745,14 @@
                             </div>
                             <div class="bg-green-50 px-6 py-4 rounded-xl">
                                 <p class="text-xs text-gray-600 mb-1">Importo ${hasActiveFilters ? 'filtrato' : 'totale'}</p>
-                                <p class="text-3xl font-bold text-green-600">â‚¬${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                <p class="text-3xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                             </div>
                             <div class="bg-purple-50 px-6 py-4 rounded-xl">
                                 <p class="text-xs text-gray-600 mb-1">Fornitori</p>
                                 <p class="text-3xl font-bold text-purple-600">${state.stats.fornitori}</p>
                             </div>
                         </div>
-                        ${state.error ? `<div class="mt-4 ${state.error.includes('âŒ') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
+                        ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
                     </div>
 
                     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -774,7 +778,7 @@
                         
                         ${state.pagatoChanges.size > 0 ? `
                             <div class="bg-orange-50 border-b px-6 py-4 flex justify-between items-center">
-                                <span class="text-sm font-medium text-orange-900">ðŸ’¾ ${state.pagatoChanges.size} modifiche non salvate</span>
+                                <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
                                 <div class="flex space-x-2">
                                     <button onclick="cancelPagatoChanges()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                                     <button onclick="savePagatoChanges()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center space-x-2">
@@ -808,7 +812,7 @@
                                     <td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
                                     <td class="px-6 py-4 text-sm font-medium">${f.num}</td>
                                     <td class="px-6 py-4 text-sm">${f.ced.nm}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-right">â‚¬${f.tot.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
                                     <td class="px-6 py-4 text-center">
                                         <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-5 h-5 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
                                     </td>
@@ -825,12 +829,8 @@
             `;
         }
 
-        // Render iniziale per mostrare lo scheletro della pagina
-        render();
-        
-        // Poi carica i dati
         loadAllFatture();
-        console.log('âœ… Gestione Fatture (Con IVA + Eliminazione)');
+        console.log('✅ Gestione Fatture (Con IVA + Eliminazione)');
     </script>
 </body>
 </html>
