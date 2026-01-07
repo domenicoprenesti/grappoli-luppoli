@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Database - Verifica Campi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">🔍 Test Database - Verifica Campi Prodotti</h1>
+
+        <!-- Pulsanti Test -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Test Rapidi</h2>
+            <div class="space-y-3">
+                <button onclick="testCampiProdotti()" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                    🔍 Verifica Campi Tabella Prodotti
+                </button>
+                <button onclick="testInsertProdotto()" class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                    ✅ Test Insert Prodotto (con fattura_id)
+                </button>
+                <button onclick="testQueryProdotti()" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">
+                    📋 Query Prodotti per Fattura
+                </button>
+                <button onclick="testSchemaProdotti()" class="w-full px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium">
+                    🗂️ Mostra Schema Completo Tabella
+                </button>
+            </div>
+        </div>
+
+        <!-- Risultati -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">📊 Risultati</h2>
+            <div id="risultati" class="space-y-3"></div>
+        </div>
+
+        <!-- Log Dettagliato -->
+        <div class="bg-gray-900 text-green-400 rounded-xl p-6 font-mono text-xs overflow-auto max-h-96">
+            <div id="logOutput"></div>
+        </div>
+
+        <!-- Istruzioni -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mt-8">
+            <h3 class="font-bold text-yellow-900 mb-2">⚠️ Se i test falliscono:</h3>
+            <ol class="text-sm text-yellow-800 list-decimal ml-5 space-y-1">
+                <li>Apri Supabase Dashboard</li>
+                <li>Vai su "SQL Editor"</li>
+                <li>Esegui lo script "aggiungi_campi_prodotti.sql"</li>
+                <li>Torna qui e clicca di nuovo "Verifica Campi"</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(msg, color = 'green') {
+            const logDiv = document.getElementById('logOutput');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="text-${color}-400">[${time}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function mostraRisultato(titolo, messaggio, tipo = 'success') {
+            const risultatiDiv = document.getElementById('risultati');
+            const colore = tipo === 'success' ? 'green' : tipo === 'error' ? 'red' : 'yellow';
+            const icona = tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : '⚠️';
+            
+            risultatiDiv.innerHTML = `
+                <div class="bg-${colore}-50 border-l-4 border-${colore}-500 p-4 rounded">
+                    <h3 class="font-bold text-${colore}-900 mb-2">${icona} ${titolo}</h3>
+                    <div class="text-sm text-${colore}-800 whitespace-pre-wrap">${messaggio}</div>
+                </div>
+            ` + risultatiDiv.innerHTML;
+        }
+
+        async function testCampiProdotti() {
+            log('🔍 TEST 1: Verifica campi tabella prodotti', 'blue');
+            
+            try {
+                // Prova a selezionare i campi specifici
+                const { data, error } = await supabaseClient
+                    .from('prodotti')
+                    .select('id, nome, fornitore, fattura_id, data_fattura')
+                    .limit(1);
+                
+                if (error) {
+                    log(`❌ ERRORE: ${error.message}`, 'red');
+                    
+                    if (error.message.includes('column') || error.message.includes('does not exist')) {
+                        mostraRisultato(
+                            'CAMPI MANCANTI!',
+                            `Il database NON ha i campi necessari.\n\nErrore: ${error.message}\n\n` +
+                            `Devi eseguire le query SQL di aggiornamento!\n\n` +
+                            `Campi che probabilmente mancano:\n- fattura_id (UUID)\n- data_fattura (DATE)`,
+                            'error'
+                        );
+                    } else {
+                        mostraRisultato('Errore Query', error.message, 'error');
+                    }
+                    return;
+                }
+                
+                log('✅ Campi verificati con successo!', 'green');
+                mostraRisultato(
+                    'Database OK!',
+                    `✅ I campi fattura_id e data_fattura esistono nella tabella prodotti.\n\n` +
+                    `Prodotti nel database: ${data ? '1+' : '0'}\n\n` +
+                    `Puoi procedere con il caricamento delle fatture!`,
+                    'success'
+                );
+                
+            } catch (err) {
+                log(`❌ ECCEZIONE: ${err.message}`, 'red');
+                mostraRisultato('Errore Imprevisto', err.message, 'error');
+            }
+        }
+
+        async function testInsertProdotto() {
+            log('🧪 TEST 2: Prova inserimento prodotto con fattura_id', 'blue');
+            
+            try {
+                // Prova a inserire un prodotto di test
+                const prodottoTest = {
+                    nome: 'TEST_PRODOTTO_' + Date.now(),
+                    descrizione: 'Prodotto di test per verifica campi',
+                    categoria: 'Test',
+                    prezzo: 10.50,
+                    aliquota_iva: 22,
+                    quantita: 1,
+                    unita_misura: 'pz',
+                    fornitore: 'TEST FORNITORE',
+                    fattura_id: '00000000-0000-0000-0000-000000000000', // UUID fittizio
+                    data_fattura: '2025-01-07',
+                    attivo: false
+                };
+                
+                log('📦 Tentativo insert...', 'yellow');
+                const { data, error } = await supabaseClient
+                    .from('prodotti')
+                    .insert([prodottoTest])
+                    .select();
+                
+                if (error) {
+                    log(`❌ ERRORE INSERT: ${error.message}`, 'red');
+                    
+                    if (error.message.includes('column') || error.message.includes('does not exist')) {
+                        mostraRisultato(
+                            'INSERT FALLITO - Campi Mancanti',
+                            `Non è possibile inserire prodotti con fattura_id.\n\n` +
+                            `Errore: ${error.message}\n\n` +
+                            `SOLUZIONE: Esegui le query SQL di aggiornamento!`,
+                            'error'
+                        );
+                    } else if (error.message.includes('foreign key')) {
+                        mostraRisultato(
+                            'Foreign Key Violation (OK)',
+                            `I campi esistono ma il constraint foreign key impedisce l'insert.\n\n` +
+                            `Questo è NORMALE se hai attivato il constraint!\n\n` +
+                            `Significa che il database è configurato correttamente. ✅`,
+                            'warning'
+                        );
+                        
+                        // Ora eliminiamo il prodotto di test se era stato inserito
+                        log('🗑️ Pulizia prodotto di test...', 'yellow');
+                    } else {
+                        mostraRisultato('Errore Insert', error.message, 'error');
+                    }
+                    return;
+                }
+                
+                log('✅ Insert riuscito!', 'green');
+                log(`ID prodotto creato: ${data[0].id}`, 'green');
+                
+                // Elimina il prodotto di test
+                log('🗑️ Eliminazione prodotto di test...', 'yellow');
+                await supabaseClient.from('prodotti').delete().eq('id', data[0].id);
+                log('✅ Prodotto di test eliminato', 'green');
+                
+                mostraRisultato(
+                    'Test Insert OK!',
+                    `✅ Prodotto inserito correttamente con fattura_id.\n\n` +
+                    `ID creato: ${data[0].id}\n\n` +
+                    `Il database è pronto per il caricamento fatture!`,
+                    'success'
+                );
+                
+            } catch (err) {
+                log(`❌ ECCEZIONE: ${err.message}`, 'red');
+                mostraRisultato('Errore Imprevisto', err.message, 'error');
+            }
+        }
+
+        async function testQueryProdotti() {
+            log('📋 TEST 3: Query prodotti per fattura_id', 'blue');
+            
+            try {
+                // Prova a cercare fatture con prodotti collegati
+                const { data: fatture, error: fattureError } = await supabaseClient
+                    .from('fatture')
+                    .select('id, numero_fattura, fornitore')
+                    .limit(5);
+                
+                if (fattureError) {
+                    throw fattureError;
+                }
+                
+                if (!fatture || fatture.length === 0) {
+                    mostraRisultato(
+                        'Nessuna Fattura',
+                        'Non ci sono fatture nel database per testare la query.',
+                        'warning'
+                    );
+                    return;
+                }
+                
+                log(`✅ Trovate ${fatture.length} fatture`, 'green');
+                
+                // Per ogni fattura, conta i prodotti collegati
+                let risultati = '';
+                for (const fattura of fatture) {
+                    const { data: prodotti, error } = await supabaseClient
+                        .from('prodotti')
+                        .select('id, nome, fattura_id')
+                        .eq('fattura_id', fattura.id);
+                    
+                    if (error) {
+                        if (error.message.includes('column') || error.message.includes('does not exist')) {
+                            mostraRisultato(
+                                'Query Fallita - Campo Mancante',
+                                `Non è possibile filtrare per fattura_id.\n\n` +
+                                `Errore: ${error.message}\n\n` +
+                                `SOLUZIONE: Esegui le query SQL!`,
+                                'error'
+                            );
+                            return;
+                        }
+                        throw error;
+                    }
+                    
+                    risultati += `Fattura ${fattura.numero_fattura}: ${prodotti.length} prodotti\n`;
+                    log(`  → Fattura ${fattura.numero_fattura}: ${prodotti.length} prodotti`, 'green');
+                }
+                
+                mostraRisultato(
+                    'Query Prodotti OK!',
+                    `✅ Query per fattura_id funziona correttamente.\n\n${risultati}\n` +
+                    `Se vedi 0 prodotti per tutte le fatture, è normale:\n` +
+                    `le fatture vecchie non hanno prodotti collegati.`,
+                    'success'
+                );
+                
+            } catch (err) {
+                log(`❌ ECCEZIONE: ${err.message}`, 'red');
+                mostraRisultato('Errore Query', err.message, 'error');
+            }
+        }
+
+        async function testSchemaProdotti() {
+            log('🗂️ TEST 4: Recupero schema completo tabella prodotti', 'blue');
+            
+            try {
+                // Recupera un prodotto per vedere tutti i campi
+                const { data, error } = await supabaseClient
+                    .from('prodotti')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    mostraRisultato(
+                        'Tabella Vuota',
+                        'Non ci sono prodotti nel database.\n\nCarica una fattura per vedere lo schema completo.',
+                        'warning'
+                    );
+                    return;
+                }
+                
+                const prodotto = data[0];
+                const campi = Object.keys(prodotto);
+                
+                log(`✅ Schema recuperato: ${campi.length} campi`, 'green');
+                
+                const hasFatturaId = campi.includes('fattura_id');
+                const hasDataFattura = campi.includes('data_fattura');
+                
+                let risultato = `CAMPI PRESENTI (${campi.length} totali):\n\n`;
+                campi.forEach(campo => {
+                    const valore = prodotto[campo];
+                    const tipo = typeof valore;
+                    risultato += `• ${campo}: ${tipo} = ${valore}\n`;
+                });
+                
+                risultato += `\n\n`;
+                risultato += `✅ fattura_id: ${hasFatturaId ? 'PRESENTE' : '❌ MANCANTE'}\n`;
+                risultato += `✅ data_fattura: ${hasDataFattura ? 'PRESENTE' : '❌ MANCANTE'}`;
+                
+                const tipoRisultato = (hasFatturaId && hasDataFattura) ? 'success' : 'error';
+                mostraRisultato('Schema Tabella', risultato, tipoRisultato);
+                
+            } catch (err) {
+                log(`❌ ECCEZIONE: ${err.message}`, 'red');
+                mostraRisultato('Errore Schema', err.message, 'error');
+            }
+        }
+
+        log('🔧 Test page ready. Clicca un pulsante per iniziare.', 'blue');
+    </script>
+</body>
+</html>

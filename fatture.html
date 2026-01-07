@@ -165,6 +165,62 @@
 
         const BATCH_SIZE = 500;
         
+        // ===== VERIFICA CAMPI DATABASE ALL'AVVIO =====
+        async function verificaCampiDatabase() {
+            console.log('🔍 Verifica campi database...');
+            
+            try {
+                // Prova a fare una query di test con i campi fattura_id e data_fattura
+                const { data, error } = await supabaseClient
+                    .from('prodotti')
+                    .select('id, fattura_id, data_fattura')
+                    .limit(1);
+                
+                if (error) {
+                    // Se l'errore menziona una colonna mancante, avvisa l'utente
+                    if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
+                        console.error('❌ CAMPI MANCANTI NEL DATABASE!', error);
+                        
+                        const conferma = confirm(
+                            '⚠️ ATTENZIONE: DATABASE NON AGGIORNATO!\n\n' +
+                            'I campi "fattura_id" e "data_fattura" non esistono nella tabella prodotti.\n\n' +
+                            'DEVI eseguire le query SQL di aggiornamento prima di poter caricare fatture.\n\n' +
+                            'Vuoi vedere le istruzioni?'
+                        );
+                        
+                        if (conferma) {
+                            alert(
+                                'ISTRUZIONI:\n\n' +
+                                '1. Apri Supabase Dashboard\n' +
+                                '2. Vai su "SQL Editor"\n' +
+                                '3. Esegui lo script "aggiungi_campi_prodotti.sql"\n' +
+                                '4. Ricarica questa pagina\n\n' +
+                                'Trovi le query SQL nei file che ti ho fornito!'
+                            );
+                        }
+                        
+                        return false;
+                    }
+                }
+                
+                console.log('✅ Campi database verificati correttamente');
+                return true;
+                
+            } catch (err) {
+                console.error('❌ Errore verifica database:', err);
+                return false;
+            }
+        }
+        
+        // Esegui verifica all'avvio
+        let databaseOK = false;
+        verificaCampiDatabase().then(ok => {
+            databaseOK = ok;
+            if (!ok) {
+                console.warn('⚠️ Database non pronto. Il caricamento fatture potrebbe fallire.');
+            }
+        });
+        
         const state = {
             fatture: [],
             stats: { total: 0, importo: 0, fornitori: 0 },
@@ -713,6 +769,16 @@
         }
 
         async function processFiles(files) {
+            // Verifica che il database sia pronto
+            if (!databaseOK) {
+                const riprova = await verificaCampiDatabase();
+                if (!riprova) {
+                    alert('❌ Database non pronto. Impossibile caricare fatture.\n\nEsegui prima le query SQL di aggiornamento!');
+                    return;
+                }
+                databaseOK = true;
+            }
+            
             state.uploading = true;
             state.error = '';
             state.uploadProgress = { current: 0, total: files.length, errors: [], duplicates: [] };
@@ -828,22 +894,47 @@
                 user_id: null
             };
 
+            console.log('📄 Inserimento fattura in database...', fatturaData);
+            
             const { data: insertedFattura, error } = await supabaseClient.from('fatture').insert([fatturaData]).select().single();
-            if (error) throw new Error(`Errore database: ${error.message}`);
+            
+            if (error) {
+                console.error('❌ ERRORE inserimento fattura:', error);
+                throw new Error(`Errore database fattura: ${error.message}`);
+            }
+            
+            if (!insertedFattura) {
+                console.error('❌ Fattura inserita ma nessun dato restituito!');
+                throw new Error('Errore: fattura inserita ma ID non recuperato');
+            }
+            
+            console.log('✅ Fattura inserita con ID:', insertedFattura.id);
 
             // Passa l'ID della fattura e la data alla funzione di estrazione prodotti
+            console.log('📦 Avvio estrazione prodotti...');
             await extractAndSaveProducts(xmlDoc, cedenteNome, insertedFattura.id, dataFattura);
+            console.log('✅ Estrazione prodotti completata!');
         }
 
         // ===== PARSER CON GESTIONE IVA COMPLETA E COLLEGAMENTO FATTURA =====
         async function extractAndSaveProducts(xmlDoc, fornitore, fatturaId, dataFattura) {
             const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
             
+            console.log(`📦 Inizio estrazione prodotti per fattura ID: ${fatturaId}`);
+            console.log(`📦 Trovate ${dettaglioLinee.length} righe di dettaglio`);
+            
+            let prodottiCreati = 0;
+            let prodottiSaltati = 0;
+            let errori = 0;
+            
             for (let i = 0; i < dettaglioLinee.length; i++) {
                 const linea = dettaglioLinee[i];
                 
                 const descrizione = getTextContent(linea, 'Descrizione');
-                if (!descrizione || descrizione.trim() === '') continue;
+                if (!descrizione || descrizione.trim() === '') {
+                    prodottiSaltati++;
+                    continue;
+                }
                 
                 let quantitaText = getTextContent(linea, 'Quantita') || getTextContent(linea, 'Quantity') || getTextContent(linea, 'Qta') || '0';
                 quantitaText = quantitaText.replace(',', '.');
@@ -869,6 +960,7 @@
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
                     console.log(`⚠️ Prodotto saltato (dati mancanti): ${descrizione}`);
+                    prodottiSaltati++;
                     continue;
                 }
                 
@@ -876,27 +968,59 @@
 
                 try {
                     // IMPORTANTE: Ora ogni prodotto è collegato ad una fattura specifica
-                    // Non cerchiamo più prodotti esistenti, creiamo sempre nuovi record
-                    await supabaseClient
+                    const prodottoData = {
+                        nome: descrizione,
+                        descrizione: descrizione,
+                        categoria: categoria,
+                        prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
+                        aliquota_iva: aliquotaIVA,
+                        quantita: quantita > 0 ? quantita : 0,
+                        unita_misura: unitaMisura,
+                        fornitore: fornitore,
+                        fattura_id: fatturaId,
+                        data_fattura: dataFattura,
+                        attivo: true
+                    };
+                    
+                    console.log(`📦 Tentativo inserimento prodotto:`, prodottoData);
+                    
+                    const { data, error } = await supabaseClient
                         .from('prodotti')
-                        .insert([{
-                            nome: descrizione,
-                            descrizione: descrizione,
-                            categoria: categoria,
-                            prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
-                            aliquota_iva: aliquotaIVA,
-                            quantita: quantita > 0 ? quantita : 0,
-                            unita_misura: unitaMisura,
-                            fornitore: fornitore,
-                            fattura_id: fatturaId,
-                            data_fattura: dataFattura,
-                            attivo: true
-                        }]);
+                        .insert([prodottoData]);
+                    
+                    if (error) {
+                        console.error(`❌ ERRORE INSERT prodotto "${descrizione}":`, error);
+                        console.error(`❌ Dettaglio errore:`, JSON.stringify(error));
+                        errori++;
                         
-                    console.log(`✅ Creato prodotto: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%, UM: ${unitaMisura}) [Fattura: ${fatturaId}]`);
+                        // Se è un errore di colonna mancante, mostra un alert
+                        if (error.message && error.message.includes('column')) {
+                            alert(`⚠️ ERRORE DATABASE: La colonna non esiste!\n\n${error.message}\n\nDevi eseguire le query SQL per aggiungere i campi fattura_id e data_fattura alla tabella prodotti!`);
+                            throw error; // Ferma il caricamento
+                        }
+                    } else {
+                        prodottiCreati++;
+                        console.log(`✅ Creato prodotto ${prodottiCreati}: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
+                    }
                 } catch (err) {
-                    console.error(`❌ Errore prodotto "${descrizione}":`, err);
+                    console.error(`❌ ECCEZIONE prodotto "${descrizione}":`, err);
+                    errori++;
+                    
+                    // Se è il primo errore, mostra un alert dettagliato
+                    if (errori === 1) {
+                        alert(`⚠️ ERRORE nel salvataggio prodotti!\n\nErrore: ${err.message}\n\nVerifica:\n1. Che i campi fattura_id e data_fattura esistano nella tabella prodotti\n2. Che hai eseguito le query SQL di aggiornamento\n3. La console del browser per dettagli`);
+                    }
                 }
+            }
+            
+            console.log(`\n📊 RIEPILOGO ESTRAZIONE PRODOTTI:`);
+            console.log(`✅ Prodotti creati: ${prodottiCreati}`);
+            console.log(`⚠️ Prodotti saltati: ${prodottiSaltati}`);
+            console.log(`❌ Errori: ${errori}`);
+            console.log(`📦 Totale righe elaborate: ${dettaglioLinee.length}\n`);
+            
+            if (errori > 0) {
+                throw new Error(`Errore nel salvataggio di ${errori} prodotti. Controlla la console per i dettagli.`);
             }
         }
 
