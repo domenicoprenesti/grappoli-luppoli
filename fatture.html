@@ -1,1295 +1,548 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Fatture Elettroniche</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tetris 3D — Rotazioni X/Y/Z</title>
+  <style>
+    html,body{margin:0;height:100%;overflow:hidden;background:#0b1020;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+    #hud{
+      position:fixed;left:12px;top:12px;color:#fff;
+      background:rgba(0,0,0,.45);padding:10px 12px;border-radius:10px;
+      user-select:none;line-height:1.25;min-width:250px;
+    }
+    #hud b{font-size:16px}
+    #help{
+      position:fixed;right:12px;top:12px;color:#fff;
+      background:rgba(0,0,0,.45);padding:10px 12px;border-radius:10px;
+      user-select:none;text-align:right;
+    }
+    #msg{
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      color:#fff;text-align:center;pointer-events:none;
+      font-size:22px;text-shadow:0 2px 18px rgba(0,0,0,.8);
+      padding:24px;
+    }
+    canvas{display:block}
+  </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                            </svg>
-                        </div>
-                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
-                    </button>
-                    <div class="hidden md:ml-10 md:flex md:space-x-4">
-                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
-                        <a class="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700">Fatture</a>
-                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Prodotti</a>
-                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Utenti</a>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
-                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+<body>
+  <div id="hud">
+    <b>Tetris 3D</b><br/>
+    Punteggio: <span id="score">0</span><br/>
+    Layer: <span id="lines">0</span><br/>
+    Livello: <span id="level">1</span>
+  </div>
+  <div id="help">
+    ← → : X<br/>
+    ↑ ↓ : Z<br/>
+    Z/X : rot Y<br/>
+    A/S : rot X<br/>
+    Q/E : rot Z<br/>
+    Spazio: drop<br/>
+    Shift: soft<br/>
+    R: restart
+  </div>
+  <div id="msg"></div>
 
-    <div class="pt-20 pb-12" id="app"></div>
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
 
-    <!-- Modal Conferma Eliminazione -->
-    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-            <div class="text-center mb-6">
-                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
-                <p id="deleteMessage" class="text-gray-600"></p>
-            </div>
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800">
-                    <strong⚠️ Attenzione:</strong> Questa azione è irreversibile!
-                </p>
-            </div>
-            <div class="flex space-x-4">
-                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
-                    Annulla
-                </button>
-                <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
-                    Elimina
-                </button>
-            </div>
-        </div>
-    </div>
+/* -----------------------------
+   Config pozzo (well)
+----------------------------- */
+const W = 5;          // X
+const D = 5;          // Z
+const H = 18;         // Y (altezza)
+const CELL = 1.0;
 
-    <!-- Modal Upload -->
-    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-            <!-- Header Modal -->
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">
-                    <span id="uploadModalTitle">Carica Fatture XML</span>
-                </h2>
-                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
+const BASE_FALL = 0.65;       // sec per step al livello 1
+const SOFT_MULT = 0.10;       // soft drop = 10% del tempo
+const LEVEL_EVERY = 6;        // layer completi per livello
 
-            <!-- Area Upload Singolo -->
-            <div id="modalUploadSingle" class="hidden">
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-500 cursor-pointer transition-colors" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" accept=".xml,.p7m" multiple class="hidden" onchange="handleFileUpload(event)">
-                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    <p class="text-xl font-bold mb-2">Carica Fatture XML</p>
-                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o più file (anche drag & drop)</p>
-                    <p class="text-xs text-blue-600 font-medium">✓ Controllo duplicati automatico</p>
-                </div>
-            </div>
+/* -----------------------------
+   Scene
+----------------------------- */
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0b1020, 12, 60);
 
-            <!-- Area Upload Cartella -->
-            <div id="modalUploadFolder" class="hidden">
-                <div class="border-2 border-dashed border-purple-300 rounded-xl p-12 text-center hover:border-purple-500 cursor-pointer transition-colors" onclick="document.getElementById('folderInput').click()">
-                    <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden" onchange="handleFolderUpload(event)">
-                    <svg class="w-20 h-20 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                    </svg>
-                    <p class="text-xl font-bold mb-2 text-purple-700">📁 Carica Cartella Completa</p>
-                    <p class="text-sm text-gray-600 mb-3">Seleziona una cartella con tutte le fatture XML</p>
-                    <div class="space-y-1">
-                        <p class="text-xs text-purple-600 font-medium">✓ Elaborazione automatica in batch</p>
-                        <p class="text-xs text-purple-600 font-medium">✓ Skip automatico duplicati</p>
-                        <p class="text-xs text-gray-500 mt-2">Perfetto per importare centinaia di fatture</p>
-                    </div>
-                </div>
-            </div>
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
 
-            <!-- Progress Bar Upload (appare durante caricamento) -->
-            <div id="modalUploadProgress" class="hidden mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div class="flex justify-between mb-2">
-                    <span class="text-sm font-medium text-blue-900">Caricamento in corso...</span>
-                    <span id="modalProgressText" class="text-sm text-blue-700">0 / 0</span>
-                </div>
-                <div class="w-full bg-blue-200 rounded-full h-3">
-                    <div id="modalProgressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
-                </div>
-                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">⚠️ 0 duplicati saltati</p>
-            </div>
-        </div>
-    </div>
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(9, 14, 14);
+camera.lookAt(0, 7, 0);
 
-    <!-- Modal Dettagli Fattura -->
-    <div id="dettagliModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6 flex justify-between items-center">
-                <h2 class="text-2xl font-bold">📄 Dettagli Fattura</h2>
-                <button onclick="closeDettagliModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <div id="dettagliContent" class="p-8">
-                <div class="text-center py-12">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p class="mt-4 text-gray-600">Caricamento...</p>
-                </div>
-            </div>
-            
-            <div class="sticky bottom-0 bg-gray-50 px-8 py-4 flex justify-end space-x-4 border-t">
-                <button onclick="closeDettagliModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
-                    Annulla
-                </button>
-                <button onclick="saveDettagliFattura()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center space-x-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    <span>Salva Modifiche</span>
-                </button>
-            </div>
-        </div>
-    </div>
+scene.add(new THREE.HemisphereLight(0xffffff, 0x1c2a3a, 0.95));
+const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+dir.position.set(10, 25, 10);
+scene.add(dir);
 
-    <script>
-        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const SESSION_KEY = 'app_authenticated';
+/* -----------------------------
+   HUD
+----------------------------- */
+const elScore = document.querySelector("#score");
+const elLines = document.querySelector("#lines");
+const elLevel = document.querySelector("#level");
+const elMsg = document.querySelector("#msg");
+const showMsg = (t="") => elMsg.innerHTML = t;
 
-        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+/* -----------------------------
+   Helpers coordinate
+   Grid coords: x in [0..W-1], z in [0..D-1], y in [0..H-1]
+   y=0 è il "pavimento"
+----------------------------- */
+function inBounds(x,y,z){
+  return x>=0 && x<W && z>=0 && z<D && y>=0 && y<H;
+}
+function key(x,y,z){ return `${x},${y},${z}`; }
 
-        const BATCH_SIZE = 500;
-        
-        // ===== VERIFICA CAMPI DATABASE ALL'AVVIO =====
-        async function verificaCampiDatabase() {
-            console.log('🔍 Verifica campi database...');
-            
-            try {
-                // Prova a fare una query di test con i campi fattura_id e data_fattura
-                const { data, error } = await supabaseClient
-                    .from('prodotti')
-                    .select('id, fattura_id, data_fattura')
-                    .limit(1);
-                
-                if (error) {
-                    // Se l'errore menziona una colonna mancante, avvisa l'utente
-                    if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
-                        console.error('❌ CAMPI MANCANTI NEL DATABASE!', error);
-                        
-                        const conferma = confirm(
-                            '⚠️ ATTENZIONE: DATABASE NON AGGIORNATO!\n\n' +
-                            'I campi "fattura_id" e "data_fattura" non esistono nella tabella prodotti.\n\n' +
-                            'DEVI eseguire le query SQL di aggiornamento prima di poter caricare fatture.\n\n' +
-                            'Vuoi vedere le istruzioni?'
-                        );
-                        
-                        if (conferma) {
-                            alert(
-                                'ISTRUZIONI:\n\n' +
-                                '1. Apri Supabase Dashboard\n' +
-                                '2. Vai su "SQL Editor"\n' +
-                                '3. Esegui lo script "aggiungi_campi_prodotti.sql"\n' +
-                                '4. Ricarica questa pagina\n\n' +
-                                'Trovi le query SQL nei file che ti ho fornito!'
-                            );
-                        }
-                        
-                        return false;
-                    }
-                }
-                
-                console.log('✅ Campi database verificati correttamente');
-                return true;
-                
-            } catch (err) {
-                console.error('❌ Errore verifica database:', err);
-                return false;
-            }
+// Convert grid to world position (centered)
+function gridToWorld(x,y,z){
+  const wx = (x - (W-1)/2) * CELL;
+  const wy = y * CELL;
+  const wz = (z - (D-1)/2) * CELL;
+  return new THREE.Vector3(wx, wy, wz);
+}
+
+/* -----------------------------
+   Well visuals (wireframe box)
+----------------------------- */
+const well = new THREE.Group();
+{
+  const box = new THREE.BoxGeometry(W*CELL+0.02, H*CELL+0.02, D*CELL+0.02);
+  const edges = new THREE.EdgesGeometry(box);
+  const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x6b77a8 }));
+  line.position.y = (H*CELL)/2 - 0.5*CELL;
+  well.add(line);
+
+  // pavimento
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(W*CELL, D*CELL),
+    new THREE.MeshStandardMaterial({ color: 0x3b3f46, roughness: 0.95 })
+  );
+  floor.rotation.x = -Math.PI/2;
+  floor.position.y = -0.5*CELL;
+  well.add(floor);
+}
+scene.add(well);
+
+/* -----------------------------
+   Board state: occupied cells
+----------------------------- */
+const board = new Map(); // key -> {mesh, color}
+
+/* -----------------------------
+   Tetromini (2D) come set di 4 cubi
+   (li ruotiamo in 3D: diventano "policubi" orientabili)
+   Coordinate locali attorno all'origine.
+----------------------------- */
+const SHAPES = [
+  // I
+  { name:"I", blocks:[[ -1,0,0],[0,0,0],[1,0,0],[2,0,0]] },
+  // O
+  { name:"O", blocks:[[0,0,0],[1,0,0],[0,0,1],[1,0,1]] },
+  // T
+  { name:"T", blocks:[[-1,0,0],[0,0,0],[1,0,0],[0,0,1]] },
+  // L
+  { name:"L", blocks:[[-1,0,0],[0,0,0],[1,0,0],[1,0,1]] },
+  // J
+  { name:"J", blocks:[[-1,0,1],[-1,0,0],[0,0,0],[1,0,0]] },
+  // S
+  { name:"S", blocks:[[-1,0,1],[0,0,1],[0,0,0],[1,0,0]] },
+  // Z
+  { name:"Z", blocks:[[-1,0,0],[0,0,0],[0,0,1],[1,0,1]] },
+];
+
+/* -----------------------------
+   Rotazioni a 90° su assi X/Y/Z
+   Applichiamo su blocchi locali (integri) usando trasformazioni discrete.
+----------------------------- */
+function rotX([x,y,z]){ return [ x, -z,  y]; } // +90° attorno X
+function rotY([x,y,z]){ return [ z,  y, -x]; } // +90° attorno Y
+function rotZ([x,y,z]){ return [-y,  x,  z]; } // +90° attorno Z
+
+function applyRot(blocks, axis, times){
+  let out = blocks.map(b=>[...b]);
+  const t = ((times%4)+4)%4;
+  for(let i=0;i<t;i++){
+    out = out.map(b => axis==="x" ? rotX(b) : axis==="y" ? rotY(b) : rotZ(b));
+  }
+  return out;
+}
+
+// Normalizza per evitare "offset strani": sposta i blocchi in modo che min x/z/y = 0 o vicino
+function normalize(blocks){
+  let minX=Infinity,minY=Infinity,minZ=Infinity;
+  for(const [x,y,z] of blocks){
+    minX=Math.min(minX,x); minY=Math.min(minY,y); minZ=Math.min(minZ,z);
+  }
+  // per tetris 3D è comodo NON forzare minY=0 sempre (ruotando può diventare verticale),
+  // ma ci serve un anchor stabile. Portiamo min a valori vicini a 0.
+  return blocks.map(([x,y,z]) => [x-minX, y-minY, z-minZ]);
+}
+
+/* -----------------------------
+   Piece (attiva)
+----------------------------- */
+const cubeGeo = new THREE.BoxGeometry(CELL, CELL, CELL);
+function makeMat(hex){
+  return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.65, metalness: 0.05 });
+}
+const COLORS = [0xffd700,0x7cf0ff,0xff6b6b,0x7bff7b,0xb37bff,0xffa34d,0x4da3ff];
+
+let active = null; // {shapeIndex, blocksLocal, pos:{x,y,z}, group, color}
+let score = 0;
+let cleared = 0;
+let level = 1;
+let gameOver = false;
+
+function fallInterval(){
+  // aumenta velocità col livello (limite)
+  return Math.max(0.12, BASE_FALL * Math.pow(0.88, level-1));
+}
+
+function spawnPiece(){
+  const idx = Math.floor(Math.random()*SHAPES.length);
+  const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+  const base = SHAPES[idx].blocks;
+
+  // inizialmente normalizziamo sul piano, poi spawniamo alto al centro
+  let blocks = normalize(base);
+
+  const group = new THREE.Group();
+  const mat = makeMat(color);
+  for(let i=0;i<4;i++){
+    const m = new THREE.Mesh(cubeGeo, mat);
+    group.add(m);
+  }
+  scene.add(group);
+
+  // spawn center
+  const pos = {
+    x: Math.floor((W-2)/2),
+    z: Math.floor((D-2)/2),
+    y: H-1
+  };
+
+  active = { shapeIndex: idx, blocksLocal: blocks, pos, group, color };
+
+  // se collide subito -> game over
+  if(!canPlace(active.pos, active.blocksLocal)){
+    endGame();
+    return;
+  }
+  syncActiveMeshes();
+}
+
+function syncActiveMeshes(){
+  if(!active) return;
+  const {blocksLocal, pos, group} = active;
+  for(let i=0;i<4;i++){
+    const [bx,by,bz] = blocksLocal[i];
+    const gx = pos.x + bx;
+    const gy = pos.y + by;
+    const gz = pos.z + bz;
+    group.children[i].position.copy(gridToWorld(gx,gy,gz));
+  }
+}
+
+function canPlace(pos, blocksLocal){
+  for(const [bx,by,bz] of blocksLocal){
+    const x = pos.x + bx;
+    const y = pos.y + by;
+    const z = pos.z + bz;
+    if(!inBounds(x,y,z)) return false;
+    if(board.has(key(x,y,z))) return false;
+  }
+  return true;
+}
+
+/* -----------------------------
+   Lock / Clear layers
+----------------------------- */
+function lockPiece(){
+  if(!active) return;
+  const {blocksLocal, pos, group, color} = active;
+
+  // trasferisci cubi nel board (nuovi mesh per semplicità)
+  const mat = makeMat(color);
+  for(const [bx,by,bz] of blocksLocal){
+    const x = pos.x + bx;
+    const y = pos.y + by;
+    const z = pos.z + bz;
+    const m = new THREE.Mesh(cubeGeo, mat);
+    m.position.copy(gridToWorld(x,y,z));
+    scene.add(m);
+    board.set(key(x,y,z), { mesh: m, color });
+  }
+
+  // rimuovi gruppo attivo
+  scene.remove(group);
+  active = null;
+
+  // clear layer completi
+  const clearedNow = clearFullLayers();
+  if(clearedNow>0){
+    cleared += clearedNow;
+    // scoring base (stile tetris, ma in 3D layer)
+    const layerScore = [0, 100, 250, 450, 700][Math.min(4, clearedNow)];
+    score += layerScore * level;
+    // level up
+    level = 1 + Math.floor(cleared / LEVEL_EVERY);
+  }
+
+  // spawn next
+  spawnPiece();
+  updateHUD();
+}
+
+function clearFullLayers(){
+  let clearedCount = 0;
+
+  // per ogni y, verifica se tutte le celle (W*D) sono occupate
+  for(let y=0;y<H;y++){
+    let full = true;
+    for(let x=0;x<W && full;x++){
+      for(let z=0;z<D;z++){
+        if(!board.has(key(x,y,z))){ full=false; break; }
+      }
+    }
+    if(full){
+      clearedCount++;
+      // rimuovi layer y
+      for(let x=0;x<W;x++){
+        for(let z=0;z<D;z++){
+          const k = key(x,y,z);
+          const cell = board.get(k);
+          if(cell){
+            scene.remove(cell.mesh);
+            board.delete(k);
+          }
         }
-        
-        // Esegui verifica all'avvio
-        let databaseOK = false;
-        verificaCampiDatabase().then(ok => {
-            databaseOK = ok;
-            if (!ok) {
-                console.warn('⚠️ Database non pronto. Il caricamento fatture potrebbe fallire.');
+      }
+      // fai scendere tutto sopra y di 1
+      // (ripeti per lo stesso y perché si è creato un "vuoto" lì)
+      for(let yy=y+1; yy<H; yy++){
+        for(let x=0;x<W;x++){
+          for(let z=0;z<D;z++){
+            const fromK = key(x,yy,z);
+            const cell = board.get(fromK);
+            if(cell){
+              board.delete(fromK);
+              const toK = key(x,yy-1,z);
+              board.set(toK, cell);
+              cell.mesh.position.copy(gridToWorld(x,yy-1,z));
             }
-        });
-        
-        const state = {
-            fatture: [],
-            stats: { total: 0, importo: 0, fornitori: 0 },
-            selectedIds: new Set(),
-            filters: { invoiceYear: 'all', invoiceMonth: 'all', supplier: 'all', minAmount: '', maxAmount: '' },
-            uploading: false,
-            uploadProgress: null,
-            error: '',
-            loadingProgress: { loaded: 0, total: 0, isLoading: false },
-            deleteAction: null, // { type: 'single'|'multiple', ids: [] }
-            uploadMode: 'single', // 'single' o 'folder'
-            pagatoChanges: new Map() // Traccia modifiche pagato: id -> nuovo valore
-        };
-
-        function logout() {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.href = 'index.html';
+          }
         }
-
-        // ===== SWITCH MODALITÀ UPLOAD =====
-        window.switchUploadMode = function(mode) {
-            state.uploadMode = mode;
-            
-            // Apri modal
-            const modal = document.getElementById('uploadModal');
-            const modalSingle = document.getElementById('modalUploadSingle');
-            const modalFolder = document.getElementById('modalUploadFolder');
-            const modalTitle = document.getElementById('uploadModalTitle');
-            
-            if (mode === 'single') {
-                modalTitle.textContent = 'Carica Fatture XML';
-                modalSingle.classList.remove('hidden');
-                modalFolder.classList.add('hidden');
-            } else {
-                modalTitle.textContent = '📁 Carica Cartella Completa';
-                modalSingle.classList.add('hidden');
-                modalFolder.classList.remove('hidden');
-            }
-            
-            modal.classList.remove('hidden');
-        };
-
-        window.closeUploadModal = function() {
-            const modal = document.getElementById('uploadModal');
-            modal.classList.add('hidden');
-        };
-
-        // ===== GESTIONE STATO PAGATO =====
-        window.togglePagato = function(id) {
-            const fattura = state.fatture.find(f => f.id === id);
-            if (!fattura) return;
-            
-            // Inverti lo stato
-            const nuovoStato = !fattura.pagato;
-            fattura.pagato = nuovoStato;
-            
-            // Traccia modifica
-            state.pagatoChanges.set(id, nuovoStato);
-            
-            render();
-        };
-
-        window.togglePagatoAll = function() {
-            const checkbox = document.getElementById('selectAllPagato');
-            const isChecked = checkbox.checked;
-            
-            // Ottieni fatture visibili (filtrate)
-            const filteredFatture = getFilteredFatture();
-            
-            // Applica lo stato a tutte le fatture visibili
-            filteredFatture.forEach(f => {
-                if (f.pagato !== isChecked) {
-                    f.pagato = isChecked;
-                    state.pagatoChanges.set(f.id, isChecked);
-                }
-            });
-            
-            render();
-        };
-
-        window.savePagatoChanges = async function() {
-            if (state.pagatoChanges.size === 0) return;
-            
-            try {
-                state.error = '💾 Salvataggio in corso...';
-                render();
-                
-                // Salva tutte le modifiche
-                for (const [id, pagato] of state.pagatoChanges.entries()) {
-                    const { error } = await supabaseClient
-                        .from('fatture')
-                        .update({ pagato: pagato })
-                        .eq('id', id);
-                    
-                    if (error) throw error;
-                }
-                
-                state.pagatoChanges.clear();
-                state.error = '✅ Modifiche salvate con successo!';
-                
-                setTimeout(() => { state.error = ''; render(); }, 3000);
-                render();
-                
-            } catch (err) {
-                console.error('Errore salvataggio:', err);
-                state.error = '❌ Errore durante il salvataggio';
-                render();
-            }
-        };
-
-        window.cancelPagatoChanges = function() {
-            // Ripristina valori originali
-            for (const [id, _] of state.pagatoChanges.entries()) {
-                const fattura = state.fatture.find(f => f.id === id);
-                if (fattura) {
-                    // Ricarica dalla copia originale (invertendo di nuovo)
-                    fattura.pagato = !fattura.pagato;
-                }
-            }
-            
-            state.pagatoChanges.clear();
-            render();
-        };
-
-        // ===== GESTIONE UPLOAD CARTELLA =====
-        window.handleFolderUpload = async function(event) {
-            const files = Array.from(event.target.files).filter(f => 
-                f.name.toLowerCase().endsWith('.xml') || f.name.toLowerCase().endsWith('.p7m')
-            );
-            
-            if (files.length === 0) {
-                alert('⚠️ Nessun file XML trovato nella cartella selezionata');
-                return;
-            }
-            
-            console.log(`📁 Upload cartella: ${files.length} file XML trovati`);
-            await processFiles(files);
-        };
-
-        function parseXML(xmlString) {
-            return new DOMParser().parseFromString(xmlString, 'text/xml');
-        }
-
-        function getTextContent(element, tagName) {
-            if (!element) return '';
-            const el = element.getElementsByTagName(tagName)[0];
-            return el ? el.textContent.trim() : '';
-        }
-
-        function generateTag(description) {
-            const desc = description.toLowerCase();
-            if (desc.includes('vino') || desc.includes('wine')) return 'Vini';
-            if (desc.includes('birra') || desc.includes('beer')) return 'Birre';
-            if (desc.includes('whisky') || desc.includes('gin') || desc.includes('vodka')) return 'Spirits';
-            if (desc.includes('acqua') || desc.includes('succo')) return 'Bevande';
-            if (desc.includes('patatine') || desc.includes('chips')) return 'Snacks';
-            return 'Altro';
-        }
-
-        // ===== GESTIONE MODAL DETTAGLI FATTURA =====
-        let currentDettagliFattura = null;
-
-        window.showDettagliFattura = async function(fatturaId) {
-            const modal = document.getElementById('dettagliModal');
-            const content = document.getElementById('dettagliContent');
-            
-            // Mostra modal con loading
-            modal.classList.remove('hidden');
-            content.innerHTML = `
-                <div class="text-center py-12">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p class="mt-4 text-gray-600">Caricamento dati...</p>
-                </div>
-            `;
-            
-            try {
-                // Carica tutti i dati della fattura dal database
-                const { data, error } = await supabaseClient
-                    .from('fatture')
-                    .select('*')
-                    .eq('id', fatturaId)
-                    .single();
-                
-                if (error) throw error;
-                
-                currentDettagliFattura = data;
-                
-                // Carica solo i prodotti di questa specifica fattura (tramite fattura_id)
-                const { data: prodotti, error: prodottiError } = await supabaseClient
-                    .from('prodotti')
-                    .select('*')
-                    .eq('fattura_id', fatturaId)
-                    .order('nome', { ascending: true });
-                
-                if (prodottiError) {
-                    console.error('Errore caricamento prodotti:', prodottiError);
-                }
-                
-                const prodottiList = prodotti || [];
-                const totaleProdotti = prodottiList.reduce((sum, p) => sum + ((p.prezzo || 0) * (p.quantita || 0)), 0);
-                
-                // Mostra i dettagli nel modal
-                content.innerHTML = `
-                    <div class="space-y-6">
-                        <!-- Informazioni Generali -->
-                        <div class="bg-blue-50 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Informazioni Generali
-                            </h3>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Numero Fattura *</label>
-                                    <input type="text" id="edit_numero_fattura" value="${data.numero_fattura || ''}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Data Fattura *</label>
-                                    <input type="date" id="edit_data_fattura" value="${data.data_fattura || ''}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Dati Cedente -->
-                        <div class="bg-green-50 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-green-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                Dati Fornitore/Cedente
-                            </h3>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Denominazione</label>
-                                    <input type="text" id="edit_cedente_denominazione" value="${data.cedente_denominazione || data.fornitore || ''}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Partita IVA</label>
-                                    <input type="text" id="edit_cedente_piva" value="${data.cedente_piva || ''}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Indirizzo</label>
-                                    <input type="text" id="edit_cedente_indirizzo" value="${data.cedente_indirizzo || ''}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Dati Cessionario -->
-                        <div class="bg-purple-50 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-purple-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                Dati Cliente/Cessionario
-                            </h3>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Denominazione</label>
-                                    <input type="text" id="edit_cessionario_denominazione" value="${data.cessionario_denominazione || ''}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Partita IVA</label>
-                                    <input type="text" id="edit_cessionario_piva" value="${data.cessionario_piva || ''}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Importi -->
-                        <div class="bg-orange-50 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-orange-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Importi e IVA
-                            </h3>
-                            <div class="grid md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Imponibile</label>
-                                    <input type="number" step="0.01" id="edit_importo_imponibile" value="${data.importo_imponibile || 0}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">IVA</label>
-                                    <input type="number" step="0.01" id="edit_importo_iva" value="${data.importo_iva || 0}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Totale</label>
-                                    <input type="number" step="0.01" id="edit_importo_totale" value="${data.importo_totale || 0}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Valuta</label>
-                                    <input type="text" id="edit_valuta" value="${data.valuta || 'EUR'}" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="flex items-center space-x-3 cursor-pointer mt-8">
-                                        <input type="checkbox" id="edit_pagato" ${data.pagato ? 'checked' : ''} class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
-                                        <span class="text-sm font-semibold text-gray-700">Fattura pagata</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Causale -->
-                        <div class="bg-gray-50 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                Causale/Note
-                            </h3>
-                            <textarea id="edit_causale" rows="3" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Inserisci causale o note...">${data.causale || ''}</textarea>
-                        </div>
-
-                        <!-- Info File -->
-                        <div class="bg-indigo-50 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                Informazioni File
-                            </h3>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nome File</label>
-                                    <input type="text" value="${data.filename || 'N/D'}" class="w-full px-4 py-2 bg-gray-100 border-2 border-gray-200 rounded-lg" readonly>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Data Creazione</label>
-                                    <input type="text" value="${data.created_at ? new Date(data.created_at).toLocaleString('it-IT') : 'N/D'}" class="w-full px-4 py-2 bg-gray-100 border-2 border-gray-200 rounded-lg" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Prodotti della Fattura -->
-                        <div class="bg-teal-50 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-teal-900 mb-4 flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                                    Prodotti (${prodottiList.length})
-                                </div>
-                                <div class="text-sm font-medium text-teal-700">
-                                    Totale: €${totaleProdotti.toFixed(2)}
-                                </div>
-                            </h3>
-                            
-                            ${prodottiList.length === 0 ? `
-                                <div class="text-center py-8 bg-white rounded-lg border-2 border-dashed border-teal-200">
-                                    <svg class="w-12 h-12 text-teal-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                    </svg>
-                                    <p class="text-teal-600 font-medium">Nessun prodotto trovato</p>
-                                    <p class="text-teal-500 text-sm mt-1">Non ci sono prodotti associati a questo fornitore</p>
-                                </div>
-                            ` : `
-                                <div class="overflow-x-auto">
-                                    <table class="w-full bg-white rounded-lg overflow-hidden">
-                                        <thead class="bg-teal-600 text-white">
-                                            <tr>
-                                                <th class="px-4 py-3 text-left text-sm font-semibold">Prodotto</th>
-                                                <th class="px-4 py-3 text-left text-sm font-semibold">Categoria</th>
-                                                <th class="px-4 py-3 text-right text-sm font-semibold">Quantità</th>
-                                                <th class="px-4 py-3 text-right text-sm font-semibold">Prezzo Unit.</th>
-                                                <th class="px-4 py-3 text-center text-sm font-semibold">IVA</th>
-                                                <th class="px-4 py-3 text-right text-sm font-semibold">Totale</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-200">
-                                            ${prodottiList.map((p, idx) => {
-                                                const totaleRiga = (p.prezzo || 0) * (p.quantita || 0);
-                                                return `
-                                                    <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-teal-50 transition-colors">
-                                                        <td class="px-4 py-3 text-sm">
-                                                            <div class="font-medium text-gray-900">${p.nome || 'N/D'}</div>
-                                                            ${p.descrizione && p.descrizione !== p.nome ? `<div class="text-xs text-gray-500 mt-1">${p.descrizione}</div>` : ''}
-                                                        </td>
-                                                        <td class="px-4 py-3 text-sm">
-                                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                                                p.categoria === 'Vini' ? 'bg-purple-100 text-purple-800' :
-                                                                p.categoria === 'Birre' ? 'bg-amber-100 text-amber-800' :
-                                                                p.categoria === 'Spirits' ? 'bg-orange-100 text-orange-800' :
-                                                                p.categoria === 'Bevande' ? 'bg-blue-100 text-blue-800' :
-                                                                'bg-gray-100 text-gray-800'
-                                                            }">
-                                                                ${p.categoria || 'Altro'}
-                                                            </span>
-                                                        </td>
-                                                        <td class="px-4 py-3 text-sm text-right font-medium">
-                                                            ${(p.quantita || 0).toLocaleString('it-IT')} ${p.unita_misura || 'pz'}
-                                                        </td>
-                                                        <td class="px-4 py-3 text-sm text-right">
-                                                            €${(p.prezzo || 0).toFixed(2)}
-                                                        </td>
-                                                        <td class="px-4 py-3 text-sm text-center">
-                                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
-                                                                ${(p.aliquota_iva || 0).toFixed(0)}%
-                                                            </span>
-                                                        </td>
-                                                        <td class="px-4 py-3 text-sm text-right font-bold text-teal-700">
-                                                            €${totaleRiga.toFixed(2)}
-                                                        </td>
-                                                    </tr>
-                                                `;
-                                            }).join('')}
-                                        </tbody>
-                                        <tfoot class="bg-teal-700 text-white">
-                                            <tr>
-                                                <td colspan="5" class="px-4 py-3 text-right font-bold">TOTALE PRODOTTI:</td>
-                                                <td class="px-4 py-3 text-right font-bold text-lg">€${totaleProdotti.toFixed(2)}</td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                                
-                                ${totaleProdotti !== data.importo_totale ? `
-                                    <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-                                        <div class="flex items-start">
-                                            <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                            </svg>
-                                            <div class="flex-1">
-                                                <p class="text-sm font-medium text-yellow-800">Attenzione: Discrepanza importi</p>
-                                                <p class="text-sm text-yellow-700 mt-1">
-                                                    Il totale prodotti (€${totaleProdotti.toFixed(2)}) non corrisponde all'importo fattura (€${data.importo_totale.toFixed(2)})
-                                                </p>
-                                                <p class="text-xs text-yellow-600 mt-1">
-                                                    Differenza: €${Math.abs(totaleProdotti - data.importo_totale).toFixed(2)} 
-                                                    ${totaleProdotti > data.importo_totale ? '(prodotti in più)' : '(spese/bolli/trasporti)'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            `}
-                        </div>
-                    </div>
-                `;
-                
-            } catch (err) {
-                console.error('Errore caricamento dettagli:', err);
-                content.innerHTML = `
-                    <div class="text-center py-12">
-                        <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p class="text-red-600 font-medium">Errore nel caricamento dei dettagli</p>
-                        <p class="text-gray-600 mt-2">${err.message}</p>
-                    </div>
-                `;
-            }
-        };
-
-        window.closeDettagliModal = function() {
-            document.getElementById('dettagliModal').classList.add('hidden');
-            currentDettagliFattura = null;
-        };
-
-        window.saveDettagliFattura = async function() {
-            if (!currentDettagliFattura) return;
-            
-            try {
-                // Raccogli i dati modificati
-                const updatedData = {
-                    numero_fattura: document.getElementById('edit_numero_fattura').value,
-                    data_fattura: document.getElementById('edit_data_fattura').value,
-                    cedente_denominazione: document.getElementById('edit_cedente_denominazione').value,
-                    cedente_piva: document.getElementById('edit_cedente_piva').value,
-                    cedente_indirizzo: document.getElementById('edit_cedente_indirizzo').value,
-                    cessionario_denominazione: document.getElementById('edit_cessionario_denominazione').value,
-                    cessionario_piva: document.getElementById('edit_cessionario_piva').value,
-                    importo_imponibile: parseFloat(document.getElementById('edit_importo_imponibile').value) || 0,
-                    importo_iva: parseFloat(document.getElementById('edit_importo_iva').value) || 0,
-                    importo_totale: parseFloat(document.getElementById('edit_importo_totale').value) || 0,
-                    valuta: document.getElementById('edit_valuta').value || 'EUR',
-                    causale: document.getElementById('edit_causale').value,
-                    pagato: document.getElementById('edit_pagato').checked,
-                    fornitore: document.getElementById('edit_cedente_denominazione').value // Aggiorna anche il campo fornitore
-                };
-                
-                // Salva nel database
-                const { error } = await supabaseClient
-                    .from('fatture')
-                    .update(updatedData)
-                    .eq('id', currentDettagliFattura.id);
-                
-                if (error) throw error;
-                
-                // Chiudi modal
-                closeDettagliModal();
-                
-                // Ricarica i dati
-                await loadAllFatture();
-                
-                alert('✅ Modifiche salvate con successo!');
-                
-            } catch (err) {
-                console.error('Errore salvataggio:', err);
-                alert('❌ Errore durante il salvataggio: ' + err.message);
-            }
-        };
-
-        async function loadAllFatture() {
-            try {
-                const { count, error: countError } = await supabaseClient.from('fatture').select('*', { count: 'exact', head: true });
-                if (countError) throw countError;
-                
-                const totalCount = count || 0;
-                state.stats.total = totalCount;
-                state.loadingProgress = { loaded: 0, total: totalCount, isLoading: true };
-                render();
-
-                const numBatches = Math.ceil(totalCount / BATCH_SIZE);
-                state.fatture = [];
-
-                for (let batchNum = 0; batchNum < numBatches; batchNum++) {
-                    const start = batchNum * BATCH_SIZE;
-                    const end = start + BATCH_SIZE - 1;
-
-                    const { data, error } = await supabaseClient
-                        .from('fatture')
-                        .select('id, numero_fattura, data_fattura, fornitore, cedente_denominazione, cedente_piva, importo_totale, importo_imponibile, importo_iva, pagato')
-                        .order('data_fattura', { ascending: false })
-                        .range(start, end);
-
-                    if (error) throw error;
-
-                    if (data && data.length > 0) {
-                        const newFatture = data.map(f => ({
-                            id: f.id,
-                            num: f.numero_fattura || '',
-                            dt: f.data_fattura || '',
-                            tot: parseFloat(f.importo_totale || 0),
-                            ced: { nm: f.cedente_denominazione || f.fornitore || '', pi: f.cedente_piva || '' },
-                            riv: { imp: parseFloat(f.importo_imponibile || 0), iva: parseFloat(f.importo_iva || 0) },
-                            pagato: f.pagato || false
-                        }));
-
-                        state.fatture = [...state.fatture, ...newFatture];
-                        state.loadingProgress.loaded = state.fatture.length;
-                        render();
-                    }
-
-                    if (batchNum < numBatches - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    }
-                }
-
-                state.stats.importo = state.fatture.reduce((sum, f) => sum + f.tot, 0);
-                state.stats.fornitori = new Set(state.fatture.map(f => f.ced.nm).filter(Boolean)).size;
-                state.loadingProgress.isLoading = false;
-                render();
-
-            } catch (err) {
-                console.error('Errore caricamento:', err);
-                state.error = 'Errore caricamento fatture';
-                state.loadingProgress.isLoading = false;
-                render();
-            }
-        }
-
-        async function processFiles(files) {
-            // Verifica che il database sia pronto
-            if (!databaseOK) {
-                const riprova = await verificaCampiDatabase();
-                if (!riprova) {
-                    alert('❌ Database non pronto. Impossibile caricare fatture.\n\nEsegui prima le query SQL di aggiornamento!');
-                    return;
-                }
-                databaseOK = true;
-            }
-            
-            state.uploading = true;
-            state.error = '';
-            state.uploadProgress = { current: 0, total: files.length, errors: [], duplicates: [] };
-            
-            // Mostra progress nel modal
-            const modalProgress = document.getElementById('modalUploadProgress');
-            const modalProgressBar = document.getElementById('modalProgressBar');
-            const modalProgressText = document.getElementById('modalProgressText');
-            const modalDuplicatesText = document.getElementById('modalDuplicatesText');
-            
-            modalProgress.classList.remove('hidden');
-            modalProgressText.textContent = `0 / ${files.length}`;
-            modalProgressBar.style.width = '0%';
-            modalDuplicatesText.classList.add('hidden');
-            
-            render();
-
-            let successCount = 0;
-
-            for (let i = 0; i < files.length; i++) {
-                state.uploadProgress.current = i + 1;
-                
-                // Aggiorna progress bar nel modal
-                const progress = ((i + 1) / files.length * 100).toFixed(0);
-                modalProgressBar.style.width = `${progress}%`;
-                modalProgressText.textContent = `${i + 1} / ${files.length}`;
-                
-                render();
-
-                try {
-                    await processFile(files[i]);
-                    successCount++;
-                } catch (err) {
-                    if (err.message.startsWith('Duplicato:')) {
-                        state.uploadProgress.duplicates.push({ file: files[i].name, error: err.message });
-                        
-                        // Mostra contatore duplicati
-                        if (state.uploadProgress.duplicates.length > 0) {
-                            modalDuplicatesText.textContent = `⚠️ ${state.uploadProgress.duplicates.length} duplicati saltati`;
-                            modalDuplicatesText.classList.remove('hidden');
-                        }
-                    } else {
-                        state.uploadProgress.errors.push({ file: files[i].name, error: err.message });
-                    }
-                }
-            }
-
-            state.uploading = false;
-            state.error = `✓ ${successCount} fatture caricate!`;
-            if (state.uploadProgress.duplicates.length > 0) state.error += ` | ⚠️ ${state.uploadProgress.duplicates.length} duplicati`;
-            if (state.uploadProgress.errors.length > 0) state.error += ` | ❌ ${state.uploadProgress.errors.length} errori`;
-            
-            // Chiudi modal dopo 2 secondi
-            setTimeout(() => {
-                closeUploadModal();
-                modalProgress.classList.add('hidden');
-            }, 2000);
-            
-            state.uploadProgress = null;
-            setTimeout(() => { state.error = ''; render(); }, 5000);
-            await loadAllFatture();
-        }
-
-        async function processFile(file) {
-            const text = await file.text();
-            const xmlDoc = parseXML(text);
-
-            if (xmlDoc.getElementsByTagName('parsererror').length > 0) throw new Error('XML non valido');
-
-            const cedente = xmlDoc.getElementsByTagName('CedentePrestatore')[0];
-            const cessionario = xmlDoc.getElementsByTagName('CessionarioCommittente')[0];
-            const datiGenerali = xmlDoc.getElementsByTagName('DatiGeneraliDocumento')[0];
-
-            if (!cedente || !cessionario || !datiGenerali) throw new Error('Formato XML non riconosciuto');
-
-            const numeroFattura = getTextContent(datiGenerali, 'Numero');
-            const dataFattura = getTextContent(datiGenerali, 'Data');
-            const datiCedente = cedente.getElementsByTagName('DatiAnagrafici')[0];
-            const partitaIVACedente = getTextContent(datiCedente.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice');
-            
-            const { data: existing } = await supabaseClient.from('fatture').select('id').eq('numero_fattura', numeroFattura).eq('data_fattura', dataFattura).eq('cedente_piva', partitaIVACedente).single();
-            if (existing) throw new Error(`Duplicato: Fattura ${numeroFattura} già presente`);
-
-            const cedenteNome = getTextContent(datiCedente.getElementsByTagName('Anagrafica')[0], 'Denominazione');
-            const sedeCedente = cedente.getElementsByTagName('Sede')[0];
-            const cedenteIndirizzo = `${getTextContent(sedeCedente, 'Indirizzo')} ${getTextContent(sedeCedente, 'NumeroCivico')}, ${getTextContent(sedeCedente, 'CAP')} ${getTextContent(sedeCedente, 'Comune')} (${getTextContent(sedeCedente, 'Provincia')})`.trim();
-
-            const datiCessionario = cessionario.getElementsByTagName('DatiAnagrafici')[0];
-            const cessionarioNome = getTextContent(datiCessionario.getElementsByTagName('Anagrafica')[0], 'Denominazione');
-            const cessionarioPIVA = getTextContent(datiCessionario.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice');
-
-            const importoTotale = parseFloat(getTextContent(datiGenerali, 'ImportoTotaleDocumento') || '0');
-            const datiRiepilogo = xmlDoc.getElementsByTagName('DatiRiepilogo')[0];
-            const importoImponibile = parseFloat(getTextContent(datiRiepilogo, 'ImponibileImporto') || '0');
-            const importoIva = parseFloat(getTextContent(datiRiepilogo, 'Imposta') || '0');
-
-            const fatturaData = {
-                numero_fattura: numeroFattura,
-                data_fattura: dataFattura,
-                fornitore: cedenteNome,
-                cedente_denominazione: cedenteNome,
-                cedente_piva: partitaIVACedente,
-                cedente_indirizzo: cedenteIndirizzo,
-                cessionario_denominazione: cessionarioNome,
-                cessionario_piva: cessionarioPIVA,
-                importo_totale: importoTotale,
-                importo_imponibile: importoImponibile,
-                importo_iva: importoIva,
-                valuta: 'EUR',
-                causale: getTextContent(datiGenerali, 'Causale') || '',
-                xml_content: text,
-                filename: file.name,
-                user_id: null
-            };
-
-            console.log('📄 Inserimento fattura in database...', fatturaData);
-            
-            const { data: insertedFattura, error } = await supabaseClient.from('fatture').insert([fatturaData]).select().single();
-            
-            if (error) {
-                console.error('❌ ERRORE inserimento fattura:', error);
-                throw new Error(`Errore database fattura: ${error.message}`);
-            }
-            
-            if (!insertedFattura) {
-                console.error('❌ Fattura inserita ma nessun dato restituito!');
-                throw new Error('Errore: fattura inserita ma ID non recuperato');
-            }
-            
-            console.log('✅ Fattura inserita con ID:', insertedFattura.id);
-
-            // Passa l'ID della fattura e la data alla funzione di estrazione prodotti
-            console.log('📦 Avvio estrazione prodotti...');
-            await extractAndSaveProducts(xmlDoc, cedenteNome, insertedFattura.id, dataFattura);
-            console.log('✅ Estrazione prodotti completata!');
-        }
-
-        // ===== PARSER CON GESTIONE IVA COMPLETA E COLLEGAMENTO FATTURA =====
-        async function extractAndSaveProducts(xmlDoc, fornitore, fatturaId, dataFattura) {
-            const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
-            
-            console.log(`📦 Inizio estrazione prodotti per fattura ID: ${fatturaId}`);
-            console.log(`📦 Trovate ${dettaglioLinee.length} righe di dettaglio`);
-            
-            let prodottiCreati = 0;
-            let prodottiSaltati = 0;
-            let errori = 0;
-            
-            for (let i = 0; i < dettaglioLinee.length; i++) {
-                const linea = dettaglioLinee[i];
-                
-                const descrizione = getTextContent(linea, 'Descrizione');
-                if (!descrizione || descrizione.trim() === '') {
-                    prodottiSaltati++;
-                    continue;
-                }
-                
-                let quantitaText = getTextContent(linea, 'Quantita') || getTextContent(linea, 'Quantity') || getTextContent(linea, 'Qta') || '0';
-                quantitaText = quantitaText.replace(',', '.');
-                const quantita = parseFloat(quantitaText) || 0;
-                
-                // Estrai unità di misura dal XML
-                const unitaMisura = getTextContent(linea, 'UnitaMisura') || 'pz';
-                
-                let prezzoText = getTextContent(linea, 'PrezzoUnitario') || getTextContent(linea, 'UnitPrice') || getTextContent(linea, 'Prezzo') || '0';
-                prezzoText = prezzoText.replace(',', '.');
-                let prezzoUnitario = parseFloat(prezzoText) || 0;
-                
-                let aliquotaIVAText = getTextContent(linea, 'AliquotaIVA') || '22.00';
-                aliquotaIVAText = aliquotaIVAText.replace(',', '.');
-                const aliquotaIVA = parseFloat(aliquotaIVAText) || 22.00;
-                
-                if (prezzoUnitario === 0 && quantita > 0) {
-                    let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
-                    totaleText = totaleText.replace(',', '.');
-                    const prezzoTotale = parseFloat(totaleText) || 0;
-                    if (prezzoTotale > 0) prezzoUnitario = prezzoTotale / quantita;
-                }
-                
-                if (quantita === 0 && prezzoUnitario === 0) {
-                    console.log(`⚠️ Prodotto saltato (dati mancanti): ${descrizione}`);
-                    prodottiSaltati++;
-                    continue;
-                }
-                
-                const categoria = generateTag(descrizione);
-
-                try {
-                    // IMPORTANTE: Ora ogni prodotto è collegato ad una fattura specifica
-                    const prodottoData = {
-                        nome: descrizione,
-                        descrizione: descrizione,
-                        categoria: categoria,
-                        prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
-                        aliquota_iva: aliquotaIVA,
-                        quantita: quantita > 0 ? quantita : 0,
-                        unita_misura: unitaMisura,
-                        fornitore: fornitore,
-                        fattura_id: fatturaId,
-                        data_fattura: dataFattura,
-                        attivo: true
-                    };
-                    
-                    console.log(`📦 Tentativo inserimento prodotto:`, prodottoData);
-                    
-                    const { data, error } = await supabaseClient
-                        .from('prodotti')
-                        .insert([prodottoData]);
-                    
-                    if (error) {
-                        console.error(`❌ ERRORE INSERT prodotto "${descrizione}":`, error);
-                        console.error(`❌ Dettaglio errore:`, JSON.stringify(error));
-                        errori++;
-                        
-                        // Se è un errore di colonna mancante, mostra un alert
-                        if (error.message && error.message.includes('column')) {
-                            alert(`⚠️ ERRORE DATABASE: La colonna non esiste!\n\n${error.message}\n\nDevi eseguire le query SQL per aggiungere i campi fattura_id e data_fattura alla tabella prodotti!`);
-                            throw error; // Ferma il caricamento
-                        }
-                    } else {
-                        prodottiCreati++;
-                        console.log(`✅ Creato prodotto ${prodottiCreati}: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
-                    }
-                } catch (err) {
-                    console.error(`❌ ECCEZIONE prodotto "${descrizione}":`, err);
-                    errori++;
-                    
-                    // Se è il primo errore, mostra un alert dettagliato
-                    if (errori === 1) {
-                        alert(`⚠️ ERRORE nel salvataggio prodotti!\n\nErrore: ${err.message}\n\nVerifica:\n1. Che i campi fattura_id e data_fattura esistano nella tabella prodotti\n2. Che hai eseguito le query SQL di aggiornamento\n3. La console del browser per dettagli`);
-                    }
-                }
-            }
-            
-            console.log(`\n📊 RIEPILOGO ESTRAZIONE PRODOTTI:`);
-            console.log(`✅ Prodotti creati: ${prodottiCreati}`);
-            console.log(`⚠️ Prodotti saltati: ${prodottiSaltati}`);
-            console.log(`❌ Errori: ${errori}`);
-            console.log(`📦 Totale righe elaborate: ${dettaglioLinee.length}\n`);
-            
-            if (errori > 0) {
-                throw new Error(`Errore nel salvataggio di ${errori} prodotti. Controlla la console per i dettagli.`);
-            }
-        }
-
-        // ===== GESTIONE ELIMINAZIONE =====
-        window.showDeleteModal = function(type, id = null) {
-            const modal = document.getElementById('deleteModal');
-            const message = document.getElementById('deleteMessage');
-            
-            if (type === 'single') {
-                const fattura = state.fatture.find(f => f.id === id);
-                message.textContent = `Vuoi eliminare la fattura ${fattura.num}?`;
-                state.deleteAction = { type: 'single', ids: [id] };
-            } else if (type === 'multiple') {
-                const count = state.selectedIds.size;
-                message.textContent = `Vuoi eliminare ${count} fatture selezionate?`;
-                state.deleteAction = { type: 'multiple', ids: Array.from(state.selectedIds) };
-            }
-            
-            modal.classList.remove('hidden');
-        };
-
-        window.closeDeleteModal = function() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            state.deleteAction = null;
-        };
-
-        window.confirmDelete = async function() {
-            if (!state.deleteAction) return;
-            
-            // Salva l'azione PRIMA di chiudere il modal
-            const actionToExecute = state.deleteAction;
-            
-            closeDeleteModal();
-            
-            try {
-                state.error = '🗑️ Eliminazione in corso...';
-                render();
-                
-                const idsToDelete = actionToExecute.ids;
-                let deletedFatture = 0;
-                let deletedProdotti = 0;
-                
-                for (const id of idsToDelete) {
-                    // 1. Elimina i prodotti collegati a questa fattura specifica (tramite fattura_id)
-                    const { error: prodError, count } = await supabaseClient
-                        .from('prodotti')
-                        .delete({ count: 'exact' })
-                        .eq('fattura_id', id);
-                    
-                    if (!prodError && count) {
-                        deletedProdotti += count;
-                        console.log(`✅ Eliminati ${count} prodotti della fattura ID: ${id}`);
-                    }
-                    
-                    // 2. Elimina la fattura
-                    const { error: fatturaError } = await supabaseClient
-                        .from('fatture')
-                        .delete()
-                        .eq('id', id);
-                    
-                    if (!fatturaError) {
-                        deletedFatture++;
-                    }
-                }
-                
-                state.selectedIds.clear();
-                state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
-                
-                await loadAllFatture();
-                
-                setTimeout(() => { state.error = ''; render(); }, 5000);
-                
-            } catch (err) {
-                console.error('Errore eliminazione:', err);
-                state.error = '❌ Errore durante l\'eliminazione';
-                render();
-            }
-        };
-
-        window.deleteFattura = function(id) {
-            showDeleteModal('single', id);
-        };
-
-        window.deleteSelected = function() {
-            if (!state.selectedIds.size) {
-                alert('Seleziona almeno una fattura da eliminare');
-                return;
-            }
-            showDeleteModal('multiple');
-        };
-
-        window.toggleSelect = function(id) {
-            state.selectedIds.has(id) ? state.selectedIds.delete(id) : state.selectedIds.add(id);
-            render();
-        };
-
-        window.toggleSelectAll = function() {
-            const filtered = getFilteredFatture();
-            if (state.selectedIds.size === filtered.length && filtered.length > 0) state.selectedIds.clear();
-            else state.selectedIds = new Set(filtered.map(f => f.id));
-            render();
-        };
-
-        function getFilteredFatture() {
-            return state.fatture.filter(f => {
-                const invoiceDate = new Date(f.dt);
-                const invoiceYear = invoiceDate.getFullYear().toString();
-                const invoiceMonth = (invoiceDate.getMonth() + 1).toString();
-                if (state.filters.invoiceYear !== 'all' && invoiceYear !== state.filters.invoiceYear) return false;
-                if (state.filters.invoiceMonth !== 'all' && invoiceMonth !== state.filters.invoiceMonth) return false;
-                if (state.filters.supplier !== 'all' && f.ced.nm !== state.filters.supplier) return false;
-                if (state.filters.minAmount && f.tot < parseFloat(state.filters.minAmount)) return false;
-                if (state.filters.maxAmount && f.tot > parseFloat(state.filters.maxAmount)) return false;
-                return true;
-            });
-        }
-
-        function getFilteredTotal() { return getFilteredFatture().reduce((sum, f) => sum + f.tot, 0); }
-        function getAvailableInvoiceYears() { return Array.from(new Set(state.fatture.map(f => new Date(f.dt).getFullYear()))).sort((a, b) => b - a); }
-        function getUniqueSuppliers() { return Array.from(new Set(state.fatture.map(f => f.ced.nm))).sort(); }
-
-        window.applyFilter = function(filterType, value) { state.filters[filterType] = value; render(); };
-        window.clearFilters = function() { state.filters = { invoiceYear: 'all', invoiceMonth: 'all', supplier: 'all', minAmount: '', maxAmount: '' }; render(); };
-        window.handleFileUpload = function(event) { if (event.target.files && event.target.files.length > 0) processFiles(event.target.files); };
-        window.handleDrop = function(event) { event.preventDefault(); if (event.dataTransfer.files && event.dataTransfer.files.length > 0) processFiles(event.dataTransfer.files); };
-        window.handleDragOver = function(event) { event.preventDefault(); };
-
-        function render() {
-            const app = document.getElementById('app');
-            const filteredFatture = getFilteredFatture();
-            const filteredTotal = getFilteredTotal();
-            const invoiceYears = getAvailableInvoiceYears();
-            const suppliers = getUniqueSuppliers();
-            const hasActiveFilters = state.filters.invoiceYear !== 'all' || state.filters.invoiceMonth !== 'all' || state.filters.supplier !== 'all' || state.filters.minAmount !== '' || state.filters.maxAmount !== '';
-            
-            app.innerHTML = `
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
-                        <!-- Header con titolo e pulsanti -->
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="flex items-center space-x-3">
-                                <div class="bg-blue-600 p-3 rounded-xl">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h1 class="text-2xl font-bold">Gestione Fatture</h1>
-                                    <p class="text-sm text-gray-600">Con estrazione IVA e cancellazione</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Pulsanti Modalità Upload -->
-                            <div class="flex space-x-3">
-                                <button onclick="switchUploadMode('single')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2">
-                                    <span>📄</span>
-                                    <span>Upload Singolo</span>
-                                </button>
-                                <button onclick="switchUploadMode('folder')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 flex items-center space-x-2">
-                                    <span>📁</span>
-                                    <span>Upload Cartella</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        ${state.loadingProgress.isLoading ? `
-                            <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div class="flex justify-between mb-2"><span class="text-sm font-medium text-blue-900">Caricamento...</span><span class="text-sm text-blue-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span></div>
-                                <div class="w-full bg-blue-200 rounded-full h-3"><div class="bg-blue-600 h-3 rounded-full" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div></div>
-                            </div>
-                        ` : ''}
-
-                        <!-- Statistiche con formato numerico senza decimali -->
-                        <div class="grid md:grid-cols-3 gap-6 mb-6">
-                            <div class="bg-blue-50 px-6 py-4 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Fatture ${hasActiveFilters ? 'filtrate' : 'totali'}</p>
-                                <p class="text-3xl font-bold text-blue-600">${filteredFatture.length.toLocaleString('it-IT')}${state.stats.total !== filteredFatture.length ? ` / ${state.stats.total.toLocaleString('it-IT')}` : ''}</p>
-                            </div>
-                            <div class="bg-green-50 px-6 py-4 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Importo ${hasActiveFilters ? 'filtrato' : 'totale'}</p>
-                                <p class="text-3xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-                            </div>
-                            <div class="bg-purple-50 px-6 py-4 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Fornitori</p>
-                                <p class="text-3xl font-bold text-purple-600">${state.stats.fornitori}</p>
-                            </div>
-                        </div>
-                        ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                        <h3 class="font-bold mb-4">Filtri</h3>
-                        <div class="grid md:grid-cols-4 gap-4">
-                            <select onchange="applyFilter('invoiceYear', this.value)" class="px-3 py-2 border rounded"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
-                            <select onchange="applyFilter('invoiceMonth', this.value)" class="px-3 py-2 border rounded"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
-                            <select onchange="applyFilter('supplier', this.value)" class="px-3 py-2 border rounded"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
-                            <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Pulisci</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                        ${state.selectedIds.size > 0 ? `
-                            <div class="bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
-                                <span class="text-sm font-medium text-blue-900">${state.selectedIds.size} fatture selezionate</span>
-                                <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    <span>Elimina Selezionate</span>
-                                </button>
-                            </div>
-                        ` : ''}
-                        
-                        ${state.pagatoChanges.size > 0 ? `
-                            <div class="bg-orange-50 border-b px-6 py-4 flex justify-between items-center">
-                                <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
-                                <div class="flex space-x-2">
-                                    <button onclick="cancelPagatoChanges()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                                    <button onclick="savePagatoChanges()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center space-x-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Salva</span>
-                                    </button>
-                                </div>
-                            </div>
-                        ` : ''}
-                        
-                        <table class="w-full">
-                            <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                                <tr>
-                                    <th class="px-4 py-3"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}></th>
-                                    <th class="px-6 py-3 text-left text-sm">Data</th>
-                                    <th class="px-6 py-3 text-left text-sm">Numero</th>
-                                    <th class="px-6 py-3 text-left text-sm">Fornitore</th>
-                                    <th class="px-6 py-3 text-right text-sm">Importo</th>
-                                    <th class="px-6 py-3 text-center text-sm">
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <span>Pagato</span>
-                                            <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-4 h-4 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''} title="Seleziona/Deseleziona tutte le fatture visibili">
-                                        </div>
-                                    </th>
-                                    <th class="px-6 py-3 text-center text-sm">Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>${!filteredFatture.length ? `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `
-                                <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
-                                    <td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td>
-                                    <td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
-                                    <td class="px-6 py-4 text-sm font-medium">${f.num}</td>
-                                    <td class="px-6 py-4 text-sm">${f.ced.nm}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
-                                    <td class="px-6 py-4 text-center">
-                                        <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-5 h-5 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <button onclick="showDettagliFattura('${f.id}')" class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded transition-colors mr-2" title="Visualizza dettagli">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                        </button>
-                                        <button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors" title="Elimina fattura">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `).join('')}</tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        }
-
-        loadAllFatture();
-        console.log('✅ Gestione Fatture (Con IVA + Eliminazione)');
-    </script>
+      }
+      // dopo aver fatto shift down, rianalizza lo stesso y
+      y--;
+    }
+  }
+  return clearedCount;
+}
+
+/* -----------------------------
+   Moves / Rotations
+----------------------------- */
+function tryMove(dx,dy,dz){
+  if(!active || gameOver) return;
+  const newPos = { x: active.pos.x + dx, y: active.pos.y + dy, z: active.pos.z + dz };
+  if(canPlace(newPos, active.blocksLocal)){
+    active.pos = newPos;
+    syncActiveMeshes();
+  } else if(dy < 0 && dx===0 && dz===0){
+    // se tenti di scendere e non puoi -> lock
+    lockPiece();
+  }
+}
+
+function tryRotate(axis, dir){ // dir = +1 o -1 (90°)
+  if(!active || gameOver) return;
+
+  // Ruota i blocchi attivi intorno all'asse, con "kick" semplice
+  let rotated = active.blocksLocal.map(b=>[...b]);
+  rotated = applyRot(rotated, axis, dir>0 ? 1 : 3);
+
+  // per mantenere numeri piccoli e consistenti
+  rotated = normalize(rotated);
+
+  const kicks = [
+    {x:0,y:0,z:0},
+    {x:1,y:0,z:0},{x:-1,y:0,z:0},
+    {x:0,y:0,z:1},{x:0,y:0,z:-1},
+    {x:1,y:0,z:1},{x:-1,y:0,z:-1},
+    {x:0,y:1,z:0}, // kick verso l'alto se serve (rare)
+  ];
+
+  for(const k of kicks){
+    const testPos = { x: active.pos.x + k.x, y: active.pos.y + k.y, z: active.pos.z + k.z };
+    if(canPlace(testPos, rotated)){
+      active.blocksLocal = rotated;
+      active.pos = testPos;
+      syncActiveMeshes();
+      return;
+    }
+  }
+}
+
+/* -----------------------------
+   Drop
+----------------------------- */
+function hardDrop(){
+  if(!active || gameOver) return;
+  let steps = 0;
+  while(true){
+    const newPos = { x: active.pos.x, y: active.pos.y - 1, z: active.pos.z };
+    if(canPlace(newPos, active.blocksLocal)){
+      active.pos = newPos;
+      steps++;
+    } else {
+      // bonus drop
+      score += steps * 2;
+      syncActiveMeshes();
+      lockPiece();
+      updateHUD();
+      return;
+    }
+  }
+}
+
+/* -----------------------------
+   Input
+----------------------------- */
+const keys = {
+  left:false,right:false,up:false,down:false,
+  soft:false
+};
+
+addEventListener("keydown", (e)=>{
+  if(e.repeat) return;
+  if(e.key==="ArrowLeft") keys.left = true;
+  if(e.key==="ArrowRight") keys.right = true;
+  if(e.key==="ArrowUp") keys.up = true;
+  if(e.key==="ArrowDown") keys.down = true;
+  if(e.key==="Shift") keys.soft = true;
+
+  if(e.key===" "){ e.preventDefault(); hardDrop(); }
+  if(e.key.toLowerCase()==="r"){ reset(); }
+
+  // rotazioni
+  if(e.key.toLowerCase()==="z") tryRotate("y", +1);
+  if(e.key.toLowerCase()==="x") tryRotate("y", -1);
+  if(e.key.toLowerCase()==="a") tryRotate("x", +1);
+  if(e.key.toLowerCase()==="s") tryRotate("x", -1);
+  if(e.key.toLowerCase()==="q") tryRotate("z", +1);
+  if(e.key.toLowerCase()==="e") tryRotate("z", -1);
+});
+
+addEventListener("keyup", (e)=>{
+  if(e.key==="ArrowLeft") keys.left = false;
+  if(e.key==="ArrowRight") keys.right = false;
+  if(e.key==="ArrowUp") keys.up = false;
+  if(e.key==="ArrowDown") keys.down = false;
+  if(e.key==="Shift") keys.soft = false;
+});
+
+addEventListener("resize", ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* -----------------------------
+   Game loop
+----------------------------- */
+let accum = 0;
+let fall = fallInterval();
+const clock = new THREE.Clock();
+
+function updateHUD(){
+  elScore.textContent = String(score);
+  elLines.textContent = String(cleared);
+  elLevel.textContent = String(level);
+}
+
+function endGame(){
+  gameOver = true;
+  showMsg(`💥 Game Over<br/>Punteggio: <b>${score}</b><br/>Premi <b>R</b> per ricominciare`);
+}
+
+function reset(){
+  // remove all board meshes
+  for(const {mesh} of board.values()) scene.remove(mesh);
+  board.clear();
+
+  // remove active
+  if(active){
+    scene.remove(active.group);
+    active = null;
+  }
+
+  score = 0;
+  cleared = 0;
+  level = 1;
+  gameOver = false;
+  updateHUD();
+  showMsg("");
+
+  spawnPiece();
+  accum = 0;
+}
+
+function step(dt){
+  if(gameOver) return;
+
+  // input continuo (move a rate-limit)
+  // piccola "repeat" manuale
+  moveRepeat(dt);
+
+  // gravità
+  fall = fallInterval() * (keys.soft ? SOFT_MULT : 1);
+  accum += dt;
+  if(accum >= fall){
+    accum = 0;
+    tryMove(0,-1,0);
+  }
+}
+
+let moveTimer = 0;
+function moveRepeat(dt){
+  moveTimer += dt;
+  const rate = 0.09;
+  if(moveTimer < rate) return;
+  moveTimer = 0;
+
+  if(keys.left)  tryMove(-1,0,0);
+  if(keys.right) tryMove(+1,0,0);
+  if(keys.up)    tryMove(0,0,-1);
+  if(keys.down)  tryMove(0,0,+1);
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.033, clock.getDelta());
+
+  // leggera orbit camera “fissa”
+  // (se vuoi, poi la rendiamo ruotabile col mouse)
+  step(dt);
+
+  // “shimmer” sul pozzo
+  renderer.render(scene, camera);
+}
+
+/* -----------------------------
+   Start
+----------------------------- */
+showMsg("Ruota i pezzi su X/Y/Z e chiudi layer completi!<br/>Premi un tasto per iniziare.");
+setTimeout(()=>showMsg(""), 1800);
+reset();
+animate();
+
+</script>
 </body>
 </html>
