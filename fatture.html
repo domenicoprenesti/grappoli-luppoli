@@ -352,12 +352,11 @@
                 
                 currentDettagliFattura = data;
                 
-                // Carica anche i prodotti della fattura
-                const fornitore = data.cedente_denominazione || data.fornitore || '';
+                // Carica solo i prodotti di questa specifica fattura (tramite fattura_id)
                 const { data: prodotti, error: prodottiError } = await supabaseClient
                     .from('prodotti')
                     .select('*')
-                    .eq('fornitore', fornitore)
+                    .eq('fattura_id', fatturaId)
                     .order('nome', { ascending: true });
                 
                 if (prodottiError) {
@@ -829,14 +828,15 @@
                 user_id: null
             };
 
-            const { error } = await supabaseClient.from('fatture').insert([fatturaData]);
+            const { data: insertedFattura, error } = await supabaseClient.from('fatture').insert([fatturaData]).select().single();
             if (error) throw new Error(`Errore database: ${error.message}`);
 
-            await extractAndSaveProducts(xmlDoc, cedenteNome);
+            // Passa l'ID della fattura e la data alla funzione di estrazione prodotti
+            await extractAndSaveProducts(xmlDoc, cedenteNome, insertedFattura.id, dataFattura);
         }
 
-        // ===== PARSER CON GESTIONE IVA COMPLETA =====
-        async function extractAndSaveProducts(xmlDoc, fornitore) {
+        // ===== PARSER CON GESTIONE IVA COMPLETA E COLLEGAMENTO FATTURA =====
+        async function extractAndSaveProducts(xmlDoc, fornitore, fatturaId, dataFattura) {
             const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
             
             for (let i = 0; i < dettaglioLinee.length; i++) {
@@ -875,46 +875,25 @@
                 const categoria = generateTag(descrizione);
 
                 try {
-                    const { data: existing } = await supabaseClient
+                    // IMPORTANTE: Ora ogni prodotto è collegato ad una fattura specifica
+                    // Non cerchiamo più prodotti esistenti, creiamo sempre nuovi record
+                    await supabaseClient
                         .from('prodotti')
-                        .select('id, quantita, prezzo, aliquota_iva')
-                        .eq('nome', descrizione)
-                        .eq('fornitore', fornitore)
-                        .single();
-
-                    if (existing) {
-                        const nuovaQuantita = (existing.quantita || 0) + quantita;
-                        const nuovoPrezzo = prezzoUnitario > 0 ? prezzoUnitario : existing.prezzo;
-                        const nuovaAliquota = aliquotaIVA > 0 ? aliquotaIVA : existing.aliquota_iva;
+                        .insert([{
+                            nome: descrizione,
+                            descrizione: descrizione,
+                            categoria: categoria,
+                            prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
+                            aliquota_iva: aliquotaIVA,
+                            quantita: quantita > 0 ? quantita : 0,
+                            unita_misura: unitaMisura,
+                            fornitore: fornitore,
+                            fattura_id: fatturaId,
+                            data_fattura: dataFattura,
+                            attivo: true
+                        }]);
                         
-                        await supabaseClient
-                            .from('prodotti')
-                            .update({ 
-                                quantita: nuovaQuantita,
-                                prezzo: nuovoPrezzo,
-                                aliquota_iva: nuovaAliquota,
-                                unita_misura: unitaMisura
-                            })
-                            .eq('id', existing.id);
-                            
-                        console.log(`✅ Aggiornato: ${descrizione} (qtà: ${nuovaQuantita}, prezzo: €${nuovoPrezzo}, IVA: ${nuovaAliquota}%, UM: ${unitaMisura})`);
-                    } else {
-                        await supabaseClient
-                            .from('prodotti')
-                            .insert([{
-                                nome: descrizione,
-                                descrizione: descrizione,
-                                categoria: categoria,
-                                prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
-                                aliquota_iva: aliquotaIVA,
-                                quantita: quantita > 0 ? quantita : 0,
-                                unita_misura: unitaMisura,
-                                fornitore: fornitore,
-                                attivo: true
-                            }]);
-                            
-                        console.log(`✅ Creato: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%, UM: ${unitaMisura})`);
-                    }
+                    console.log(`✅ Creato prodotto: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%, UM: ${unitaMisura}) [Fattura: ${fatturaId}]`);
                 } catch (err) {
                     console.error(`❌ Errore prodotto "${descrizione}":`, err);
                 }
@@ -947,47 +926,39 @@
         window.confirmDelete = async function() {
             if (!state.deleteAction) return;
             
+            // Salva l'azione PRIMA di chiudere il modal
+            const actionToExecute = state.deleteAction;
+            
             closeDeleteModal();
             
             try {
                 state.error = '🗑️ Eliminazione in corso...';
                 render();
                 
-                const idsToDelete = state.deleteAction.ids;
+                const idsToDelete = actionToExecute.ids;
                 let deletedFatture = 0;
                 let deletedProdotti = 0;
                 
                 for (const id of idsToDelete) {
-                    // 1. Recupera info fattura prima di eliminarla
-                    const { data: fattura } = await supabaseClient
-                        .from('fatture')
-                        .select('cedente_denominazione, data_fattura')
-                        .eq('id', id)
-                        .single();
+                    // 1. Elimina i prodotti collegati a questa fattura specifica (tramite fattura_id)
+                    const { error: prodError, count } = await supabaseClient
+                        .from('prodotti')
+                        .delete({ count: 'exact' })
+                        .eq('fattura_id', id);
                     
-                    if (fattura) {
-                        // 2. Elimina prodotti associati a questa fattura (stesso fornitore)
-                        const fornitore = fattura.cedente_denominazione;
-                        
-                        const { error: prodError, count } = await supabaseClient
-                            .from('prodotti')
-                            .delete({ count: 'exact' })
-                            .eq('fornitore', fornitore);
-                        
-                        if (!prodError && count) {
-                            deletedProdotti += count;
-                            console.log(`✅ Eliminati ${count} prodotti del fornitore: ${fornitore}`);
-                        }
-                        
-                        // 3. Elimina la fattura
-                        const { error: fatturaError } = await supabaseClient
-                            .from('fatture')
-                            .delete()
-                            .eq('id', id);
-                        
-                        if (!fatturaError) {
-                            deletedFatture++;
-                        }
+                    if (!prodError && count) {
+                        deletedProdotti += count;
+                        console.log(`✅ Eliminati ${count} prodotti della fattura ID: ${id}`);
+                    }
+                    
+                    // 2. Elimina la fattura
+                    const { error: fatturaError } = await supabaseClient
+                        .from('fatture')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (!fatturaError) {
+                        deletedFatture++;
                     }
                 }
                 
