@@ -51,7 +51,7 @@
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                 <p class="text-sm text-yellow-800">
-                    <strongâš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!
+                    <strongâš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!
                 </p>
             </div>
             <div class="flex space-x-4">
@@ -119,7 +119,7 @@
                 <div class="w-full bg-blue-200 rounded-full h-3">
                     <div id="modalProgressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
                 </div>
-                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">âš ï¸ 0 duplicati saltati</p>
+                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">âš ï¸ 0 duplicati saltati</p>
             </div>
         </div>
     </div>
@@ -265,7 +265,7 @@
             );
             
             if (files.length === 0) {
-                alert('âš ï¸ Nessun file XML trovato nella cartella selezionata');
+                alert('âš ï¸ Nessun file XML trovato nella cartella selezionata');
                 return;
             }
             
@@ -391,7 +391,7 @@
                         
                         // Mostra contatore duplicati
                         if (state.uploadProgress.duplicates.length > 0) {
-                            modalDuplicatesText.textContent = `âš ï¸ ${state.uploadProgress.duplicates.length} duplicati saltati`;
+                            modalDuplicatesText.textContent = `âš ï¸ ${state.uploadProgress.duplicates.length} duplicati saltati`;
                             modalDuplicatesText.classList.remove('hidden');
                         }
                     } else {
@@ -402,7 +402,7 @@
 
             state.uploading = false;
             state.error = `âœ“ ${successCount} fatture caricate!`;
-            if (state.uploadProgress.duplicates.length > 0) state.error += ` | âš ï¸ ${state.uploadProgress.duplicates.length} duplicati`;
+            if (state.uploadProgress.duplicates.length > 0) state.error += ` | âš ï¸ ${state.uploadProgress.duplicates.length} duplicati`;
             if (state.uploadProgress.errors.length > 0) state.error += ` | âŒ ${state.uploadProgress.errors.length} errori`;
             
             // Chiudi modal dopo 2 secondi
@@ -434,7 +434,7 @@
             const partitaIVACedente = getTextContent(datiCedente.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice');
             
             const { data: existing } = await supabaseClient.from('fatture').select('id').eq('numero_fattura', numeroFattura).eq('data_fattura', dataFattura).eq('cedente_piva', partitaIVACedente).single();
-            if (existing) throw new Error(`Duplicato: Fattura ${numeroFattura} giÃ  presente`);
+            if (existing) throw new Error(`Duplicato: Fattura ${numeroFattura} giÃ  presente`);
 
             const cedenteNome = getTextContent(datiCedente.getElementsByTagName('Anagrafica')[0], 'Denominazione');
             const sedeCedente = cedente.getElementsByTagName('Sede')[0];
@@ -504,7 +504,7 @@
                 }
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
-                    console.log(`âš ï¸ Prodotto saltato (dati mancanti): ${descrizione}`);
+                    console.log(`âš ï¸ Prodotto saltato (dati mancanti): ${descrizione}`);
                     continue;
                 }
                 
@@ -532,7 +532,7 @@
                             })
                             .eq('id', existing.id);
                             
-                        console.log(`âœ… Aggiornato: ${descrizione} (qtÃ : ${nuovaQuantita}, prezzo: â‚¬${nuovoPrezzo}, IVA: ${nuovaAliquota}%)`);
+                        console.log(`âœ… Aggiornato: ${descrizione} (qtÃ : ${nuovaQuantita}, prezzo: â‚¬${nuovoPrezzo}, IVA: ${nuovaAliquota}%)`);
                     } else {
                         await supabaseClient
                             .from('prodotti')
@@ -547,7 +547,7 @@
                                 attivo: true
                             }]);
                             
-                        console.log(`âœ… Creato: ${descrizione} (qtÃ : ${quantita}, prezzo: â‚¬${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
+                        console.log(`âœ… Creato: ${descrizione} (qtÃ : ${quantita}, prezzo: â‚¬${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
                     }
                 } catch (err) {
                     console.error(`âŒ Errore prodotto "${descrizione}":`, err);
@@ -713,7 +713,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Pulsanti ModalitÃ  Upload -->
+                            <!-- Pulsanti ModalitÃ  Upload -->
                             <div class="flex space-x-3">
                                 <button onclick="switchUploadMode('single')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2">
                                     <span>ðŸ“„</span>
@@ -825,6 +825,10 @@
             `;
         }
 
+        // Render iniziale per mostrare lo scheletro della pagina
+        render();
+        
+        // Poi carica i dati
         loadAllFatture();
         console.log('âœ… Gestione Fatture (Con IVA + Eliminazione)');
     </script>
