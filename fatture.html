@@ -301,7 +301,7 @@
                 for (let i = 0; i < numBatches; i++) {
                     const { data, error } = await supabaseClient
                         .from('prodotti')
-                        .select('fattura_id, prezzo, quantita, aliquota_iva')
+                        .select('fattura_id, prezzo, prezzo_scontato, quantita, aliquota_iva')
                         .not('fattura_id', 'is', null)
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     
@@ -329,10 +329,11 @@
                         groupedByFattura[fid] = { valoreTotale: 0, numProdotti: 0 };
                     }
                     
-                    const prezzo = p.prezzo || 0;
+                    // Usa prezzo_scontato se disponibile, altrimenti prezzo
+                    const prezzoFinale = p.prezzo_scontato || p.prezzo || 0;
                     const quantita = p.quantita || 0;
                     const iva = p.aliquota_iva || 0;
-                    const valoreProdottoConIVA = prezzo * quantita * (1 + iva / 100);
+                    const valoreProdottoConIVA = prezzoFinale * quantita * (1 + iva / 100);
                     
                     groupedByFattura[fid].valoreTotale += valoreProdottoConIVA;
                     groupedByFattura[fid].numProdotti++;
