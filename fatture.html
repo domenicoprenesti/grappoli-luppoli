@@ -538,7 +538,13 @@
                 }
                 
                 const prodottiList = prodotti || [];
-                const totaleProdotti = prodottiList.reduce((sum, p) => sum + ((p.prezzo || 0) * (p.quantita || 0)), 0);
+                // Calcolo con IVA: Σ(prezzo × quantità × (1 + IVA%))
+                const totaleProdotti = prodottiList.reduce((sum, p) => {
+                    const prezzo = p.prezzo || 0;
+                    const quantita = p.quantita || 0;
+                    const iva = p.aliquota_iva || 0;
+                    return sum + (prezzo * quantita * (1 + iva / 100));
+                }, 0);
                 
                 // Mostra i dettagli nel modal
                 content.innerHTML = `
@@ -1068,8 +1074,13 @@
             for (let i = 0; i < dettaglioLinee.length; i++) {
                 const linea = dettaglioLinee[i];
                 
+                console.log(`\n🔍 === RIGA ${i + 1} ===`);
+                
                 const descrizione = getTextContent(linea, 'Descrizione');
+                console.log(`📝 Descrizione: ${descrizione}`);
+                
                 if (!descrizione || descrizione.trim() === '') {
+                    console.log(`⚠️ SALTATO: Descrizione vuota`);
                     prodottiSaltati++;
                     continue;
                 }
@@ -1097,7 +1108,7 @@
                 }
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
-                    console.log(`⚠️ Prodotto saltato (dati mancanti): ${descrizione}`);
+                    console.log(`⚠️ SALTATO: Quantità=0 E Prezzo=0 per "${descrizione}"`);
                     prodottiSaltati++;
                     continue;
                 }
@@ -1120,7 +1131,13 @@
                         attivo: true
                     };
                     
-                    console.log(`📦 Tentativo inserimento prodotto:`, prodottoData);
+                    console.log(`💾 INSERIMENTO #${prodottiCreati + 1}:`, {
+                        nome: descrizione.substring(0, 40),
+                        prezzo: prezzoUnitario,
+                        quantita: quantita,
+                        iva: aliquotaIVA,
+                        unitaMisura: unitaMisura
+                    });
                     
                     const { data, error } = await supabaseClient
                         .from('prodotti')
