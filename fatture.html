@@ -1192,7 +1192,7 @@
                         categoria: categoria,
                         prezzo: prezzoBase > 0 ? prezzoBase : null,  // Prezzo PRIMA degli sconti
                         prezzo_base: prezzoBase > 0 ? prezzoBase : null,
-                        prezzo_scontato: prezzoScontato > 0 ? prezzoScontato : null,  // Prezzo DOPO sconti
+                        prezzo_scontato: prezzoScontato,  // IMPORTANTE: salva 0 invece di null per sconti 100%
                         aliquota_iva: aliquotaIVA,
                         quantita: quantita > 0 ? quantita : 0,
                         unita_misura: unitaMisura,
