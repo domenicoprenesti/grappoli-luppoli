@@ -231,7 +231,8 @@
         function updateStats() {
             document.getElementById('totalProdotti').textContent = allProdotti.length.toLocaleString('it-IT');
             document.getElementById('totalCategorie').textContent = new Set(allProdotti.map(p => p.categoria).filter(Boolean)).size;
-            const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo || 0) * (p.quantita || 0)), 0);
+            // Usa prezzo_scontato se disponibile, altrimenti prezzo
+            const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
             const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
             
             const percentualeIVA = valoreSenzaIVA > 0 ? ((valoreConIVA - valoreSenzaIVA) / valoreSenzaIVA * 100) : 0;
