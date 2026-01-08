@@ -1424,7 +1424,7 @@ window.applyColumnFilter = function(column, value) {
                                     <th class="px-6 py-3 text-center text-sm font-semibold">Azioni</th>
                                 </tr>
                             </thead>
-                            <tbody>${!filteredFatture.length ? `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `
+                            <tbody>${!filteredFatture.length ? `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `
 <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
                                     <td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td>
                                     <td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
