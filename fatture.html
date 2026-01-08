@@ -1152,9 +1152,22 @@
                     }
                 }
                 
-                // ===== CALCOLO PREZZO SCONTATO =====
+                // ===== CALCOLO PREZZO BASE =====
                 let prezzoBase = prezzoUnitario;
-                let prezzoScontato = prezzoUnitario;
+                
+                // Se PrezzoUnitario è 0, prova a ricavare dal PrezzoTotale
+                if (prezzoUnitario === 0 && quantita > 0) {
+                    let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
+                    totaleText = totaleText.replace(',', '.');
+                    const prezzoTotale = parseFloat(totaleText) || 0;
+                    if (prezzoTotale > 0) {
+                        prezzoBase = prezzoTotale / quantita;
+                        prezzoUnitario = prezzoBase;
+                    }
+                }
+                
+                // ===== CALCOLO PREZZO SCONTATO =====
+                let prezzoScontato = prezzoBase;
                 
                 // Applica sconti a cascata
                 for (const sconto of sconti) {
@@ -1162,18 +1175,6 @@
                 }
                 
                 console.log(`💵 Prezzo base: €${prezzoBase.toFixed(2)} → Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
-                
-                // Se PrezzoUnitario è 0 MA non ci sono sconti 100%, prova a ricavare dal PrezzoTotale
-                if (prezzoUnitario === 0 && quantita > 0 && sconti.length === 0) {
-                    let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
-                    totaleText = totaleText.replace(',', '.');
-                    const prezzoTotale = parseFloat(totaleText) || 0;
-                    if (prezzoTotale > 0) {
-                        prezzoBase = prezzoTotale / quantita;
-                        prezzoScontato = prezzoBase;
-                        prezzoUnitario = prezzoBase;
-                    }
-                }
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
                     console.log(`⚠️ SALTATO: Quantità=0 E Prezzo=0 per "${descrizione}"`);
