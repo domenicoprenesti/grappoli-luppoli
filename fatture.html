@@ -538,12 +538,13 @@
                 }
                 
                 const prodottiList = prodotti || [];
-                // Calcolo con IVA: Σ(prezzo × quantità × (1 + IVA%))
+                // Calcolo con IVA: Σ(prezzo_scontato × quantità × (1 + IVA%))
+                // Usa prezzo_scontato se disponibile, altrimenti prezzo
                 const totaleProdotti = prodottiList.reduce((sum, p) => {
-                    const prezzo = p.prezzo || 0;
+                    const prezzoFinale = p.prezzo_scontato || p.prezzo || 0;
                     const quantita = p.quantita || 0;
                     const iva = p.aliquota_iva || 0;
-                    return sum + (prezzo * quantita * (1 + iva / 100));
+                    return sum + (prezzoFinale * quantita * (1 + iva / 100));
                 }, 0);
                 
                 // Mostra i dettagli nel modal
@@ -688,28 +689,35 @@
                                 </div>
                             ` : `
                                 <div class="overflow-x-auto">
-                                    <table class="w-full bg-white rounded-lg overflow-hidden">
+                                    <table class="w-full bg-white rounded-lg overflow-hidden text-xs">
                                         <thead class="bg-teal-600 text-white">
                                             <tr>
-                                                <th class="px-4 py-3 text-left text-sm font-semibold">Prodotto</th>
-                                                <th class="px-4 py-3 text-left text-sm font-semibold">Categoria</th>
-                                                <th class="px-4 py-3 text-right text-sm font-semibold">Quantità</th>
-                                                <th class="px-4 py-3 text-right text-sm font-semibold">Prezzo Unit.</th>
-                                                <th class="px-4 py-3 text-center text-sm font-semibold">IVA</th>
-                                                <th class="px-4 py-3 text-right text-sm font-semibold">Totale</th>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold">Prodotto</th>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold">Cat.</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">Qtà</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">€ Base</th>
+                                                <th class="px-3 py-2 text-center text-xs font-semibold">Sc1%</th>
+                                                <th class="px-3 py-2 text-center text-xs font-semibold">Sc2%</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">€ Finale</th>
+                                                <th class="px-3 py-2 text-center text-xs font-semibold">IVA</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">Totale</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-200">
                                             ${prodottiList.map((p, idx) => {
-                                                const totaleRiga = (p.prezzo || 0) * (p.quantita || 0);
+                                                const prezzoBase = p.prezzo_base || p.prezzo || 0;
+                                                const prezzoFinale = p.prezzo_scontato || p.prezzo || 0;
+                                                const totaleRiga = prezzoFinale * (p.quantita || 0);
+                                                const hasSconti = p.sconto1 || p.sconto2 || p.sconto3;
+                                                
                                                 return `
                                                     <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-teal-50 transition-colors">
-                                                        <td class="px-4 py-3 text-sm">
+                                                        <td class="px-3 py-2">
                                                             <div class="font-medium text-gray-900">${p.nome || 'N/D'}</div>
-                                                            ${p.descrizione && p.descrizione !== p.nome ? `<div class="text-xs text-gray-500 mt-1">${p.descrizione}</div>` : ''}
+                                                            ${p.tipo_cessione === 'SC' ? '<div class="text-xs text-orange-600 font-semibold">🎁 OMAGGIO/SCONTO</div>' : ''}
                                                         </td>
-                                                        <td class="px-4 py-3 text-sm">
-                                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                                        <td class="px-3 py-2">
+                                                            <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded ${
                                                                 p.categoria === 'Vini' ? 'bg-purple-100 text-purple-800' :
                                                                 p.categoria === 'Birre' ? 'bg-amber-100 text-amber-800' :
                                                                 p.categoria === 'Spirits' ? 'bg-orange-100 text-orange-800' :
@@ -719,18 +727,27 @@
                                                                 ${p.categoria || 'Altro'}
                                                             </span>
                                                         </td>
-                                                        <td class="px-4 py-3 text-sm text-right font-medium">
+                                                        <td class="px-3 py-2 text-right font-medium">
                                                             ${(p.quantita || 0).toLocaleString('it-IT')} ${p.unita_misura || 'pz'}
                                                         </td>
-                                                        <td class="px-4 py-3 text-sm text-right">
-                                                            €${(p.prezzo || 0).toFixed(2)}
+                                                        <td class="px-3 py-2 text-right ${hasSconti ? 'line-through text-gray-400' : 'font-semibold'}">
+                                                            €${prezzoBase.toFixed(2)}
                                                         </td>
-                                                        <td class="px-4 py-3 text-sm text-center">
-                                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
+                                                        <td class="px-3 py-2 text-center">
+                                                            ${p.sconto1 ? `<span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded bg-orange-100 text-orange-800">${p.sconto1.toFixed(1)}%</span>` : '<span class="text-gray-300">-</span>'}
+                                                        </td>
+                                                        <td class="px-3 py-2 text-center">
+                                                            ${p.sconto2 ? `<span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded bg-orange-100 text-orange-800">${p.sconto2.toFixed(1)}%</span>` : '<span class="text-gray-300">-</span>'}
+                                                        </td>
+                                                        <td class="px-3 py-2 text-right font-bold text-green-600">
+                                                            €${prezzoFinale.toFixed(2)}
+                                                        </td>
+                                                        <td class="px-3 py-2 text-center">
+                                                            <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-800">
                                                                 ${(p.aliquota_iva || 0).toFixed(0)}%
                                                             </span>
                                                         </td>
-                                                        <td class="px-4 py-3 text-sm text-right font-bold text-teal-700">
+                                                        <td class="px-3 py-2 text-right font-bold text-teal-700">
                                                             €${totaleRiga.toFixed(2)}
                                                         </td>
                                                     </tr>
@@ -739,8 +756,8 @@
                                         </tbody>
                                         <tfoot class="bg-teal-700 text-white">
                                             <tr>
-                                                <td colspan="5" class="px-4 py-3 text-right font-bold">TOTALE PRODOTTI:</td>
-                                                <td class="px-4 py-3 text-right font-bold text-lg">€${totaleProdotti.toFixed(2)}</td>
+                                                <td colspan="8" class="px-3 py-2 text-right font-bold">TOTALE PRODOTTI:</td>
+                                                <td class="px-3 py-2 text-right font-bold text-lg">€${totaleProdotti.toFixed(2)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
