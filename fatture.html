@@ -260,31 +260,53 @@
             state.fattureConProdotti.clear();
             
             try {
-                const { count: prodottiCount } = await supabaseClient
+                const { count: prodottiCount, error: countError } = await supabaseClient
                     .from('prodotti')
                     .select('*', { count: 'exact', head: true })
                     .not('fattura_id', 'is', null);
                 
-                console.log(`📦 Totale prodotti con fattura: ${prodottiCount}`);
+                if (countError) {
+                    console.warn('⚠️ Errore count prodotti:', countError);
+                    return; // Continua senza delta
+                }
+                
+                console.log(`📦 Totale prodotti con fattura: ${prodottiCount || 0}`);
+                
+                if (!prodottiCount || prodottiCount === 0) {
+                    console.log('ℹ️ Nessun prodotto con fattura_id. Delta non disponibile.');
+                    return; // Continua senza delta
+                }
                 
                 let allProdotti = [];
                 const numBatches = Math.ceil(prodottiCount / BATCH_SIZE);
                 
                 for (let i = 0; i < numBatches; i++) {
-                    const { data } = await supabaseClient
+                    const { data, error } = await supabaseClient
                         .from('prodotti')
                         .select('fattura_id, prezzo, quantita, aliquota_iva')
                         .not('fattura_id', 'is', null)
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                    
+                    if (error) {
+                        console.error('❌ Errore batch prodotti:', error);
+                        continue;
+                    }
                     
                     if (data) allProdotti = [...allProdotti, ...data];
                 }
                 
                 console.log(`✅ Caricati ${allProdotti.length} prodotti totali`);
                 
+                if (allProdotti.length === 0) {
+                    console.log('ℹ️ Nessun prodotto caricato. Delta = 0 per tutte le fatture.');
+                    return;
+                }
+                
                 const groupedByFattura = {};
                 allProdotti.forEach(p => {
                     const fid = p.fattura_id;
+                    if (!fid) return; // Skip se fattura_id è null
+                    
                     if (!groupedByFattura[fid]) {
                         groupedByFattura[fid] = { valoreTotale: 0, numProdotti: 0 };
                     }
@@ -310,6 +332,7 @@
                 
             } catch (err) {
                 console.error('❌ Errore caricamento prodotti:', err);
+                console.log('ℹ️ Continuo senza calcolo delta');
             }
         }
 
