@@ -1100,11 +1100,60 @@
                 aliquotaIVAText = aliquotaIVAText.replace(',', '.');
                 const aliquotaIVA = parseFloat(aliquotaIVAText) || 22.00;
                 
+                // ===== ESTRAZIONE TIPO CESSIONE/PRESTAZIONE =====
+                const tipoCessione = getTextContent(linea, 'TipoCessione') || getTextContent(linea, 'TipoCessionePrestazione') || null;
+                console.log(`🏷️ Tipo cessione: ${tipoCessione || 'Standard'}`);
+                
+                // ===== ESTRAZIONE SCONTI/MAGGIORAZIONI =====
+                const scontiMaggiorazioni = linea.getElementsByTagName('ScontoMaggiorazione');
+                const sconti = [];
+                
+                for (let s = 0; s < scontiMaggiorazioni.length && s < 5; s++) {
+                    const scontoEl = scontiMaggiorazioni[s];
+                    const tipo = getTextContent(scontoEl, 'Tipo'); // SC = sconto, MG = maggiorazione
+                    
+                    // Controlla se è percentuale o importo
+                    let percentualeText = getTextContent(scontoEl, 'Percentuale');
+                    let importoText = getTextContent(scontoEl, 'Importo');
+                    
+                    if (tipo === 'SC') { // Solo sconti, ignora maggiorazioni
+                        if (percentualeText) {
+                            // Sconto già in percentuale
+                            percentualeText = percentualeText.replace(',', '.');
+                            const percentuale = parseFloat(percentualeText);
+                            sconti.push(percentuale);
+                            console.log(`  💰 Sconto ${s + 1}: ${percentuale}%`);
+                        } else if (importoText && prezzoUnitario > 0) {
+                            // Sconto in importo - converti in percentuale
+                            importoText = importoText.replace(',', '.');
+                            const importo = parseFloat(importoText);
+                            const percentuale = (importo / prezzoUnitario) * 100;
+                            sconti.push(parseFloat(percentuale.toFixed(3)));
+                            console.log(`  💰 Sconto ${s + 1}: €${importo} → ${percentuale.toFixed(2)}%`);
+                        }
+                    }
+                }
+                
+                // ===== CALCOLO PREZZO SCONTATO =====
+                let prezzoBase = prezzoUnitario;
+                let prezzoScontato = prezzoUnitario;
+                
+                // Applica sconti a cascata
+                for (const sconto of sconti) {
+                    prezzoScontato = prezzoScontato * (1 - sconto / 100);
+                }
+                
+                console.log(`💵 Prezzo base: €${prezzoBase.toFixed(2)} → Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
+                
                 if (prezzoUnitario === 0 && quantita > 0) {
                     let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
                     totaleText = totaleText.replace(',', '.');
                     const prezzoTotale = parseFloat(totaleText) || 0;
-                    if (prezzoTotale > 0) prezzoUnitario = prezzoTotale / quantita;
+                    if (prezzoTotale > 0) {
+                        prezzoBase = prezzoTotale / quantita;
+                        prezzoScontato = prezzoBase;
+                        prezzoUnitario = prezzoBase;
+                    }
                 }
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
@@ -1121,22 +1170,33 @@
                         nome: descrizione,
                         descrizione: descrizione,
                         categoria: categoria,
-                        prezzo: prezzoUnitario > 0 ? prezzoUnitario : null,
+                        prezzo: prezzoBase > 0 ? prezzoBase : null,  // Prezzo PRIMA degli sconti
+                        prezzo_base: prezzoBase > 0 ? prezzoBase : null,
+                        prezzo_scontato: prezzoScontato > 0 ? prezzoScontato : null,  // Prezzo DOPO sconti
                         aliquota_iva: aliquotaIVA,
                         quantita: quantita > 0 ? quantita : 0,
                         unita_misura: unitaMisura,
                         fornitore: fornitore,
                         fattura_id: fatturaId,
                         data_fattura: dataFattura,
+                        tipo_cessione: tipoCessione,
+                        sconto1: sconti[0] || null,
+                        sconto2: sconti[1] || null,
+                        sconto3: sconti[2] || null,
+                        sconto4: sconti[3] || null,
+                        sconto5: sconti[4] || null,
+                        sconto_fattura: null,  // Verrà popolato dopo se c'è uno sconto generale
                         attivo: true
                     };
                     
                     console.log(`💾 INSERIMENTO #${prodottiCreati + 1}:`, {
                         nome: descrizione.substring(0, 40),
-                        prezzo: prezzoUnitario,
+                        prezzo_base: prezzoBase,
+                        prezzo_scontato: prezzoScontato,
+                        sconti: sconti.length > 0 ? sconti : 'nessuno',
                         quantita: quantita,
                         iva: aliquotaIVA,
-                        unitaMisura: unitaMisura
+                        tipo: tipoCessione || 'normale'
                     });
                     
                     const { data, error } = await supabaseClient
@@ -1155,7 +1215,8 @@
                         }
                     } else {
                         prodottiCreati++;
-                        console.log(`✅ Creato prodotto ${prodottiCreati}: ${descrizione} (qtà: ${quantita}, prezzo: €${prezzoUnitario}, IVA: ${aliquotaIVA}%)`);
+                        const scontiStr = sconti.length > 0 ? ` sconti: [${sconti.join('%, ')}%]` : '';
+                        console.log(`✅ Creato prodotto ${prodottiCreati}: ${descrizione} (qtà: ${quantita}, base: €${prezzoBase.toFixed(2)}, finale: €${prezzoScontato.toFixed(2)}${scontiStr}, IVA: ${aliquotaIVA}%)`);
                     }
                 } catch (err) {
                     console.error(`❌ ECCEZIONE prodotto "${descrizione}":`, err);
