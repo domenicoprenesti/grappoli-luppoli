@@ -114,7 +114,8 @@
                             <th class="col-nome text-left text-sm">Nome</th>
                             <th class="col-categoria text-left text-sm">Categoria</th>
                             <th class="col-fornitore text-left text-sm">Fornitore</th>
-                            <th class="col-prezzo text-sm">€ netto</th>
+                            <th class="col-prezzo text-sm">€ base</th>
+                            <th class="col-prezzo text-sm">€ scontato</th>
                             <th class="col-iva text-sm">IVA</th>
                             <th class="col-prezzo-ivato text-sm">€ IVA</th>
                             <th class="col-qta text-sm">Q.tà</th>
@@ -287,13 +288,16 @@
             if (!prodotti.length) { tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; selectAllCheckbox.checked = false; return; }
             const allSelected = prodotti.every(p => selectedIds.has(p.id));
             selectAllCheckbox.checked = allSelected && prodotti.length > 0;
-            tbody.innerHTML = prodotti.map(p => `
+            tbody.innerHTML = prodotti.map(p => {
+                const hasSconto = p.prezzo_scontato && p.prezzo_scontato < p.prezzo;
+                return `
                 <tr class="hover:bg-gray-50 border-b ${selectedIds.has(p.id) ? 'bg-blue-50' : ''}">
                     <td class="col-checkbox"><input type="checkbox" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelect('${p.id}')" class="w-4 h-4"></td>
                     <td class="col-nome truncate-cell" title="${p.nome}">${p.nome}</td>
                     <td class="col-categoria text-sm">${p.categoria || '-'}</td>
                     <td class="col-fornitore truncate-cell text-sm" title="${p.fornitore || '-'}">${p.fornitore || '-'}</td>
-                    <td class="col-prezzo text-sm">€${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">€${(p.prezzo_scontato || p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
                     <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
@@ -307,7 +311,7 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         function showDeleteModal(id) {
