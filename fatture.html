@@ -239,7 +239,7 @@
         
 let state = {
     fatture: [],
-    fattureConProdotti: new Map(), // NUOVO: Map<fatturaId, {valoreProdotti, numProdotti, delta}>
+    fattureConProdotti: new Map(),
     stats: { total: 0, importo: 0, fornitori: 0 },
     selectedIds: new Set(),
     filters: { 
@@ -248,7 +248,6 @@ let state = {
         supplier: 'all', 
         minAmount: '', 
         maxAmount: '',
-        // NUOVI FILTRI PER COLONNE
         numeroFattura: '',
         dataFattura: '',
         fornitore: '',
@@ -259,18 +258,17 @@ let state = {
     uploadProgress: null,
     error: '',
     loadingProgress: { loaded: 0, total: 0, isLoading: false },
-    deleteAction: null, // { type: 'single'|'multiple', ids: [] }
-    uploadMode: 'single', // 'single' o 'folder'
-    pagatoChanges: new Map() // Traccia modifiche pagato: id -> nuovo valore
+    deleteAction: null,
+    uploadMode: 'single',
+    pagatoChanges: new Map()
 };
 
-// ===== POI AGGIUNGI LA FUNZIONE loadProdottiPerFatture SUBITO DOPO =====
+// LA FUNZIONE VA QUI FUORI, DOPO LA CHIUSURA DELLO STATE!
 async function loadProdottiPerFatture() {
     console.log('📦 Caricamento prodotti per calcolare delta...');
     state.fattureConProdotti.clear();
     
     try {
-        // Carica TUTTI i prodotti con fattura_id
         const { count: prodottiCount } = await supabaseClient
             .from('prodotti')
             .select('*', { count: 'exact', head: true })
@@ -293,7 +291,6 @@ async function loadProdottiPerFatture() {
         
         console.log(`✅ Caricati ${allProdotti.length} prodotti totali`);
         
-        // Raggruppa per fattura_id e calcola valore con IVA
         const groupedByFattura = {};
         allProdotti.forEach(p => {
             const fid = p.fattura_id;
@@ -304,20 +301,17 @@ async function loadProdottiPerFatture() {
             const prezzo = p.prezzo || 0;
             const quantita = p.quantita || 0;
             const iva = p.aliquota_iva || 0;
-            
-            // Calcola valore con IVA: prezzo * quantità * (1 + iva/100)
             const valoreProdottoConIVA = prezzo * quantita * (1 + iva / 100);
             
             groupedByFattura[fid].valoreTotale += valoreProdottoConIVA;
             groupedByFattura[fid].numProdotti++;
         });
         
-        // Popola la Map con i dati
         for (const [fid, data] of Object.entries(groupedByFattura)) {
             state.fattureConProdotti.set(fid, {
                 valoreProdotti: data.valoreTotale,
                 numProdotti: data.numProdotti,
-                delta: 0 // Verrà calcolato dopo quando avremo le fatture
+                delta: 0
             });
         }
         
@@ -327,7 +321,6 @@ async function loadProdottiPerFatture() {
         console.error('❌ Errore caricamento prodotti:', err);
     }
 }
-
 
 
 
