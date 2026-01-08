@@ -1417,34 +1417,34 @@
                         <table class="w-full">
                             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                                 <tr>
-                                    <th class="px-4 py-3"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}></th>
-                                    <th class="px-6 py-3 text-left">
+                                    <th class="px-3 py-2.5"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''} class="w-4 h-4"></th>
+                                    <th class="px-4 py-2.5 text-left">
                                         <div class="text-sm font-semibold mb-1">Data</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.dataFattura}" onkeyup="applyColumnFilter('dataFattura', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-6 py-3 text-left">
+                                    <th class="px-4 py-2.5 text-left">
                                         <div class="text-sm font-semibold mb-1">Numero</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.numeroFattura}" onkeyup="applyColumnFilter('numeroFattura', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-6 py-3 text-left">
+                                    <th class="px-4 py-2.5 text-left">
                                         <div class="text-sm font-semibold mb-1">Fornitore</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.fornitore}" onkeyup="applyColumnFilter('fornitore', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-6 py-3 text-right">
+                                    <th class="px-4 py-2.5 text-right">
                                         <div class="text-sm font-semibold mb-1">Importo</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.importo}" onkeyup="applyColumnFilter('importo', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-6 py-3 text-right">
+                                    <th class="px-4 py-2.5 text-right">
                                         <div class="text-sm font-semibold mb-1">Δ Delta</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.delta}" onkeyup="applyColumnFilter('delta', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-6 py-3 text-center">
+                                    <th class="px-4 py-2.5 text-center">
                                         <div class="flex items-center justify-center space-x-2">
                                             <span class="text-sm font-semibold">Pagato</span>
                                             <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-4 h-4 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''}>
                                         </div>
                                     </th>
-                                    <th class="px-6 py-3 text-center text-sm font-semibold">Azioni</th>
+                                    <th class="px-4 py-2.5 text-center text-sm font-semibold">Azioni</th>
                                 </tr>
                             </thead>
                             <tbody>${!filteredFatture.length ? `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => {
@@ -1453,24 +1453,26 @@
                                 const deltaClass = Math.abs(delta) < 1 ? 'text-green-600' : Math.abs(delta) < 50 ? 'text-orange-600' : 'text-red-600';
                                 return `
                                 <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
-                                    <td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td>
-                                    <td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
-                                    <td class="px-6 py-4 text-sm font-medium">${f.num}</td>
-                                    <td class="px-6 py-4 text-sm">${f.ced.nm}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-right ${deltaClass}" title="Totale Fattura - Σ(Prezzo × Qtà × (1+IVA%))">
+                                    <td class="px-3 py-2.5"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')" class="w-4 h-4"></td>
+                                    <td class="px-4 py-2.5 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
+                                    <td class="px-4 py-2.5 text-sm font-medium">${f.num}</td>
+                                    <td class="px-4 py-2.5 text-sm">${f.ced.nm}</td>
+                                    <td class="px-4 py-2.5 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
+                                    <td class="px-4 py-2.5 text-sm font-bold text-right ${deltaClass}" title="Totale Fattura - Σ(Prezzo × Qtà × (1+IVA%))">
                                         €${delta.toFixed(2)}
                                     </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-5 h-5 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
+                                    <td class="px-4 py-2.5 text-center">
+                                        <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-4 h-4 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
                                     </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <button onclick="showDettagliFattura('${f.id}')" class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded transition-colors mr-2" title="Visualizza dettagli">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                        </button>
-                                        <button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors" title="Elimina fattura">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
+                                    <td class="px-4 py-2.5">
+                                        <div class="flex items-center justify-center space-x-1">
+                                            <button onclick="showDettagliFattura('${f.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 hover:bg-blue-50 rounded transition-colors" title="Visualizza dettagli">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            </button>
+                                            <button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 rounded transition-colors" title="Elimina fattura">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             `;
