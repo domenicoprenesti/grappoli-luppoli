@@ -1255,7 +1255,7 @@
                 if (state.filters.importo && !f.tot.toFixed(2).includes(state.filters.importo)) return false;
                 
                 if (state.filters.delta) {
-                    const datiProdotti = state.fattureConProdotti.get(f.id);
+                    const datiProdotti = state.fattureConProdotti ? state.fattureConProdotti.get(f.id) : null;
                     const delta = datiProdotti ? datiProdotti.delta : 0;
                     if (!delta.toFixed(2).includes(state.filters.delta)) return false;
                 }
@@ -1406,7 +1406,7 @@
                                 </tr>
                             </thead>
                             <tbody>${!filteredFatture.length ? `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => {
-                                const datiProdotti = state.fattureConProdotti.get(f.id);
+                                const datiProdotti = state.fattureConProdotti ? state.fattureConProdotti.get(f.id) : null;
                                 const delta = datiProdotti ? datiProdotti.delta : 0;
                                 const deltaClass = Math.abs(delta) < 1 ? 'text-green-600' : Math.abs(delta) < 50 ? 'text-orange-600' : 'text-red-600';
                                 return `
