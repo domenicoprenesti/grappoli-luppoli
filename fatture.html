@@ -301,7 +301,7 @@
                 for (let i = 0; i < numBatches; i++) {
                     const { data, error } = await supabaseClient
                         .from('prodotti')
-                        .select('fattura_id, prezzo, prezzo_scontato, quantita, aliquota_iva')
+                        .select('fattura_id, prezzo_ivato, quantita')
                         .not('fattura_id', 'is', null)
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     
@@ -329,13 +329,12 @@
                         groupedByFattura[fid] = { valoreTotale: 0, numProdotti: 0 };
                     }
                     
-                    // Usa prezzo_scontato se disponibile, altrimenti prezzo
-                    const prezzoFinale = p.prezzo_scontato || p.prezzo || 0;
+                    // USA DIRETTAMENTE prezzo_ivato dal database (già calcolato correttamente)
+                    const prezzoIvato = p.prezzo_ivato || 0;
                     const quantita = p.quantita || 0;
-                    const iva = p.aliquota_iva || 0;
-                    const valoreProdottoConIVA = prezzoFinale * quantita * (1 + iva / 100);
+                    const valoreProdotto = prezzoIvato * quantita;
                     
-                    groupedByFattura[fid].valoreTotale += valoreProdottoConIVA;
+                    groupedByFattura[fid].valoreTotale += valoreProdotto;
                     groupedByFattura[fid].numProdotti++;
                 });
                 
@@ -539,13 +538,12 @@
                 }
                 
                 const prodottiList = prodotti || [];
-                // Calcolo con IVA: Σ(prezzo_scontato × quantità × (1 + IVA%))
-                // Usa prezzo_scontato se disponibile, altrimenti prezzo
+                // Calcolo con IVA: Σ(prezzo_ivato × quantità)
+                // USA prezzo_ivato dal database (già include IVA e sconti)
                 const totaleProdotti = prodottiList.reduce((sum, p) => {
-                    const prezzoFinale = p.prezzo_scontato || p.prezzo || 0;
+                    const prezzoIvato = p.prezzo_ivato || 0;
                     const quantita = p.quantita || 0;
-                    const iva = p.aliquota_iva || 0;
-                    return sum + (prezzoFinale * quantita * (1 + iva / 100));
+                    return sum + (prezzoIvato * quantita);
                 }, 0);
                 
                 // Mostra i dettagli nel modal
@@ -707,8 +705,8 @@
                                         <tbody class="divide-y divide-gray-200">
                                             ${prodottiList.map((p, idx) => {
                                                 const prezzoBase = p.prezzo_base || p.prezzo || 0;
-                                                const prezzoFinale = p.prezzo_scontato || p.prezzo || 0;
-                                                const totaleRiga = prezzoFinale * (p.quantita || 0);
+                                                const prezzoIvato = p.prezzo_ivato || 0;
+                                                const totaleRiga = prezzoIvato * (p.quantita || 0);
                                                 const hasSconti = p.sconto1 || p.sconto2 || p.sconto3;
                                                 
                                                 return `
