@@ -1163,7 +1163,8 @@
                 
                 console.log(`💵 Prezzo base: €${prezzoBase.toFixed(2)} → Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
                 
-                if (prezzoUnitario === 0 && quantita > 0) {
+                // Se PrezzoUnitario è 0 MA non ci sono sconti 100%, prova a ricavare dal PrezzoTotale
+                if (prezzoUnitario === 0 && quantita > 0 && sconti.length === 0) {
                     let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
                     totaleText = totaleText.replace(',', '.');
                     const prezzoTotale = parseFloat(totaleText) || 0;
