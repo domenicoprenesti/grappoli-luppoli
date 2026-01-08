@@ -237,25 +237,35 @@
             }
         });
         
-	let state = {
-    		fatture: [],
-    		fattureConProdotti: new Map(), // NUOVO: Map<fatturaId, {valoreProdotti, numProdotti, delta}>
-    		stats: { total: 0, importo: 0, fornitori: 0 },
-    		selectedIds: new Set(),
-    		filters: { 
-        		invoiceYear: 'all', 
-        		invoiceMonth: 'all', 
-        		supplier: 'all', 
-        		minAmount: '', 
-        		maxAmount: '',
-        		// NUOVI FILTRI PER COLONNE
-        		numeroFattura: '',
-        		dataFattura: '',
-        		fornitore: '',
-        		importo: '',
-        		delta: ''
-    	},
-        async function loadProdottiPerFatture() {
+let state = {
+    fatture: [],
+    fattureConProdotti: new Map(), // NUOVO: Map<fatturaId, {valoreProdotti, numProdotti, delta}>
+    stats: { total: 0, importo: 0, fornitori: 0 },
+    selectedIds: new Set(),
+    filters: { 
+        invoiceYear: 'all', 
+        invoiceMonth: 'all', 
+        supplier: 'all', 
+        minAmount: '', 
+        maxAmount: '',
+        // NUOVI FILTRI PER COLONNE
+        numeroFattura: '',
+        dataFattura: '',
+        fornitore: '',
+        importo: '',
+        delta: ''
+    },
+    uploading: false,
+    uploadProgress: null,
+    error: '',
+    loadingProgress: { loaded: 0, total: 0, isLoading: false },
+    deleteAction: null, // { type: 'single'|'multiple', ids: [] }
+    uploadMode: 'single', // 'single' o 'folder'
+    pagatoChanges: new Map() // Traccia modifiche pagato: id -> nuovo valore
+};
+
+// ===== POI AGGIUNGI LA FUNZIONE loadProdottiPerFatture SUBITO DOPO =====
+async function loadProdottiPerFatture() {
     console.log('📦 Caricamento prodotti per calcolare delta...');
     state.fattureConProdotti.clear();
     
@@ -316,7 +326,7 @@
     } catch (err) {
         console.error('❌ Errore caricamento prodotti:', err);
     }
-}   
+}
 
 
 
