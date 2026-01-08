@@ -242,21 +242,39 @@
         
         const state = {
             fatture: [],
+            fattureConProdotti: new Map(), // <-- AGGIUNTO PER DELTA
             stats: { total: 0, importo: 0, fornitori: 0 },
             selectedIds: new Set(),
-            filters: { invoiceYear: 'all', invoiceMonth: 'all', supplier: 'all', minAmount: '', maxAmount: '' },
+            filters: { 
+                invoiceYear: 'all', 
+                invoiceMonth: 'all', 
+                supplier: 'all', 
+                minAmount: '', 
+                maxAmount: '',
+                // NUOVI FILTRI PER COLONNA:
+                numeroFattura: '',
+                dataFattura: '',
+                fornitore: '',
+                importo: '',
+                delta: ''
+            },
             uploading: false,
             uploadProgress: null,
             error: '',
             loadingProgress: { loaded: 0, total: 0, isLoading: false },
-            deleteAction: null, // { type: 'single'|'multiple', ids: [] }
-            uploadMode: 'single', // 'single' o 'folder'
-            pagatoChanges: new Map() // Traccia modifiche pagato: id -> nuovo valore
+            deleteAction: null,
+            uploadMode: 'single',
+            pagatoChanges: new Map()
         };
 
-        // Funzione per caricare prodotti e calcolare delta
         async function loadProdottiPerFatture() {
             console.log('📦 Caricamento prodotti per calcolare delta...');
+            
+            if (!state.fattureConProdotti) {
+                console.error('❌ state.fattureConProdotti non inizializzato!');
+                return;
+            }
+            
             state.fattureConProdotti.clear();
             
             try {
@@ -267,14 +285,14 @@
                 
                 if (countError) {
                     console.warn('⚠️ Errore count prodotti:', countError);
-                    return; // Continua senza delta
+                    return;
                 }
                 
                 console.log(`📦 Totale prodotti con fattura: ${prodottiCount || 0}`);
                 
                 if (!prodottiCount || prodottiCount === 0) {
-                    console.log('ℹ️ Nessun prodotto con fattura_id. Delta non disponibile.');
-                    return; // Continua senza delta
+                    console.log('ℹ️ Nessun prodotto con fattura_id');
+                    return;
                 }
                 
                 let allProdotti = [];
@@ -298,14 +316,14 @@
                 console.log(`✅ Caricati ${allProdotti.length} prodotti totali`);
                 
                 if (allProdotti.length === 0) {
-                    console.log('ℹ️ Nessun prodotto caricato. Delta = 0 per tutte le fatture.');
+                    console.log('ℹ️ Nessun prodotto caricato');
                     return;
                 }
                 
                 const groupedByFattura = {};
                 allProdotti.forEach(p => {
                     const fid = p.fattura_id;
-                    if (!fid) return; // Skip se fattura_id è null
+                    if (!fid) return;
                     
                     if (!groupedByFattura[fid]) {
                         groupedByFattura[fid] = { valoreTotale: 0, numProdotti: 0 };
@@ -332,7 +350,6 @@
                 
             } catch (err) {
                 console.error('❌ Errore caricamento prodotti:', err);
-                console.log('ℹ️ Continuo senza calcolo delta');
             }
         }
 
@@ -867,14 +884,12 @@
                 state.fatture.forEach(f => {
                     const datiProdotti = state.fattureConProdotti.get(f.id);
                     if (datiProdotti) {
-                        // Calcolo: Totale Fattura - Somma(Prezzo * Quantità * (1 + IVA/100))
                         const delta = f.tot - datiProdotti.valoreProdotti;
                         datiProdotti.delta = delta;
                         deltaCalcolati++;
                         
-                        // Debug per prime 5 fatture
                         if (deltaCalcolati <= 5) {
-                            console.log(`Delta fattura ${f.num}: €${f.tot.toFixed(2)} - €${datiProdotti.valoreProdotti.toFixed(2)} = €${delta.toFixed(2)}`);
+                            console.log(`Delta ${f.num}: €${f.tot.toFixed(2)} - €${datiProdotti.valoreProdotti.toFixed(2)} = €${delta.toFixed(2)}`);
                         }
                     }
                 });
@@ -1264,8 +1279,8 @@
                 if (state.filters.fornitore && !f.ced.nm.toLowerCase().includes(state.filters.fornitore.toLowerCase())) return false;
                 if (state.filters.importo && !f.tot.toFixed(2).includes(state.filters.importo)) return false;
                 
-                if (state.filters.delta) {
-                    const datiProdotti = state.fattureConProdotti ? state.fattureConProdotti.get(f.id) : null;
+                if (state.filters.delta && state.fattureConProdotti) {
+                    const datiProdotti = state.fattureConProdotti.get(f.id);
                     const delta = datiProdotti ? datiProdotti.delta : 0;
                     if (!delta.toFixed(2).includes(state.filters.delta)) return false;
                 }
@@ -1426,7 +1441,7 @@
                                     <td class="px-6 py-4 text-sm font-medium">${f.num}</td>
                                     <td class="px-6 py-4 text-sm">${f.ced.nm}</td>
                                     <td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-right ${deltaClass}" title="Differenza tra importo fattura e valore prodotti con IVA">
+                                    <td class="px-6 py-4 text-sm font-bold text-right ${deltaClass}" title="Totale Fattura - Σ(Prezzo × Qtà × (1+IVA%))">
                                         €${delta.toFixed(2)}
                                     </td>
                                     <td class="px-6 py-4 text-center">
