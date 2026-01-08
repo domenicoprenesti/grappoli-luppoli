@@ -5,23 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Fatture Elettroniche</title>
     <script src="https://cdn.tailwindcss.com"></script>
-<style>
-    .filter-input {
-        width: 100%;
-        padding: 4px 8px;
-        font-size: 12px;
-        border: 1px solid rgba(255,255,255,0.3);
-        border-radius: 4px;
-        background: rgba(255,255,255,0.9);
-        color: #1f2937;
-    }
-    .filter-input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        background: white;
-    }
-</style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .filter-input {
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.375rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            outline: none;
+        }
+        .filter-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .filter-input:focus {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
@@ -237,95 +240,12 @@
             }
         });
         
-let state = {
-    fatture: [],
-    fattureConProdotti: new Map(),
-    stats: { total: 0, importo: 0, fornitori: 0 },
-    selectedIds: new Set(),
-    filters: { 
-        invoiceYear: 'all', 
-        invoiceMonth: 'all', 
-        supplier: 'all', 
-        minAmount: '', 
-        maxAmount: '',
-        numeroFattura: '',
-        dataFattura: '',
-        fornitore: '',
-        importo: '',
-        delta: ''
-    },
-    uploading: false,
-    uploadProgress: null,
-    error: '',
-    loadingProgress: { loaded: 0, total: 0, isLoading: false },
-    deleteAction: null,
-    uploadMode: 'single',
-    pagatoChanges: new Map()
-};
-
-// LA FUNZIONE VA QUI FUORI, DOPO LA CHIUSURA DELLO STATE!
-async function loadProdottiPerFatture() {
-    console.log('📦 Caricamento prodotti per calcolare delta...');
-    state.fattureConProdotti.clear();
-    
-    try {
-        const { count: prodottiCount } = await supabaseClient
-            .from('prodotti')
-            .select('*', { count: 'exact', head: true })
-            .not('fattura_id', 'is', null);
-        
-        console.log(`📦 Totale prodotti con fattura: ${prodottiCount}`);
-        
-        let allProdotti = [];
-        const numBatches = Math.ceil(prodottiCount / BATCH_SIZE);
-        
-        for (let i = 0; i < numBatches; i++) {
-            const { data } = await supabaseClient
-                .from('prodotti')
-                .select('fattura_id, prezzo, quantita, aliquota_iva')
-                .not('fattura_id', 'is', null)
-                .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
-            
-            if (data) allProdotti = [...allProdotti, ...data];
-        }
-        
-        console.log(`✅ Caricati ${allProdotti.length} prodotti totali`);
-        
-        const groupedByFattura = {};
-        allProdotti.forEach(p => {
-            const fid = p.fattura_id;
-            if (!groupedByFattura[fid]) {
-                groupedByFattura[fid] = { valoreTotale: 0, numProdotti: 0 };
-            }
-            
-            const prezzo = p.prezzo || 0;
-            const quantita = p.quantita || 0;
-            const iva = p.aliquota_iva || 0;
-            const valoreProdottoConIVA = prezzo * quantita * (1 + iva / 100);
-            
-            groupedByFattura[fid].valoreTotale += valoreProdottoConIVA;
-            groupedByFattura[fid].numProdotti++;
-        });
-        
-        for (const [fid, data] of Object.entries(groupedByFattura)) {
-            state.fattureConProdotti.set(fid, {
-                valoreProdotti: data.valoreTotale,
-                numProdotti: data.numProdotti,
-                delta: 0
-            });
-        }
-        
-        console.log(`✅ Aggregati dati per ${state.fattureConProdotti.size} fatture`);
-        
-    } catch (err) {
-        console.error('❌ Errore caricamento prodotti:', err);
-    }
-}
-
-
-
-
-	 uploading: false,
+        const state = {
+            fatture: [],
+            stats: { total: 0, importo: 0, fornitori: 0 },
+            selectedIds: new Set(),
+            filters: { invoiceYear: 'all', invoiceMonth: 'all', supplier: 'all', minAmount: '', maxAmount: '' },
+            uploading: false,
             uploadProgress: null,
             error: '',
             loadingProgress: { loaded: 0, total: 0, isLoading: false },
@@ -333,6 +253,65 @@ async function loadProdottiPerFatture() {
             uploadMode: 'single', // 'single' o 'folder'
             pagatoChanges: new Map() // Traccia modifiche pagato: id -> nuovo valore
         };
+
+        // Funzione per caricare prodotti e calcolare delta
+        async function loadProdottiPerFatture() {
+            console.log('📦 Caricamento prodotti per calcolare delta...');
+            state.fattureConProdotti.clear();
+            
+            try {
+                const { count: prodottiCount } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .not('fattura_id', 'is', null);
+                
+                console.log(`📦 Totale prodotti con fattura: ${prodottiCount}`);
+                
+                let allProdotti = [];
+                const numBatches = Math.ceil(prodottiCount / BATCH_SIZE);
+                
+                for (let i = 0; i < numBatches; i++) {
+                    const { data } = await supabaseClient
+                        .from('prodotti')
+                        .select('fattura_id, prezzo, quantita, aliquota_iva')
+                        .not('fattura_id', 'is', null)
+                        .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                    
+                    if (data) allProdotti = [...allProdotti, ...data];
+                }
+                
+                console.log(`✅ Caricati ${allProdotti.length} prodotti totali`);
+                
+                const groupedByFattura = {};
+                allProdotti.forEach(p => {
+                    const fid = p.fattura_id;
+                    if (!groupedByFattura[fid]) {
+                        groupedByFattura[fid] = { valoreTotale: 0, numProdotti: 0 };
+                    }
+                    
+                    const prezzo = p.prezzo || 0;
+                    const quantita = p.quantita || 0;
+                    const iva = p.aliquota_iva || 0;
+                    const valoreProdottoConIVA = prezzo * quantita * (1 + iva / 100);
+                    
+                    groupedByFattura[fid].valoreTotale += valoreProdottoConIVA;
+                    groupedByFattura[fid].numProdotti++;
+                });
+                
+                for (const [fid, data] of Object.entries(groupedByFattura)) {
+                    state.fattureConProdotti.set(fid, {
+                        valoreProdotti: data.valoreTotale,
+                        numProdotti: data.numProdotti,
+                        delta: 0
+                    });
+                }
+                
+                console.log(`✅ Aggregati dati per ${state.fattureConProdotti.size} fatture`);
+                
+            } catch (err) {
+                console.error('❌ Errore caricamento prodotti:', err);
+            }
+        }
 
         function logout() {
             localStorage.removeItem(SESSION_KEY);
@@ -854,7 +833,7 @@ async function loadProdottiPerFatture() {
                     }
                 }
 
-		state.stats.importo = state.fatture.reduce((sum, f) => sum + f.tot, 0);
+                state.stats.importo = state.fatture.reduce((sum, f) => sum + f.tot, 0);
                 state.stats.fornitori = new Set(state.fatture.map(f => f.ced.nm).filter(Boolean)).size;
                 
                 // CARICA PRODOTTI PER CALCOLARE DELTA
@@ -1240,29 +1219,25 @@ async function loadProdottiPerFatture() {
                 const invoiceDate = new Date(f.dt);
                 const invoiceYear = invoiceDate.getFullYear().toString();
                 const invoiceMonth = (invoiceDate.getMonth() + 1).toString();
+                
                 if (state.filters.invoiceYear !== 'all' && invoiceYear !== state.filters.invoiceYear) return false;
                 if (state.filters.invoiceMonth !== 'all' && invoiceMonth !== state.filters.invoiceMonth) return false;
                 if (state.filters.supplier !== 'all' && f.ced.nm !== state.filters.supplier) return false;
                 if (state.filters.minAmount && f.tot < parseFloat(state.filters.minAmount)) return false;
                 if (state.filters.maxAmount && f.tot > parseFloat(state.filters.maxAmount)) return false;
+                
                 if (state.filters.numeroFattura && !f.num.toLowerCase().includes(state.filters.numeroFattura.toLowerCase())) return false;
-        if (state.filters.dataFattura && !f.dt.includes(state.filters.dataFattura)) return false;
-        if (state.filters.fornitore && !f.ced.nm.toLowerCase().includes(state.filters.fornitore.toLowerCase())) return false;
-        if (state.filters.importo) {
-            const importoStr = f.tot.toFixed(2);
-            if (!importoStr.includes(state.filters.importo)) return false;
-        }
-        if (state.filters.delta) {
-            const datiProdotti = state.fattureConProdotti.get(f.id);
-            if (datiProdotti) {
-                const deltaStr = datiProdotti.delta.toFixed(2);
-                if (!deltaStr.includes(state.filters.delta)) return false;
-            }
-        }
-
-
-
-		return true;
+                if (state.filters.dataFattura && !f.dt.includes(state.filters.dataFattura)) return false;
+                if (state.filters.fornitore && !f.ced.nm.toLowerCase().includes(state.filters.fornitore.toLowerCase())) return false;
+                if (state.filters.importo && !f.tot.toFixed(2).includes(state.filters.importo)) return false;
+                
+                if (state.filters.delta) {
+                    const datiProdotti = state.fattureConProdotti.get(f.id);
+                    const delta = datiProdotti ? datiProdotti.delta : 0;
+                    if (!delta.toFixed(2).includes(state.filters.delta)) return false;
+                }
+                
+                return true;
             });
         }
 
@@ -1271,25 +1246,8 @@ async function loadProdottiPerFatture() {
         function getUniqueSuppliers() { return Array.from(new Set(state.fatture.map(f => f.ced.nm))).sort(); }
 
         window.applyFilter = function(filterType, value) { state.filters[filterType] = value; render(); };
-window.clearFilters = function() { 
-    state.filters = { 
-        invoiceYear: 'all', 
-        invoiceMonth: 'all', 
-        supplier: 'all', 
-        minAmount: '', 
-        maxAmount: '',
-        numeroFattura: '',
-        dataFattura: '',
-        fornitore: '',
-        importo: '',
-        delta: ''
-    }; 
-    render(); 
-};
-window.applyColumnFilter = function(column, value) {
-    state.filters[column] = value;
-    render();
-};
+        window.applyColumnFilter = function(filterName, value) { state.filters[filterName] = value; render(); };
+        window.clearFilters = function() { state.filters = { invoiceYear: 'all', invoiceMonth: 'all', supplier: 'all', minAmount: '', maxAmount: '', numeroFattura: '', dataFattura: '', fornitore: '', importo: '', delta: '' }; render(); };
         window.handleFileUpload = function(event) { if (event.target.files && event.target.files.length > 0) processFiles(event.target.files); };
         window.handleDrop = function(event) { event.preventDefault(); if (event.dataTransfer.files && event.dataTransfer.files.length > 0) processFiles(event.dataTransfer.files); };
         window.handleDragOver = function(event) { event.preventDefault(); };
@@ -1392,7 +1350,7 @@ window.applyColumnFilter = function(column, value) {
                         ` : ''}
                         
                         <table class="w-full">
-<thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                            <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                                 <tr>
                                     <th class="px-4 py-3"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''}></th>
                                     <th class="px-6 py-3 text-left">
@@ -1418,38 +1376,25 @@ window.applyColumnFilter = function(column, value) {
                                     <th class="px-6 py-3 text-center">
                                         <div class="flex items-center justify-center space-x-2">
                                             <span class="text-sm font-semibold">Pagato</span>
-                                            <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-4 h-4 cursor-pointer">
+                                            <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-4 h-4 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''}>
                                         </div>
                                     </th>
                                     <th class="px-6 py-3 text-center text-sm font-semibold">Azioni</th>
                                 </tr>
                             </thead>
-                            <tbody>${!filteredFatture.length ? `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => `
-<tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
+                            <tbody>${!filteredFatture.length ? `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => {
+                                const datiProdotti = state.fattureConProdotti.get(f.id);
+                                const delta = datiProdotti ? datiProdotti.delta : 0;
+                                const deltaClass = Math.abs(delta) < 1 ? 'text-green-600' : Math.abs(delta) < 50 ? 'text-orange-600' : 'text-red-600';
+                                return `
+                                <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
                                     <td class="px-4 py-4"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')"></td>
                                     <td class="px-6 py-4 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
                                     <td class="px-6 py-4 text-sm font-medium">${f.num}</td>
                                     <td class="px-6 py-4 text-sm">${f.ced.nm}</td>
                                     <td class="px-6 py-4 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-right ${(() => {
-                                        const datiProdotti = state.fattureConProdotti.get(f.id);
-                                        if (!datiProdotti) return 'text-gray-400';
-                                        const delta = datiProdotti.delta;
-                                        if (Math.abs(delta) < 1) return 'text-green-600';
-                                        return delta > 0 ? 'text-orange-600' : 'text-red-600';
-                                    })()}" title="${(() => {
-                                        const datiProdotti = state.fattureConProdotti.get(f.id);
-                                        if (!datiProdotti) return 'Nessun prodotto';
-                                        const delta = datiProdotti.delta;
-                                        if (Math.abs(delta) < 1) return 'Perfetto! Fattura = Prodotti';
-                                        return delta > 0 ? 'Delta positivo: spese extra (trasporto, bollo)' : 'Delta negativo: possibile errore estrazione';
-                                    })()}">
-                                        ${(() => {
-                                            const datiProdotti = state.fattureConProdotti.get(f.id);
-                                            if (!datiProdotti) return '-';
-                                            const delta = datiProdotti.delta;
-                                            return `€${delta.toFixed(2)}`;
-                                        })()}
+                                    <td class="px-6 py-4 text-sm font-bold text-right ${deltaClass}" title="Differenza tra importo fattura e valore prodotti con IVA">
+                                        €${delta.toFixed(2)}
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-5 h-5 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
@@ -1463,7 +1408,8 @@ window.applyColumnFilter = function(column, value) {
                                         </button>
                                     </td>
                                 </tr>
-                            `).join('')}</tbody>
+                            `;
+                            }).join('')}</tbody>
                         </table>
                     </div>
                 </div>
