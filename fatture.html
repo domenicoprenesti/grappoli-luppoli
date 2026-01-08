@@ -863,12 +863,22 @@
                 await loadProdottiPerFatture();
                 
                 // CALCOLA DELTA PER OGNI FATTURA
+                let deltaCalcolati = 0;
                 state.fatture.forEach(f => {
                     const datiProdotti = state.fattureConProdotti.get(f.id);
                     if (datiProdotti) {
-                        datiProdotti.delta = f.tot - datiProdotti.valoreProdotti;
+                        // Calcolo: Totale Fattura - Somma(Prezzo * Quantità * (1 + IVA/100))
+                        const delta = f.tot - datiProdotti.valoreProdotti;
+                        datiProdotti.delta = delta;
+                        deltaCalcolati++;
+                        
+                        // Debug per prime 5 fatture
+                        if (deltaCalcolati <= 5) {
+                            console.log(`Delta fattura ${f.num}: €${f.tot.toFixed(2)} - €${datiProdotti.valoreProdotti.toFixed(2)} = €${delta.toFixed(2)}`);
+                        }
                     }
                 });
+                console.log(`✅ Calcolati ${deltaCalcolati} delta su ${state.fatture.length} fatture`);
                 
                 state.loadingProgress.isLoading = false;
                 render();
