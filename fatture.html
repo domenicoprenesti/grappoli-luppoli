@@ -27,32 +27,56 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                            </svg>
-                        </div>
-                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
-                    </button>
-                    <div class="hidden md:ml-10 md:flex md:space-x-4">
-                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
-                        <a class="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700">Fatture</a>
-                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Prodotti</a>
-                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Utenti</a>
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
                     </div>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
-                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                    <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                </button>
+                <div class="hidden md:ml-10 md:flex md:space-x-4">
+                    <!-- Dashboard -->
+                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                        Dashboard
+                    </a>
+                    
+                    <!-- Fatture -->
+                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                        Fatture
+                    </a>
+                    
+                    <!-- ⭐ NUOVO: Scadenze ⭐ -->
+                    <a href="scadenze.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                        📅 Scadenze
+                    </a>
+                    
+                    <!-- Prodotti -->
+                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                        Prodotti
+                    </a>
+                    
+                    <!-- Utenti -->
+                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                        Utenti
+                    </a>
                 </div>
             </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
+                    Dashboard
+                </button>
+                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                    Esci
+                </button>
+            </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <div class="pt-20 pb-12" id="app"></div>
 
