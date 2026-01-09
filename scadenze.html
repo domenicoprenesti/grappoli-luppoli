@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scadenze Fatture - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .scaduta { background-color: #fee2e2; border-left: 4px solid #dc2626; }
+        .oggi { background-color: #fef3c7; border-left: 4px solid #f59e0b; }
+        .settimana { background-color: #fef9c3; border-left: 4px solid #eab308; }
+        .quindicina { background-color: #dbeafe; border-left: 4px solid #3b82f6; }
+        .ok { background-color: #f0fdf4; border-left: 4px solid #16a34a; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+    </script>
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a class="px-3 py-2 rounded-md text-sm bg-orange-100 text-orange-700 font-medium">Scadenze</a>
+                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Prodotti</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">📅 Monitoraggio Scadenze Fatture</h1>
+            <p class="text-gray-600">Gestisci e monitora le date di scadenza dei pagamenti</p>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-blue-900">Caricamento...</span>
+                <span id="loadingText" class="text-sm text-blue-700">0%</span>
+            </div>
+            <div class="w-full bg-blue-200 rounded-full h-3">
+                <div id="loadingBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid md:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 scaduta">
+                <p class="text-sm text-gray-600 mb-1">Scadute</p>
+                <p id="scadute" class="text-3xl font-bold text-red-600">0</p>
+                <p id="importoScadute" class="text-xs text-gray-500 mt-1">€0</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 oggi">
+                <p class="text-sm text-gray-600 mb-1">Oggi</p>
+                <p id="oggi" class="text-3xl font-bold text-orange-600">0</p>
+                <p id="importoOggi" class="text-xs text-gray-500 mt-1">€0</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 settimana">
+                <p class="text-sm text-gray-600 mb-1">7 giorni</p>
+                <p id="settimana" class="text-3xl font-bold text-yellow-600">0</p>
+                <p id="importoSettimana" class="text-xs text-gray-500 mt-1">€0</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 quindicina">
+                <p class="text-sm text-gray-600 mb-1">15 giorni</p>
+                <p id="quindicina" class="text-3xl font-bold text-blue-600">0</p>
+                <p id="importoQuindicina" class="text-xs text-gray-500 mt-1">€0</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 ok">
+                <p class="text-sm text-gray-600 mb-1">Oltre 15gg</p>
+                <p id="oltre" class="text-3xl font-bold text-green-600">0</p>
+                <p id="importoOltre" class="text-xs text-gray-500 mt-1">€0</p>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="font-bold mb-4">Filtri</h3>
+            <div class="grid md:grid-cols-4 gap-4">
+                <select id="filtroStato" class="px-4 py-2 border rounded-lg" onchange="applicaFiltri()">
+                    <option value="">Tutti gli stati</option>
+                    <option value="Scaduta">Scadute</option>
+                    <option value="In scadenza oggi">In scadenza oggi</option>
+                    <option value="In scadenza (7gg)">Prossimi 7 giorni</option>
+                    <option value="In scadenza (15gg)">Prossimi 15 giorni</option>
+                    <option value="Da scadere">Oltre 15 giorni</option>
+                </select>
+                <select id="filtroTipoPagamento" class="px-4 py-2 border rounded-lg" onchange="applicaFiltri()">
+                    <option value="">Tutti i tipi</option>
+                    <option value="Immediato">Immediato</option>
+                    <option value="Anticipato">Anticipato</option>
+                    <option value="30gg FM">30gg Fine Mese</option>
+                    <option value="60gg FM">60gg Fine Mese</option>
+                    <option value="90gg FM">90gg Fine Mese</option>
+                    <option value="Personalizzato">Personalizzato</option>
+                </select>
+                <input type="text" id="filtroFornitore" placeholder="Filtra per fornitore..." class="px-4 py-2 border rounded-lg" onkeyup="applicaFiltri()">
+                <button onclick="azzeraFiltri()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Pulisci Filtri</button>
+            </div>
+        </div>
+
+        <!-- Tabella Scadenze -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-orange-600 to-red-600 text-white">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold">Numero</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold">Fornitore</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Data Fattura</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Tipo Pagamento</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Scadenza</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Giorni</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Importo</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Stato</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scadenzeTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modifica Scadenza -->
+    <div id="modalScadenza" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <h2 class="text-2xl font-bold mb-6">Modifica Condizioni Pagamento</h2>
+            <form onsubmit="salvaScadenza(event)" class="space-y-4">
+                <input type="hidden" id="fatturaId">
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Fattura</label>
+                    <input type="text" id="fatturaInfo" readonly class="w-full px-4 py-2 bg-gray-100 border rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">Tipo Pagamento *</label>
+                    <select id="tipoPagamento" required class="w-full px-4 py-2 border rounded-lg" onchange="aggiornaTipoPagamento()">
+                        <option value="Immediato">Pagamento Immediato (carte, contanti)</option>
+                        <option value="Anticipato">Pagamento Anticipato (bonifico preventivo)</option>
+                        <option value="30gg FM">30 giorni Fine Mese</option>
+                        <option value="60gg FM">60 giorni Fine Mese</option>
+                        <option value="90gg FM">90 giorni Fine Mese</option>
+                        <option value="Personalizzato">Personalizzato (specifica giorni)</option>
+                    </select>
+                </div>
+
+                <div id="giorniPersonalizzati" class="hidden">
+                    <label class="block text-sm font-medium mb-2">Giorni dalla data fattura</label>
+                    <input type="number" id="giorniScadenza" min="1" max="365" class="w-full px-4 py-2 border rounded-lg" placeholder="Es: 45">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">Data Scadenza Calcolata</label>
+                    <input type="date" id="dataScadenza" class="w-full px-4 py-2 border rounded-lg bg-gray-50">
+                    <p class="text-xs text-gray-500 mt-1">Verrà calcolata automaticamente in base al tipo di pagamento</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">Note Pagamento</label>
+                    <textarea id="notePagamento" rows="3" class="w-full px-4 py-2 border rounded-lg" placeholder="Note aggiuntive..."></textarea>
+                </div>
+
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salva</button>
+                    <button type="button" onclick="chiudiModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let tutteScadenze = [];
+        let fatturaCorrente = null;
+
+        function logout() {
+            localStorage.removeItem('app_authenticated');
+            window.location.href = 'index.html';
+        }
+
+        // Calcola data scadenza in base al tipo
+        function calcolaDataScadenza(dataFattura, tipoPagamento, giorniPersonalizzati = null) {
+            const data = new Date(dataFattura);
+            
+            switch(tipoPagamento) {
+                case 'Immediato':
+                case 'Anticipato':
+                    return dataFattura;
+                
+                case '30gg FM':
+                    // Fine del mese successivo
+                    const nextMonth = new Date(data.getFullYear(), data.getMonth() + 2, 0);
+                    return nextMonth.toISOString().split('T')[0];
+                
+                case '60gg FM':
+                    // Fine del secondo mese successivo
+                    const twoMonths = new Date(data.getFullYear(), data.getMonth() + 3, 0);
+                    return twoMonths.toISOString().split('T')[0];
+                
+                case '90gg FM':
+                    // Fine del terzo mese successivo
+                    const threeMonths = new Date(data.getFullYear(), data.getMonth() + 4, 0);
+                    return threeMonths.toISOString().split('T')[0];
+                
+                case 'Personalizzato':
+                    if (giorniPersonalizzati) {
+                        const scadenza = new Date(data);
+                        scadenza.setDate(scadenza.getDate() + parseInt(giorniPersonalizzati));
+                        return scadenza.toISOString().split('T')[0];
+                    }
+                    return dataFattura;
+                
+                default:
+                    return dataFattura;
+            }
+        }
+
+        async function caricaScadenze() {
+            try {
+                showLoading(true);
+                
+                // Carica fatture non pagate con scadenze
+                const { data, error } = await supabaseClient
+                    .from('fatture')
+                    .select('*')
+                    .eq('pagato', false)
+                    .order('data_scadenza', { ascending: true });
+                
+                if (error) throw error;
+                
+                tutteScadenze = data.map(f => {
+                    const oggi = new Date();
+                    oggi.setHours(0, 0, 0, 0);
+                    const scadenza = new Date(f.data_scadenza || f.data_fattura);
+                    scadenza.setHours(0, 0, 0, 0);
+                    
+                    const diffTime = scadenza - oggi;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    let statoScadenza = 'Da scadere';
+                    if (diffDays < 0) statoScadenza = 'Scaduta';
+                    else if (diffDays === 0) statoScadenza = 'In scadenza oggi';
+                    else if (diffDays <= 7) statoScadenza = 'In scadenza (7gg)';
+                    else if (diffDays <= 15) statoScadenza = 'In scadenza (15gg)';
+                    
+                    return {
+                        ...f,
+                        giorni_a_scadenza: diffDays,
+                        stato_scadenza: statoScadenza
+                    };
+                });
+                
+                aggiornaKPI();
+                applicaFiltri();
+                showLoading(false);
+                
+            } catch (err) {
+                console.error('Errore caricamento:', err);
+                alert('Errore durante il caricamento delle scadenze');
+                showLoading(false);
+            }
+        }
+
+        function aggiornaKPI() {
+            const scadute = tutteScadenze.filter(s => s.stato_scadenza === 'Scaduta');
+            const oggi = tutteScadenze.filter(s => s.stato_scadenza === 'In scadenza oggi');
+            const settimana = tutteScadenze.filter(s => s.stato_scadenza === 'In scadenza (7gg)');
+            const quindicina = tutteScadenze.filter(s => s.stato_scadenza === 'In scadenza (15gg)');
+            const oltre = tutteScadenze.filter(s => s.stato_scadenza === 'Da scadere');
+            
+            document.getElementById('scadute').textContent = scadute.length;
+            document.getElementById('oggi').textContent = oggi.length;
+            document.getElementById('settimana').textContent = settimana.length;
+            document.getElementById('quindicina').textContent = quindicina.length;
+            document.getElementById('oltre').textContent = oltre.length;
+            
+            const sum = arr => arr.reduce((s, f) => s + (f.importo_totale || 0), 0);
+            document.getElementById('importoScadute').textContent = '€' + sum(scadute).toLocaleString('it-IT', {minimumFractionDigits: 0});
+            document.getElementById('importoOggi').textContent = '€' + sum(oggi).toLocaleString('it-IT', {minimumFractionDigits: 0});
+            document.getElementById('importoSettimana').textContent = '€' + sum(settimana).toLocaleString('it-IT', {minimumFractionDigits: 0});
+            document.getElementById('importoQuindicina').textContent = '€' + sum(quindicina).toLocaleString('it-IT', {minimumFractionDigits: 0});
+            document.getElementById('importoOltre').textContent = '€' + sum(oltre).toLocaleString('it-IT', {minimumFractionDigits: 0});
+        }
+
+        function applicaFiltri() {
+            const stato = document.getElementById('filtroStato').value;
+            const tipo = document.getElementById('filtroTipoPagamento').value;
+            const fornitore = document.getElementById('filtroFornitore').value.toLowerCase();
+            
+            let filtrate = tutteScadenze;
+            
+            if (stato) filtrate = filtrate.filter(f => f.stato_scadenza === stato);
+            if (tipo) filtrate = filtrate.filter(f => f.tipo_pagamento === tipo);
+            if (fornitore) filtrate = filtrate.filter(f => 
+                (f.fornitore || '').toLowerCase().includes(fornitore) ||
+                (f.cedente_denominazione || '').toLowerCase().includes(fornitore)
+            );
+            
+            renderTabella(filtrate);
+        }
+
+        function renderTabella(scadenze) {
+            const tbody = document.getElementById('scadenzeTableBody');
+            
+            if (!scadenze.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-gray-400">Nessuna scadenza trovata</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = scadenze.map(s => {
+                const classStato = s.stato_scadenza === 'Scaduta' ? 'scaduta' :
+                                  s.stato_scadenza === 'In scadenza oggi' ? 'oggi' :
+                                  s.stato_scadenza === 'In scadenza (7gg)' ? 'settimana' :
+                                  s.stato_scadenza === 'In scadenza (15gg)' ? 'quindicina' : 'ok';
+                
+                const colorGiorni = s.giorni_a_scadenza < 0 ? 'text-red-600' :
+                                   s.giorni_a_scadenza === 0 ? 'text-orange-600' :
+                                   s.giorni_a_scadenza <= 7 ? 'text-yellow-600' :
+                                   s.giorni_a_scadenza <= 15 ? 'text-blue-600' : 'text-green-600';
+                
+                return `
+                    <tr class="${classStato} hover:opacity-75 transition-opacity">
+                        <td class="px-4 py-3 text-sm font-medium">${s.numero_fattura}</td>
+                        <td class="px-4 py-3 text-sm">${s.fornitore || s.cedente_denominazione || '-'}</td>
+                        <td class="px-4 py-3 text-sm text-center">${new Date(s.data_fattura).toLocaleDateString('it-IT')}</td>
+                        <td class="px-4 py-3 text-sm text-center">
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
+                                ${s.tipo_pagamento || 'Immediato'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-center font-medium">
+                            ${s.data_scadenza ? new Date(s.data_scadenza).toLocaleDateString('it-IT') : '-'}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-center font-bold ${colorGiorni}">
+                            ${s.giorni_a_scadenza > 0 ? '+' : ''}${s.giorni_a_scadenza}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-right font-bold">€${(s.importo_totale || 0).toLocaleString('it-IT', {minimumFractionDigits: 2})}</td>
+                        <td class="px-4 py-3 text-sm text-center">
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded ${
+                                s.stato_scadenza === 'Scaduta' ? 'bg-red-100 text-red-800' :
+                                s.stato_scadenza === 'In scadenza oggi' ? 'bg-orange-100 text-orange-800' :
+                                s.stato_scadenza === 'In scadenza (7gg)' ? 'bg-yellow-100 text-yellow-800' :
+                                s.stato_scadenza === 'In scadenza (15gg)' ? 'bg-blue-100 text-blue-800' :
+                                'bg-green-100 text-green-800'
+                            }">
+                                ${s.stato_scadenza}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-center">
+                            <button onclick="modificaScadenza('${s.id}')" class="text-blue-600 hover:text-blue-800 p-1" title="Modifica condizioni">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function modificaScadenza(id) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('fatture')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                fatturaCorrente = data;
+                
+                document.getElementById('fatturaId').value = data.id;
+                document.getElementById('fatturaInfo').value = `${data.numero_fattura} - ${data.fornitore || data.cedente_denominazione} - €${data.importo_totale}`;
+                document.getElementById('tipoPagamento').value = data.tipo_pagamento || 'Immediato';
+                document.getElementById('giorniScadenza').value = data.giorni_scadenza || '';
+                document.getElementById('dataScadenza').value = data.data_scadenza || data.data_fattura;
+                document.getElementById('notePagamento').value = data.note_pagamento || '';
+                
+                aggiornaTipoPagamento();
+                
+                document.getElementById('modalScadenza').classList.remove('hidden');
+                
+            } catch (err) {
+                console.error('Errore:', err);
+                alert('Errore durante il caricamento dei dati');
+            }
+        }
+
+        function aggiornaTipoPagamento() {
+            const tipo = document.getElementById('tipoPagamento').value;
+            const divGiorni = document.getElementById('giorniPersonalizzati');
+            
+            if (tipo === 'Personalizzato') {
+                divGiorni.classList.remove('hidden');
+            } else {
+                divGiorni.classList.add('hidden');
+            }
+            
+            // Calcola e mostra data scadenza
+            if (fatturaCorrente) {
+                const giorni = parseInt(document.getElementById('giorniScadenza').value) || null;
+                const scadenza = calcolaDataScadenza(fatturaCorrente.data_fattura, tipo, giorni);
+                document.getElementById('dataScadenza').value = scadenza;
+            }
+        }
+
+        async function salvaScadenza(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('fatturaId').value;
+            const tipo = document.getElementById('tipoPagamento').value;
+            const giorni = tipo === 'Personalizzato' ? parseInt(document.getElementById('giorniScadenza').value) : null;
+            const note = document.getElementById('notePagamento').value;
+            
+            // Calcola data scadenza
+            const scadenza = calcolaDataScadenza(fatturaCorrente.data_fattura, tipo, giorni);
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('fatture')
+                    .update({
+                        tipo_pagamento: tipo,
+                        giorni_scadenza: giorni,
+                        data_scadenza: scadenza,
+                        note_pagamento: note
+                    })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                chiudiModal();
+                await caricaScadenze();
+                
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                alert('Errore durante il salvataggio');
+            }
+        }
+
+        function chiudiModal() {
+            document.getElementById('modalScadenza').classList.add('hidden');
+            fatturaCorrente = null;
+        }
+
+        function azzeraFiltri() {
+            document.getElementById('filtroStato').value = '';
+            document.getElementById('filtroTipoPagamento').value = '';
+            document.getElementById('filtroFornitore').value = '';
+            applicaFiltri();
+        }
+
+        function showLoading(show) {
+            const div = document.getElementById('loading');
+            if (show) div.classList.remove('hidden');
+            else div.classList.add('hidden');
+        }
+
+        // Quando si modifica giorni personalizzati, ricalcola scadenza
+        document.getElementById('giorniScadenza')?.addEventListener('input', aggiornaTipoPagamento);
+
+        // Inizializza
+        caricaScadenze();
+        
+        // Auto-refresh ogni 5 minuti
+        setInterval(caricaScadenze, 5 * 60 * 1000);
+        
+        console.log('✅ Scadenze fatture v1.0');
+    </script>
+</body>
+</html>
