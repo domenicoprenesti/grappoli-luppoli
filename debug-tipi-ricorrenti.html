@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Tipi Ricorrenti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">🔍 Debug: Tipi associati a "Ricorrenti"</h1>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <button onclick="eseguiAnalisi()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                🚀 Esegui Analisi Database
+            </button>
+        </div>
+
+        <!-- Risultati -->
+        <div id="risultati" class="space-y-6"></div>
+
+        <!-- Log Console -->
+        <div class="bg-gray-900 text-green-400 rounded-xl p-6 font-mono text-xs overflow-auto max-h-96 mt-6">
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(msg, color = 'green') {
+            const logDiv = document.getElementById('logOutput');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="text-${color}-400">[${time}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function mostraRisultato(titolo, contenuto, tipo = 'info') {
+            const risultatiDiv = document.getElementById('risultati');
+            const colore = tipo === 'success' ? 'green' : tipo === 'error' ? 'red' : tipo === 'warning' ? 'yellow' : 'blue';
+            const icona = tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : tipo === 'warning' ? '⚠️' : 'ℹ️';
+            
+            risultatiDiv.innerHTML += `
+                <div class="bg-${colore}-50 border-l-4 border-${colore}-500 rounded-lg p-6">
+                    <h3 class="font-bold text-${colore}-900 text-lg mb-4">${icona} ${titolo}</h3>
+                    <div class="text-sm text-${colore}-800">
+                        ${contenuto}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function eseguiAnalisi() {
+            document.getElementById('risultati').innerHTML = '';
+            log('🚀 Inizio analisi database...', 'blue');
+
+            try {
+                // 1️⃣ TROVA L'AGGREGANTE "RICORRENTI"
+                log('1️⃣ Ricerca aggregante "Ricorrenti"...', 'blue');
+                
+                const { data: ricorrenti, error: ricorrentiError } = await supabase
+                    .from('aggregante_prodotto')
+                    .select('*')
+                    .eq('nome', 'Ricorrenti')
+                    .single();
+
+                if (ricorrentiError) {
+                    log('❌ Errore ricerca Ricorrenti: ' + ricorrentiError.message, 'red');
+                    mostraRisultato(
+                        'PROBLEMA: Categoria "Ricorrenti" non trovata',
+                        `<p class="mb-2">La categoria "Ricorrenti" non esiste nel database!</p>
+                         <p class="text-xs">Errore: ${ricorrentiError.message}</p>`,
+                        'error'
+                    );
+                    return;
+                }
+
+                log('✅ Trovata categoria Ricorrenti: ID = ' + ricorrenti.id, 'green');
+                
+                mostraRisultato(
+                    'Categoria "Ricorrenti" trovata',
+                    `<div class="space-y-2">
+                        <p><strong>🔑 ID:</strong> <code class="bg-white px-2 py-1 rounded">${ricorrenti.id}</code></p>
+                        <p><strong>📛 Nome:</strong> ${ricorrenti.nome}</p>
+                        <p><strong>🎨 Colore:</strong> <span style="background: ${ricorrenti.colore}" class="inline-block w-8 h-8 rounded border"></span> ${ricorrenti.colore}</p>
+                        <p><strong>📊 Ordine:</strong> ${ricorrenti.ordine}</p>
+                        ${ricorrenti.descrizione ? `<p><strong>📝 Descrizione:</strong> ${ricorrenti.descrizione}</p>` : ''}
+                    </div>`,
+                    'success'
+                );
+
+                // 2️⃣ TROVA TUTTI I TIPI ASSOCIATI
+                log('2️⃣ Ricerca tipi associati a Ricorrenti...', 'blue');
+                
+                const { data: tipi, error: tipiError } = await supabase
+                    .from('tipo_prodotto')
+                    .select('*')
+                    .eq('aggregante_id', ricorrenti.id)
+                    .order('nome', { ascending: true });
+
+                if (tipiError) {
+                    log('❌ Errore ricerca tipi: ' + tipiError.message, 'red');
+                    mostraRisultato(
+                        'Errore nella ricerca dei tipi',
+                        `<p>Errore: ${tipiError.message}</p>`,
+                        'error'
+                    );
+                    return;
+                }
+
+                log(`✅ Trovati ${tipi.length} tipi associati a Ricorrenti`, 'green');
+
+                if (tipi.length === 0) {
+                    mostraRisultato(
+                        'PROBLEMA: Nessun tipo trovato!',
+                        `<p class="mb-2">La categoria "Ricorrenti" esiste ma NON ha tipi associati!</p>
+                         <p class="font-bold text-red-700">Questo è il motivo per cui il dropdown è vuoto!</p>
+                         <p class="mt-4">Soluzione: Devi creare almeno un tipo per la categoria Ricorrenti usando "+ Crea nuovo tipo"</p>`,
+                        'warning'
+                    );
+                } else {
+                    // Mostra tabella tipi
+                    let tabellaHTML = `
+                        <p class="mb-4 font-bold text-green-700">Trovati ${tipi.length} tipi associati a Ricorrenti:</p>
+                        <table class="w-full text-xs border-collapse">
+                            <thead class="bg-green-100">
+                                <tr>
+                                    <th class="border border-green-300 px-3 py-2 text-left">Nome</th>
+                                    <th class="border border-green-300 px-3 py-2 text-left">ID</th>
+                                    <th class="border border-green-300 px-3 py-2 text-left">Keywords</th>
+                                    <th class="border border-green-300 px-3 py-2 text-left">Aggregante ID</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                    `;
+
+                    tipi.forEach(tipo => {
+                        const idMatch = tipo.aggregante_id === ricorrenti.id ? '✅' : '❌';
+                        tabellaHTML += `
+                            <tr class="hover:bg-green-50">
+                                <td class="border border-green-200 px-3 py-2 font-medium">${tipo.nome}</td>
+                                <td class="border border-green-200 px-3 py-2"><code class="text-xs">${tipo.id}</code></td>
+                                <td class="border border-green-200 px-3 py-2">${tipo.keywords ? tipo.keywords.join(', ') : '-'}</td>
+                                <td class="border border-green-200 px-3 py-2">
+                                    ${idMatch} <code class="text-xs">${tipo.aggregante_id}</code>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    tabellaHTML += `
+                            </tbody>
+                        </table>
+                        <p class="mt-4 text-xs text-gray-600">
+                            ✅ = ID aggregante corrisponde | ❌ = ID aggregante NON corrisponde (problema!)
+                        </p>
+                    `;
+
+                    mostraRisultato(
+                        `Tipi associati a "Ricorrenti": ${tipi.length}`,
+                        tabellaHTML,
+                        'success'
+                    );
+                }
+
+                // 3️⃣ VERIFICA TUTTI GLI AGGREGANTI
+                log('3️⃣ Caricamento tutti gli aggreganti per confronto...', 'blue');
+                
+                const { data: tuttiAggreganti, error: aggError } = await supabase
+                    .from('aggregante_prodotto')
+                    .select('id, nome')
+                    .order('ordine', { ascending: true });
+
+                if (!aggError && tuttiAggreganti) {
+                    log(`✅ Trovati ${tuttiAggreganti.length} aggreganti totali`, 'green');
+                    
+                    let listaAggreganti = '<ul class="list-disc ml-5 space-y-1">';
+                    tuttiAggreganti.forEach(agg => {
+                        const isRicorrenti = agg.id === ricorrenti.id;
+                        listaAggreganti += `
+                            <li class="${isRicorrenti ? 'font-bold text-blue-700' : ''}">
+                                ${agg.nome} ${isRicorrenti ? '👈 QUESTO' : ''}
+                                <br><code class="text-xs text-gray-600">${agg.id}</code>
+                            </li>
+                        `;
+                    });
+                    listaAggreganti += '</ul>';
+
+                    mostraRisultato(
+                        'Tutti gli aggreganti nel database',
+                        listaAggreganti,
+                        'info'
+                    );
+                }
+
+                // 4️⃣ CONTA TIPI PER OGNI AGGREGANTE
+                log('4️⃣ Conteggio tipi per ogni aggregante...', 'blue');
+                
+                const { data: tuttiTipi, error: tuttiTipiError } = await supabase
+                    .from('tipo_prodotto')
+                    .select('aggregante_id');
+
+                if (!tuttiTipiError && tuttiTipi) {
+                    const conteggioPerAggregante = {};
+                    tuttiTipi.forEach(tipo => {
+                        if (!conteggioPerAggregante[tipo.aggregante_id]) {
+                            conteggioPerAggregante[tipo.aggregante_id] = 0;
+                        }
+                        conteggioPerAggregante[tipo.aggregante_id]++;
+                    });
+
+                    let tabellaConteggi = `
+                        <table class="w-full text-xs border-collapse mt-2">
+                            <thead class="bg-blue-100">
+                                <tr>
+                                    <th class="border border-blue-300 px-3 py-2 text-left">Aggregante</th>
+                                    <th class="border border-blue-300 px-3 py-2 text-center">N° Tipi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                    `;
+
+                    tuttiAggreganti.forEach(agg => {
+                        const count = conteggioPerAggregante[agg.id] || 0;
+                        const isRicorrenti = agg.id === ricorrenti.id;
+                        const rowClass = isRicorrenti ? 'bg-blue-100 font-bold' : '';
+                        const warning = count === 0 ? '⚠️' : '';
+                        
+                        tabellaConteggi += `
+                            <tr class="${rowClass} hover:bg-blue-50">
+                                <td class="border border-blue-200 px-3 py-2">
+                                    ${agg.nome} ${isRicorrenti ? '👈' : ''} ${warning}
+                                </td>
+                                <td class="border border-blue-200 px-3 py-2 text-center">
+                                    ${count}
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    tabellaConteggi += '</tbody></table>';
+
+                    mostraRisultato(
+                        'Conteggio tipi per aggregante',
+                        tabellaConteggi,
+                        'info'
+                    );
+                }
+
+                log('✅ Analisi completata!', 'green');
+
+            } catch (err) {
+                log('❌ ERRORE: ' + err.message, 'red');
+                console.error(err);
+                mostraRisultato(
+                    'Errore durante l\'analisi',
+                    `<p>${err.message}</p>`,
+                    'error'
+                );
+            }
+        }
+
+        log('🔧 Tool di debug pronto. Clicca "Esegui Analisi Database".', 'blue');
+    </script>
+</body>
+</html>
