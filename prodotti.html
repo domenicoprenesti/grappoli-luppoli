@@ -232,15 +232,17 @@
                     <div class="grid md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Prezzo (senza IVA)</label>
-                            <input type="number" step="0.01" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg">
+                            <input type="number" step="any" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
+                            <p class="text-xs text-gray-500 mt-1">💡 Usa virgola o punto per i decimali</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Aliquota IVA (%)</label>
-                            <input type="number" step="0.01" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg">
+                            <input type="number" step="any" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Quantità</label>
-                            <input type="number" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg">
+                            <input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
+                            <p class="text-xs text-gray-500 mt-1">💡 Puoi usare sia virgola (4,49) che punto (4.49)</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Unità di Misura</label>
@@ -392,6 +394,23 @@
             localStorage.removeItem('app_authenticated'); 
             window.location.href = 'index.html'; 
         }
+
+        // Normalizza i decimali: converte virgola in punto
+        window.normalizeDecimal = function(input) {
+            if (input.value) {
+                // Sostituisce virgola con punto
+                input.value = input.value.replace(',', '.');
+                
+                // Rimuove eventuali caratteri non numerici (tranne punto e segno meno)
+                input.value = input.value.replace(/[^0-9.-]/g, '');
+                
+                // Parse e reformat per rimuovere punti multipli
+                const num = parseFloat(input.value);
+                if (!isNaN(num)) {
+                    input.value = num;
+                }
+            }
+        };
 
         // Carica anagrafiche (aggreganti e tipi)
         async function loadAnagrafiche() {
@@ -908,7 +927,7 @@
                     descrizione: document.getElementById('prodottoDescrizione').value || null,
                     prezzo: parseFloat(document.getElementById('prodottoPrezzo').value) || null,
                     aliquota_iva: parseFloat(document.getElementById('prodottoAliquotaIVA').value) || 22,
-                    quantita: parseInt(document.getElementById('prodottoQuantita').value) || 0,
+                    quantita: parseFloat(document.getElementById('prodottoQuantita').value) || 0,
                     unita_misura: document.getElementById('prodottoUnitaMisura').value || 'pz',
                     attivo: document.getElementById('prodottoAttivo').checked,
                     tipo_id: tipoId
