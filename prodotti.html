@@ -10,14 +10,14 @@
         .table-compact th, .table-compact td { padding: 0.5rem 0.75rem; }
         .col-checkbox { width: 40px; }
         .col-nome { min-width: 200px; max-width: 300px; }
-        .col-categoria { width: 100px; }
+        .col-categoria { width: 120px; }
         .col-fornitore { width: 140px; }
         .col-prezzo { width: 90px; text-align: right; }
         .col-iva { width: 60px; text-align: center; }
         .col-prezzo-ivato { width: 100px; text-align: right; }
         .col-qta { width: 70px; text-align: right; }
         .col-stato { width: 80px; text-align: center; }
-        .col-azioni { width: 100px; text-align: center; }
+        .col-azioni { width: 120px; text-align: center; }
         .truncate-cell { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
@@ -27,54 +27,37 @@
         if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
-<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex items-center">
-                <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a class="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700">Prodotti</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fornitori</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
-                    <span class="text-lg font-bold">Grappoli & Luppoli</span>
-                </button>
-                
-                <!-- MENU PRINCIPALE -->
-                <div class="hidden md:ml-10 md:flex md:space-x-4">
-                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Dashboard
-                    </a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Fatture
-                    </a>
-                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Prodotti
-                    </a>
-                    <!-- NUOVO LINK FORNITORI -->
-                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Fornitori
-                    </a>
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Utenti
-                    </a>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
                 </div>
             </div>
-            
-            <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                    Dashboard
-                </button>
-                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
-                    Esci
-                </button>
-            </div>
         </div>
-    </div>
-</nav>
-    <div class="max-w-[1400px] mx-auto px-4 py-8">
+    </nav>
+
+    <div class="max-w-[1600px] mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
-        <p class="text-gray-600 mb-8">Prodotti con IVA ed eliminazione</p>
+        <p class="text-gray-600 mb-8">Prodotti con categorizzazione avanzata</p>
 
         <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
             <div class="flex items-center justify-between mb-2">
@@ -109,8 +92,12 @@
             <h3 class="font-bold mb-4">Filtri</h3>
             <div class="grid md:grid-cols-4 gap-4">
                 <input type="text" id="searchNome" placeholder="Cerca prodotto..." class="px-4 py-2 border rounded-lg" onkeyup="applyFilters()">
-                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutte le categorie</option></select>
-                <select id="filterFornitore" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i fornitori</option></select>
+                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutte le categorie</option>
+                </select>
+                <select id="filterFornitore" class="px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutti i fornitori</option>
+                </select>
                 <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg">Pulisci</button>
             </div>
         </div>
@@ -147,6 +134,95 @@
         </div>
     </div>
 
+    <!-- Modal Categorizzazione -->
+    <div id="modalCategorizzazione" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">🏷️ Categorizzazione Prodotto</h2>
+                <button onclick="closeModalCategorizzazione()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="saveCategorizzazione(event)" class="space-y-6">
+                <input type="hidden" id="categProdottoId">
+                
+                <!-- Info Prodotto -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-1">Prodotto:</p>
+                    <p id="categProdottoNome" class="font-bold text-lg"></p>
+                </div>
+
+                <!-- Aggregante (Categoria) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Categoria (Aggregante) *</label>
+                    <select id="categAggregante" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500" onchange="onAggreganteChange()" required>
+                        <option value="">Seleziona categoria...</option>
+                        <option value="__nuovo__">➕ Crea nuova categoria</option>
+                    </select>
+                </div>
+
+                <!-- Form Nuovo Aggregante -->
+                <div id="formNuovoAggregante" class="hidden space-y-4 bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                    <h3 class="font-bold text-green-900">Crea Nuova Categoria</h3>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Nome *</label>
+                        <input type="text" id="nuovoAggreganteNome" class="w-full px-4 py-2 border rounded-lg" placeholder="es: Snacks">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Descrizione</label>
+                        <input type="text" id="nuovoAggreganteDescrizione" class="w-full px-4 py-2 border rounded-lg" placeholder="es: Patatine e snack vari">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Colore (hex)</label>
+                            <input type="color" id="nuovoAggreganteColore" value="#3B82F6" class="w-full h-10 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Ordine</label>
+                            <input type="number" id="nuovoAggreganteOrdine" value="50" class="w-full px-4 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tipo -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo Specifico *</label>
+                    <select id="categTipo" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500" onchange="onTipoChange()" required>
+                        <option value="">Seleziona tipo...</option>
+                        <option value="__nuovo__">➕ Crea nuovo tipo</option>
+                    </select>
+                </div>
+
+                <!-- Form Nuovo Tipo -->
+                <div id="formNuovoTipo" class="hidden space-y-4 bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
+                    <h3 class="font-bold text-purple-900">Crea Nuovo Tipo</h3>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Nome *</label>
+                        <input type="text" id="nuovoTipoNome" class="w-full px-4 py-2 border rounded-lg" placeholder="es: Patatine San Carlo">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Keywords (separate da virgola)</label>
+                        <input type="text" id="nuovoTipoKeywords" class="w-full px-4 py-2 border rounded-lg" placeholder="es: patatine, chips, san carlo">
+                        <p class="text-xs text-gray-500 mt-1">Parole chiave per il matching automatico futuro</p>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        💾 Salva Categorizzazione
+                    </button>
+                    <button type="button" onclick="closeModalCategorizzazione()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">
+                        Annulla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Modifica Prodotto (semplificato, senza categoria) -->
     <div id="modalProdotto" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
             <h2 id="modalTitle" class="text-2xl font-bold mb-6">Modifica Prodotto</h2>
@@ -154,11 +230,12 @@
                 <input type="hidden" id="prodottoId">
                 <div class="grid md:grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium mb-2">Nome *</label><input type="text" id="prodottoNome" required class="w-full px-4 py-2 border rounded-lg"></div>
-                    <div><label class="block text-sm font-medium mb-2">Categoria</label><input type="text" id="prodottoCategoria" class="w-full px-4 py-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium mb-2">Fornitore</label><input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg"></div>
                     <div><label class="block text-sm font-medium mb-2">Prezzo (senza IVA)</label><input type="number" step="0.01" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg"></div>
                     <div><label class="block text-sm font-medium mb-2">Aliquota IVA (%)</label><input type="number" step="0.01" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg"></div>
                     <div><label class="block text-sm font-medium mb-2">Quantità</label><input type="number" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg"></div>
-                    <div><label class="block text-sm font-medium mb-2">Unità di Misura</label>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Unità di Misura</label>
                         <select id="prodottoUnitaMisura" class="w-full px-4 py-2 border rounded-lg">
                             <option value="pz">Pezzi (pz)</option>
                             <option value="kg">Kilogrammi (kg)</option>
@@ -170,7 +247,6 @@
                             <option value="pacco">Pacchi (pacco)</option>
                         </select>
                     </div>
-                    <div><label class="block text-sm font-medium mb-2">Fornitore</label><input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg"></div>
                 </div>
                 <div><label class="block text-sm font-medium mb-2">Descrizione</label><textarea id="prodottoDescrizione" rows="3" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
                 <div class="flex items-center"><input type="checkbox" id="prodottoAttivo" checked class="w-5 h-5 mr-2"><label class="text-sm font-medium">Prodotto attivo</label></div>
@@ -182,6 +258,7 @@
         </div>
     </div>
 
+    <!-- Modal Eliminazione -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div class="text-center mb-6">
@@ -210,32 +287,91 @@
         const BATCH_SIZE = 500;
         
         let allProdotti = [];
+        let allAggreganti = [];
+        let allTipi = [];
         let loadingProgress = { loaded: 0, total: 0, isLoading: false };
         let selectedIds = new Set();
         let deleteAction = null;
 
-        function logout() { localStorage.removeItem('app_authenticated'); window.location.href = 'index.html'; }
+        function logout() { 
+            localStorage.removeItem('app_authenticated'); 
+            window.location.href = 'index.html'; 
+        }
+
+        // ===== CARICAMENTO ANAGRAFICHE =====
+        async function loadAnagrafiche() {
+            try {
+                // Carica aggreganti
+                const { data: aggreganti, error: errAgg } = await supabaseClient
+                    .from('aggregante_prodotto')
+                    .select('*')
+                    .eq('attivo', true)
+                    .order('ordine', { ascending: true });
+                
+                if (errAgg) throw errAgg;
+                allAggreganti = aggreganti || [];
+                console.log(`✅ Caricati ${allAggreganti.length} aggreganti`);
+
+                // Carica tipi
+                const { data: tipi, error: errTipi } = await supabaseClient
+                    .from('tipo_prodotto')
+                    .select('*')
+                    .eq('attivo', true)
+                    .order('nome', { ascending: true });
+                
+                if (errTipi) throw errTipi;
+                allTipi = tipi || [];
+                console.log(`✅ Caricati ${allTipi.length} tipi`);
+
+            } catch (err) {
+                console.error('Errore caricamento anagrafiche:', err);
+                alert('Errore caricamento categorie. Verifica che le tabelle anagrafiche siano state create.');
+            }
+        }
 
         async function loadAllProdotti() {
             try {
                 const { count } = await supabaseClient.from('prodotti').select('*', { count: 'exact', head: true });
                 loadingProgress = { loaded: 0, total: count || 0, isLoading: true };
                 updateLoadingUI();
+                
                 const numBatches = Math.ceil(loadingProgress.total / BATCH_SIZE);
                 allProdotti = [];
+                
                 for (let i = 0; i < numBatches; i++) {
-                    const { data } = await supabaseClient.from('prodotti').select('*').order('nome', { ascending: true }).range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                    const { data } = await supabaseClient
+                        .from('prodotti')
+                        .select(`
+                            *,
+                            tipo:tipo_id (
+                                id,
+                                nome,
+                                aggregante:aggregante_id (
+                                    id,
+                                    nome,
+                                    colore
+                                )
+                            )
+                        `)
+                        .order('nome', { ascending: true })
+                        .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                    
                     allProdotti = [...allProdotti, ...data];
                     loadingProgress.loaded = allProdotti.length;
                     updateLoadingUI();
+                    
                     if (i < numBatches - 1) await new Promise(r => setTimeout(r, 100));
                 }
+                
                 loadingProgress.isLoading = false;
                 updateStats();
                 updateFilters();
                 applyFilters();
                 hideLoadingUI();
-            } catch (err) { console.error('Errore:', err); hideLoadingUI(); }
+            } catch (err) { 
+                console.error('Errore:', err); 
+                hideLoadingUI(); 
+            }
         }
 
         function updateLoadingUI() {
@@ -246,43 +382,85 @@
                 document.getElementById('progressText').textContent = `${loadingProgress.loaded} / ${loadingProgress.total}`;
             }
         }
+        
         function hideLoadingUI() { document.getElementById('loadingProgress').classList.add('hidden'); }
+        
         function updateStats() {
             document.getElementById('totalProdotti').textContent = allProdotti.length.toLocaleString('it-IT');
-            document.getElementById('totalCategorie').textContent = new Set(allProdotti.map(p => p.categoria).filter(Boolean)).size;
-            // Usa prezzo_scontato se disponibile, altrimenti prezzo
+            
+            // Conta aggreganti unici
+            const aggregantiUnici = new Set(
+                allProdotti
+                    .map(p => p.tipo?.aggregante?.nome)
+                    .filter(Boolean)
+            );
+            document.getElementById('totalCategorie').textContent = aggregantiUnici.size;
+            
             const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
             const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
             
-            const percentualeIVA = valoreSenzaIVA > 0 ? ((valoreConIVA - valoreSenzaIVA) / valoreSenzaIVA * 100) : 0;
-            
             document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}  (${percentualeIVA.toFixed(2)}%)`;
+            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
+        
         function updateFilters() {
-            const cat = [...new Set(allProdotti.map(p => p.categoria).filter(Boolean))].sort();
+            // Filtro categorie (aggreganti)
+            const aggregantiSet = new Set();
+            allProdotti.forEach(p => {
+                if (p.tipo?.aggregante?.nome) {
+                    aggregantiSet.add(p.tipo.aggregante.nome);
+                }
+            });
+            const aggregantiOrdinati = Array.from(aggregantiSet).sort();
+            
+            document.getElementById('filterCategoria').innerHTML = 
+                '<option value="">Tutte le categorie</option>' + 
+                aggregantiOrdinati.map(a => `<option value="${a}">${a}</option>`).join('');
+            
+            // Filtro fornitori
             const forn = [...new Set(allProdotti.map(p => p.fornitore).filter(Boolean))].sort();
-            document.getElementById('filterCategoria').innerHTML = '<option value="">Tutte le categorie</option>' + cat.map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('filterFornitore').innerHTML = '<option value="">Tutti i fornitori</option>' + forn.map(f => `<option value="${f}">${f}</option>`).join('');
+            document.getElementById('filterFornitore').innerHTML = 
+                '<option value="">Tutti i fornitori</option>' + 
+                forn.map(f => `<option value="${f}">${f}</option>`).join('');
         }
+        
         function applyFilters() {
             const search = document.getElementById('searchNome').value.toLowerCase();
             const cat = document.getElementById('filterCategoria').value;
             const forn = document.getElementById('filterFornitore').value;
+            
             let filtered = allProdotti;
             if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
-            if (cat) filtered = filtered.filter(p => p.categoria === cat);
+            if (cat) filtered = filtered.filter(p => p.tipo?.aggregante?.nome === cat);
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
+            
             renderTable(filtered);
         }
-        function clearFilters() { document.getElementById('searchNome').value = ''; document.getElementById('filterCategoria').value = ''; document.getElementById('filterFornitore').value = ''; applyFilters(); }
+        
+        function clearFilters() { 
+            document.getElementById('searchNome').value = ''; 
+            document.getElementById('filterCategoria').value = ''; 
+            document.getElementById('filterFornitore').value = ''; 
+            applyFilters(); 
+        }
+        
         function updateSelectionBar() {
             const bar = document.getElementById('selectionBar');
             const count = document.getElementById('selectionCount');
-            if (selectedIds.size > 0) { bar.classList.remove('hidden'); count.textContent = `${selectedIds.size} prodotti selezionati`; }
-            else { bar.classList.add('hidden'); }
+            if (selectedIds.size > 0) { 
+                bar.classList.remove('hidden'); 
+                count.textContent = `${selectedIds.size} prodotti selezionati`; 
+            } else { 
+                bar.classList.add('hidden'); 
+            }
         }
-        function toggleSelect(id) { selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id); updateSelectionBar(); applyFilters(); }
+        
+        function toggleSelect(id) { 
+            selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id); 
+            updateSelectionBar(); 
+            applyFilters(); 
+        }
+        
         function toggleSelectAll() {
             const checkbox = document.getElementById('selectAllCheckbox');
             if (checkbox.checked) {
@@ -291,10 +469,12 @@
                 const forn = document.getElementById('filterFornitore').value;
                 let filtered = allProdotti;
                 if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
-                if (cat) filtered = filtered.filter(p => p.categoria === cat);
+                if (cat) filtered = filtered.filter(p => p.tipo?.aggregante?.nome === cat);
                 if (forn) filtered = filtered.filter(p => p.fornitore === forn);
                 selectedIds = new Set(filtered.map(p => p.id));
-            } else { selectedIds.clear(); }
+            } else { 
+                selectedIds.clear(); 
+            }
             updateSelectionBar();
             applyFilters();
         }
@@ -302,17 +482,36 @@
         function renderTable(prodotti) {
             const tbody = document.getElementById('prodottiTableBody');
             const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-            if (loadingProgress.isLoading) { tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; return; }
-            if (!prodotti.length) { tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; selectAllCheckbox.checked = false; return; }
+            
+            if (loadingProgress.isLoading) { 
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; 
+                return; 
+            }
+            
+            if (!prodotti.length) { 
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; 
+                selectAllCheckbox.checked = false; 
+                return; 
+            }
+            
             const allSelected = prodotti.every(p => selectedIds.has(p.id));
             selectAllCheckbox.checked = allSelected && prodotti.length > 0;
+            
             tbody.innerHTML = prodotti.map(p => {
                 const hasSconto = p.prezzo_scontato && p.prezzo_scontato < p.prezzo;
+                const aggregante = p.tipo?.aggregante;
+                const categoriaNome = aggregante?.nome || 'Non categorizzato';
+                const categoriaColore = aggregante?.colore || '#9CA3AF';
+                
                 return `
                 <tr class="hover:bg-gray-50 border-b ${selectedIds.has(p.id) ? 'bg-blue-50' : ''}">
                     <td class="col-checkbox"><input type="checkbox" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelect('${p.id}')" class="w-4 h-4"></td>
                     <td class="col-nome truncate-cell" title="${p.nome}">${p.nome}</td>
-                    <td class="col-categoria text-sm">${p.categoria || '-'}</td>
+                    <td class="col-categoria">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${categoriaColore}20; color: ${categoriaColore}; border: 1px solid ${categoriaColore}40;">
+                            ${categoriaNome}
+                        </span>
+                    </td>
                     <td class="col-fornitore truncate-cell text-sm" title="${p.fornitore || '-'}">${p.fornitore || '-'}</td>
                     <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">€${(p.prezzo_scontato || p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -321,6 +520,9 @@
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
                     <td class="col-stato text-sm text-center">${p.unita_misura || 'pz'}</td>
                     <td class="col-azioni">
+                        <button onclick="editCategorizzazione('${p.id}')" class="text-purple-600 hover:text-purple-800 p-1 hover:bg-purple-50 rounded inline-block" title="Modifica Categorizzazione">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        </button>
                         <button onclick="editProdotto('${p.id}')" class="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded inline-block" title="Modifica">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
@@ -332,66 +534,169 @@
             `}).join('');
         }
 
-        function showDeleteModal(id) {
+        // ===== CATEGORIZZAZIONE =====
+        function editCategorizzazione(id) {
             const prodotto = allProdotti.find(p => p.id === id);
-            if (!prodotto) { console.error('Prodotto non trovato:', id); alert('Errore: prodotto non trovato'); return; }
-            const modal = document.getElementById('deleteModal');
-            const message = document.getElementById('deleteMessage');
-            message.textContent = `Vuoi eliminare il prodotto "${prodotto.nome}"?`;
-            deleteAction = { type: 'single', ids: [id] };
-            modal.classList.remove('hidden');
+            if (!prodotto) return;
+            
+            document.getElementById('categProdottoId').value = prodotto.id;
+            document.getElementById('categProdottoNome').textContent = prodotto.nome;
+            
+            // Popola select aggregante
+            const selectAgg = document.getElementById('categAggregante');
+            selectAgg.innerHTML = '<option value="">Seleziona categoria...</option>' +
+                allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') +
+                '<option value="__nuovo__">➕ Crea nuova categoria</option>';
+            
+            // Se ha già una categoria, selezionala
+            if (prodotto.tipo?.aggregante?.id) {
+                selectAgg.value = prodotto.tipo.aggregante.id;
+                loadTipiPerAggregante(prodotto.tipo.aggregante.id, prodotto.tipo?.id);
+            }
+            
+            document.getElementById('modalCategorizzazione').classList.remove('hidden');
         }
 
-        window.deleteSelected = function() {
-            if (selectedIds.size === 0) { alert('Seleziona almeno un prodotto da eliminare'); return; }
-            const modal = document.getElementById('deleteModal');
-            const message = document.getElementById('deleteMessage');
-            message.textContent = `Vuoi eliminare ${selectedIds.size} prodotti selezionati?`;
-            deleteAction = { type: 'multiple', ids: Array.from(selectedIds) };
-            modal.classList.remove('hidden');
-        };
-
-        function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
-
-        async function confirmDelete() {
-            if (!deleteAction) return;
-            const idsToDelete = deleteAction.ids;
-            const total = idsToDelete.length;
-            deleteAction = null;
-            closeDeleteModal();
-            try {
-                let deletedCount = 0;
-                const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
-                const BATCH_DELETE_SIZE = 100;
-                for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
-                    const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
-                    const { error } = await supabaseClient.from('prodotti').delete().in('id', batch);
-                    if (error) throw error;
-                    deletedCount += batch.length;
-                    const progressSpan = document.getElementById('deleteProgress');
-                    if (progressSpan) progressSpan.textContent = `${deletedCount} / ${total}`;
-                    if (i + BATCH_DELETE_SIZE < idsToDelete.length) await new Promise(resolve => setTimeout(resolve, 500));
+        function onAggreganteChange() {
+            const val = document.getElementById('categAggregante').value;
+            const formNuovo = document.getElementById('formNuovoAggregante');
+            const selectTipo = document.getElementById('categTipo');
+            
+            if (val === '__nuovo__') {
+                formNuovo.classList.remove('hidden');
+                selectTipo.innerHTML = '<option value="">Prima salva la nuova categoria</option>';
+                selectTipo.disabled = true;
+            } else {
+                formNuovo.classList.add('hidden');
+                selectTipo.disabled = false;
+                if (val) {
+                    loadTipiPerAggregante(parseInt(val));
+                } else {
+                    selectTipo.innerHTML = '<option value="">Seleziona tipo...</option>';
                 }
-                selectedIds.clear();
-                updateSelectionBar();
-                await loadAllProdotti();
-                if (deletedCount === total) alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
-                else alert(`⚠️ Eliminati ${deletedCount} su ${total} prodotti`);
-            } catch (err) {
-                console.error('Errore eliminazione:', err);
-                alert(`❌ Errore durante l'eliminazione: ${err.message}`);
-                await loadAllProdotti();
             }
         }
 
+        function loadTipiPerAggregante(aggreganteId, tipoIdSelezionato = null) {
+            const selectTipo = document.getElementById('categTipo');
+            const tipiFiltered = allTipi.filter(t => t.aggregante_id == aggreganteId);
+            
+            selectTipo.innerHTML = '<option value="">Seleziona tipo...</option>' +
+                tipiFiltered.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') +
+                '<option value="__nuovo__">➕ Crea nuovo tipo</option>';
+            
+            if (tipoIdSelezionato) {
+                selectTipo.value = tipoIdSelezionato;
+            }
+        }
+
+        function onTipoChange() {
+            const val = document.getElementById('categTipo').value;
+            const formNuovo = document.getElementById('formNuovoTipo');
+            
+            if (val === '__nuovo__') {
+                formNuovo.classList.remove('hidden');
+            } else {
+                formNuovo.classList.add('hidden');
+            }
+        }
+
+        async function saveCategorizzazione(e) {
+            e.preventDefault();
+            
+            const prodottoId = document.getElementById('categProdottoId').value;
+            let aggreganteId = document.getElementById('categAggregante').value;
+            let tipoId = document.getElementById('categTipo').value;
+            
+            try {
+                // 1. Se nuovo aggregante, crealo
+                if (aggreganteId === '__nuovo__') {
+                    const nome = document.getElementById('nuovoAggreganteNome').value.trim();
+                    if (!nome) {
+                        alert('Inserisci il nome della nuova categoria');
+                        return;
+                    }
+                    
+                    const { data: nuovoAgg, error: errAgg } = await supabaseClient
+                        .from('aggregante_prodotto')
+                        .insert([{
+                            nome: nome,
+                            descrizione: document.getElementById('nuovoAggreganteDescrizione').value || null,
+                            colore: document.getElementById('nuovoAggreganteColore').value,
+                            ordine: parseInt(document.getElementById('nuovoAggreganteOrdine').value) || 50,
+                            attivo: true
+                        }])
+                        .select()
+                        .single();
+                    
+                    if (errAgg) throw errAgg;
+                    aggreganteId = nuovoAgg.id;
+                    console.log('✅ Nuovo aggregante creato:', nuovoAgg);
+                }
+                
+                // 2. Se nuovo tipo, crealo
+                if (tipoId === '__nuovo__') {
+                    const nome = document.getElementById('nuovoTipoNome').value.trim();
+                    if (!nome) {
+                        alert('Inserisci il nome del nuovo tipo');
+                        return;
+                    }
+                    
+                    const keywordsRaw = document.getElementById('nuovoTipoKeywords').value;
+                    const keywords = keywordsRaw.split(',').map(k => k.trim()).filter(Boolean);
+                    
+                    const { data: nuovoTipo, error: errTipo } = await supabaseClient
+                        .from('tipo_prodotto')
+                        .insert([{
+                            nome: nome,
+                            aggregante_id: aggreganteId,
+                            keywords: keywords.length > 0 ? keywords : [nome.toLowerCase()],
+                            attivo: true
+                        }])
+                        .select()
+                        .single();
+                    
+                    if (errTipo) throw errTipo;
+                    tipoId = nuovoTipo.id;
+                    console.log('✅ Nuovo tipo creato:', nuovoTipo);
+                }
+                
+                // 3. Aggiorna prodotto
+                const { error: errUpdate } = await supabaseClient
+                    .from('prodotti')
+                    .update({ tipo_id: tipoId })
+                    .eq('id', prodottoId);
+                
+                if (errUpdate) throw errUpdate;
+                
+                closeModalCategorizzazione();
+                
+                // Ricarica tutto
+                await loadAnagrafiche();
+                await loadAllProdotti();
+                
+                alert('✅ Categorizzazione salvata con successo!');
+                
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                alert('❌ Errore: ' + err.message);
+            }
+        }
+
+        function closeModalCategorizzazione() {
+            document.getElementById('modalCategorizzazione').classList.add('hidden');
+            document.getElementById('formNuovoAggregante').classList.add('hidden');
+            document.getElementById('formNuovoTipo').classList.add('hidden');
+        }
+
+        // ===== MODIFICA PRODOTTO =====
         function editProdotto(id) {
             const p = allProdotti.find(pr => pr.id === id);
             if (!p) return;
+            
             document.getElementById('modalTitle').textContent = 'Modifica Prodotto';
             document.getElementById('prodottoId').value = p.id;
             document.getElementById('prodottoNome').value = p.nome || '';
-            document.getElementById('prodottoCategoria').value = p.categoria || '';
             document.getElementById('prodottoPrezzo').value = p.prezzo || '';
             document.getElementById('prodottoAliquotaIVA').value = p.aliquota_iva || 22;
             document.getElementById('prodottoQuantita').value = p.quantita || '';
@@ -407,7 +712,6 @@
             const id = document.getElementById('prodottoId').value;
             const prod = {
                 nome: document.getElementById('prodottoNome').value,
-                categoria: document.getElementById('prodottoCategoria').value || null,
                 prezzo: parseFloat(document.getElementById('prodottoPrezzo').value) || null,
                 aliquota_iva: parseFloat(document.getElementById('prodottoAliquotaIVA').value) || 22,
                 quantita: parseInt(document.getElementById('prodottoQuantita').value) || 0,
@@ -416,16 +720,95 @@
                 descrizione: document.getElementById('prodottoDescrizione').value || null,
                 attivo: document.getElementById('prodottoAttivo').checked
             };
+            
             if (id) await supabaseClient.from('prodotti').update(prod).eq('id', id);
             else await supabaseClient.from('prodotti').insert([prod]);
+            
             closeModal();
             await loadAllProdotti();
         }
 
-        function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
+        function closeModal() { 
+            document.getElementById('modalProdotto').classList.add('hidden'); 
+        }
 
-        loadAllProdotti();
-        console.log('✅ Prodotti FINALE');
+        // ===== ELIMINAZIONE =====
+        function showDeleteModal(id) {
+            const prodotto = allProdotti.find(p => p.id === id);
+            if (!prodotto) return;
+            
+            const modal = document.getElementById('deleteModal');
+            const message = document.getElementById('deleteMessage');
+            message.textContent = `Vuoi eliminare il prodotto "${prodotto.nome}"?`;
+            deleteAction = { type: 'single', ids: [id] };
+            modal.classList.remove('hidden');
+        }
+
+        window.deleteSelected = function() {
+            if (selectedIds.size === 0) { 
+                alert('Seleziona almeno un prodotto da eliminare'); 
+                return; 
+            }
+            
+            const modal = document.getElementById('deleteModal');
+            const message = document.getElementById('deleteMessage');
+            message.textContent = `Vuoi eliminare ${selectedIds.size} prodotti selezionati?`;
+            deleteAction = { type: 'multiple', ids: Array.from(selectedIds) };
+            modal.classList.remove('hidden');
+        };
+
+        function closeDeleteModal() { 
+            document.getElementById('deleteModal').classList.add('hidden'); 
+        }
+
+        async function confirmDelete() {
+            if (!deleteAction) return;
+            const idsToDelete = deleteAction.ids;
+            const total = idsToDelete.length;
+            deleteAction = null;
+            closeDeleteModal();
+            
+            try {
+                let deletedCount = 0;
+                const tbody = document.getElementById('prodottiTableBody');
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
+                
+                const BATCH_DELETE_SIZE = 100;
+                for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
+                    const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
+                    const { error } = await supabaseClient.from('prodotti').delete().in('id', batch);
+                    if (error) throw error;
+                    
+                    deletedCount += batch.length;
+                    const progressSpan = document.getElementById('deleteProgress');
+                    if (progressSpan) progressSpan.textContent = `${deletedCount} / ${total}`;
+                    
+                    if (i + BATCH_DELETE_SIZE < idsToDelete.length) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+                
+                selectedIds.clear();
+                updateSelectionBar();
+                await loadAllProdotti();
+                
+                if (deletedCount === total) alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
+                else alert(`⚠️ Eliminati ${deletedCount} su ${total} prodotti`);
+                
+            } catch (err) {
+                console.error('Errore eliminazione:', err);
+                alert(`❌ Errore durante l'eliminazione: ${err.message}`);
+                await loadAllProdotti();
+            }
+        }
+
+        // ===== INIT =====
+        (async function init() {
+            console.log('🚀 Inizializzazione Gestione Prodotti...');
+            await loadAnagrafiche();
+            await loadAllProdotti();
+            console.log('✅ Gestione Prodotti pronta!');
+        })();
     </script>
 </body>
 </html>
