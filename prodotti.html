@@ -415,6 +415,8 @@
         // Carica anagrafiche (aggreganti e tipi)
         async function loadAnagrafiche() {
             try {
+                console.log('🔄 Caricamento anagrafiche...');
+                
                 // Carica aggreganti
                 const { data: aggreganti, error: aggError } = await supabaseClient
                     .from('aggregante_prodotto')
@@ -423,6 +425,7 @@
                 
                 if (aggError) throw aggError;
                 allAggreganti = aggreganti || [];
+                console.log(`✅ Caricati ${allAggreganti.length} aggreganti:`, allAggreganti.map(a => a.nome));
                 
                 // Carica tipi
                 const { data: tipi, error: tipiError } = await supabaseClient
@@ -432,10 +435,20 @@
                 
                 if (tipiError) throw tipiError;
                 allTipi = tipi || [];
+                console.log(`✅ Caricati ${allTipi.length} tipi:`, allTipi.map(t => `${t.nome} (aggregante: ${t.aggregante_prodotto?.nome || t.aggregante_id})`));
                 
-                console.log(`✅ Caricati ${allAggreganti.length} aggreganti e ${allTipi.length} tipi`);
+                // Verifica associazioni
+                const tipiPerAggregante = {};
+                allTipi.forEach(t => {
+                    if (!tipiPerAggregante[t.aggregante_id]) {
+                        tipiPerAggregante[t.aggregante_id] = [];
+                    }
+                    tipiPerAggregante[t.aggregante_id].push(t.nome);
+                });
+                console.log('📊 Tipi raggruppati per aggregante:', tipiPerAggregante);
+                
             } catch (err) {
-                console.error('Errore caricamento anagrafiche:', err);
+                console.error('❌ Errore caricamento anagrafiche:', err);
             }
         }
 
@@ -750,14 +763,40 @@
         // Popola select tipi filtrati per aggregante
         function populateTipiSelect(aggreganteId) {
             const select = document.getElementById('prodottoTipo');
-            select.innerHTML = '<option value="">Nessun tipo specifico</option>';
             
-            const tipiFiltrati = allTipi.filter(t => t.aggregante_id === aggreganteId);
-            tipiFiltrati.forEach(tipo => {
-                select.innerHTML += `<option value="${tipo.id}">${tipo.nome}</option>`;
+            console.log('🔍 populateTipiSelect chiamata con aggreganteId:', aggreganteId);
+            console.log('📦 Tutti i tipi disponibili:', allTipi.length, allTipi);
+            
+            const tipiFiltrati = allTipi.filter(t => {
+                const match = t.aggregante_id === aggreganteId;
+                if (!match) {
+                    console.log(`  ⏭️  Skip tipo "${t.nome}" (aggregante_id: ${t.aggregante_id} !== ${aggreganteId})`);
+                }
+                return match;
             });
             
-            select.innerHTML += '<option value="__nuovo__">➕ Crea nuovo tipo</option>';
+            console.log('✅ Tipi filtrati per questo aggregante:', tipiFiltrati.length, tipiFiltrati.map(t => t.nome));
+            
+            // Costruisci options array
+            let options = ['<option value="">Nessun tipo specifico</option>'];
+            
+            if (tipiFiltrati.length === 0) {
+                // Messaggio se non ci sono tipi per questa categoria
+                const aggNome = allAggreganti.find(a => a.id === aggreganteId)?.nome || 'questa categoria';
+                options.push(`<option value="" disabled>ℹ️ Nessun tipo esistente per "${aggNome}"</option>`);
+                console.log(`⚠️ ATTENZIONE: Nessun tipo trovato per aggregante "${aggNome}" (ID: ${aggreganteId})`);
+            }
+            
+            tipiFiltrati.forEach(tipo => {
+                options.push(`<option value="${tipo.id}">${tipo.nome}</option>`);
+            });
+            
+            options.push('<option value="__nuovo__">➕ Crea nuovo tipo</option>');
+            
+            // Assegna tutto insieme (più performante)
+            select.innerHTML = options.join('');
+            
+            console.log('📝 Select popolata con', tipiFiltrati.length, 'tipi esistenti');
             
             // Gestione creazione nuovo tipo
             select.onchange = function() {
