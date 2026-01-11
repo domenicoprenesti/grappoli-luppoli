@@ -27,7 +27,7 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-<nav class="bg-white shadow-lg">
+<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
@@ -39,33 +39,28 @@
                     </div>
                     <span class="text-lg font-bold">Grappoli & Luppoli</span>
                 </button>
+                
+                <!-- MENU PRINCIPALE -->
                 <div class="hidden md:ml-10 md:flex md:space-x-4">
-                    <!-- Dashboard -->
-                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Dashboard
                     </a>
-                    
-                    <!-- Fatture -->
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Fatture
                     </a>
-                    
-                    <!-- ⭐ NUOVO: Scadenze ⭐ -->
-                    <a href="scadenze.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
-                        📅 Scadenze
-                    </a>
-                    
-                    <!-- Prodotti -->
-                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Prodotti
                     </a>
-                    
-                    <!-- Utenti -->
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+                    <!-- NUOVO LINK FORNITORI -->
+                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Fornitori
+                    </a>
+                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Utenti
                     </a>
                 </div>
             </div>
+            
             <div class="flex items-center space-x-3">
                 <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
                     Dashboard
