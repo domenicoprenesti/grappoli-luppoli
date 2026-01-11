@@ -189,7 +189,11 @@
                         <div class="grid md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-xs font-medium mb-1">Nome *</label>
-                                <input type="text" id="nuovoAggreganteNome" class="w-full px-3 py-2 border rounded text-sm">
+                                <input type="text" id="nuovoAggreganteNome" class="w-full px-3 py-2 border rounded text-sm" oninput="checkAggreganteExists()">
+                                <div id="aggreganteExistsWarning" class="hidden mt-1 text-xs text-orange-600 flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span>Nome già esistente</span>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium mb-1">Colore</label>
@@ -208,7 +212,11 @@
                         <div class="grid md:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-medium mb-1">Nome *</label>
-                                <input type="text" id="nuovoTipoNome" class="w-full px-3 py-2 border rounded text-sm">
+                                <input type="text" id="nuovoTipoNome" class="w-full px-3 py-2 border rounded text-sm" oninput="checkTipoExists()">
+                                <div id="tipoExistsWarning" class="hidden mt-1 text-xs text-orange-600 flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span>Nome già esistente</span>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium mb-1">Keywords (separate da virgola)</label>
@@ -794,22 +802,46 @@
                         return;
                     }
                     
-                    const nuovoAgg = {
-                        nome: nomeAgg,
-                        colore: document.getElementById('nuovoAggreganteColore').value,
-                        ordine: parseInt(document.getElementById('nuovoAggreganteOrdine').value) || 50,
-                        descrizione: null
-                    };
-                    
-                    const { data: aggData, error: aggError } = await supabaseClient
+                    // Verifica se il nome esiste già
+                    const { data: esistente } = await supabaseClient
                         .from('aggregante_prodotto')
-                        .insert([nuovoAgg])
-                        .select()
-                        .single();
+                        .select('id, nome')
+                        .eq('nome', nomeAgg)
+                        .maybeSingle();
                     
-                    if (aggError) throw aggError;
-                    aggreganteId = aggData.id;
-                    console.log('✅ Creato nuovo aggregante:', aggData);
+                    if (esistente) {
+                        const conferma = confirm(
+                            `⚠️ ATTENZIONE\n\n` +
+                            `La categoria "${nomeAgg}" esiste già nel database.\n\n` +
+                            `Vuoi usare quella esistente invece di crearne una nuova?`
+                        );
+                        
+                        if (conferma) {
+                            aggreganteId = esistente.id;
+                            console.log('✅ Uso categoria esistente:', esistente);
+                        } else {
+                            alert('Scegli un nome diverso per la nuova categoria');
+                            return;
+                        }
+                    } else {
+                        // Nome non esiste, procedi con creazione
+                        const nuovoAgg = {
+                            nome: nomeAgg,
+                            colore: document.getElementById('nuovoAggreganteColore').value,
+                            ordine: parseInt(document.getElementById('nuovoAggreganteOrdine').value) || 50,
+                            descrizione: null
+                        };
+                        
+                        const { data: aggData, error: aggError } = await supabaseClient
+                            .from('aggregante_prodotto')
+                            .insert([nuovoAgg])
+                            .select()
+                            .single();
+                        
+                        if (aggError) throw aggError;
+                        aggreganteId = aggData.id;
+                        console.log('✅ Creato nuovo aggregante:', aggData);
+                    }
                 }
                 
                 // Gestisci selezione/creazione tipo
@@ -822,25 +854,49 @@
                         return;
                     }
                     
-                    const keywordsInput = document.getElementById('nuovoTipoKeywords').value.trim();
-                    const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [nomeTipo.toLowerCase()];
-                    
-                    const nuovoTipo = {
-                        nome: nomeTipo,
-                        aggregante_id: aggreganteId,
-                        keywords: keywords,
-                        descrizione: null
-                    };
-                    
-                    const { data: tipoData, error: tipoError } = await supabaseClient
+                    // Verifica se il nome esiste già
+                    const { data: esistente } = await supabaseClient
                         .from('tipo_prodotto')
-                        .insert([nuovoTipo])
-                        .select()
-                        .single();
+                        .select('id, nome, aggregante_id')
+                        .eq('nome', nomeTipo)
+                        .maybeSingle();
                     
-                    if (tipoError) throw tipoError;
-                    tipoId = tipoData.id;
-                    console.log('✅ Creato nuovo tipo:', tipoData);
+                    if (esistente) {
+                        const conferma = confirm(
+                            `⚠️ ATTENZIONE\n\n` +
+                            `Il tipo "${nomeTipo}" esiste già nel database.\n\n` +
+                            `Vuoi usare quello esistente invece di crearne uno nuovo?`
+                        );
+                        
+                        if (conferma) {
+                            tipoId = esistente.id;
+                            console.log('✅ Uso tipo esistente:', esistente);
+                        } else {
+                            alert('Scegli un nome diverso per il nuovo tipo');
+                            return;
+                        }
+                    } else {
+                        // Nome non esiste, procedi con creazione
+                        const keywordsInput = document.getElementById('nuovoTipoKeywords').value.trim();
+                        const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [nomeTipo.toLowerCase()];
+                        
+                        const nuovoTipo = {
+                            nome: nomeTipo,
+                            aggregante_id: aggreganteId,
+                            keywords: keywords,
+                            descrizione: null
+                        };
+                        
+                        const { data: tipoData, error: tipoError } = await supabaseClient
+                            .from('tipo_prodotto')
+                            .insert([nuovoTipo])
+                            .select()
+                            .single();
+                        
+                        if (tipoError) throw tipoError;
+                        tipoId = tipoData.id;
+                        console.log('✅ Creato nuovo tipo:', tipoData);
+                    }
                 } else if (tipoSelect && tipoSelect !== '') {
                     tipoId = tipoSelect;
                 }
@@ -884,6 +940,43 @@
         }
 
         // ===== GESTIONE MODIFICA AGGREGANTI =====
+        
+        // Controlla se l'aggregante esiste già mentre si digita
+        window.checkAggreganteExists = function() {
+            const nome = document.getElementById('nuovoAggreganteNome').value.trim();
+            const warning = document.getElementById('aggreganteExistsWarning');
+            
+            if (!nome) {
+                warning.classList.add('hidden');
+                return;
+            }
+            
+            const exists = allAggreganti.some(a => a.nome.toLowerCase() === nome.toLowerCase());
+            if (exists) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        };
+        
+        // Controlla se il tipo esiste già mentre si digita
+        window.checkTipoExists = function() {
+            const nome = document.getElementById('nuovoTipoNome').value.trim();
+            const warning = document.getElementById('tipoExistsWarning');
+            
+            if (!nome) {
+                warning.classList.add('hidden');
+                return;
+            }
+            
+            const exists = allTipi.some(t => t.nome.toLowerCase() === nome.toLowerCase());
+            if (exists) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        };
+        
         window.editAggregante = function() {
             const aggreganteId = document.getElementById('prodottoAggregante').value;
             
@@ -917,17 +1010,32 @@
             e.preventDefault();
             
             const id = document.getElementById('editAggId').value;
+            const nomeNuovo = document.getElementById('editAggNome').value.trim();
+            
+            if (!nomeNuovo) {
+                alert('Il nome è obbligatorio');
+                return;
+            }
+            
+            // Verifica se il nome esiste già (escludendo l'elemento corrente)
+            const { data: esistente } = await supabaseClient
+                .from('aggregante_prodotto')
+                .select('id, nome')
+                .eq('nome', nomeNuovo)
+                .neq('id', id)
+                .maybeSingle();
+            
+            if (esistente) {
+                alert(`⚠️ Il nome "${nomeNuovo}" è già utilizzato da un'altra categoria.\n\nScegli un nome diverso.`);
+                return;
+            }
+            
             const aggData = {
-                nome: document.getElementById('editAggNome').value.trim(),
+                nome: nomeNuovo,
                 colore: document.getElementById('editAggColore').value,
                 ordine: parseInt(document.getElementById('editAggOrdine').value) || 50,
                 descrizione: document.getElementById('editAggDescrizione').value.trim() || null
             };
-            
-            if (!aggData.nome) {
-                alert('Il nome è obbligatorio');
-                return;
-            }
             
             try {
                 const { error } = await supabaseClient
@@ -1036,20 +1144,35 @@
             e.preventDefault();
             
             const id = document.getElementById('editTipoId').value;
+            const nomeNuovo = document.getElementById('editTipoNome').value.trim();
+            
+            if (!nomeNuovo) {
+                alert('Il nome è obbligatorio');
+                return;
+            }
+            
+            // Verifica se il nome esiste già (escludendo l'elemento corrente)
+            const { data: esistente } = await supabaseClient
+                .from('tipo_prodotto')
+                .select('id, nome')
+                .eq('nome', nomeNuovo)
+                .neq('id', id)
+                .maybeSingle();
+            
+            if (esistente) {
+                alert(`⚠️ Il nome "${nomeNuovo}" è già utilizzato da un altro tipo.\n\nScegli un nome diverso.`);
+                return;
+            }
+            
             const keywordsInput = document.getElementById('editTipoKeywords').value.trim();
             const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [];
             
             const tipoData = {
-                nome: document.getElementById('editTipoNome').value.trim(),
+                nome: nomeNuovo,
                 aggregante_id: document.getElementById('editTipoAggregante').value,
-                keywords: keywords.length > 0 ? keywords : [document.getElementById('editTipoNome').value.toLowerCase()],
+                keywords: keywords.length > 0 ? keywords : [nomeNuovo.toLowerCase()],
                 descrizione: document.getElementById('editTipoDescrizione').value.trim() || null
             };
-            
-            if (!tipoData.nome) {
-                alert('Il nome è obbligatorio');
-                return;
-            }
             
             try {
                 const { error } = await supabaseClient
