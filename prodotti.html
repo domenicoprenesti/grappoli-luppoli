@@ -27,35 +27,33 @@
         if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
-<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex items-center">
-                <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a class="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700">Prodotti</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fornitori</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
-                    <span class="text-lg font-bold">Grappoli & Luppoli</span>
-                </button>
-                
-                <div class="hidden md:ml-10 md:flex md:space-x-4">
-                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
-                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
-                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
                 </div>
             </div>
-            
-            <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
-                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
-            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <div class="max-w-[1400px] mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
@@ -101,22 +99,46 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
-                <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
-                <div class="flex space-x-3">
-                    <!-- NUOVO PULSANTE MODIFICA MASSIVA -->
-                    <button onclick="openBulkEditModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        <span>Modifica Categoria/Tipo</span>
-                    </button>
-                    <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                        <span>Elimina Selezionati</span>
-                    </button>
+            <!-- Barra Modifica Massiva -->
+            <div id="selectionBar" class="hidden bg-gradient-to-r from-blue-50 to-indigo-50 border-b px-6 py-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span id="selectionCount" class="text-sm font-bold text-blue-900">0 prodotti selezionati</span>
+                    <button onclick="clearSelection()" class="text-sm text-gray-600 hover:text-gray-800">✕ Deseleziona tutto</button>
+                </div>
+                
+                <!-- Controlli Modifica Massiva -->
+                <div class="grid md:grid-cols-12 gap-3 items-end">
+                    <!-- Nuova Categoria -->
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Nuova Categoria</label>
+                        <select id="bulkCategoria" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" onchange="onBulkCategoriaChange()">
+                            <option value="">-- Non modificare --</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Nuovo Tipo -->
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Nuovo Tipo</label>
+                        <select id="bulkTipo" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" disabled>
+                            <option value="">-- Seleziona categoria prima --</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Pulsanti Azione -->
+                    <div class="md:col-span-6 flex items-center space-x-2">
+                        <button onclick="applyBulkChanges()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Applica Modifiche</span>
+                        </button>
+                        <button onclick="deleteSelected()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            <span>Elimina</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -143,77 +165,14 @@
         </div>
     </div>
 
-    <!-- Modal Modifica Massiva CATEGORIA/TIPO -->
-    <div id="modalBulkEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold">✏️ Modifica Massiva Categoria/Tipo</h2>
-                <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <div>
-                        <p class="text-sm font-medium text-blue-900">Prodotti selezionati: <span id="bulkEditCount" class="font-bold">0</span></p>
-                        <p class="text-xs text-blue-700 mt-1">La categoria e il tipo verranno applicati a tutti i prodotti selezionati</p>
-                    </div>
-                </div>
-            </div>
-
-            <form onsubmit="saveBulkEdit(event)" class="space-y-6">
-                <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Nuova Categorizzazione</h3>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
-                            <select id="bulkAggregate" class="w-full px-4 py-2 border rounded-lg" onchange="onBulkAggregateChange()">
-                                <option value="">Non modificare</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Tipo</label>
-                            <select id="bulkType" class="w-full px-4 py-2 border rounded-lg" disabled>
-                                <option value="">Seleziona prima categoria</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                        <p class="text-xs text-yellow-800">
-                            <strong>💡 Suggerimento:</strong> Se selezioni "Non modificare" per la categoria, i prodotti manterranno la loro categoria attuale. Il tipo può essere modificato solo se selezioni una categoria.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="flex space-x-4 pt-4 border-t">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg flex items-center justify-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span>Applica a <span id="bulkEditCountBtn">0</span> Prodotti</span>
-                    </button>
-                    <button type="button" onclick="closeBulkEditModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
-                        Annulla
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Modifica Prodotto (esistente) -->
+    <!-- Modal Modifica Prodotto -->
     <div id="modalProdotto" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-auto">
             <h2 id="modalTitle" class="text-2xl font-bold mb-6">Modifica Prodotto</h2>
             <form onsubmit="saveProdotto(event)" class="space-y-6">
                 <input type="hidden" id="prodottoId">
                 
+                <!-- Dati Base -->
                 <div class="bg-blue-50 rounded-lg p-4">
                     <h3 class="font-bold text-blue-900 mb-3">📋 Dati Base</h3>
                     <div class="grid md:grid-cols-2 gap-4">
@@ -232,6 +191,7 @@
                     </div>
                 </div>
 
+                <!-- Categorizzazione -->
                 <div class="bg-purple-50 rounded-lg p-4">
                     <h3 class="font-bold text-purple-900 mb-3">🏷️ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
@@ -259,6 +219,7 @@
                         </div>
                     </div>
                     
+                    <!-- Form Nuovo Aggregante -->
                     <div id="formNuovoAggregante" class="hidden mt-4 bg-green-50 border-2 border-green-300 rounded-lg p-4">
                         <h4 class="font-bold text-green-900 mb-3">✨ Crea Nuova Categoria</h4>
                         <div class="grid md:grid-cols-3 gap-3">
@@ -281,6 +242,7 @@
                         </div>
                     </div>
 
+                    <!-- Form Nuovo Tipo -->
                     <div id="formNuovoTipo" class="hidden mt-4 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
                         <h4 class="font-bold text-purple-900 mb-3">✨ Crea Nuovo Tipo</h4>
                         <div class="grid md:grid-cols-2 gap-3">
@@ -300,6 +262,7 @@
                     </div>
                 </div>
 
+                <!-- Prezzi e Quantità -->
                 <div class="bg-orange-50 rounded-lg p-4">
                     <h3 class="font-bold text-orange-900 mb-3">💰 Prezzi e Quantità</h3>
                     <div class="grid md:grid-cols-4 gap-4">
@@ -333,14 +296,20 @@
                     </div>
                 </div>
 
+                <!-- Stato -->
                 <div class="flex items-center bg-gray-50 rounded-lg p-4">
                     <input type="checkbox" id="prodottoAttivo" checked class="w-5 h-5 mr-3">
                     <label class="text-sm font-medium">Prodotto attivo</label>
                 </div>
 
+                <!-- Pulsanti -->
                 <div class="flex space-x-4 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva Modifiche</button>
-                    <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        💾 Salva Modifiche
+                    </button>
+                    <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">
+                        Annulla
+                    </button>
                 </div>
             </form>
         </div>
@@ -391,9 +360,15 @@
                     <textarea id="editAggDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
                 </div>
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
-                    <button type="button" onclick="closeEditAggregante()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteAggregante()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina categoria">🗑️</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        💾 Salva
+                    </button>
+                    <button type="button" onclick="closeEditAggregante()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">
+                        Annulla
+                    </button>
+                    <button type="button" onclick="deleteAggregante()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina categoria">
+                        🗑️
+                    </button>
                 </div>
             </form>
         </div>
@@ -411,7 +386,9 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
-                    <select id="editTipoAggregante" class="w-full px-4 py-2 border rounded-lg"></select>
+                    <select id="editTipoAggregante" class="w-full px-4 py-2 border rounded-lg">
+                        <!-- popolato dinamicamente -->
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Keywords (separate da virgola)</label>
@@ -422,9 +399,15 @@
                     <textarea id="editTipoDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
                 </div>
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
-                    <button type="button" onclick="closeEditTipo()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteTipo()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina tipo">🗑️</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        💾 Salva
+                    </button>
+                    <button type="button" onclick="closeEditTipo()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">
+                        Annulla
+                    </button>
+                    <button type="button" onclick="deleteTipo()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina tipo">
+                        🗑️
+                    </button>
                 </div>
             </form>
         </div>
@@ -448,173 +431,29 @@
             window.location.href = 'index.html'; 
         }
 
+        // Normalizza i decimali: converte virgola in punto
         window.normalizeDecimal = function(input) {
             if (input.value) {
+                // Sostituisce virgola con punto
                 input.value = input.value.replace(',', '.');
+                
+                // Rimuove eventuali caratteri non numerici (tranne punto e segno meno)
                 input.value = input.value.replace(/[^0-9.-]/g, '');
+                
+                // Parse e reformat per rimuovere punti multipli
                 const num = parseFloat(input.value);
-                if (!isNaN(num)) input.value = num;
-            }
-        };
-
-        // ===== MODIFICA MASSIVA =====
-        window.openBulkEditModal = function() {
-            if (selectedIds.size === 0) {
-                alert('Seleziona almeno un prodotto');
-                return;
-            }
-
-            document.getElementById('bulkEditCount').textContent = selectedIds.size;
-            document.getElementById('bulkEditCountBtn').textContent = selectedIds.size;
-            
-            // Popola select aggreganti
-            const select = document.getElementById('bulkAggregate');
-            select.innerHTML = '<option value="">Non modificare</option>';
-            allAggreganti.forEach(agg => {
-                select.innerHTML += `<option value="${agg.id}">${agg.nome}</option>`;
-            });
-            select.innerHTML += '<option value="__remove__">🗑️ Rimuovi categoria</option>';
-            
-            // Reset tipo
-            document.getElementById('bulkType').innerHTML = '<option value="">Seleziona prima categoria</option>';
-            document.getElementById('bulkType').disabled = true;
-            
-            document.getElementById('modalBulkEdit').classList.remove('hidden');
-        };
-
-        window.closeBulkEditModal = function() {
-            document.getElementById('modalBulkEdit').classList.add('hidden');
-        };
-
-        window.onBulkAggregateChange = function() {
-            const aggreganteId = document.getElementById('bulkAggregate').value;
-            const tipoSelect = document.getElementById('bulkType');
-            
-            if (!aggreganteId || aggreganteId === '' || aggreganteId === '__remove__') {
-                tipoSelect.disabled = true;
-                tipoSelect.innerHTML = '<option value="">Non modificabile</option>';
-            } else {
-                tipoSelect.disabled = false;
-                populateBulkTipiSelect(aggreganteId);
-            }
-        };
-
-        function populateBulkTipiSelect(aggreganteId) {
-            const select = document.getElementById('bulkType');
-            const tuttiITipi = allTipi;
-            
-            let options = ['<option value="">Non modificare</option>'];
-            
-            const tipiOrdinati = [...tuttiITipi].sort((a, b) => {
-                const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
-                const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
-                if (aggA !== aggB) return aggA.localeCompare(aggB);
-                return a.nome.localeCompare(b.nome);
-            });
-            
-            let currentAgg = null;
-            tipiOrdinati.forEach(tipo => {
-                const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
-                if (aggNome !== currentAgg) {
-                    options.push(`<option value="" disabled class="font-bold">─── ${aggNome} ───</option>`);
-                    currentAgg = aggNome;
+                if (!isNaN(num)) {
+                    input.value = num;
                 }
-                options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
-            });
-            
-            options.push('<option value="__remove__">🗑️ Rimuovi tipo</option>');
-            select.innerHTML = options.join('');
-        }
-
-        window.saveBulkEdit = async function(event) {
-            event.preventDefault();
-            
-            const aggreganteId = document.getElementById('bulkAggregate').value;
-            const tipoId = document.getElementById('bulkType').value;
-            
-            if (!aggreganteId && !tipoId) {
-                alert('Seleziona almeno una modifica da applicare');
-                return;
-            }
-            
-            const count = selectedIds.size;
-            const confirm = window.confirm(
-                `Confermi di voler modificare ${count} prodotti?\n\n` +
-                (aggreganteId === '__remove__' ? '- La categoria verrà RIMOSSA\n' : aggreganteId ? `- Nuova categoria verrà applicata\n` : '') +
-                (tipoId === '__remove__' ? '- Il tipo verrà RIMOSSO\n' : tipoId ? `- Nuovo tipo verrà applicato\n` : '')
-            );
-            
-            if (!confirm) return;
-            
-            try {
-                closeBulkEditModal();
-                
-                // Mostra progress
-                const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `
-                    <tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">
-                        ✏️ Modifica massiva in corso...<br>
-                        <span id="bulkProgress">0 / ${count}</span>
-                    </td></tr>
-                `;
-                
-                let updated = 0;
-                const idsArray = Array.from(selectedIds);
-                
-                // Determina i valori da aggiornare
-                let updateData = {};
-                
-                if (aggreganteId === '__remove__') {
-                    updateData.tipo_id = null;
-                } else if (tipoId === '__remove__') {
-                    updateData.tipo_id = null;
-                } else if (tipoId && tipoId !== '') {
-                    updateData.tipo_id = tipoId;
-                } else if (aggreganteId && aggreganteId !== '') {
-                    // Se cambiamo solo categoria senza tipo, dobbiamo trovare o creare un tipo generico
-                    // Per semplicità rimuoviamo il tipo
-                    updateData.tipo_id = null;
-                }
-                
-                // Aggiorna in batch
-                const BATCH_UPDATE_SIZE = 100;
-                for (let i = 0; i < idsArray.length; i += BATCH_UPDATE_SIZE) {
-                    const batch = idsArray.slice(i, i + BATCH_UPDATE_SIZE);
-                    
-                    const { error } = await supabaseClient
-                        .from('prodotti')
-                        .update(updateData)
-                        .in('id', batch);
-                    
-                    if (error) throw error;
-                    
-                    updated += batch.length;
-                    const progressSpan = document.getElementById('bulkProgress');
-                    if (progressSpan) progressSpan.textContent = `${updated} / ${count}`;
-                    
-                    if (i + BATCH_UPDATE_SIZE < idsArray.length) {
-                        await new Promise(resolve => setTimeout(resolve, 300));
-                    }
-                }
-                
-                selectedIds.clear();
-                updateSelectionBar();
-                await loadAllProdotti();
-                
-                alert(`✅ ${updated} prodotti aggiornati con successo!`);
-                
-            } catch (err) {
-                console.error('Errore modifica massiva:', err);
-                alert(`❌ Errore durante la modifica massiva: ${err.message}`);
-                await loadAllProdotti();
             }
         };
 
-        // ===== CARICAMENTO ANAGRAFICHE E PRODOTTI =====
+        // Carica anagrafiche (aggreganti e tipi)
         async function loadAnagrafiche() {
             try {
-                console.log('📄 Caricamento anagrafiche...');
+                console.log('🔄 Caricamento anagrafiche...');
                 
+                // Carica aggreganti
                 const { data: aggreganti, error: aggError } = await supabaseClient
                     .from('aggregante_prodotto')
                     .select('*')
@@ -624,6 +463,7 @@
                 allAggreganti = aggreganti || [];
                 console.log(`✅ Caricati ${allAggreganti.length} aggreganti:`, allAggreganti.map(a => a.nome));
                 
+                // Carica tipi
                 const { data: tipi, error: tipiError } = await supabaseClient
                     .from('tipo_prodotto')
                     .select('*, aggregante_prodotto(id, nome, colore)')
@@ -633,6 +473,16 @@
                 allTipi = tipi || [];
                 console.log(`✅ Caricati ${allTipi.length} tipi:`, allTipi.map(t => `${t.nome} (aggregante: ${t.aggregante_prodotto?.nome || t.aggregante_id})`));
                 
+                // Verifica associazioni
+                const tipiPerAggregante = {};
+                allTipi.forEach(t => {
+                    if (!tipiPerAggregante[t.aggregante_id]) {
+                        tipiPerAggregante[t.aggregante_id] = [];
+                    }
+                    tipiPerAggregante[t.aggregante_id].push(t.nome);
+                });
+                console.log('📊 Tipi raggruppati per aggregante:', tipiPerAggregante);
+                
             } catch (err) {
                 console.error('❌ Errore caricamento anagrafiche:', err);
             }
@@ -640,6 +490,7 @@
 
         async function loadAllProdotti() {
             try {
+                // Prima carica le anagrafiche
                 await loadAnagrafiche();
                 
                 const { count } = await supabaseClient.from('prodotti').select('*', { count: 'exact', head: true });
@@ -700,6 +551,7 @@
         function updateStats() {
             document.getElementById('totalProdotti').textContent = allProdotti.length.toLocaleString('it-IT');
             
+            // Conta aggreganti unici dai prodotti
             const aggregantiUnici = new Set(
                 allProdotti
                     .filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome)
@@ -717,6 +569,7 @@
         }
         
         function updateFilters() {
+            // Popola filtro categorie con aggreganti
             const aggregantiSet = new Set();
             allProdotti.forEach(p => {
                 if (p.tipo_prodotto?.aggregante_prodotto?.nome) {
@@ -757,9 +610,152 @@
             if (selectedIds.size > 0) { 
                 bar.classList.remove('hidden'); 
                 count.textContent = `${selectedIds.size} prodotti selezionati`; 
+                
+                // Popola i dropdown per la modifica massiva
+                populateBulkDropdowns();
             } else { 
                 bar.classList.add('hidden'); 
             }
+        }
+        
+        // Popola i dropdown della barra modifica massiva
+        function populateBulkDropdowns() {
+            const categoriaSelect = document.getElementById('bulkCategoria');
+            const tipoSelect = document.getElementById('bulkTipo');
+            
+            // Popola dropdown categoria
+            let categoriaOptions = '<option value="">-- Non modificare --</option>';
+            allAggreganti.forEach(agg => {
+                categoriaOptions += `<option value="${agg.id}">${agg.nome}</option>`;
+            });
+            categoriaSelect.innerHTML = categoriaOptions;
+            
+            // Reset dropdown tipo
+            tipoSelect.innerHTML = '<option value="">-- Seleziona categoria prima --</option>';
+            tipoSelect.disabled = true;
+        }
+        
+        // Gestisce il cambio categoria nella modifica massiva
+        function onBulkCategoriaChange() {
+            const categoriaSelect = document.getElementById('bulkCategoria');
+            const tipoSelect = document.getElementById('bulkTipo');
+            const categoriaId = categoriaSelect.value;
+            
+            if (!categoriaId) {
+                // Nessuna categoria selezionata
+                tipoSelect.innerHTML = '<option value="">-- Seleziona categoria prima --</option>';
+                tipoSelect.disabled = true;
+                return;
+            }
+            
+            // Filtra tipi per questa categoria
+            const tipiFiltrati = allTipi.filter(t => t.aggregante_id == categoriaId);
+            
+            let tipoOptions = '<option value="">-- Non modificare tipo --</option>';
+            tipoOptions += '<option value="__nessuno__">Nessun tipo specifico</option>';
+            
+            tipiFiltrati.forEach(tipo => {
+                tipoOptions += `<option value="${tipo.id}">${tipo.nome}</option>`;
+            });
+            
+            tipoSelect.innerHTML = tipoOptions;
+            tipoSelect.disabled = false;
+        }
+        
+        // Applica modifiche massive
+        async function applyBulkChanges() {
+            if (selectedIds.size === 0) {
+                alert('Seleziona almeno un prodotto!');
+                return;
+            }
+            
+            const categoriaSelect = document.getElementById('bulkCategoria');
+            const tipoSelect = document.getElementById('bulkTipo');
+            
+            const nuovaCategoriaId = categoriaSelect.value;
+            const nuovoTipoId = tipoSelect.value;
+            
+            if (!nuovaCategoriaId && !nuovoTipoId) {
+                alert('Seleziona almeno una modifica da applicare (Categoria o Tipo)!');
+                return;
+            }
+            
+            // Prepara messaggio di conferma
+            const nomeCategoria = nuovaCategoriaId ? allAggreganti.find(a => a.id == nuovaCategoriaId)?.nome : null;
+            const nomeTipo = nuovoTipoId === '__nessuno__' ? 'Nessun tipo specifico' : 
+                           nuovoTipoId ? allTipi.find(t => t.id == nuovoTipoId)?.nome : null;
+            
+            let messaggio = `Vuoi applicare queste modifiche a ${selectedIds.size} prodotti?\n\n`;
+            if (nomeCategoria) messaggio += `• Categoria: ${nomeCategoria}\n`;
+            if (nomeTipo) messaggio += `• Tipo: ${nomeTipo}\n`;
+            
+            if (!confirm(messaggio)) return;
+            
+            try {
+                // Mostra progress
+                const tbody = document.getElementById('prodottiTableBody');
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">
+                    🔄 Aggiornamento in corso...<br>
+                    <span id="bulkProgress">0 / ${selectedIds.size}</span>
+                </td></tr>`;
+                
+                let updated = 0;
+                const idsArray = Array.from(selectedIds);
+                
+                // Aggiorna in batch da 50
+                const BATCH_SIZE = 50;
+                for (let i = 0; i < idsArray.length; i += BATCH_SIZE) {
+                    const batch = idsArray.slice(i, i + BATCH_SIZE);
+                    
+                    // Prepara dati aggiornamento
+                    const updateData = {};
+                    if (nuovaCategoriaId) {
+                        updateData.aggregante_id = nuovaCategoriaId;
+                    }
+                    if (nuovoTipoId) {
+                        updateData.tipo_id = nuovoTipoId === '__nessuno__' ? null : nuovoTipoId;
+                    }
+                    
+                    const { error } = await supabaseClient
+                        .from('prodotti')
+                        .update(updateData)
+                        .in('id', batch);
+                    
+                    if (error) throw error;
+                    
+                    updated += batch.length;
+                    
+                    // Aggiorna progress
+                    const progressSpan = document.getElementById('bulkProgress');
+                    if (progressSpan) progressSpan.textContent = `${updated} / ${selectedIds.size}`;
+                    
+                    // Pausa tra batch
+                    if (i + BATCH_SIZE < idsArray.length) {
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                }
+                
+                // Ricarica dati
+                selectedIds.clear();
+                updateSelectionBar();
+                await loadAllProdotti();
+                
+                alert(`✅ ${updated} prodotti aggiornati con successo!`);
+                
+            } catch (err) {
+                console.error('Errore modifica massiva:', err);
+                alert(`❌ Errore durante l'aggiornamento: ${err.message}`);
+                await loadAllProdotti();
+            }
+        }
+        
+        // Deseleziona tutti i prodotti
+        function clearSelection() {
+            selectedIds.clear();
+            const checkbox = document.getElementById('selectAllCheckbox');
+            if (checkbox) checkbox.checked = false;
+            updateSelectionBar();
+            applyFilters();
         }
         
         function toggleSelect(id) { 
@@ -838,10 +834,6 @@
             `}).join('');
         }
 
-        // ===== RESTO DEL CODICE (Gestione modali, salvataggio, eliminazione, ecc.) =====
-        // Il codice continua esattamente come nel file originale...
-        // [Il resto delle funzioni rimane invariato]
-        
         function showDeleteModal(id) {
             const prodotto = allProdotti.find(p => p.id === id);
             if (!prodotto) { 
@@ -908,22 +900,7 @@
             }
         }
 
-        // [Aggiungi qui tutte le altre funzioni dal file originale:
-        // - populateAggregantiSelect
-        // - onAggreganteChange
-        // - populateTipiSelect
-        // - editProdotto
-        // - saveProdotto
-        // - closeModal
-        // - checkAggreganteExists
-        // - checkTipoExists
-        // - editAggregante, saveEditAggregante, deleteAggregante, closeEditAggregante
-        // - editTipo, saveEditTipo, deleteTipo, closeEditTipo
-        // ecc.]
-
-        // Per brevità, includerò solo le funzioni principali essenziali
-        // Il resto del codice rimane identico al file originale
-
+        // Popola select aggreganti
         function populateAggregantiSelect() {
             const select = document.getElementById('prodottoAggregante');
             select.innerHTML = '<option value="">Non categorizzato</option>';
@@ -935,12 +912,14 @@
             select.innerHTML += '<option value="__nuovo__">➕ Crea nuova categoria</option>';
         }
 
+        // Gestione cambio aggregante
         window.onAggreganteChange = function() {
             const aggreganteId = document.getElementById('prodottoAggregante').value;
             const tipoSelect = document.getElementById('prodottoTipo');
             const formNuovoAgg = document.getElementById('formNuovoAggregante');
             const formNuovoTipo = document.getElementById('formNuovoTipo');
             
+            // Mostra/nascondi form nuovo aggregante
             if (aggreganteId === '__nuovo__') {
                 formNuovoAgg.classList.remove('hidden');
                 tipoSelect.disabled = true;
@@ -960,32 +939,51 @@
             }
         };
 
+        // Popola select con TUTTI i tipi disponibili (senza filtro per aggregante)
         function populateTipiSelect(aggreganteId) {
             const select = document.getElementById('prodottoTipo');
+            
+            console.log('🔍 populateTipiSelect chiamata - Mostrando TUTTI i tipi disponibili');
+            console.log('📦 Totale tipi nel database:', allTipi.length);
+            
+            // MODIFICA: Non filtriamo più per aggregante, mostriamo TUTTI i tipi
             const tuttiITipi = allTipi;
             
+            // Costruisci options array
             let options = ['<option value="">Nessun tipo specifico</option>'];
             
+            // Aggiungi tutti i tipi (ordinati alfabeticamente per categoria)
             const tipiOrdinati = [...tuttiITipi].sort((a, b) => {
+                // Prima ordina per aggregante, poi per nome
                 const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
                 const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
                 if (aggA !== aggB) return aggA.localeCompare(aggB);
                 return a.nome.localeCompare(b.nome);
             });
             
+            // Raggruppa per aggregante per visualizzazione migliore
             let currentAgg = null;
             tipiOrdinati.forEach(tipo => {
                 const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
+                
+                // Aggiungi intestazione categoria se cambia
                 if (aggNome !== currentAgg) {
                     options.push(`<option value="" disabled class="font-bold">─── ${aggNome} ───</option>`);
                     currentAgg = aggNome;
                 }
+                
                 options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
             });
             
+            // Aggiungi sempre l'opzione per creare nuovo tipo
             options.push('<option value="__nuovo__">➕ Crea nuovo tipo</option>');
+            
+            // Assegna tutto insieme (più performante)
             select.innerHTML = options.join('');
             
+            console.log('✅ Select popolata con TUTTI i', tuttiITipi.length, 'tipi disponibili');
+            
+            // Gestione creazione nuovo tipo
             select.onchange = function() {
                 const formNuovoTipo = document.getElementById('formNuovoTipo');
                 if (this.value === '__nuovo__') {
@@ -1011,8 +1009,10 @@
             document.getElementById('prodottoUnitaMisura').value = p.unita_misura || 'pz';
             document.getElementById('prodottoAttivo').checked = p.attivo;
             
+            // Popola select aggreganti
             populateAggregantiSelect();
             
+            // Se ha un tipo, seleziona aggregante e tipo
             if (p.tipo_prodotto) {
                 const aggreganteId = p.tipo_prodotto.aggregante_prodotto?.id;
                 if (aggreganteId) {
@@ -1022,6 +1022,7 @@
                 }
             }
             
+            // Nascondi form creazione
             document.getElementById('formNuovoAggregante').classList.add('hidden');
             document.getElementById('formNuovoTipo').classList.add('hidden');
             
@@ -1036,6 +1037,7 @@
                 let tipoId = null;
                 let aggreganteId = document.getElementById('prodottoAggregante').value;
                 
+                // Gestisci creazione nuovo aggregante
                 if (aggreganteId === '__nuovo__') {
                     const nomeAgg = document.getElementById('nuovoAggreganteNome').value.trim();
                     if (!nomeAgg) {
@@ -1043,6 +1045,7 @@
                         return;
                     }
                     
+                    // Verifica se il nome esiste già
                     const { data: esistente } = await supabaseClient
                         .from('aggregante_prodotto')
                         .select('id, nome')
@@ -1064,6 +1067,7 @@
                             return;
                         }
                     } else {
+                        // Nome non esiste, procedi con creazione
                         const nuovoAgg = {
                             nome: nomeAgg,
                             colore: document.getElementById('nuovoAggreganteColore').value,
@@ -1083,6 +1087,7 @@
                     }
                 }
                 
+                // Gestisci selezione/creazione tipo
                 const tipoSelect = document.getElementById('prodottoTipo').value;
                 
                 if (tipoSelect === '__nuovo__') {
@@ -1092,6 +1097,7 @@
                         return;
                     }
                     
+                    // Verifica se il nome esiste già
                     const { data: esistente } = await supabaseClient
                         .from('tipo_prodotto')
                         .select('id, nome, aggregante_id')
@@ -1113,6 +1119,7 @@
                             return;
                         }
                     } else {
+                        // Nome non esiste, procedi con creazione
                         const keywordsInput = document.getElementById('nuovoTipoKeywords').value.trim();
                         const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [nomeTipo.toLowerCase()];
                         
@@ -1137,6 +1144,7 @@
                     tipoId = tipoSelect;
                 }
                 
+                // Prepara dati prodotto
                 const prod = {
                     nome: document.getElementById('prodottoNome').value,
                     fornitore: document.getElementById('prodottoFornitore').value || null,
@@ -1149,6 +1157,7 @@
                     tipo_id: tipoId
                 };
                 
+                // Salva prodotto
                 if (id) {
                     const { error } = await supabaseClient.from('prodotti').update(prod).eq('id', id);
                     if (error) throw error;
@@ -1173,6 +1182,9 @@
             document.getElementById('modalProdotto').classList.add('hidden'); 
         }
 
+        // ===== GESTIONE MODIFICA AGGREGANTI =====
+        
+        // Controlla se l'aggregante esiste già mentre si digita
         window.checkAggreganteExists = function() {
             const nome = document.getElementById('nuovoAggreganteNome').value.trim();
             const warning = document.getElementById('aggreganteExistsWarning');
@@ -1190,6 +1202,7 @@
             }
         };
         
+        // Controlla se il tipo esiste già mentre si digita
         window.checkTipoExists = function() {
             const nome = document.getElementById('nuovoTipoNome').value.trim();
             const warning = document.getElementById('tipoExistsWarning');
@@ -1206,10 +1219,288 @@
                 warning.classList.add('hidden');
             }
         };
+        
+        window.editAggregante = function() {
+            const aggreganteId = document.getElementById('prodottoAggregante').value;
+            
+            if (!aggreganteId || aggreganteId === '' || aggreganteId === '__nuovo__') {
+                alert('Seleziona una categoria da modificare');
+                return;
+            }
+            
+            const aggregante = allAggreganti.find(a => a.id == aggreganteId); // == invece di ===
+            if (!aggregante) {
+                alert('Categoria non trovata');
+                return;
+            }
+            
+            // Popola modal
+            document.getElementById('editAggId').value = aggregante.id;
+            document.getElementById('editAggNome').value = aggregante.nome;
+            document.getElementById('editAggColore').value = aggregante.colore || '#3B82F6';
+            document.getElementById('editAggOrdine').value = aggregante.ordine || 50;
+            document.getElementById('editAggDescrizione').value = aggregante.descrizione || '';
+            
+            // Mostra modal
+            document.getElementById('modalEditAggregante').classList.remove('hidden');
+        };
+
+        function closeEditAggregante() {
+            document.getElementById('modalEditAggregante').classList.add('hidden');
+        }
+
+        async function saveEditAggregante(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('editAggId').value;
+            const nomeNuovo = document.getElementById('editAggNome').value.trim();
+            
+            if (!nomeNuovo) {
+                alert('Il nome è obbligatorio');
+                return;
+            }
+            
+            // Verifica se il nome esiste già (escludendo l'elemento corrente)
+            const { data: esistente } = await supabaseClient
+                .from('aggregante_prodotto')
+                .select('id, nome')
+                .eq('nome', nomeNuovo)
+                .neq('id', id)
+                .maybeSingle();
+            
+            if (esistente) {
+                alert(`⚠️ Il nome "${nomeNuovo}" è già utilizzato da un'altra categoria.\n\nScegli un nome diverso.`);
+                return;
+            }
+            
+            const aggData = {
+                nome: nomeNuovo,
+                colore: document.getElementById('editAggColore').value,
+                ordine: parseInt(document.getElementById('editAggOrdine').value) || 50,
+                descrizione: document.getElementById('editAggDescrizione').value.trim() || null
+            };
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('aggregante_prodotto')
+                    .update(aggData)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                console.log('✅ Aggregante aggiornato');
+                closeEditAggregante();
+                
+                // Ricarica anagrafiche e aggiorna select
+                await loadAnagrafiche();
+                populateAggregantiSelect();
+                document.getElementById('prodottoAggregante').value = id;
+                onAggreganteChange();
+                
+                alert('✅ Categoria aggiornata con successo!');
+                
+            } catch (err) {
+                console.error('Errore aggiornamento aggregante:', err);
+                alert(`❌ Errore: ${err.message}`);
+            }
+        }
+
+        async function deleteAggregante() {
+            const id = document.getElementById('editAggId').value;
+            const nome = document.getElementById('editAggNome').value;
+            
+            if (!confirm(`Sei sicuro di voler eliminare la categoria "${nome}"?\n\nATTENZIONE: Verranno eliminati anche tutti i tipi associati!`)) {
+                return;
+            }
+            
+            try {
+                // Prima elimina i tipi associati
+                const { error: tipiError } = await supabaseClient
+                    .from('tipo_prodotto')
+                    .delete()
+                    .eq('aggregante_id', id);
+                
+                if (tipiError) throw tipiError;
+                
+                // Poi elimina l'aggregante
+                const { error: aggError } = await supabaseClient
+                    .from('aggregante_prodotto')
+                    .delete()
+                    .eq('id', id);
+                
+                if (aggError) throw aggError;
+                
+                console.log('✅ Aggregante eliminato');
+                closeEditAggregante();
+                
+                // Ricarica anagrafiche e aggiorna select
+                await loadAnagrafiche();
+                populateAggregantiSelect();
+                document.getElementById('prodottoAggregante').value = '';
+                onAggreganteChange();
+                
+                alert('✅ Categoria eliminata con successo!');
+                
+            } catch (err) {
+                console.error('Errore eliminazione aggregante:', err);
+                alert(`❌ Errore: ${err.message}`);
+            }
+        }
+
+        // ===== GESTIONE MODIFICA TIPI =====
+        window.editTipo = function() {
+            const tipoId = document.getElementById('prodottoTipo').value;
+            
+            if (!tipoId || tipoId === '' || tipoId === '__nuovo__') {
+                alert('Seleziona un tipo da modificare');
+                return;
+            }
+            
+            const tipo = allTipi.find(t => t.id == tipoId); // == invece di ===
+            if (!tipo) {
+                alert('Tipo non trovato');
+                return;
+            }
+            
+            // Popola select aggreganti nel modal
+            const selectAgg = document.getElementById('editTipoAggregante');
+            selectAgg.innerHTML = allAggreganti.map(agg => 
+                `<option value="${agg.id}">${agg.nome}</option>`
+            ).join('');
+            
+            // Popola campi
+            document.getElementById('editTipoId').value = tipo.id;
+            document.getElementById('editTipoNome').value = tipo.nome;
+            document.getElementById('editTipoAggregante').value = tipo.aggregante_id;
+            document.getElementById('editTipoKeywords').value = tipo.keywords ? tipo.keywords.join(', ') : '';
+            document.getElementById('editTipoDescrizione').value = tipo.descrizione || '';
+            
+            // Mostra modal
+            document.getElementById('modalEditTipo').classList.remove('hidden');
+        };
+
+        function closeEditTipo() {
+            document.getElementById('modalEditTipo').classList.add('hidden');
+        }
+
+        async function saveEditTipo(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('editTipoId').value;
+            const nomeNuovo = document.getElementById('editTipoNome').value.trim();
+            
+            if (!nomeNuovo) {
+                alert('Il nome è obbligatorio');
+                return;
+            }
+            
+            // Verifica se il nome esiste già (escludendo l'elemento corrente)
+            const { data: esistente } = await supabaseClient
+                .from('tipo_prodotto')
+                .select('id, nome')
+                .eq('nome', nomeNuovo)
+                .neq('id', id)
+                .maybeSingle();
+            
+            if (esistente) {
+                alert(`⚠️ Il nome "${nomeNuovo}" è già utilizzato da un altro tipo.\n\nScegli un nome diverso.`);
+                return;
+            }
+            
+            const keywordsInput = document.getElementById('editTipoKeywords').value.trim();
+            const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [];
+            
+            const tipoData = {
+                nome: nomeNuovo,
+                aggregante_id: document.getElementById('editTipoAggregante').value,
+                keywords: keywords.length > 0 ? keywords : [nomeNuovo.toLowerCase()],
+                descrizione: document.getElementById('editTipoDescrizione').value.trim() || null
+            };
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('tipo_prodotto')
+                    .update(tipoData)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                console.log('✅ Tipo aggiornato');
+                closeEditTipo();
+                
+                // Ricarica anagrafiche e aggiorna select
+                await loadAnagrafiche();
+                const aggreganteId = document.getElementById('prodottoAggregante').value;
+                if (aggreganteId && aggreganteId !== '__nuovo__' && aggreganteId !== '') {
+                    populateTipiSelect(aggreganteId);
+                    document.getElementById('prodottoTipo').value = id;
+                }
+                
+                alert('✅ Tipo aggiornato con successo!');
+                
+            } catch (err) {
+                console.error('Errore aggiornamento tipo:', err);
+                alert(`❌ Errore: ${err.message}`);
+            }
+        }
+
+        async function deleteTipo() {
+            const id = document.getElementById('editTipoId').value;
+            const nome = document.getElementById('editTipoNome').value;
+            
+            if (!confirm(`Sei sicuro di voler eliminare il tipo "${nome}"?`)) {
+                return;
+            }
+            
+            try {
+                // Verifica se ci sono prodotti con questo tipo
+                const { count } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('tipo_id', id);
+                
+                if (count > 0) {
+                    if (!confirm(`ATTENZIONE: Ci sono ${count} prodotti con questo tipo.\n\nSe elimini il tipo, questi prodotti diventeranno "non categorizzati".\n\nContinuare?`)) {
+                        return;
+                    }
+                    
+                    // Rimuovi tipo dai prodotti
+                    await supabaseClient
+                        .from('prodotti')
+                        .update({ tipo_id: null })
+                        .eq('tipo_id', id);
+                }
+                
+                // Elimina il tipo
+                const { error } = await supabaseClient
+                    .from('tipo_prodotto')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                console.log('✅ Tipo eliminato');
+                closeEditTipo();
+                
+                // Ricarica anagrafiche e aggiorna select
+                await loadAnagrafiche();
+                const aggreganteId = document.getElementById('prodottoAggregante').value;
+                if (aggreganteId && aggreganteId !== '__nuovo__' && aggreganteId !== '') {
+                    populateTipiSelect(aggreganteId);
+                    document.getElementById('prodottoTipo').value = '';
+                }
+                
+                alert('✅ Tipo eliminato con successo!');
+                
+            } catch (err) {
+                console.error('Errore eliminazione tipo:', err);
+                alert(`❌ Errore: ${err.message}`);
+            }
+        }
 
         // Inizializza
         loadAllProdotti();
-        console.log('✅ Prodotti v2.0 - Con modifica massiva categoria/tipo');
+        console.log('✅ Prodotti v1.3 - Categorizzazione completa caricato');
     </script>
 </body>
 </html>
