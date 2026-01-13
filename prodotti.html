@@ -764,13 +764,16 @@
         function populateTipiSelect(aggreganteId) {
             const select = document.getElementById('prodottoTipo');
             
-            console.log('🔍 populateTipiSelect chiamata con aggreganteId:', aggreganteId);
+            console.log('🔍 populateTipiSelect chiamata con aggreganteId:', aggreganteId, typeof aggreganteId);
             console.log('📦 Tutti i tipi disponibili:', allTipi.length, allTipi);
             
             const tipiFiltrati = allTipi.filter(t => {
-                const match = t.aggregante_id === aggreganteId;
+                // CONFRONTO FLESSIBILE: converte string ↔ number automaticamente
+                const match = t.aggregante_id == aggreganteId; // == invece di ===
                 if (!match) {
-                    console.log(`  ⏭️  Skip tipo "${t.nome}" (aggregante_id: ${t.aggregante_id} !== ${aggreganteId})`);
+                    console.log(`  ⏭️  Skip tipo "${t.nome}" (aggregante_id: ${t.aggregante_id} [${typeof t.aggregante_id}] != ${aggreganteId} [${typeof aggreganteId}])`);
+                } else {
+                    console.log(`  ✅ Match tipo "${t.nome}" (${t.aggregante_id} == ${aggreganteId})`);
                 }
                 return match;
             });
@@ -782,7 +785,7 @@
             
             if (tipiFiltrati.length === 0) {
                 // Messaggio se non ci sono tipi per questa categoria
-                const aggNome = allAggreganti.find(a => a.id === aggreganteId)?.nome || 'questa categoria';
+                const aggNome = allAggreganti.find(a => a.id == aggreganteId)?.nome || 'questa categoria'; // == invece di ===
                 options.push(`<option value="" disabled>ℹ️ Nessun tipo esistente per "${aggNome}"</option>`);
                 console.log(`⚠️ ATTENZIONE: Nessun tipo trovato per aggregante "${aggNome}" (ID: ${aggreganteId})`);
             }
@@ -1043,7 +1046,7 @@
                 return;
             }
             
-            const aggregante = allAggreganti.find(a => a.id === aggreganteId);
+            const aggregante = allAggreganti.find(a => a.id == aggreganteId); // == invece di ===
             if (!aggregante) {
                 alert('Categoria non trovata');
                 return;
@@ -1171,7 +1174,7 @@
                 return;
             }
             
-            const tipo = allTipi.find(t => t.id === tipoId);
+            const tipo = allTipi.find(t => t.id == tipoId); // == invece di ===
             if (!tipo) {
                 alert('Tipo non trovato');
                 return;
