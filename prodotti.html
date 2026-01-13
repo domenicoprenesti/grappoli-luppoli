@@ -27,51 +27,33 @@
         if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
-<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex items-center">
-                <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a class="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700">Prodotti</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Fornitori</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
-                    <span class="text-lg font-bold">Grappoli & Luppoli</span>
-                </button>
-                
-                <!-- MENU PRINCIPALE -->
-                <div class="hidden md:ml-10 md:flex md:space-x-4">
-                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Dashboard
-                    </a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Fatture
-                    </a>
-                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Prodotti
-                    </a>
-                    <!-- NUOVO LINK FORNITORI -->
-                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Fornitori
-                    </a>
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Utenti
-                    </a>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
                 </div>
             </div>
-            
-            <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                    Dashboard
-                </button>
-                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
-                    Esci
-                </button>
-            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <div class="max-w-[1400px] mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
@@ -117,12 +99,47 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
-                <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
-                <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    <span>Elimina Selezionati</span>
-                </button>
+            <!-- Barra Modifica Massiva -->
+            <div id="selectionBar" class="hidden bg-gradient-to-r from-blue-50 to-indigo-50 border-b px-6 py-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span id="selectionCount" class="text-sm font-bold text-blue-900">0 prodotti selezionati</span>
+                    <button onclick="clearSelection()" class="text-sm text-gray-600 hover:text-gray-800">✕ Deseleziona tutto</button>
+                </div>
+                
+                <!-- Controlli Modifica Massiva -->
+                <div class="grid md:grid-cols-12 gap-3 items-end">
+                    <!-- Nuova Categoria -->
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Nuova Categoria</label>
+                        <select id="bulkCategoria" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" onchange="onBulkCategoriaChange()">
+                            <option value="">-- Non modificare --</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Nuovo Tipo -->
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Nuovo Tipo</label>
+                        <select id="bulkTipo" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" disabled>
+                            <option value="">-- Seleziona categoria prima --</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Pulsanti Azione -->
+                    <div class="md:col-span-6 flex items-center space-x-2">
+                        <button onclick="applyBulkChanges()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Applica Modifiche</span>
+                        </button>
+                        <button onclick="deleteSelected()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            <span>Elimina</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="overflow-auto">
@@ -593,9 +610,152 @@
             if (selectedIds.size > 0) { 
                 bar.classList.remove('hidden'); 
                 count.textContent = `${selectedIds.size} prodotti selezionati`; 
+                
+                // Popola i dropdown per la modifica massiva
+                populateBulkDropdowns();
             } else { 
                 bar.classList.add('hidden'); 
             }
+        }
+        
+        // Popola i dropdown della barra modifica massiva
+        function populateBulkDropdowns() {
+            const categoriaSelect = document.getElementById('bulkCategoria');
+            const tipoSelect = document.getElementById('bulkTipo');
+            
+            // Popola dropdown categoria
+            let categoriaOptions = '<option value="">-- Non modificare --</option>';
+            allAggreganti.forEach(agg => {
+                categoriaOptions += `<option value="${agg.id}">${agg.nome}</option>`;
+            });
+            categoriaSelect.innerHTML = categoriaOptions;
+            
+            // Reset dropdown tipo
+            tipoSelect.innerHTML = '<option value="">-- Seleziona categoria prima --</option>';
+            tipoSelect.disabled = true;
+        }
+        
+        // Gestisce il cambio categoria nella modifica massiva
+        function onBulkCategoriaChange() {
+            const categoriaSelect = document.getElementById('bulkCategoria');
+            const tipoSelect = document.getElementById('bulkTipo');
+            const categoriaId = categoriaSelect.value;
+            
+            if (!categoriaId) {
+                // Nessuna categoria selezionata
+                tipoSelect.innerHTML = '<option value="">-- Seleziona categoria prima --</option>';
+                tipoSelect.disabled = true;
+                return;
+            }
+            
+            // Filtra tipi per questa categoria
+            const tipiFiltrati = allTipi.filter(t => t.aggregante_id == categoriaId);
+            
+            let tipoOptions = '<option value="">-- Non modificare tipo --</option>';
+            tipoOptions += '<option value="__nessuno__">Nessun tipo specifico</option>';
+            
+            tipiFiltrati.forEach(tipo => {
+                tipoOptions += `<option value="${tipo.id}">${tipo.nome}</option>`;
+            });
+            
+            tipoSelect.innerHTML = tipoOptions;
+            tipoSelect.disabled = false;
+        }
+        
+        // Applica modifiche massive
+        async function applyBulkChanges() {
+            if (selectedIds.size === 0) {
+                alert('Seleziona almeno un prodotto!');
+                return;
+            }
+            
+            const categoriaSelect = document.getElementById('bulkCategoria');
+            const tipoSelect = document.getElementById('bulkTipo');
+            
+            const nuovaCategoriaId = categoriaSelect.value;
+            const nuovoTipoId = tipoSelect.value;
+            
+            if (!nuovaCategoriaId && !nuovoTipoId) {
+                alert('Seleziona almeno una modifica da applicare (Categoria o Tipo)!');
+                return;
+            }
+            
+            // Prepara messaggio di conferma
+            const nomeCategoria = nuovaCategoriaId ? allAggreganti.find(a => a.id == nuovaCategoriaId)?.nome : null;
+            const nomeTipo = nuovoTipoId === '__nessuno__' ? 'Nessun tipo specifico' : 
+                           nuovoTipoId ? allTipi.find(t => t.id == nuovoTipoId)?.nome : null;
+            
+            let messaggio = `Vuoi applicare queste modifiche a ${selectedIds.size} prodotti?\n\n`;
+            if (nomeCategoria) messaggio += `• Categoria: ${nomeCategoria}\n`;
+            if (nomeTipo) messaggio += `• Tipo: ${nomeTipo}\n`;
+            
+            if (!confirm(messaggio)) return;
+            
+            try {
+                // Mostra progress
+                const tbody = document.getElementById('prodottiTableBody');
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">
+                    🔄 Aggiornamento in corso...<br>
+                    <span id="bulkProgress">0 / ${selectedIds.size}</span>
+                </td></tr>`;
+                
+                let updated = 0;
+                const idsArray = Array.from(selectedIds);
+                
+                // Aggiorna in batch da 50
+                const BATCH_SIZE = 50;
+                for (let i = 0; i < idsArray.length; i += BATCH_SIZE) {
+                    const batch = idsArray.slice(i, i + BATCH_SIZE);
+                    
+                    // Prepara dati aggiornamento
+                    const updateData = {};
+                    if (nuovaCategoriaId) {
+                        updateData.aggregante_id = nuovaCategoriaId;
+                    }
+                    if (nuovoTipoId) {
+                        updateData.tipo_id = nuovoTipoId === '__nessuno__' ? null : nuovoTipoId;
+                    }
+                    
+                    const { error } = await supabaseClient
+                        .from('prodotti')
+                        .update(updateData)
+                        .in('id', batch);
+                    
+                    if (error) throw error;
+                    
+                    updated += batch.length;
+                    
+                    // Aggiorna progress
+                    const progressSpan = document.getElementById('bulkProgress');
+                    if (progressSpan) progressSpan.textContent = `${updated} / ${selectedIds.size}`;
+                    
+                    // Pausa tra batch
+                    if (i + BATCH_SIZE < idsArray.length) {
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                }
+                
+                // Ricarica dati
+                selectedIds.clear();
+                updateSelectionBar();
+                await loadAllProdotti();
+                
+                alert(`✅ ${updated} prodotti aggiornati con successo!`);
+                
+            } catch (err) {
+                console.error('Errore modifica massiva:', err);
+                alert(`❌ Errore durante l'aggiornamento: ${err.message}`);
+                await loadAllProdotti();
+            }
+        }
+        
+        // Deseleziona tutti i prodotti
+        function clearSelection() {
+            selectedIds.clear();
+            const checkbox = document.getElementById('selectAllCheckbox');
+            if (checkbox) checkbox.checked = false;
+            updateSelectionBar();
+            applyFilters();
         }
         
         function toggleSelect(id) { 
