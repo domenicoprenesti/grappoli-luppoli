@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fix Confronto ID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">🧪 Test: Confronto ID (Number vs String)</h1>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">📊 Simulazione Problema</h2>
+            <button onclick="testConfronto()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                🚀 Esegui Test
+            </button>
+        </div>
+
+        <div id="risultati" class="space-y-4"></div>
+    </div>
+
+    <script>
+        function mostraRisultato(titolo, contenuto, tipo = 'info') {
+            const risultatiDiv = document.getElementById('risultati');
+            const colore = tipo === 'success' ? 'green' : tipo === 'error' ? 'red' : 'blue';
+            const icona = tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : 'ℹ️';
+            
+            risultatiDiv.innerHTML += `
+                <div class="bg-${colore}-50 border-l-4 border-${colore}-500 rounded-lg p-6">
+                    <h3 class="font-bold text-${colore}-900 text-lg mb-2">${icona} ${titolo}</h3>
+                    <div class="text-sm text-${colore}-800 font-mono whitespace-pre-wrap">
+${contenuto}
+                    </div>
+                </div>
+            `;
+        }
+
+        function testConfronto() {
+            document.getElementById('risultati').innerHTML = '';
+            
+            // SIMULA DATI DATABASE (con ID numerici come Supabase)
+            const aggregantiDB = [
+                { id: 1, nome: 'Vini' },
+                { id: 2, nome: 'Birre' },
+                { id: 8, nome: 'Ricorrenti' }
+            ];
+
+            const tipiDB = [
+                { id: 101, nome: 'Vini Rossi', aggregante_id: 1 },
+                { id: 102, nome: 'Vini Bianchi', aggregante_id: 1 },
+                { id: 201, nome: 'Birra Chiara', aggregante_id: 2 },
+                { id: 801, nome: 'Consumabili', aggregante_id: 8 },
+                { id: 802, nome: 'Ghiaccio', aggregante_id: 8 },
+                { id: 803, nome: 'Merchandising', aggregante_id: 8 },
+                { id: 804, nome: 'Minchiate', aggregante_id: 8 },
+                { id: 805, nome: 'Omaggio', aggregante_id: 8 }
+            ];
+
+            // SIMULA SELECT HTML (restituisce SEMPRE string!)
+            const aggreganteIdDaSelect = "8"; // String!
+
+            console.log('📊 Dati di test:');
+            console.log('  Aggreganti:', aggregantiDB);
+            console.log('  Tipi:', tipiDB);
+            console.log('  ID selezionato da dropdown:', aggreganteIdDaSelect, typeof aggreganteIdDaSelect);
+
+            // TEST 1: CONFRONTO CON === (SBAGLIATO)
+            console.log('\n❌ TEST 1: Con === (strict equality)');
+            const tipiFiltrati_SBAGLIATO = tipiDB.filter(t => {
+                const match = t.aggregante_id === aggreganteIdDaSelect;
+                console.log(`  ${t.nome}: ${t.aggregante_id} === "${aggreganteIdDaSelect}" → ${match}`);
+                return match;
+            });
+
+            mostraRisultato(
+                'TEST 1: Confronto con === (SBAGLIATO)',
+                `Codice:
+const tipiFiltrati = tipiDB.filter(t => 
+    t.aggregante_id === aggreganteIdDaSelect
+);
+
+ID dal database: ${8} (type: number)
+ID dal select HTML: "${aggreganteIdDaSelect}" (type: string)
+
+Confronto: 8 === "8" → FALSE ❌
+
+Risultato:
+Tipi trovati: ${tipiFiltrati_SBAGLIATO.length}
+${tipiFiltrati_SBAGLIATO.length === 0 ? '⚠️ NESSUN TIPO TROVATO - DROPDOWN VUOTO!' : tipiFiltrati_SBAGLIATO.map(t => '  • ' + t.nome).join('\n')}`,
+                'error'
+            );
+
+            // TEST 2: CONFRONTO CON == (CORRETTO)
+            console.log('\n✅ TEST 2: Con == (loose equality)');
+            const tipiFiltrati_CORRETTO = tipiDB.filter(t => {
+                const match = t.aggregante_id == aggreganteIdDaSelect; // == invece di ===
+                console.log(`  ${t.nome}: ${t.aggregante_id} == "${aggreganteIdDaSelect}" → ${match}`);
+                return match;
+            });
+
+            mostraRisultato(
+                'TEST 2: Confronto con == (CORRETTO)',
+                `Codice:
+const tipiFiltrati = tipiDB.filter(t => 
+    t.aggregante_id == aggreganteIdDaSelect
+);
+
+ID dal database: ${8} (type: number)
+ID dal select HTML: "${aggreganteIdDaSelect}" (type: string)
+
+Confronto: 8 == "8" → TRUE ✅
+
+Risultato:
+Tipi trovati: ${tipiFiltrati_CORRETTO.length}
+${tipiFiltrati_CORRETTO.map(t => '  • ' + t.nome).join('\n')}
+
+🎉 TUTTI I TIPI VISUALIZZATI CORRETTAMENTE!`,
+                'success'
+            );
+
+            // TEST 3: DIMOSTRAZIONE VISIVA
+            const demo = `
+╔═══════════════════════════════════════════════════════════╗
+║  PERCHÉ IL DROPDOWN ERA VUOTO                            ║
+╚═══════════════════════════════════════════════════════════╝
+
+1️⃣ DATABASE (Supabase):
+   aggregante_id = 8 (INTEGER/NUMBER)
+
+2️⃣ HTML SELECT:
+   <select id="prodottoAggregante">
+     <option value="8">Ricorrenti</option>  ← STRINGA "8"
+   </select>
+
+3️⃣ JAVASCRIPT:
+   const id = select.value;  // → "8" (STRING!)
+
+4️⃣ CONFRONTO:
+   
+   ❌ CON ===:
+      8 === "8"  → FALSE
+      Tipi filtrati: [ ] (vuoto)
+      Dropdown: solo "+ Crea nuovo tipo"
+   
+   ✅ CON ==:
+      8 == "8"  → TRUE (conversione automatica)
+      Tipi filtrati: [Consumabili, Ghiaccio, ...]
+      Dropdown: tutti i tipi! 🎉
+
+╔═══════════════════════════════════════════════════════════╗
+║  REGOLA D'ORO                                            ║
+╠═══════════════════════════════════════════════════════════╣
+║  Quando confronti dati da DATABASE con SELECT HTML:      ║
+║  → USA == (loose equality)                                ║
+║  → NON usare === (strict equality)                       ║
+╚═══════════════════════════════════════════════════════════╝
+`;
+
+            mostraRisultato(
+                'Spiegazione Visiva',
+                demo,
+                'info'
+            );
+        }
+
+        console.log('🔧 Test pronto. Clicca il pulsante per eseguire!');
+    </script>
+</body>
+</html>
