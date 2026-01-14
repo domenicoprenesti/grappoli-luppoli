@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Date Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold mb-6">🔍 Debug Date Database</h1>
+        
+        <button onclick="verificaDate()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-6">
+            Verifica Date nel Database
+        </button>
+
+        <div id="loading" class="hidden text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Caricamento...</p>
+        </div>
+
+        <div id="results" class="space-y-6"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function verificaDate() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            loading.classList.remove('hidden');
+            results.innerHTML = '';
+
+            try {
+                // 1. Verifica distribuzione fatture per anno
+                console.log('📊 Query 1: Distribuzione fatture per anno...');
+                const { data: fatture, error: fattureError } = await supabase
+                    .from('fatture')
+                    .select('data_fattura, numero_fattura, importo_totale')
+                    .order('data_fattura', { ascending: false });
+
+                if (fattureError) throw fattureError;
+
+                // Raggruppa per anno
+                const distribuzione = {};
+                let minDate = null;
+                let maxDate = null;
+
+                fatture.forEach(f => {
+                    const year = new Date(f.data_fattura).getFullYear();
+                    if (!distribuzione[year]) {
+                        distribuzione[year] = { count: 0, totale: 0, fatture: [] };
+                    }
+                    distribuzione[year].count++;
+                    distribuzione[year].totale += parseFloat(f.importo_totale || 0);
+                    
+                    if (distribuzione[year].fatture.length < 5) {
+                        distribuzione[year].fatture.push({
+                            numero: f.numero_fattura,
+                            data: f.data_fattura,
+                            importo: f.importo_totale
+                        });
+                    }
+
+                    const date = new Date(f.data_fattura);
+                    if (!minDate || date < minDate) minDate = date;
+                    if (!maxDate || date > maxDate) maxDate = date;
+                });
+
+                // Mostra risultati
+                let html = `
+                    <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                        <h2 class="text-xl font-bold text-blue-900 mb-4">📋 Fatture nel Database</h2>
+                        <div class="space-y-2 mb-4">
+                            <p><strong>Totale fatture:</strong> ${fatture.length}</p>
+                            <p><strong>Prima fattura:</strong> ${minDate ? minDate.toLocaleDateString('it-IT') : 'N/D'}</p>
+                            <p><strong>Ultima fattura:</strong> ${maxDate ? maxDate.toLocaleDateString('it-IT') : 'N/D'}</p>
+                        </div>
+
+                        <h3 class="font-bold text-lg mb-3">Distribuzione per Anno:</h3>
+                        <div class="space-y-4">
+                `;
+
+                Object.keys(distribuzione).sort((a, b) => b - a).forEach(year => {
+                    const data = distribuzione[year];
+                    const isRecent = parseInt(year) >= 2024;
+                    
+                    html += `
+                        <div class="bg-white rounded-lg p-4 border-2 ${isRecent ? 'border-green-400' : 'border-yellow-400'}">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-2xl font-bold ${isRecent ? 'text-green-600' : 'text-yellow-600'}">${year}</span>
+                                <div class="text-right">
+                                    <p class="font-semibold">${data.count} fatture</p>
+                                    <p class="text-sm text-gray-600">€${data.totale.toLocaleString('it-IT', {minimumFractionDigits: 2})}</p>
+                                </div>
+                            </div>
+                            <details class="text-sm">
+                                <summary class="cursor-pointer text-blue-600 hover:text-blue-800">Vedi esempi fatture →</summary>
+                                <div class="mt-2 space-y-1 pl-4">
+                                    ${data.fatture.map(f => `
+                                        <div class="text-xs text-gray-700">
+                                            • ${f.numero} - ${new Date(f.data).toLocaleDateString('it-IT')} - €${parseFloat(f.importo).toFixed(2)}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </details>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+
+                // 2. Verifica prodotti
+                console.log('📦 Query 2: Verifica prodotti con/senza fattura_id...');
+                const { count: conFattura } = await supabase
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .not('fattura_id', 'is', null);
+
+                const { count: senzaFattura } = await supabase
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .is('fattura_id', null);
+
+                html += `
+                    <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+                        <h2 class="text-xl font-bold text-purple-900 mb-4">📦 Prodotti nel Database</h2>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>Prodotti con fattura collegata:</span>
+                                <span class="font-bold text-green-600">${conFattura || 0}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Prodotti senza fattura:</span>
+                                <span class="font-bold ${senzaFattura > 0 ? 'text-yellow-600' : 'text-gray-400'}">${senzaFattura || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 3. Suggerimenti
+                const hasOldData = Object.keys(distribuzione).some(y => parseInt(y) < 2024);
+                const hasRecentData = Object.keys(distribuzione).some(y => parseInt(y) >= 2024);
+
+                if (hasOldData && !hasRecentData) {
+                    html += `
+                        <div class="bg-red-50 border-2 border-red-400 rounded-lg p-6">
+                            <h2 class="text-xl font-bold text-red-900 mb-4">⚠️ PROBLEMA RILEVATO</h2>
+                            <p class="mb-4">Tutte le fatture nel database sono del <strong>2023 o precedenti</strong>.</p>
+                            <p class="mb-4"><strong>Soluzioni possibili:</strong></p>
+                            <ul class="list-disc pl-6 space-y-2">
+                                <li>Le fatture caricate sono davvero vecchie → Carica fatture più recenti</li>
+                                <li>È un database di test → Usa dati di esempio più recenti</li>
+                                <li>Le date sono sbagliate → Controlla il campo data_fattura nelle fatture</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (hasOldData && hasRecentData) {
+                    html += `
+                        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6">
+                            <h2 class="text-xl font-bold text-yellow-900 mb-4">ℹ️ DATI MISTI</h2>
+                            <p class="mb-4">Il database contiene sia fatture vecchie (2023) che recenti (2024+).</p>
+                            <p class="mb-4"><strong>Suggerimento:</strong></p>
+                            <ul class="list-disc pl-6 space-y-2">
+                                <li>Usa il filtro "12 mesi" nella dashboard per vedere solo i dati recenti</li>
+                                <li>Oppure elimina le fatture vecchie se non servono più</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6">
+                            <h2 class="text-xl font-bold text-green-900 mb-4">✅ TUTTO OK</h2>
+                            <p>Tutte le fatture sono recenti (2024+)!</p>
+                        </div>
+                    `;
+                }
+
+                results.innerHTML = html;
+                loading.classList.add('hidden');
+
+            } catch (err) {
+                console.error('Errore:', err);
+                results.innerHTML = `
+                    <div class="bg-red-50 border-2 border-red-400 rounded-lg p-6">
+                        <h2 class="text-xl font-bold text-red-900 mb-4">❌ Errore</h2>
+                        <p>${err.message}</p>
+                    </div>
+                `;
+                loading.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
