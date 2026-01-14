@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifica Collegamento Fatture-Prodotti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen p-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h1 class="text-2xl font-bold mb-6 flex items-center">
+                <span class="mr-3">🔗</span>
+                Verifica Collegamento Fatture ↔ Prodotti
+            </h1>
+            
+            <div class="flex flex-wrap gap-4 mb-6">
+                <button onclick="verificaCollegamento()" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium">
+                    1️⃣ Verifica Collegamento
+                </button>
+                <button onclick="verificaDateProdotti()" class="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 font-medium">
+                    2️⃣ Verifica Date Prodotti
+                </button>
+                <button onclick="aggiornaDateProdotti()" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium">
+                    3️⃣ Aggiorna Date dai Fatture
+                </button>
+            </div>
+            
+            <div id="risultati" class="space-y-4"></div>
+            
+            <div id="progressContainer" class="hidden mt-6">
+                <div class="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm font-medium text-blue-900">Elaborazione in corso...</span>
+                        <span id="progressText" class="text-sm text-blue-700">0 / 0</span>
+                    </div>
+                    <div class="w-full bg-blue-200 rounded-full h-3">
+                        <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const BATCH_SIZE = 500;
+
+        function showProgress(show) {
+            document.getElementById('progressContainer').classList.toggle('hidden', !show);
+        }
+
+        function updateProgress(current, total) {
+            const percent = total > 0 ? (current / total * 100).toFixed(1) : 0;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressText').textContent = `${current} / ${total}`;
+        }
+
+        // ===== 1. VERIFICA COLLEGAMENTO =====
+        async function verificaCollegamento() {
+            const risultatiDiv = document.getElementById('risultati');
+            risultatiDiv.innerHTML = '<div class="text-blue-600">⏳ Verifica collegamento in corso...</div>';
+            
+            try {
+                // Conta fatture totali
+                const { count: totaleFatture } = await supabaseClient
+                    .from('fatture')
+                    .select('*', { count: 'exact', head: true });
+                
+                // Conta prodotti totali
+                const { count: totaleProdotti } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+                
+                // Conta prodotti CON fattura_id
+                const { count: prodottiConFattura } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .not('fattura_id', 'is', null);
+                
+                // Conta prodotti SENZA fattura_id (orfani)
+                const { count: prodottiOrfani } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .is('fattura_id', null);
+                
+                // Verifica integrità: prodotti con fattura_id che puntano a fatture esistenti
+                // Carica un campione per verificare
+                const { data: campioneProdotti } = await supabaseClient
+                    .from('prodotti')
+                    .select('id, fattura_id, nome')
+                    .not('fattura_id', 'is', null)
+                    .limit(10);
+                
+                // Verifica che le fatture esistano
+                let fattureValide = 0;
+                let fattureInvalide = [];
+                
+                if (campioneProdotti && campioneProdotti.length > 0) {
+                    for (const prod of campioneProdotti) {
+                        const { data: fattura } = await supabaseClient
+                            .from('fatture')
+                            .select('id, numero_fattura')
+                            .eq('id', prod.fattura_id)
+                            .single();
+                        
+                        if (fattura) {
+                            fattureValide++;
+                        } else {
+                            fattureInvalide.push({ prodotto: prod.nome, fattura_id: prod.fattura_id });
+                        }
+                    }
+                }
+                
+                // Calcola percentuale collegamento
+                const percentualeCollegata = totaleProdotti > 0 
+                    ? ((prodottiConFattura / totaleProdotti) * 100).toFixed(1) 
+                    : 0;
+                
+                risultatiDiv.innerHTML = `
+                    <div class="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+                        <h2 class="text-lg font-bold text-blue-900 mb-4">🔗 Stato Collegamento Fatture ↔ Prodotti</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-blue-500">
+                                <p class="text-sm text-gray-600">Fatture nel DB</p>
+                                <p class="text-3xl font-bold text-blue-600">${totaleFatture || 0}</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-purple-500">
+                                <p class="text-sm text-gray-600">Prodotti nel DB</p>
+                                <p class="text-3xl font-bold text-purple-600">${totaleProdotti || 0}</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-green-500">
+                                <p class="text-sm text-gray-600">Prodotti CON fattura_id</p>
+                                <p class="text-3xl font-bold text-green-600">${prodottiConFattura || 0}</p>
+                                <p class="text-xs text-green-700 mt-1">${percentualeCollegata}% collegati</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-orange-500">
+                                <p class="text-sm text-gray-600">Prodotti SENZA fattura_id</p>
+                                <p class="text-3xl font-bold text-orange-600">${prodottiOrfani || 0}</p>
+                                <p class="text-xs text-orange-700 mt-1">Prodotti "orfani"</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg">
+                            <h3 class="font-bold mb-2">📊 Verifica Integrità (campione ${campioneProdotti?.length || 0} prodotti)</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center text-green-600">
+                                    <span class="text-2xl mr-2">✅</span>
+                                    <span>${fattureValide} collegamenti validi</span>
+                                </div>
+                                ${fattureInvalide.length > 0 ? `
+                                    <div class="flex items-center text-red-600">
+                                        <span class="text-2xl mr-2">❌</span>
+                                        <span>${fattureInvalide.length} collegamenti rotti</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${percentualeCollegata >= 90 ? `
+                        <div class="bg-green-50 rounded-xl p-4 border-2 border-green-200 text-center">
+                            <p class="text-green-700 font-medium">✅ Collegamento OK! ${percentualeCollegata}% dei prodotti sono collegati a fatture.</p>
+                        </div>
+                    ` : `
+                        <div class="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
+                            <p class="text-yellow-700 font-medium">⚠️ Attenzione: Solo ${percentualeCollegata}% dei prodotti sono collegati a fatture.</p>
+                        </div>
+                    `}
+                `;
+                
+                console.log('✅ Verifica collegamento completata');
+                
+            } catch (err) {
+                console.error('❌ Errore:', err);
+                risultatiDiv.innerHTML = `
+                    <div class="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+                        <h2 class="text-lg font-bold text-red-900 mb-2">❌ Errore</h2>
+                        <p class="text-red-700">${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== 2. VERIFICA DATE PRODOTTI =====
+        async function verificaDateProdotti() {
+            const risultatiDiv = document.getElementById('risultati');
+            risultatiDiv.innerHTML = '<div class="text-blue-600">⏳ Verifica date prodotti in corso...</div>';
+            
+            try {
+                // Conta prodotti totali
+                const { count: totaleProdotti } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+                
+                // Conta prodotti CON data_fattura
+                const { count: prodottiConData } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .not('data_fattura', 'is', null);
+                
+                // Conta prodotti SENZA data_fattura
+                const { count: prodottiSenzaData } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .is('data_fattura', null);
+                
+                // Conta prodotti con fattura_id MA senza data_fattura (da aggiornare)
+                const { count: daAggiornare } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true })
+                    .not('fattura_id', 'is', null)
+                    .is('data_fattura', null);
+                
+                // Statistiche per anno (se ci sono date)
+                const { data: perAnno } = await supabaseClient
+                    .from('prodotti')
+                    .select('data_fattura')
+                    .not('data_fattura', 'is', null)
+                    .limit(1000);
+                
+                const anniCount = {};
+                if (perAnno) {
+                    perAnno.forEach(p => {
+                        if (p.data_fattura) {
+                            const anno = new Date(p.data_fattura).getFullYear();
+                            anniCount[anno] = (anniCount[anno] || 0) + 1;
+                        }
+                    });
+                }
+                
+                const anniOrdinati = Object.entries(anniCount).sort((a, b) => b[0] - a[0]);
+                
+                risultatiDiv.innerHTML = `
+                    <div class="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+                        <h2 class="text-lg font-bold text-purple-900 mb-4">📅 Stato Date nei Prodotti</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-purple-500">
+                                <p class="text-sm text-gray-600">Prodotti Totali</p>
+                                <p class="text-3xl font-bold text-purple-600">${totaleProdotti || 0}</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-green-500">
+                                <p class="text-sm text-gray-600">CON data_fattura</p>
+                                <p class="text-3xl font-bold text-green-600">${prodottiConData || 0}</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-orange-500">
+                                <p class="text-sm text-gray-600">SENZA data_fattura</p>
+                                <p class="text-3xl font-bold text-orange-600">${prodottiSenzaData || 0}</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-blue-500">
+                                <p class="text-sm text-gray-600">Da Aggiornare</p>
+                                <p class="text-3xl font-bold text-blue-600">${daAggiornare || 0}</p>
+                                <p class="text-xs text-blue-700 mt-1">Hanno fattura_id ma non data</p>
+                            </div>
+                        </div>
+                        
+                        ${anniOrdinati.length > 0 ? `
+                            <div class="bg-white p-4 rounded-lg">
+                                <h3 class="font-bold mb-3">📊 Distribuzione per Anno (campione)</h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    ${anniOrdinati.map(([anno, count]) => `
+                                        <div class="bg-gray-50 p-2 rounded text-center">
+                                            <p class="text-lg font-bold text-gray-800">${anno}</p>
+                                            <p class="text-sm text-gray-600">${count} prodotti</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="bg-yellow-50 p-4 rounded-lg text-center">
+                                <p class="text-yellow-700">⚠️ Nessun prodotto ha data_fattura valorizzata</p>
+                            </div>
+                        `}
+                    </div>
+                    
+                    ${daAggiornare > 0 ? `
+                        <div class="bg-blue-50 rounded-xl p-4 border-2 border-blue-200 text-center">
+                            <p class="text-blue-700 font-medium">💡 Ci sono <strong>${daAggiornare}</strong> prodotti che possono essere aggiornati!</p>
+                            <p class="text-sm text-blue-600 mt-1">Clicca "Aggiorna Date dai Fatture" per copiare le date dalle fatture collegate.</p>
+                        </div>
+                    ` : `
+                        <div class="bg-green-50 rounded-xl p-4 border-2 border-green-200 text-center">
+                            <p class="text-green-700 font-medium">✅ Tutti i prodotti con fattura hanno già la data!</p>
+                        </div>
+                    `}
+                `;
+                
+            } catch (err) {
+                console.error('❌ Errore:', err);
+                risultatiDiv.innerHTML = `
+                    <div class="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+                        <h2 class="text-lg font-bold text-red-900 mb-2">❌ Errore</h2>
+                        <p class="text-red-700">${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== 3. AGGIORNA DATE PRODOTTI DALLE FATTURE =====
+        async function aggiornaDateProdotti() {
+            const risultatiDiv = document.getElementById('risultati');
+            
+            // Conferma
+            const conferma = confirm(
+                '⚠️ AGGIORNAMENTO DATE PRODOTTI\n\n' +
+                'Questa operazione:\n' +
+                '1. Trova tutti i prodotti con fattura_id ma SENZA data_fattura\n' +
+                '2. Copia la data dalla fattura collegata\n\n' +
+                'Vuoi procedere?'
+            );
+            
+            if (!conferma) return;
+            
+            risultatiDiv.innerHTML = '<div class="text-blue-600">⏳ Preparazione aggiornamento...</div>';
+            showProgress(true);
+            
+            try {
+                // 1. Trova tutti i prodotti da aggiornare (hanno fattura_id ma non data_fattura)
+                const { data: prodottiDaAggiornare, error: errProdotti } = await supabaseClient
+                    .from('prodotti')
+                    .select('id, fattura_id')
+                    .not('fattura_id', 'is', null)
+                    .is('data_fattura', null);
+                
+                if (errProdotti) throw errProdotti;
+                
+                if (!prodottiDaAggiornare || prodottiDaAggiornare.length === 0) {
+                    showProgress(false);
+                    risultatiDiv.innerHTML = `
+                        <div class="bg-green-50 rounded-xl p-6 border-2 border-green-200 text-center">
+                            <p class="text-green-700 font-medium text-lg">✅ Nessun prodotto da aggiornare!</p>
+                            <p class="text-green-600 mt-2">Tutti i prodotti con fattura_id hanno già data_fattura.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const totale = prodottiDaAggiornare.length;
+                console.log(`📦 Trovati ${totale} prodotti da aggiornare`);
+                
+                // 2. Raggruppa prodotti per fattura_id
+                const perFattura = {};
+                prodottiDaAggiornare.forEach(p => {
+                    if (!perFattura[p.fattura_id]) {
+                        perFattura[p.fattura_id] = [];
+                    }
+                    perFattura[p.fattura_id].push(p.id);
+                });
+                
+                const fattureIds = Object.keys(perFattura);
+                console.log(`📄 ${fattureIds.length} fatture coinvolte`);
+                
+                // 3. Carica le date delle fatture
+                const { data: fatture, error: errFatture } = await supabaseClient
+                    .from('fatture')
+                    .select('id, data_fattura')
+                    .in('id', fattureIds);
+                
+                if (errFatture) throw errFatture;
+                
+                // Mappa fattura_id -> data_fattura
+                const fattureMap = {};
+                fatture.forEach(f => {
+                    fattureMap[f.id] = f.data_fattura;
+                });
+                
+                // 4. Aggiorna i prodotti in batch
+                let aggiornati = 0;
+                let errori = 0;
+                let senzaData = 0;
+                
+                for (const [fatturaId, prodottiIds] of Object.entries(perFattura)) {
+                    const dataFattura = fattureMap[fatturaId];
+                    
+                    if (!dataFattura) {
+                        console.warn(`⚠️ Fattura ${fatturaId} non ha data_fattura`);
+                        senzaData += prodottiIds.length;
+                        continue;
+                    }
+                    
+                    // Aggiorna in batch di 100
+                    for (let i = 0; i < prodottiIds.length; i += 100) {
+                        const batch = prodottiIds.slice(i, i + 100);
+                        
+                        const { error: errUpdate } = await supabaseClient
+                            .from('prodotti')
+                            .update({ data_fattura: dataFattura })
+                            .in('id', batch);
+                        
+                        if (errUpdate) {
+                            console.error('Errore update:', errUpdate);
+                            errori += batch.length;
+                        } else {
+                            aggiornati += batch.length;
+                        }
+                        
+                        updateProgress(aggiornati + errori + senzaData, totale);
+                    }
+                }
+                
+                showProgress(false);
+                
+                // 5. Mostra risultati
+                risultatiDiv.innerHTML = `
+                    <div class="bg-green-50 rounded-xl p-6 border-2 border-green-200">
+                        <h2 class="text-lg font-bold text-green-900 mb-4">✅ Aggiornamento Completato!</h2>
+                        
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="bg-white p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-600">Prodotti Aggiornati</p>
+                                <p class="text-3xl font-bold text-green-600">${aggiornati}</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-600">Errori</p>
+                                <p class="text-3xl font-bold text-red-600">${errori}</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-600">Fatture senza data</p>
+                                <p class="text-3xl font-bold text-orange-600">${senzaData}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <button onclick="verificaDateProdotti()" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">
+                                🔄 Verifica Nuovo Stato
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                console.log(`✅ Aggiornamento completato: ${aggiornati} OK, ${errori} errori, ${senzaData} senza data`);
+                
+            } catch (err) {
+                showProgress(false);
+                console.error('❌ Errore:', err);
+                risultatiDiv.innerHTML = `
+                    <div class="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+                        <h2 class="text-lg font-bold text-red-900 mb-2">❌ Errore</h2>
+                        <p class="text-red-700">${err.message}</p>
+                        <pre class="mt-4 text-xs bg-red-100 p-4 rounded overflow-auto">${JSON.stringify(err, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        console.log('✅ Tool Verifica Collegamento caricato');
+    </script>
+</body>
+</html>
