@@ -3,545 +3,735 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grappoli & Luppoli - Gestione Contabile</title>
+    <title>Dashboard Analytics - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .chart-container { position: relative; height: 400px; }
+        @media (max-width: 768px) { .chart-container { height: 300px; } }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-            <div class="text-center mb-6">
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Accesso Protetto</h2>
-                <p class="text-sm text-gray-600">Inserisci le tue credenziali per accedere</p>
-            </div>
-            
-            <form onsubmit="checkPassword(event)" class="space-y-4">
-                <div>
-                    <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input 
-                        type="email" 
-                        id="loginEmail" 
-                        autocomplete="email"
-                        placeholder="Inserisci la tua email"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                    >
-                </div>
-                
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        autocomplete="current-password"
-                        placeholder="Inserisci la password"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                    >
-                </div>
-                
-                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span id="errorText">Credenziali errate. Riprova.</span>
+    <script>
+        // Verifica sessione
+        const SESSION_KEY = 'app_authenticated';
+        const SESSION_DURATION = 24 * 60 * 60 * 1000;
+        const auth = localStorage.getItem(SESSION_KEY);
+        if (!auth) {
+            window.location.href = 'index.html';
+        } else {
+            try {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                if (now - authData.timestamp >= SESSION_DURATION) {
+                    localStorage.removeItem(SESSION_KEY);
+                    window.location.href = 'index.html';
+                }
+            } catch (e) {
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
                 </div>
                 
-                <button 
-                    type="submit" 
-                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105"
-                >
-                    Accedi
-                </button>
-            </form>
+                <div class="flex items-center space-x-3">
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Dashboard Analytics</h1>
+            <p class="text-gray-600">Analisi costi per categoria e previsioni di spesa</p>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+                <span class="text-gray-700 font-medium">Caricamento dati in corso...</span>
+            </div>
+        </div>
+
+        <!-- Filtro Periodo -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex flex-wrap items-center gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Periodo di Analisi</label>
+                    <select id="periodFilter" onchange="applyFilters()" class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="6">Ultimi 6 mesi</option>
+                        <option value="12" selected>Ultimo anno</option>
+                        <option value="24">Ultimi 2 anni</option>
+                        <option value="all">Tutti i dati</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Mesi di Previsione</label>
+                    <select id="forecastMonths" onchange="updateForecast()" class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="3" selected>3 mesi</option>
+                        <option value="6">6 mesi</option>
+                        <option value="12">12 mesi</option>
+                    </select>
+                </div>
+                <div class="ml-auto">
+                    <button onclick="exportData()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span>Esporta Dati</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm opacity-90">Spesa Totale (12m)</p>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p id="kpiTotalSpent" class="text-3xl font-bold">€0</p>
+                <p id="kpiTotalChange" class="text-sm mt-2 opacity-90">vs mese precedente</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm opacity-90">Media Mensile</p>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <p id="kpiAvgMonthly" class="text-3xl font-bold">€0</p>
+                <p class="text-sm mt-2 opacity-90">Ultimi 12 mesi</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm opacity-90">Previsione Pross. Mese</p>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+                <p id="kpiForecastNext" class="text-3xl font-bold">€0</p>
+                <p id="kpiForecastConfidence" class="text-sm mt-2 opacity-90">Confidenza: -</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm opacity-90">Categorie Attive</p>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                </div>
+                <p id="kpiCategories" class="text-3xl font-bold">0</p>
+                <p id="kpiTopCategory" class="text-sm mt-2 opacity-90 truncate">Top: -</p>
+            </div>
+        </div>
+
+        <!-- Grafici Principali -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Grafico Spesa Mensile per Categoria -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">📈 Andamento Spesa Mensile per Categoria</h2>
+                <div class="chart-container">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Grafico Previsione -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">🔮 Previsione Spesa Futura</h2>
+                <div class="chart-container">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribuzione per Categoria -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Torta Categorie -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">🥧 Distribuzione per Categoria (12m)</h2>
+                <div class="chart-container">
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Categorie -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">🏆 Top 5 Categorie per Spesa</h2>
+                <div id="topCategoriesList" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Tabella Dettaglio Mensile -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600">
+                <h2 class="text-xl font-bold text-white">📅 Dettaglio Mensile per Categoria</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mese</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Importo</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Var. %</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyDetailTable" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
         </div>
     </div>
-    
-    <div id="app"></div>
 
     <script>
-        // ========== REDIRECT SE NON AUTENTICATO ==========
-        (function() {
-            const SESSION_KEY = 'app_authenticated';
-            const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-            
-            const auth = localStorage.getItem(SESSION_KEY);
-            
-            if (!auth) {
-                console.log('❌ Nessuna sessione trovata - redirect a index.html');
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            try {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp >= SESSION_DURATION) {
-                    console.log('⏰ Sessione scaduta - redirect a index.html');
-                    localStorage.removeItem(SESSION_KEY);
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                console.log('✅ Sessione valida:', authData.userName, '-', authData.userRole);
-            } catch (e) {
-                console.error('❌ Errore parsing sessione - redirect a index.html');
-                localStorage.removeItem(SESSION_KEY);
-                window.location.href = 'index.html';
-                return;
-            }
-        })();
-        
-        // ========== RESTO DEL CODICE APPLICAZIONE ==========
-        
-        // ========== SISTEMA DI AUTENTICAZIONE ==========
-        const USERS_KEY = 'authorized_users';
-        const SESSION_KEY = 'app_authenticated';
-        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 ore
-        
-        function getAuthorizedUsers() {
-            try {
-                const saved = localStorage.getItem(USERS_KEY);
-                return saved ? JSON.parse(saved) : [];
-            } catch (e) {
-                return [];
-            }
-        }
-        
-        function checkAuth() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            if (auth) {
-                const authData = JSON.parse(auth);
-                const now = new Date().getTime();
-                
-                if (now - authData.timestamp < SESSION_DURATION) {
-                    document.getElementById('loginModal').style.display = 'none';
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        window.checkPassword = function(event) {
-            event.preventDefault();
-            
-            const emailInput = document.getElementById('loginEmail');
-            const passwordInput = document.getElementById('password');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            
-            const enteredEmail = emailInput.value.trim().toLowerCase();
-            const enteredPassword = passwordInput.value;
-            
-            const users = getAuthorizedUsers();
-            const user = users.find(u => u.email.toLowerCase() === enteredEmail);
-            
-            if (!user) {
-                errorText.textContent = 'Email non registrata.';
-                errorMessage.classList.remove('hidden');
-                emailInput.classList.add('border-red-500');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    emailInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (!user.attivo) {
-                errorText.textContent = 'Utente disattivato. Contatta l\'amministratore.';
-                errorMessage.classList.remove('hidden');
-                emailInput.value = '';
-                passwordInput.value = '';
-                emailInput.focus();
-                
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (user.password !== enteredPassword) {
-                errorText.textContent = 'Password errata.';
-                errorMessage.classList.remove('hidden');
-                passwordInput.value = '';
-                passwordInput.focus();
-                passwordInput.classList.add('border-red-500');
-                
-                setTimeout(() => {
-                    passwordInput.classList.remove('border-red-500');
-                    errorMessage.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            const authData = {
-                authenticated: true,
-                timestamp: new Date().getTime(),
-                userId: user.id,
-                userName: user.nome,
-                userEmail: user.email,
-                userRole: user.ruolo
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
-            
-            const modal = document.getElementById('loginModal');
-            modal.style.opacity = '0';
-            modal.style.transition = 'opacity 0.3s';
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        };
-        
-        window.logout = function() {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.href = "index.html";
-        };
-        
-        window.getCurrentUser = function() {
-            const auth = localStorage.getItem(SESSION_KEY);
-            return auth ? JSON.parse(auth) : null;
-        };
-        
-        checkAuth();
-        
-        // ========== APPLICAZIONE PRINCIPALE ==========
-        
-        // Stato globale
-        let state = {
-            currentPage: 'dashboard', // dashboard, fatture, prodotti
-            fatture: [],
-            stats: {
-                totaleEntrate: 0,
-                totaleUscite: 0,
-                fattureCaricate: 0,
-                fattureDelMese: 0,
-                prodottiUnici: 0
-            }
-        };
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Carica dati
-        function loadData() {
+        let allProdotti = [];
+        let monthlyData = {};
+        let categoryColors = {};
+        let charts = {};
+
+        function logout() {
+            localStorage.removeItem('app_authenticated');
+            window.location.href = 'index.html';
+        }
+
+        // ===== CARICAMENTO DATI =====
+        async function loadData() {
+            showLoading(true);
             try {
-                const saved = localStorage.getItem('fatture_elettroniche');
-                state.fatture = saved ? JSON.parse(saved) : [];
-                calculateStats();
-            } catch (e) {
-                state.fatture = [];
+                // Carica prodotti con categoria e data fattura
+                const { data: prodotti, error } = await supabaseClient
+                    .from('prodotti')
+                    .select(`
+                        id,
+                        nome,
+                        prezzo_ivato,
+                        quantita,
+                        data_fattura,
+                        tipo_prodotto (
+                            id,
+                            nome,
+                            aggregante_prodotto (
+                                id,
+                                nome,
+                                colore
+                            )
+                        )
+                    `)
+                    .not('data_fattura', 'is', null)
+                    .order('data_fattura', { ascending: true });
+
+                if (error) throw error;
+
+                allProdotti = prodotti || [];
+                console.log(`✅ Caricati ${allProdotti.length} prodotti`);
+
+                processData();
+                applyFilters();
+                showLoading(false);
+            } catch (err) {
+                console.error('Errore caricamento:', err);
+                alert('Errore nel caricamento dei dati: ' + err.message);
+                showLoading(false);
             }
         }
 
-        // Calcola statistiche
-        function calculateStats() {
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
+        function showLoading(show) {
+            document.getElementById('loadingIndicator').classList.toggle('hidden', !show);
+        }
 
-            state.stats.fattureCaricate = state.fatture.length;
-            state.stats.totaleEntrate = 0;
-            state.stats.totaleUscite = 0;
-            state.stats.fattureDelMese = 0;
+        // ===== ELABORAZIONE DATI =====
+        function processData() {
+            monthlyData = {};
 
-            // Conta prodotti unici
-            const prodottiSet = new Set();
-            
-            state.fatture.forEach(f => {
-                const fatturaData = new Date(f.dt);
-                
-                // Totale generale (assumiamo tutte uscite per semplicità)
-                state.stats.totaleUscite += f.tot;
+            allProdotti.forEach(p => {
+                if (!p.data_fattura || !p.prezzo_ivato) return;
 
-                // Fatture del mese corrente
-                if (fatturaData.getMonth() === currentMonth && 
-                    fatturaData.getFullYear() === currentYear) {
-                    state.stats.fattureDelMese++;
+                const data = new Date(p.data_fattura);
+                const monthKey = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+                const categoria = p.tipo_prodotto?.aggregante_prodotto?.nome || 'Non categorizzato';
+                const colore = p.tipo_prodotto?.aggregante_prodotto?.colore || '#6B7280';
+
+                if (!categoryColors[categoria]) {
+                    categoryColors[categoria] = colore;
                 }
 
-                // Prodotti unici
-                f.itm.forEach(item => {
-                    prodottiSet.add(item.d.toLowerCase().trim());
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = {};
+                }
+
+                if (!monthlyData[monthKey][categoria]) {
+                    monthlyData[monthKey][categoria] = 0;
+                }
+
+                const valore = p.prezzo_ivato * (p.quantita || 0);
+                monthlyData[monthKey][categoria] += valore;
+            });
+
+            console.log('📊 Dati elaborati:', monthlyData);
+        }
+
+        // ===== APPLICAZIONE FILTRI =====
+        function applyFilters() {
+            const periodMonths = document.getElementById('periodFilter').value;
+            let filteredData = { ...monthlyData };
+
+            if (periodMonths !== 'all') {
+                const months = parseInt(periodMonths);
+                const now = new Date();
+                const cutoffDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
+                
+                filteredData = Object.fromEntries(
+                    Object.entries(monthlyData).filter(([monthKey]) => {
+                        const [year, month] = monthKey.split('-').map(Number);
+                        const monthDate = new Date(year, month - 1, 1);
+                        return monthDate >= cutoffDate;
+                    })
+                );
+            }
+
+            updateDashboard(filteredData);
+        }
+
+        // ===== AGGIORNAMENTO DASHBOARD =====
+        function updateDashboard(data) {
+            updateKPIs(data);
+            updateMonthlyTrendChart(data);
+            updateCategoryPieChart(data);
+            updateTopCategories(data);
+            updateMonthlyDetailTable(data);
+            updateForecast();
+        }
+
+        // ===== KPIs =====
+        function updateKPIs(data) {
+            const months = Object.keys(data).sort();
+            const totalSpent = months.reduce((sum, month) => {
+                return sum + Object.values(data[month]).reduce((s, v) => s + v, 0);
+            }, 0);
+
+            const avgMonthly = months.length > 0 ? totalSpent / months.length : 0;
+
+            // Variazione vs mese precedente
+            let changePercent = 0;
+            if (months.length >= 2) {
+                const lastMonth = months[months.length - 1];
+                const prevMonth = months[months.length - 2];
+                const lastTotal = Object.values(data[lastMonth]).reduce((s, v) => s + v, 0);
+                const prevTotal = Object.values(data[prevMonth]).reduce((s, v) => s + v, 0);
+                changePercent = prevTotal > 0 ? ((lastTotal - prevTotal) / prevTotal * 100) : 0;
+            }
+
+            // Categorie
+            const allCategories = new Set();
+            Object.values(data).forEach(monthData => {
+                Object.keys(monthData).forEach(cat => allCategories.add(cat));
+            });
+
+            // Top categoria
+            const categoryTotals = {};
+            Object.values(data).forEach(monthData => {
+                Object.entries(monthData).forEach(([cat, amount]) => {
+                    categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
+                });
+            });
+            const topCategory = Object.entries(categoryTotals)
+                .sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+
+            document.getElementById('kpiTotalSpent').textContent = formatCurrency(totalSpent);
+            document.getElementById('kpiTotalChange').textContent = 
+                `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(1)}% vs mese precedente`;
+            document.getElementById('kpiAvgMonthly').textContent = formatCurrency(avgMonthly);
+            document.getElementById('kpiCategories').textContent = allCategories.size;
+            document.getElementById('kpiTopCategory').textContent = `Top: ${topCategory}`;
+        }
+
+        // ===== GRAFICO ANDAMENTO MENSILE =====
+        function updateMonthlyTrendChart(data) {
+            const months = Object.keys(data).sort();
+            const categories = [...new Set(
+                Object.values(data).flatMap(m => Object.keys(m))
+            )].sort();
+
+            const datasets = categories.map(cat => {
+                return {
+                    label: cat,
+                    data: months.map(month => data[month][cat] || 0),
+                    borderColor: categoryColors[cat] || '#6B7280',
+                    backgroundColor: (categoryColors[cat] || '#6B7280') + '33',
+                    tension: 0.3,
+                    fill: true
+                };
+            });
+
+            const ctx = document.getElementById('monthlyTrendChart');
+            if (charts.monthlyTrend) charts.monthlyTrend.destroy();
+
+            charts.monthlyTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months.map(m => formatMonth(m)),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + (value / 1000).toFixed(1) + 'k';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== GRAFICO TORTA CATEGORIE =====
+        function updateCategoryPieChart(data) {
+            const categoryTotals = {};
+            Object.values(data).forEach(monthData => {
+                Object.entries(monthData).forEach(([cat, amount]) => {
+                    categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
                 });
             });
 
-            state.stats.prodottiUnici = prodottiSet.size;
+            const labels = Object.keys(categoryTotals);
+            const values = Object.values(categoryTotals);
+            const colors = labels.map(cat => categoryColors[cat] || '#6B7280');
+
+            const ctx = document.getElementById('categoryPieChart');
+            if (charts.categoryPie) charts.categoryPie.destroy();
+
+            charts.categoryPie = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = values.reduce((a, b) => a + b, 0);
+                                    const percent = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + formatCurrency(context.parsed) + ' (' + percent + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
+        // ===== TOP CATEGORIE =====
+        function updateTopCategories(data) {
+            const categoryTotals = {};
+            Object.values(data).forEach(monthData => {
+                Object.entries(monthData).forEach(([cat, amount]) => {
+                    categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
+                });
+            });
+
+            const sorted = Object.entries(categoryTotals)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            const maxValue = sorted[0]?.[1] || 1;
+
+            const html = sorted.map(([cat, amount]) => {
+                const percent = (amount / maxValue * 100);
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium text-gray-800">${cat}</span>
+                            <span class="font-bold text-gray-900">${formatCurrency(amount)}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="h-3 rounded-full transition-all" 
+                                 style="width: ${percent}%; background-color: ${categoryColors[cat] || '#6B7280'}"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('topCategoriesList').innerHTML = html || '<p class="text-gray-400 text-center py-8">Nessun dato disponibile</p>';
+        }
+
+        // ===== TABELLA DETTAGLIO =====
+        function updateMonthlyDetailTable(data) {
+            const months = Object.keys(data).sort().reverse();
+            const rows = [];
+
+            months.forEach((month, idx) => {
+                const monthData = data[month];
+                const prevMonth = months[idx + 1];
+                const prevMonthData = prevMonth ? data[prevMonth] : {};
+
+                Object.entries(monthData).forEach(([cat, amount]) => {
+                    const prevAmount = prevMonthData[cat] || 0;
+                    const change = prevAmount > 0 ? ((amount - prevAmount) / prevAmount * 100) : 0;
+                    const trend = change > 5 ? '📈' : change < -5 ? '📉' : '➡️';
+
+                    rows.push(`
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatMonth(month)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                                      style="background-color: ${categoryColors[cat]}22; color: ${categoryColors[cat]}">
+                                    ${cat}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">${formatCurrency(amount)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${change >= 0 ? 'text-green-600' : 'text-red-600'}">${change >= 0 ? '+' : ''}${change.toFixed(1)}%</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-lg">${trend}</td>
+                        </tr>
+                    `);
+                });
+            });
+
+            document.getElementById('monthlyDetailTable').innerHTML = rows.join('') || '<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">Nessun dato disponibile</td></tr>';
+        }
+
+        // ===== PREVISIONE =====
+        function updateForecast() {
+            const forecastMonths = parseInt(document.getElementById('forecastMonths').value);
+            const months = Object.keys(monthlyData).sort();
+            
+            if (months.length < 3) {
+                document.getElementById('kpiForecastNext').textContent = 'Dati insufficienti';
+                document.getElementById('kpiForecastConfidence').textContent = 'Servono almeno 3 mesi';
+                return;
+            }
+
+            // Usa gli ultimi 6 mesi per la previsione
+            const recentMonths = months.slice(-6);
+            const totals = recentMonths.map(month => 
+                Object.values(monthlyData[month]).reduce((s, v) => s + v, 0)
+            );
+
+            // Media mobile semplice
+            const avgRecent = totals.reduce((a, b) => a + b, 0) / totals.length;
+
+            // Calcola trend (regressione lineare semplificata)
+            const trend = totals.length > 1 ? 
+                (totals[totals.length - 1] - totals[0]) / totals.length : 0;
+
+            // Previsione prossimo mese
+            const nextMonthForecast = avgRecent + trend;
+
+            // Genera previsioni per i prossimi N mesi
+            const forecasts = [];
+            for (let i = 1; i <= forecastMonths; i++) {
+                forecasts.push(avgRecent + (trend * i));
+            }
+
+            // Calcola confidenza (basata sulla varianza)
+            const variance = totals.reduce((sum, val) => sum + Math.pow(val - avgRecent, 2), 0) / totals.length;
+            const stdDev = Math.sqrt(variance);
+            const confidence = Math.max(0, 100 - (stdDev / avgRecent * 100));
+
+            document.getElementById('kpiForecastNext').textContent = formatCurrency(nextMonthForecast);
+            document.getElementById('kpiForecastConfidence').textContent = `Confidenza: ${confidence.toFixed(0)}%`;
+
+            // Aggiorna grafico previsione
+            updateForecastChart(recentMonths, totals, forecasts);
+        }
+
+        function updateForecastChart(historicMonths, historicTotals, forecasts) {
+            const forecastMonths = parseInt(document.getElementById('forecastMonths').value);
+            
+            // Genera le label per i mesi futuri
+            const lastMonth = historicMonths[historicMonths.length - 1];
+            const [year, month] = lastMonth.split('-').map(Number);
+            const futureMonths = [];
+            
+            for (let i = 1; i <= forecastMonths; i++) {
+                const futureDate = new Date(year, month - 1 + i, 1);
+                const futureKey = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`;
+                futureMonths.push(futureKey);
+            }
+
+            const allMonths = [...historicMonths, ...futureMonths];
+            const historicData = [...historicTotals, ...Array(forecastMonths).fill(null)];
+            const forecastData = [...Array(historicMonths.length).fill(null), ...forecasts];
+
+            const ctx = document.getElementById('forecastChart');
+            if (charts.forecast) charts.forecast.destroy();
+
+            charts.forecast = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allMonths.map(m => formatMonth(m)),
+                    datasets: [
+                        {
+                            label: 'Storico',
+                            data: historicData,
+                            borderColor: '#3B82F6',
+                            backgroundColor: '#3B82F633',
+                            tension: 0.3,
+                            fill: false,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Previsione',
+                            data: forecastData,
+                            borderColor: '#F59E0B',
+                            backgroundColor: '#F59E0B33',
+                            tension: 0.3,
+                            fill: true,
+                            borderWidth: 2,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.parsed.y === null) return null;
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + (value / 1000).toFixed(1) + 'k';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== EXPORT DATI =====
+        function exportData() {
+            const months = Object.keys(monthlyData).sort();
+            const categories = [...new Set(
+                Object.values(monthlyData).flatMap(m => Object.keys(m))
+            )].sort();
+
+            let csv = 'Mese,' + categories.join(',') + ',Totale\n';
+
+            months.forEach(month => {
+                const row = [formatMonth(month)];
+                let total = 0;
+                categories.forEach(cat => {
+                    const value = monthlyData[month][cat] || 0;
+                    row.push(value.toFixed(2));
+                    total += value;
+                });
+                row.push(total.toFixed(2));
+                csv += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `analisi_spese_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // ===== UTILITY =====
         function formatCurrency(value) {
             return new Intl.NumberFormat('it-IT', {
                 style: 'currency',
-                currency: 'EUR'
+                currency: 'EUR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
             }).format(value || 0);
         }
 
-        window.navigateTo = function(page) {
-            if (page === 'fatture') {
-                window.location.href = 'fatture.html';
-            } else if (page === 'prodotti') {
-                window.location.href = 'prodotti.html';
-            } else {
-                state.currentPage = page;
-                render();
-            }
-        };
-
-        function render() {
-            const app = document.getElementById('app');
-            
-            app.innerHTML = `
-                <!-- Navbar -->
-<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex items-center">
-                <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
-                    </div>
-                    <span class="text-lg font-bold">Grappoli & Luppoli</span>
-                </button>
-                
-                <!-- MENU PRINCIPALE -->
-                <div class="hidden md:ml-10 md:flex md:space-x-4">
-                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Dashboard
-                    </a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Fatture
-                    </a>
-                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Prodotti
-                    </a>
-                    <!-- NUOVO LINK FORNITORI -->
-                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Fornitori
-                    </a>
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Utenti
-                    </a>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                    Dashboard
-                </button>
-                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
-                    Esci
-                </button>
-            </div>
-        </div>
-    </div>
-</nav>
-
-                <!-- Main Content -->
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
-                    <!-- Header -->
-                    <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-gray-900">Dashboard Contabile</h1>
-                        <p class="mt-2 text-gray-600">Panoramica generale della situazione economica</p>
-                    </div>
-
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <!-- Card Entrate -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Entrate Totali</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${formatCurrency(state.stats.totaleEntrate)}</p>
-                                </div>
-                                <div class="bg-green-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Uscite -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Uscite Totali</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${formatCurrency(state.stats.totaleUscite)}</p>
-                                </div>
-                                <div class="bg-red-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Bilancio -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Bilancio</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${formatCurrency(state.stats.totaleEntrate - state.stats.totaleUscite)}</p>
-                                </div>
-                                <div class="bg-blue-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Fatture -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Fatture Caricate</p>
-                                    <p class="text-2xl font-bold text-gray-900 mt-2">${state.stats.fattureCaricate}</p>
-                                    <p class="text-xs text-gray-500 mt-1">${state.stats.fattureDelMese} questo mese</p>
-                                </div>
-                                <div class="bg-purple-100 p-3 rounded-lg">
-                                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <!-- Gestione Fatture -->
-                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-xl p-6 text-white cursor-pointer transform hover:scale-105 transition-transform" onclick="navigateTo('fatture')">
-                            <div class="flex items-center justify-between mb-4">
-                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                                    ${state.stats.fattureCaricate}
-                                </div>
-                            </div>
-                            <h3 class="text-xl font-bold mb-2">Gestione Fatture</h3>
-                            <p class="text-blue-100 text-sm mb-4">Carica e visualizza le fatture elettroniche in formato XML</p>
-                            <div class="flex items-center text-sm font-medium">
-                                <span>Vai al portale</span>
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Analisi Prodotti -->
-                        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-xl p-6 text-white cursor-pointer transform hover:scale-105 transition-transform" onclick="navigateTo('prodotti')">
-                            <div class="flex items-center justify-between mb-4">
-                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                </svg>
-                                <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                                    ${state.stats.prodottiUnici}
-                                </div>
-                            </div>
-                            <h3 class="text-xl font-bold mb-2">Analisi Prodotti</h3>
-                            <p class="text-purple-100 text-sm mb-4">Esplora tutti i prodotti acquistati e le statistiche</p>
-                            <div class="flex items-center text-sm font-medium">
-                                <span>Vai all'analisi</span>
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Report Mensile -->
-                        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-xl p-6 text-white cursor-pointer transform hover:scale-105 transition-transform">
-                            <div class="flex items-center justify-between mb-4">
-                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                                    Presto
-                                </div>
-                            </div>
-                            <h3 class="text-xl font-bold mb-2">Report Mensile</h3>
-                            <p class="text-green-100 text-sm mb-4">Genera report dettagliati delle entrate e uscite</p>
-                            <div class="flex items-center text-sm font-medium">
-                                <span>Prossimamente</span>
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold text-gray-900">Attività Recente</h2>
-                            <button onclick="navigateTo('fatture')" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center">
-                                Vedi tutto
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        ${state.fatture.length === 0 ? `
-                            <div class="text-center py-12">
-                                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                </svg>
-                                <p class="text-gray-600 text-lg font-medium">Nessuna attività recente</p>
-                                <p class="text-gray-500 text-sm mt-2">Carica la tua prima fattura per iniziare</p>
-                                <button onclick="navigateTo('fatture')" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                    Carica Fattura
-                                </button>
-                            </div>
-                        ` : `
-                            <div class="space-y-4">
-                                ${state.fatture.slice(0, 5).map(f => `
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <div class="flex items-center space-x-4">
-                                            <div class="bg-blue-100 p-3 rounded-lg">
-                                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="font-semibold text-gray-900">Fattura ${f.num}</p>
-                                                <p class="text-sm text-gray-600">${f.ced.nm}</p>
-                                                <p class="text-xs text-gray-500">${new Date(f.dt).toLocaleDateString('it-IT')}</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-bold text-red-600">${formatCurrency(f.tot)}</p>
-                                            <p class="text-xs text-gray-500">${f.itm.length} prodotti</p>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `}
-                    </div>
-                </div>
-            `;
+        function formatMonth(monthKey) {
+            const [year, month] = monthKey.split('-');
+            const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            return `${months[parseInt(month) - 1]} ${year}`;
         }
 
-        // Inizializzazione
+        // ===== INIZIALIZZAZIONE =====
         loadData();
-        render();
-        
-        // Aggiorna ogni 30 secondi
-        setInterval(() => {
-            loadData();
-            render();
-        }, 30000);
+        console.log('✅ Dashboard Analytics caricata');
     </script>
 </body>
 </html>
