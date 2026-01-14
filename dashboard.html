@@ -194,6 +194,21 @@
             </div>
         </div>
 
+        <!-- Analisi Stagionalità -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">🌡️ Pattern Stagionale per Categoria</h2>
+            <p class="text-sm text-gray-600 mb-4">Mostra la deviazione media dal trend per ogni mese dell'anno</p>
+            <div class="chart-container">
+                <canvas id="seasonalityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Dettaglio Previsioni per Categoria -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">🔍 Dettaglio Previsioni per Categoria</h2>
+            <div id="categoryForecastDetails" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
         <!-- Tabella Dettaglio Mensile -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -559,7 +574,7 @@
             document.getElementById('monthlyDetailTable').innerHTML = rows.join('') || '<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">Nessun dato disponibile</td></tr>';
         }
 
-        // ===== PREVISIONE =====
+        // ===== PREVISIONE CON STAGIONALITÀ E TREND =====
         function updateForecast() {
             const forecastMonths = parseInt(document.getElementById('forecastMonths').value);
             const months = Object.keys(monthlyData).sort();
@@ -570,86 +585,141 @@
                 return;
             }
 
-            // Usa gli ultimi 6 mesi per la previsione
-            const recentMonths = months.slice(-6);
-            const totals = recentMonths.map(month => 
-                Object.values(monthlyData[month]).reduce((s, v) => s + v, 0)
-            );
+            // Raccogli tutte le categorie
+            const allCategories = new Set();
+            Object.values(monthlyData).forEach(monthData => {
+                Object.keys(monthData).forEach(cat => allCategories.add(cat));
+            });
 
-            // Media mobile semplice
-            const avgRecent = totals.reduce((a, b) => a + b, 0) / totals.length;
+            const categoryForecasts = {};
+            let totalNextMonth = 0;
+            let avgConfidence = 0;
+            let validCategories = 0;
 
-            // Calcola trend (regressione lineare semplificata)
-            const trend = totals.length > 1 ? 
-                (totals[totals.length - 1] - totals[0]) / totals.length : 0;
+            // Previsione per ogni categoria
+            allCategories.forEach(category => {
+                const forecast = forecastCategory(category, months, forecastMonths);
+                if (forecast.valid) {
+                    categoryForecasts[category] = forecast;
+                    totalNextMonth += forecast.forecasts[0];
+                    avgConfidence += forecast.confidence;
+                    validCategories++;
+                }
+            });
 
-            // Previsione prossimo mese
-            const nextMonthForecast = avgRecent + trend;
-
-            // Genera previsioni per i prossimi N mesi
-            const forecasts = [];
-            for (let i = 1; i <= forecastMonths; i++) {
-                forecasts.push(avgRecent + (trend * i));
+            if (validCategories > 0) {
+                avgConfidence /= validCategories;
             }
 
-            // Calcola confidenza (basata sulla varianza)
-            const variance = totals.reduce((sum, val) => sum + Math.pow(val - avgRecent, 2), 0) / totals.length;
-            const stdDev = Math.sqrt(variance);
-            const confidence = Math.max(0, 100 - (stdDev / avgRecent * 100));
-
-            document.getElementById('kpiForecastNext').textContent = formatCurrency(nextMonthForecast);
-            document.getElementById('kpiForecastConfidence').textContent = `Confidenza: ${confidence.toFixed(0)}%`;
+            document.getElementById('kpiForecastNext').textContent = formatCurrency(totalNextMonth);
+            document.getElementById('kpiForecastConfidence').textContent = `Confidenza: ${avgConfidence.toFixed(0)}%`;
 
             // Aggiorna grafico previsione
-            updateForecastChart(recentMonths, totals, forecasts);
+            updateForecastChart(months, categoryForecasts, forecastMonths);
+            
+            // Aggiorna dettagli previsioni per categoria
+            updateCategoryForecastDetails(categoryForecasts);
         }
 
-        function updateForecastChart(historicMonths, historicTotals, forecasts) {
-            const forecastMonths = parseInt(document.getElementById('forecastMonths').value);
+        function updateCategoryForecastDetails(categoryForecasts) {
+            const container = document.getElementById('categoryForecastDetails');
             
-            // Genera le label per i mesi futuri
-            const lastMonth = historicMonths[historicMonths.length - 1];
-            const [year, month] = lastMonth.split('-').map(Number);
-            const futureMonths = [];
-            
-            for (let i = 1; i <= forecastMonths; i++) {
-                const futureDate = new Date(year, month - 1 + i, 1);
-                const futureKey = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`;
-                futureMonths.push(futureKey);
+            if (Object.keys(categoryForecasts).length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center col-span-full py-8">Nessuna previsione disponibile</p>';
+                return;
             }
 
-            const allMonths = [...historicMonths, ...futureMonths];
-            const historicData = [...historicTotals, ...Array(forecastMonths).fill(null)];
-            const forecastData = [...Array(historicMonths.length).fill(null), ...forecasts];
+            const html = Object.entries(categoryForecasts)
+                .sort((a, b) => b[1].forecasts[0] - a[1].forecasts[0])
+                .map(([category, forecast]) => {
+                    const nextMonth = forecast.forecasts[0];
+                    const trendDirection = forecast.trend > 0 ? '📈' : forecast.trend < 0 ? '📉' : '➡️';
+                    const trendPercent = forecast.trend;
+                    
+                    // Trova il picco stagionale
+                    const seasonalPeakMonth = forecast.seasonal
+                        .map((s, i) => ({ month: i, value: s.avg }))
+                        .sort((a, b) => b.value - a.value)[0];
+                    const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+                    const peakMonth = monthNames[seasonalPeakMonth.month];
 
-            const ctx = document.getElementById('forecastChart');
-            if (charts.forecast) charts.forecast.destroy();
+                    return `
+                        <div class="border-2 rounded-lg p-4 hover:shadow-md transition-shadow" style="border-color: ${categoryColors[category] || '#6B7280'}22">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-gray-900">${category}</h3>
+                                <span class="text-2xl">${trendDirection}</span>
+                            </div>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Prossimo mese:</span>
+                                    <span class="font-bold" style="color: ${categoryColors[category] || '#6B7280'}">${formatCurrency(nextMonth)}</span>
+                                </div>
+                                
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Confidenza:</span>
+                                    <span class="font-semibold ${forecast.confidence >= 70 ? 'text-green-600' : forecast.confidence >= 50 ? 'text-yellow-600' : 'text-red-600'}">
+                                        ${forecast.confidence.toFixed(0)}%
+                                    </span>
+                                </div>
+                                
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Trend mensile:</span>
+                                    <span class="font-semibold ${trendPercent >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                        ${trendPercent >= 0 ? '+' : ''}${formatCurrency(trendPercent)}
+                                    </span>
+                                </div>
+                                
+                                <div class="pt-2 mt-2 border-t border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-600 text-xs">Picco stagionale:</span>
+                                        <span class="text-xs font-medium px-2 py-1 rounded" style="background-color: ${categoryColors[category] || '#6B7280'}22; color: ${categoryColors[category] || '#6B7280'}">
+                                            ${peakMonth}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                                    <div class="h-2 rounded-full transition-all" 
+                                         style="width: ${forecast.confidence}%; background-color: ${categoryColors[category] || '#6B7280'}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
 
-            charts.forecast = new Chart(ctx, {
+            container.innerHTML = html;
+            
+            // Aggiorna grafico stagionalità
+            updateSeasonalityChart(categoryForecasts);
+        }
+
+        function updateSeasonalityChart(categoryForecasts) {
+            const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            const categories = Object.keys(categoryForecasts).sort();
+
+            const datasets = categories.map(category => {
+                const forecast = categoryForecasts[category];
+                const seasonalData = forecast.seasonal.map(s => s.avg);
+
+                return {
+                    label: category,
+                    data: seasonalData,
+                    borderColor: categoryColors[category] || '#6B7280',
+                    backgroundColor: (categoryColors[category] || '#6B7280') + '99',
+                    borderWidth: 2,
+                    tension: 0.4
+                };
+            });
+
+            const ctx = document.getElementById('seasonalityChart');
+            if (charts.seasonality) charts.seasonality.destroy();
+
+            charts.seasonality = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: allMonths.map(m => formatMonth(m)),
-                    datasets: [
-                        {
-                            label: 'Storico',
-                            data: historicData,
-                            borderColor: '#3B82F6',
-                            backgroundColor: '#3B82F633',
-                            tension: 0.3,
-                            fill: false,
-                            borderWidth: 2
-                        },
-                        {
-                            label: 'Previsione',
-                            data: forecastData,
-                            borderColor: '#F59E0B',
-                            backgroundColor: '#F59E0B33',
-                            tension: 0.3,
-                            fill: true,
-                            borderWidth: 2,
-                            borderDash: [5, 5]
-                        }
-                    ]
+                    labels: monthNames,
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
@@ -665,14 +735,273 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    if (context.parsed.y === null) return null;
-                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                    const value = context.parsed.y;
+                                    const sign = value >= 0 ? '+' : '';
+                                    return context.dataset.label + ': ' + sign + formatCurrency(value);
+                                },
+                                footer: function(tooltipItems) {
+                                    return 'Deviazione dal trend medio';
                                 }
                             }
                         }
                     },
                     scales: {
                         y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    const sign = value >= 0 ? '+' : '';
+                                    return sign + '€' + (value / 1000).toFixed(1) + 'k';
+                                }
+                            },
+                            grid: {
+                                color: function(context) {
+                                    if (context.tick.value === 0) {
+                                        return '#000';
+                                    }
+                                    return 'rgba(0, 0, 0, 0.1)';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function forecastCategory(category, allMonths, forecastPeriods) {
+            // Estrai serie temporale per questa categoria (solo mesi con valore > 0)
+            const series = [];
+            const monthIndices = [];
+            
+            allMonths.forEach((month, idx) => {
+                const value = monthlyData[month][category];
+                if (value && value > 0) {
+                    series.push(value);
+                    monthIndices.push(idx);
+                }
+            });
+
+            // Serve un minimo di dati
+            if (series.length < 3) {
+                return { valid: false };
+            }
+
+            // ===== 1. CALCOLO TREND (Regressione Lineare) =====
+            const n = series.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            
+            for (let i = 0; i < n; i++) {
+                const x = monthIndices[i];
+                const y = series[i];
+                sumX += x;
+                sumY += y;
+                sumXY += x * y;
+                sumX2 += x * x;
+            }
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+
+            // ===== 2. CALCOLO STAGIONALITÀ =====
+            // Raggruppa per mese dell'anno (0-11)
+            const seasonalData = Array(12).fill(0).map(() => ({ values: [], avg: 0 }));
+            
+            allMonths.forEach((month, idx) => {
+                const value = monthlyData[month][category];
+                if (value && value > 0) {
+                    const [year, monthNum] = month.split('-').map(Number);
+                    const monthOfYear = monthNum - 1; // 0-based
+                    
+                    // Calcola valore detrended
+                    const trendValue = slope * idx + intercept;
+                    const detrended = value - trendValue;
+                    
+                    seasonalData[monthOfYear].values.push(detrended);
+                }
+            });
+
+            // Calcola media stagionale per ogni mese
+            seasonalData.forEach(monthData => {
+                if (monthData.values.length > 0) {
+                    monthData.avg = monthData.values.reduce((a, b) => a + b, 0) / monthData.values.length;
+                }
+            });
+
+            // Normalizza stagionalità (media = 0)
+            const avgSeasonal = seasonalData.reduce((s, m) => s + m.avg, 0) / 12;
+            seasonalData.forEach(m => m.avg -= avgSeasonal);
+
+            // ===== 3. GENERA PREVISIONI =====
+            const forecasts = [];
+            const lastMonthIndex = allMonths.length - 1;
+            const [lastYear, lastMonth] = allMonths[lastMonthIndex].split('-').map(Number);
+
+            for (let i = 1; i <= forecastPeriods; i++) {
+                const futureIndex = lastMonthIndex + i;
+                
+                // Trend
+                const trendComponent = slope * futureIndex + intercept;
+                
+                // Stagionalità
+                const futureDate = new Date(lastYear, lastMonth - 1 + i, 1);
+                const futureMonthOfYear = futureDate.getMonth();
+                const seasonalComponent = seasonalData[futureMonthOfYear].avg;
+                
+                // Previsione = Trend + Stagionalità
+                const prediction = Math.max(0, trendComponent + seasonalComponent);
+                forecasts.push(prediction);
+            }
+
+            // ===== 4. CALCOLO CONFIDENZA =====
+            // Basata su R² e varianza residui
+            let sse = 0; // Sum of Squared Errors
+            let sst = 0; // Total Sum of Squares
+            const meanY = sumY / n;
+
+            for (let i = 0; i < n; i++) {
+                const x = monthIndices[i];
+                const yActual = series[i];
+                const [year, monthNum] = allMonths[monthIndices[i]].split('-').map(Number);
+                const monthOfYear = monthNum - 1;
+                
+                const yPredicted = (slope * x + intercept) + seasonalData[monthOfYear].avg;
+                
+                sse += Math.pow(yActual - yPredicted, 2);
+                sst += Math.pow(yActual - meanY, 2);
+            }
+
+            const r2 = sst > 0 ? 1 - (sse / sst) : 0;
+            const confidence = Math.max(0, Math.min(100, r2 * 100));
+
+            return {
+                valid: true,
+                forecasts: forecasts,
+                confidence: confidence,
+                trend: slope,
+                seasonal: seasonalData,
+                historicValues: series,
+                historicIndices: monthIndices
+            };
+        }
+
+        function updateForecastChart(allMonths, categoryForecasts, forecastPeriods) {
+            const categories = Object.keys(categoryForecasts).sort();
+            
+            // Genera le label per i mesi futuri
+            const lastMonth = allMonths[allMonths.length - 1];
+            const [year, month] = lastMonth.split('-').map(Number);
+            const futureMonths = [];
+            
+            for (let i = 1; i <= forecastPeriods; i++) {
+                const futureDate = new Date(year, month - 1 + i, 1);
+                const futureKey = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`;
+                futureMonths.push(futureKey);
+            }
+
+            // Prepara dataset per lo storico (stacked)
+            const historicDatasets = categories.map(cat => {
+                const data = allMonths.map(month => monthlyData[month][cat] || 0);
+                return {
+                    label: cat + ' (Storico)',
+                    data: [...data, ...Array(forecastPeriods).fill(null)],
+                    borderColor: categoryColors[cat] || '#6B7280',
+                    backgroundColor: categoryColors[cat] || '#6B7280',
+                    tension: 0.3,
+                    fill: true,
+                    stack: 'historic'
+                };
+            });
+
+            // Prepara dataset per le previsioni (stacked)
+            const forecastDatasets = categories.map(cat => {
+                const forecast = categoryForecasts[cat];
+                const data = [...Array(allMonths.length).fill(null), ...forecast.forecasts];
+                
+                return {
+                    label: cat + ' (Previsione)',
+                    data: data,
+                    borderColor: categoryColors[cat] || '#6B7280',
+                    backgroundColor: (categoryColors[cat] || '#6B7280') + '66',
+                    tension: 0.3,
+                    fill: true,
+                    borderDash: [5, 5],
+                    stack: 'forecast'
+                };
+            });
+
+            const allLabels = [...allMonths, ...futureMonths].map(m => formatMonth(m));
+
+            const ctx = document.getElementById('forecastChart');
+            if (charts.forecast) charts.forecast.destroy();
+
+            charts.forecast = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allLabels,
+                    datasets: [...historicDatasets, ...forecastDatasets]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                filter: function(legendItem, chartData) {
+                                    // Mostra solo categorie, non duplicati storico/previsione
+                                    return !legendItem.text.includes('(Storico)');
+                                },
+                                generateLabels: function(chart) {
+                                    // Genera legenda personalizzata per categorie
+                                    return categories.map(cat => ({
+                                        text: cat,
+                                        fillStyle: categoryColors[cat] || '#6B7280',
+                                        strokeStyle: categoryColors[cat] || '#6B7280',
+                                        lineWidth: 2,
+                                        hidden: false,
+                                        index: 0
+                                    }));
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.parsed.y === null) return null;
+                                    const label = context.dataset.label.replace(' (Storico)', '').replace(' (Previsione)', '');
+                                    const type = context.dataset.label.includes('Previsione') ? ' [Prev]' : '';
+                                    return label + type + ': ' + formatCurrency(context.parsed.y);
+                                },
+                                footer: function(tooltipItems) {
+                                    // Calcola totale del mese
+                                    let total = 0;
+                                    tooltipItems.forEach(item => {
+                                        if (item.parsed.y !== null) {
+                                            total += item.parsed.y;
+                                        }
+                                    });
+                                    return total > 0 ? 'Totale: ' + formatCurrency(total) : '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            stacked: true,
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
@@ -683,6 +1012,30 @@
                     }
                 }
             });
+
+            // Aggiungi linea divisoria tra storico e previsione
+            const plugin = {
+                id: 'verticalLine',
+                afterDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+                    
+                    const x = xAxis.getPixelForValue(allMonths.length - 0.5);
+                    
+                    ctx.save();
+                    ctx.strokeStyle = '#EF4444';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([10, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            };
+            
+            charts.forecast.options.plugins.verticalLine = plugin;
         }
 
         // ===== EXPORT DATI =====
