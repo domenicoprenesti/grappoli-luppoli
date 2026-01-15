@@ -84,6 +84,81 @@
             </div>
         </div>
 
+        <!-- FILTRI -->
+        <div id="filtriSection" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                    Filtri Analisi
+                </h2>
+                <div id="filtriAttivi" class="hidden">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span id="filtriAttiviText">Filtri attivi</span>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Filtro Anno -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">📅 Anno</label>
+                    <select id="filterAnno" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Tutti gli anni</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro Mese -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🗓️ Mese</label>
+                    <select id="filterMese" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Tutti i mesi</option>
+                        <option value="1">Gennaio</option>
+                        <option value="2">Febbraio</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Aprile</option>
+                        <option value="5">Maggio</option>
+                        <option value="6">Giugno</option>
+                        <option value="7">Luglio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Settembre</option>
+                        <option value="10">Ottobre</option>
+                        <option value="11">Novembre</option>
+                        <option value="12">Dicembre</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro Categoria -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Categoria</label>
+                    <select id="filterCategoria" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Tutte le categorie</option>
+                    </select>
+                </div>
+                
+                <!-- Pulsante Reset -->
+                <div class="flex items-end">
+                    <button onclick="resetFilters()" class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium flex items-center justify-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Reset Filtri</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Riepilogo Periodo Selezionato -->
+            <div id="periodoSelezionato" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-800">
+                    <strong>Periodo selezionato:</strong> <span id="periodoText">Tutti i dati</span>
+                </p>
+            </div>
+        </div>
+
         <!-- Stats Cards -->
         <div id="statsCards" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Fatture Totali -->
@@ -105,7 +180,7 @@
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Prodotti Totali</p>
+                        <p class="text-sm font-medium text-gray-600">Prodotti Filtrati</p>
                         <p id="statProdotti" class="text-2xl font-bold text-gray-900 mt-2">0</p>
                     </div>
                     <div class="bg-purple-100 p-3 rounded-lg">
@@ -229,12 +304,19 @@
         const BATCH_SIZE = 1000;
 
         // ========== STATO ==========
+        let allProdottiOriginal = []; // Dati originali non filtrati
+        let allFattureOriginal = [];  // Fatture originali
+        
         let dashboardData = {
             fatture: { count: 0, totale: 0 },
             prodotti: { count: 0, costoTotale: 0, costoIvato: 0 },
             storicoMensile: [],
             categorie: []
         };
+
+        // Istanze grafici per poterli distruggere e ricreare
+        let chartMensileInstance = null;
+        let chartCategorieInstance = null;
 
         // ========== FUNZIONI UTILITÀ ==========
         function logout() {
@@ -255,102 +337,240 @@
             const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
             return months[month - 1] || '';
         }
+        
+        function getMonthNameFull(month) {
+            const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            return months[month - 1] || '';
+        }
+
+        // ========== POPOLAMENTO FILTRI ==========
+        function populateFilters() {
+            // Estrai anni unici dai prodotti
+            const anniSet = new Set();
+            const categorieSet = new Set();
+            
+            allProdottiOriginal.forEach(p => {
+                if (p.data_fattura) {
+                    const date = new Date(p.data_fattura);
+                    anniSet.add(date.getFullYear());
+                }
+                if (p.categoria) {
+                    categorieSet.add(p.categoria);
+                }
+            });
+            
+            // Popola select anni (ordinati decrescente)
+            const anniArray = Array.from(anniSet).sort((a, b) => b - a);
+            const selectAnno = document.getElementById('filterAnno');
+            selectAnno.innerHTML = '<option value="">Tutti gli anni</option>';
+            anniArray.forEach(anno => {
+                selectAnno.innerHTML += `<option value="${anno}">${anno}</option>`;
+            });
+            
+            // Popola select categorie (ordinate alfabeticamente)
+            const categorieArray = Array.from(categorieSet).sort();
+            const selectCategoria = document.getElementById('filterCategoria');
+            selectCategoria.innerHTML = '<option value="">Tutte le categorie</option>';
+            categorieArray.forEach(cat => {
+                selectCategoria.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+
+        // ========== APPLICAZIONE FILTRI ==========
+        function applyFilters() {
+            const filterAnno = document.getElementById('filterAnno').value;
+            const filterMese = document.getElementById('filterMese').value;
+            const filterCategoria = document.getElementById('filterCategoria').value;
+            
+            // Filtra i prodotti
+            let prodottiFiltrati = allProdottiOriginal.filter(p => {
+                // Filtro anno
+                if (filterAnno && p.data_fattura) {
+                    const anno = new Date(p.data_fattura).getFullYear();
+                    if (anno !== parseInt(filterAnno)) return false;
+                } else if (filterAnno && !p.data_fattura) {
+                    return false;
+                }
+                
+                // Filtro mese
+                if (filterMese && p.data_fattura) {
+                    const mese = new Date(p.data_fattura).getMonth() + 1;
+                    if (mese !== parseInt(filterMese)) return false;
+                } else if (filterMese && !p.data_fattura) {
+                    return false;
+                }
+                
+                // Filtro categoria
+                if (filterCategoria) {
+                    if (p.categoria !== filterCategoria) return false;
+                }
+                
+                return true;
+            });
+            
+            // Aggiorna indicatore filtri attivi
+            updateFilterIndicator(filterAnno, filterMese, filterCategoria);
+            
+            // Ricalcola i dati della dashboard con i prodotti filtrati
+            recalculateDashboardData(prodottiFiltrati, filterAnno, filterMese);
+            
+            // Ri-renderizza
+            renderDashboard();
+        }
+
+        function updateFilterIndicator(anno, mese, categoria) {
+            const filtriAttivi = document.getElementById('filtriAttivi');
+            const filtriAttiviText = document.getElementById('filtriAttiviText');
+            const periodoDiv = document.getElementById('periodoSelezionato');
+            const periodoText = document.getElementById('periodoText');
+            
+            const filtriApplicati = [];
+            if (anno) filtriApplicati.push(`Anno: ${anno}`);
+            if (mese) filtriApplicati.push(`Mese: ${getMonthNameFull(parseInt(mese))}`);
+            if (categoria) filtriApplicati.push(`Cat: ${categoria}`);
+            
+            if (filtriApplicati.length > 0) {
+                filtriAttivi.classList.remove('hidden');
+                filtriAttiviText.textContent = `${filtriApplicati.length} filtri attivi`;
+                
+                periodoDiv.classList.remove('hidden');
+                periodoText.textContent = filtriApplicati.join(' | ');
+            } else {
+                filtriAttivi.classList.add('hidden');
+                periodoDiv.classList.add('hidden');
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('filterAnno').value = '';
+            document.getElementById('filterMese').value = '';
+            document.getElementById('filterCategoria').value = '';
+            applyFilters();
+        }
+
+        // ========== RICALCOLO DATI ==========
+        function recalculateDashboardData(prodottiFiltrati, filterAnno, filterMese) {
+            // Conta prodotti filtrati
+            dashboardData.prodotti.count = prodottiFiltrati.length;
+            
+            // Calcola costi totali
+            dashboardData.prodotti.costoTotale = prodottiFiltrati.reduce((s, p) => {
+                const prezzo = p.prezzo_scontato || p.prezzo || 0;
+                return s + (prezzo * (p.quantita || 0));
+            }, 0);
+
+            dashboardData.prodotti.costoIvato = prodottiFiltrati.reduce((s, p) => {
+                return s + ((p.prezzo_ivato || 0) * (p.quantita || 0));
+            }, 0);
+
+            // Raggruppa per mese
+            const byMonth = {};
+            prodottiFiltrati.forEach(p => {
+                if (!p.data_fattura) return;
+                
+                const date = new Date(p.data_fattura);
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!byMonth[key]) {
+                    byMonth[key] = {
+                        anno: date.getFullYear(),
+                        mese: date.getMonth() + 1,
+                        numProdotti: 0,
+                        quantita: 0,
+                        costoSenzaIva: 0,
+                        costoConIva: 0
+                    };
+                }
+                
+                byMonth[key].numProdotti++;
+                byMonth[key].quantita += p.quantita || 0;
+                byMonth[key].costoSenzaIva += (p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0);
+                byMonth[key].costoConIva += (p.prezzo_ivato || 0) * (p.quantita || 0);
+            });
+
+            dashboardData.storicoMensile = Object.values(byMonth).sort((a, b) => {
+                if (a.anno !== b.anno) return a.anno - b.anno;
+                return a.mese - b.mese;
+            });
+
+            // Raggruppa per categoria
+            const byCategoria = {};
+            prodottiFiltrati.forEach(p => {
+                const cat = p.categoria || 'Non categorizzato';
+                if (!byCategoria[cat]) {
+                    byCategoria[cat] = { nome: cat, numProdotti: 0, costoIvato: 0 };
+                }
+                byCategoria[cat].numProdotti++;
+                byCategoria[cat].costoIvato += (p.prezzo_ivato || 0) * (p.quantita || 0);
+            });
+
+            dashboardData.categorie = Object.values(byCategoria).sort((a, b) => b.costoIvato - a.costoIvato);
+            
+            // Conta fatture (se filtrate per periodo)
+            if (filterAnno || filterMese) {
+                const fattureIdsSet = new Set();
+                prodottiFiltrati.forEach(p => {
+                    if (p.fattura_id) fattureIdsSet.add(p.fattura_id);
+                });
+                dashboardData.fatture.count = fattureIdsSet.size;
+            } else {
+                dashboardData.fatture.count = allFattureOriginal.length;
+            }
+        }
 
         // ========== CARICAMENTO DATI ==========
         async function loadDashboardData() {
             try {
                 console.log('📊 Caricamento dati dashboard...');
 
-                // 1. Conta fatture
+                // 1. Conta e carica fatture
                 const { count: fattureCount } = await supabaseClient
                     .from('fatture')
                     .select('*', { count: 'exact', head: true });
                 
                 dashboardData.fatture.count = fattureCount || 0;
 
-                // 2. Totale fatture
-                const { data: fattureTotale } = await supabaseClient
+                // Carica IDs fatture per riferimento
+                const { data: fattureIds } = await supabaseClient
                     .from('fatture')
-                    .select('importo_totale');
+                    .select('id, importo_totale');
                 
-                dashboardData.fatture.totale = (fattureTotale || []).reduce((s, f) => s + (f.importo_totale || 0), 0);
+                allFattureOriginal = fattureIds || [];
+                dashboardData.fatture.totale = allFattureOriginal.reduce((s, f) => s + (f.importo_totale || 0), 0);
 
-                // 3. Conta prodotti
+                // 2. Conta prodotti
                 const { count: prodottiCount } = await supabaseClient
                     .from('prodotti')
                     .select('*', { count: 'exact', head: true });
                 
                 dashboardData.prodotti.count = prodottiCount || 0;
 
-                // 4. Carica prodotti per calcoli (in batch)
-                let allProdotti = [];
+                // 3. Carica tutti i prodotti (in batch)
+                allProdottiOriginal = [];
                 const numBatches = Math.ceil(prodottiCount / BATCH_SIZE);
                 
                 for (let i = 0; i < numBatches; i++) {
                     const { data } = await supabaseClient
                         .from('prodotti')
-                        .select('data_fattura, categoria, prezzo_scontato, prezzo, prezzo_ivato, quantita')
+                        .select('fattura_id, data_fattura, categoria, prezzo_scontato, prezzo, prezzo_ivato, quantita')
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     
-                    if (data) allProdotti = [...allProdotti, ...data];
+                    if (data) allProdottiOriginal = [...allProdottiOriginal, ...data];
                 }
 
-                console.log(`✅ Caricati ${allProdotti.length} prodotti`);
+                console.log(`✅ Caricati ${allProdottiOriginal.length} prodotti`);
 
-                // 5. Calcola costi totali
-                dashboardData.prodotti.costoTotale = allProdotti.reduce((s, p) => {
-                    const prezzo = p.prezzo_scontato || p.prezzo || 0;
-                    return s + (prezzo * (p.quantita || 0));
-                }, 0);
+                // 4. Popola i filtri con i valori disponibili
+                populateFilters();
 
-                dashboardData.prodotti.costoIvato = allProdotti.reduce((s, p) => {
-                    return s + ((p.prezzo_ivato || 0) * (p.quantita || 0));
-                }, 0);
-
-                // 6. Raggruppa per mese
-                const byMonth = {};
-                allProdotti.forEach(p => {
-                    if (!p.data_fattura) return;
-                    
-                    const date = new Date(p.data_fattura);
-                    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    
-                    if (!byMonth[key]) {
-                        byMonth[key] = {
-                            anno: date.getFullYear(),
-                            mese: date.getMonth() + 1,
-                            numProdotti: 0,
-                            quantita: 0,
-                            costoSenzaIva: 0,
-                            costoConIva: 0
-                        };
-                    }
-                    
-                    byMonth[key].numProdotti++;
-                    byMonth[key].quantita += p.quantita || 0;
-                    byMonth[key].costoSenzaIva += (p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0);
-                    byMonth[key].costoConIva += (p.prezzo_ivato || 0) * (p.quantita || 0);
-                });
-
-                dashboardData.storicoMensile = Object.values(byMonth).sort((a, b) => {
-                    if (a.anno !== b.anno) return a.anno - b.anno;
-                    return a.mese - b.mese;
-                });
-
-                // 7. Raggruppa per categoria
-                const byCategoria = {};
-                allProdotti.forEach(p => {
-                    const cat = p.categoria || 'Non categorizzato';
-                    if (!byCategoria[cat]) {
-                        byCategoria[cat] = { nome: cat, numProdotti: 0, costoIvato: 0 };
-                    }
-                    byCategoria[cat].numProdotti++;
-                    byCategoria[cat].costoIvato += (p.prezzo_ivato || 0) * (p.quantita || 0);
-                });
-
-                dashboardData.categorie = Object.values(byCategoria).sort((a, b) => b.costoIvato - a.costoIvato);
+                // 5. Calcola dati iniziali (senza filtri)
+                recalculateDashboardData(allProdottiOriginal, '', '');
 
                 console.log('✅ Dati dashboard elaborati');
+                
+                // Mostra sezione filtri
+                document.getElementById('filtriSection').classList.remove('hidden');
+                
                 renderDashboard();
 
             } catch (err) {
@@ -396,13 +616,18 @@
 
         // ========== GRAFICO MENSILE ==========
         function renderChartMensile() {
+            // Distruggi grafico precedente se esiste
+            if (chartMensileInstance) {
+                chartMensileInstance.destroy();
+            }
+            
             const ctx = document.getElementById('chartMensile').getContext('2d');
             
             const labels = dashboardData.storicoMensile.map(m => `${getMonthName(m.mese)} ${m.anno}`);
             const dataCostoIvato = dashboardData.storicoMensile.map(m => m.costoConIva);
             const dataCostoSenzaIva = dashboardData.storicoMensile.map(m => m.costoSenzaIva);
 
-            new Chart(ctx, {
+            chartMensileInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -443,7 +668,10 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return '€' + (value / 1000).toFixed(0) + 'k';
+                                    if (value >= 1000) {
+                                        return '€' + (value / 1000).toFixed(0) + 'k';
+                                    }
+                                    return '€' + value;
                                 }
                             }
                         }
@@ -454,14 +682,20 @@
 
         // ========== GRAFICO CATEGORIE ==========
         function renderChartCategorie() {
+            // Distruggi grafico precedente se esiste
+            if (chartCategorieInstance) {
+                chartCategorieInstance.destroy();
+            }
+            
             const ctx = document.getElementById('chartCategorie').getContext('2d');
             
             const colors = [
                 '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', 
-                '#10B981', '#6366F1', '#EF4444', '#06B6D4'
+                '#10B981', '#6366F1', '#EF4444', '#06B6D4',
+                '#84CC16', '#F97316', '#14B8A6', '#A855F7'
             ];
 
-            new Chart(ctx, {
+            chartCategorieInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: dashboardData.categorie.map(c => c.nome),
@@ -476,7 +710,13 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right' },
+                        legend: { 
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
+                        },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -494,6 +734,17 @@
         // ========== TABELLA DETTAGLIO ==========
         function renderTabellaDettaglio() {
             const tbody = document.getElementById('tabellaDettaglioMensile');
+            
+            if (dashboardData.storicoMensile.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            Nessun dato disponibile per i filtri selezionati
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
             
             // Ordina dal più recente
             const storicoReversed = [...dashboardData.storicoMensile].reverse();
@@ -543,13 +794,22 @@
                 'from-indigo-500 to-indigo-600'
             ];
 
+            if (dashboardData.categorie.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center text-gray-500 py-4">
+                        Nessuna categoria disponibile per i filtri selezionati
+                    </div>
+                `;
+                return;
+            }
+
             container.innerHTML = dashboardData.categorie.slice(0, 6).map((cat, idx) => {
                 const total = dashboardData.prodotti.costoIvato;
                 const percentage = total > 0 ? ((cat.costoIvato / total) * 100).toFixed(1) : 0;
                 
                 return `
                     <div class="bg-gradient-to-br ${colors[idx % colors.length]} rounded-xl p-4 text-white">
-                        <p class="text-xs opacity-80">${cat.nome}</p>
+                        <p class="text-xs opacity-80 truncate" title="${cat.nome}">${cat.nome}</p>
                         <p class="text-xl font-bold">${formatCurrency(cat.costoIvato)}</p>
                         <p class="text-xs opacity-80">${percentage}% del totale</p>
                         <p class="text-xs opacity-60 mt-1">${cat.numProdotti} prodotti</p>
@@ -560,7 +820,7 @@
 
         // ========== INIZIALIZZAZIONE ==========
         loadDashboardData();
-        console.log('✅ Dashboard Analitica caricata');
+        console.log('✅ Dashboard Analitica con Filtri caricata');
     </script>
 </body>
 </html>
