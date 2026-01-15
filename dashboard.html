@@ -354,8 +354,9 @@
                     const date = new Date(p.data_fattura);
                     anniSet.add(date.getFullYear());
                 }
-                if (p.categoria) {
-                    categorieSet.add(p.categoria);
+                const nomeCategoria = p.tipo_prodotto?.aggregante_prodotto?.nome || p.categoria;
+                if (nomeCategoria) {
+                    categorieSet.add(nomeCategoria);
                 }
             });
             
@@ -402,7 +403,8 @@
                 
                 // Filtro categoria
                 if (filterCategoria) {
-                    if (p.categoria !== filterCategoria) return false;
+                    const nomeCategoria = p.tipo_prodotto?.aggregante_prodotto?.nome || p.categoria;
+                    if (nomeCategoria !== filterCategoria) return false;
                 }
                 
                 return true;
@@ -496,7 +498,7 @@
             // Raggruppa per categoria
             const byCategoria = {};
             prodottiFiltrati.forEach(p => {
-                const cat = p.categoria || 'Non categorizzato';
+                const cat = p.tipo_prodotto?.aggregante_prodotto?.nome || p.categoria || 'Non categorizzato';
                 if (!byCategoria[cat]) {
                     byCategoria[cat] = { nome: cat, numProdotti: 0, costoIvato: 0 };
                 }
@@ -552,7 +554,24 @@
                 for (let i = 0; i < numBatches; i++) {
                     const { data } = await supabaseClient
                         .from('prodotti')
-                        .select('fattura_id, data_fattura, categoria, prezzo_scontato, prezzo, prezzo_ivato, quantita')
+                        .select(`
+                            fattura_id, 
+                            data_fattura, 
+                            categoria, 
+                            prezzo_scontato, 
+                            prezzo, 
+                            prezzo_ivato, 
+                            quantita,
+                            tipo_prodotto (
+                                id,
+                                nome,
+                                aggregante_prodotto (
+                                    id,
+                                    nome,
+                                    colore
+                                )
+                            )
+                        `)
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     
                     if (data) allProdottiOriginal = [...allProdottiOriginal, ...data];
