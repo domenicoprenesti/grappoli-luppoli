@@ -633,7 +633,7 @@
             renderCategorieCards();
         }
 
-        // ========== GRAFICO MENSILE ==========
+        // ========== GRAFICO MENSILE (Multi-Anno) ==========
         function renderChartMensile() {
             // Distruggi grafico precedente se esiste
             if (chartMensileInstance) {
@@ -642,50 +642,103 @@
             
             const ctx = document.getElementById('chartMensile').getContext('2d');
             
-            const labels = dashboardData.storicoMensile.map(m => `${getMonthName(m.mese)} ${m.anno}`);
-            const dataCostoIvato = dashboardData.storicoMensile.map(m => m.costoConIva);
-            const dataCostoSenzaIva = dashboardData.storicoMensile.map(m => m.costoSenzaIva);
+            // Labels fissi: 12 mesi
+            const labels = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            
+            // Estrai anni unici dai dati
+            const anniUnici = [...new Set(dashboardData.storicoMensile.map(m => m.anno))].sort();
+            
+            // Palette colori per gli anni
+            const colori = [
+                { border: '#6366F1', bg: 'rgba(99, 102, 241, 0.15)' },   // Indigo
+                { border: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' },    // Red
+                { border: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' },   // Emerald
+                { border: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' },   // Amber
+                { border: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' },   // Violet
+                { border: '#EC4899', bg: 'rgba(236, 72, 153, 0.15)' },   // Pink
+                { border: '#06B6D4', bg: 'rgba(6, 182, 212, 0.15)' },    // Cyan
+                { border: '#84CC16', bg: 'rgba(132, 204, 22, 0.15)' }    // Lime
+            ];
+            
+            // Crea un dataset per ogni anno
+            const datasets = anniUnici.map((anno, idx) => {
+                // Crea array di 12 elementi (uno per mese), inizializzato a null
+                const dataPerMese = new Array(12).fill(null);
+                
+                // Popola con i dati disponibili per quell'anno
+                dashboardData.storicoMensile
+                    .filter(m => m.anno === anno)
+                    .forEach(m => {
+                        dataPerMese[m.mese - 1] = m.costoConIva; // mese 1 = indice 0
+                    });
+                
+                const colore = colori[idx % colori.length];
+                
+                return {
+                    label: anno.toString(),
+                    data: dataPerMese,
+                    borderColor: colore.border,
+                    backgroundColor: colore.bg,
+                    fill: false,
+                    tension: 0.3,
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: colore.border,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    spanGaps: true // Connette i punti anche se ci sono null in mezzo
+                };
+            });
 
             chartMensileInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [
-                        {
-                            label: 'Costo con IVA',
-                            data: dataCostoIvato,
-                            borderColor: '#EF4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'Costo senza IVA',
-                            data: dataCostoSenzaIva,
-                            borderColor: '#3B82F6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        }
-                    ]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
-                        legend: { position: 'top' },
+                        legend: { 
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { weight: 'bold' }
+                            }
+                        },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
+                                    if (context.raw === null) return null;
                                     return context.dataset.label + ': ' + formatCurrency(context.raw);
                                 }
                             }
                         }
                     },
                     scales: {
+                        x: {
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                font: { weight: 'bold' }
+                            }
+                        },
                         y: {
                             beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.08)'
+                            },
                             ticks: {
+                                font: { weight: '500' },
                                 callback: function(value) {
                                     if (value >= 1000) {
                                         return '€' + (value / 1000).toFixed(0) + 'k';
