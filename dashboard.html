@@ -672,10 +672,16 @@
                         dataPerMese[m.mese - 1] = m.costoConIva; // mese 1 = indice 0
                     });
                 
+                // Calcola totale annuo
+                const totaleAnno = dataPerMese.reduce((sum, val) => sum + (val || 0), 0);
+                const totaleFormattato = totaleAnno >= 1000 
+                    ? '€' + (totaleAnno / 1000).toFixed(1) + 'k' 
+                    : '€' + totaleAnno.toFixed(0);
+                
                 const colore = colori[idx % colori.length];
                 
                 return {
-                    label: anno.toString(),
+                    label: `${anno} (${totaleFormattato})`,
                     data: dataPerMese,
                     borderColor: colore.border,
                     backgroundColor: colore.bg,
@@ -717,7 +723,9 @@
                             callbacks: {
                                 label: function(context) {
                                     if (context.raw === null) return null;
-                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                    // Estrai solo l'anno dalla label (rimuovi il totale tra parentesi)
+                                    const anno = context.dataset.label.split(' ')[0];
+                                    return anno + ': ' + formatCurrency(context.raw);
                                 }
                             }
                         }
