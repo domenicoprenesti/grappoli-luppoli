@@ -835,7 +835,35 @@
             const count = document.getElementById('selectionCount');
             if (selectedIds.size > 0) { 
                 bar.classList.remove('hidden'); 
-                count.textContent = `${selectedIds.size} prodotti selezionati`; 
+                
+                // Calcola statistiche sui prodotti selezionati
+                let costoTotale = 0;
+                let quantitaTotale = 0;
+                
+                selectedIds.forEach(id => {
+                    const prodotto = allProdotti.find(p => p.id === id);
+                    if (prodotto) {
+                        const prezzoIvato = prodotto.prezzo_ivato || 0;
+                        const quantita = prodotto.quantita || 0;
+                        costoTotale += prezzoIvato * quantita;
+                        quantitaTotale += quantita;
+                    }
+                });
+                
+                const costoMedio = quantitaTotale > 0 ? costoTotale / quantitaTotale : 0;
+                
+                // Aggiorna contatore e statistiche
+                count.innerHTML = `
+                    <div class="flex items-center space-x-6">
+                        <span class="font-bold">${selectedIds.size} prodotti selezionati</span>
+                        <span class="text-gray-600">|</span>
+                        <span>Totale: <strong class="text-green-700">€${costoTotale.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                        <span class="text-gray-600">|</span>
+                        <span>Q.tà: <strong class="text-purple-700">${quantitaTotale.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong></span>
+                        <span class="text-gray-600">|</span>
+                        <span>Costo medio: <strong class="text-orange-700">€${costoMedio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                    </div>
+                `;
             } else { 
                 bar.classList.add('hidden'); 
             }
