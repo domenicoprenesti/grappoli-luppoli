@@ -92,11 +92,12 @@
 
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h3 class="font-bold mb-4">Filtri</h3>
-            <div class="grid md:grid-cols-4 gap-4">
+            <div class="grid md:grid-cols-5 gap-4">
                 <input type="text" id="searchNome" placeholder="Cerca prodotto..." class="px-4 py-2 border rounded-lg" onkeyup="applyFilters()">
-                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutte le categorie</option></select>
+                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="onFilterCategoriaChange()"><option value="">Tutte le categorie</option></select>
+                <select id="filterTipo" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i tipi</option></select>
                 <select id="filterFornitore" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i fornitori</option></select>
-                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg">Pulisci</button>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Pulisci</button>
             </div>
         </div>
 
@@ -731,15 +732,91 @@
                 cat.map(c => `<option value="${c}">${c}</option>`).join('');
             document.getElementById('filterFornitore').innerHTML = '<option value="">Tutti i fornitori</option>' + 
                 forn.map(f => `<option value="${f}">${f}</option>`).join('');
+            
+            // Popola filtro tipo con tutti i tipi
+            updateFilterTipo();
+        }
+        
+        function updateFilterTipo(categoriaSelezionata = '') {
+            const tipoSelect = document.getElementById('filterTipo');
+            const currentTipo = tipoSelect.value; // Salva valore corrente
+            
+            let tipiDaMostrare = [];
+            
+            if (categoriaSelezionata) {
+                // Mostra solo i tipi della categoria selezionata
+                tipiDaMostrare = allTipi.filter(t => {
+                    const aggNome = allAggreganti.find(a => a.id == t.aggregante_id)?.nome;
+                    return aggNome === categoriaSelezionata;
+                });
+            } else {
+                // Mostra tutti i tipi usati nei prodotti
+                const tipiUsati = new Set();
+                allProdotti.forEach(p => {
+                    if (p.tipo_prodotto?.id) {
+                        tipiUsati.add(p.tipo_prodotto.id);
+                    }
+                });
+                tipiDaMostrare = allTipi.filter(t => tipiUsati.has(t.id));
+            }
+            
+            // Ordina per categoria e poi per nome
+            tipiDaMostrare.sort((a, b) => {
+                const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
+                const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
+                if (aggA !== aggB) return aggA.localeCompare(aggB);
+                return a.nome.localeCompare(b.nome);
+            });
+            
+            let options = ['<option value="">Tutti i tipi</option>'];
+            
+            if (!categoriaSelezionata) {
+                // Raggruppa per categoria
+                let currentAgg = null;
+                tipiDaMostrare.forEach(tipo => {
+                    const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
+                    if (aggNome !== currentAgg) {
+                        options.push(`<option value="" disabled class="font-bold">── ${aggNome} ──</option>`);
+                        currentAgg = aggNome;
+                    }
+                    options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
+                });
+            } else {
+                // Lista semplice per categoria singola
+                tipiDaMostrare.forEach(tipo => {
+                    options.push(`<option value="${tipo.id}">${tipo.nome}</option>`);
+                });
+            }
+            
+            tipoSelect.innerHTML = options.join('');
+            
+            // Ripristina valore se ancora disponibile
+            if (currentTipo && tipiDaMostrare.some(t => t.id == currentTipo)) {
+                tipoSelect.value = currentTipo;
+            }
+        }
+        
+        function onFilterCategoriaChange() {
+            const categoriaSelezionata = document.getElementById('filterCategoria').value;
+            
+            // Aggiorna il filtro tipo in base alla categoria
+            updateFilterTipo(categoriaSelezionata);
+            
+            // Resetta il filtro tipo se la categoria cambia
+            document.getElementById('filterTipo').value = '';
+            
+            applyFilters();
         }
         
         function applyFilters() {
             const search = document.getElementById('searchNome').value.toLowerCase();
             const cat = document.getElementById('filterCategoria').value;
+            const tipo = document.getElementById('filterTipo').value;
             const forn = document.getElementById('filterFornitore').value;
             let filtered = allProdotti;
             if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
             if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
+            if (tipo) filtered = filtered.filter(p => p.tipo_prodotto?.id == tipo);
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
             renderTable(filtered);
         }
@@ -747,7 +824,9 @@
         function clearFilters() { 
             document.getElementById('searchNome').value = ''; 
             document.getElementById('filterCategoria').value = ''; 
+            document.getElementById('filterTipo').value = '';
             document.getElementById('filterFornitore').value = ''; 
+            updateFilterTipo(); // Ripopola tutti i tipi
             applyFilters(); 
         }
         
@@ -773,10 +852,12 @@
             if (checkbox.checked) {
                 const search = document.getElementById('searchNome').value.toLowerCase();
                 const cat = document.getElementById('filterCategoria').value;
+                const tipo = document.getElementById('filterTipo').value;
                 const forn = document.getElementById('filterFornitore').value;
                 let filtered = allProdotti;
                 if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
                 if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
+                if (tipo) filtered = filtered.filter(p => p.tipo_prodotto?.id == tipo);
                 if (forn) filtered = filtered.filter(p => p.fornitore === forn);
                 selectedIds = new Set(filtered.map(p => p.id));
             } else { 
