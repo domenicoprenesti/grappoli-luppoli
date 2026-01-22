@@ -54,6 +54,62 @@
     </script>
 
     <!-- Navbar -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Fornitori - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Animazioni smooth per editing inline */
+        .editable-field {
+            transition: all 0.2s ease;
+        }
+        .editable-field:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .editable-field:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toasts per feedback salvataggio */
+        .toast {
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+    </script>
+
+    <!-- Navbar -->
     <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -91,6 +147,1094 @@
             </div>
         </div>
     </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
+        <!-- Header -->
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">🏢 Gestione Fornitori</h1>
+                <p class="text-gray-600">Anagrafica fornitori con condizioni di pagamento</p>
+            </div>
+            <button onclick="openNewFornitoreModal()" class="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span class="font-semibold">Nuovo Fornitore</span>
+            </button>
+        </div>
+
+        <!-- Loading Progress -->
+        <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-blue-900">Caricamento fornitori...</span>
+                <span id="progressText" class="text-sm text-blue-700">0 / 0</span>
+            </div>
+            <div class="w-full bg-blue-200 rounded-full h-3">
+                <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Statistiche -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Fornitori Totali</p>
+                        <p id="totalFornitori" class="text-3xl font-bold text-blue-600">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Fatturato Totale</p>
+                        <p id="fatturatoTotale" class="text-3xl font-bold text-green-600">€0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Da Pagare</p>
+                        <p id="daPagareTotale" class="text-3xl font-bold text-orange-600">€0</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Importo Scaduto</p>
+                        <p id="scadutoTotale" class="text-3xl font-bold text-red-600">€0</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtri Ricerca -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="font-bold mb-4">🔍 Filtri</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+                <input type="text" id="searchRagioneSociale" placeholder="Cerca ragione sociale..." class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onkeyup="applyFilters()">
+                <select id="filterTipoPagamento" class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="applyFilters()">
+                    <option value="">Tutti i tipi di pagamento</option>
+                    <option value="Carta di Credito">Carta di Credito</option>
+                    <option value="Bonifico">Bonifico</option>
+                    <option value="Addebito Diretto">Addebito Diretto</option>
+                    <option value="Contanti">Contanti</option>
+                    <option value="Assegno">Assegno</option>
+                </select>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Pulisci Filtri</button>
+            </div>
+        </div>
+
+        <!-- Tabella Fornitori -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Fornitore</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Contatti</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Tipo Pagamento</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Termini Pagamento</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Fine Mese</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold">Fatturato</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Fatture</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fornitoriTableBody" class="divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container (per feedback salvataggio) -->
+    <div id="toastContainer" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+    <!-- Modal Dettagli/Modifica Fornitore -->
+    <div id="modalFornitore" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6 flex justify-between items-center">
+                <h2 id="modalTitle" class="text-2xl font-bold">Dettagli Fornitore</h2>
+                <button onclick="closeModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="fornitoreForm" onsubmit="saveFornitore(event)" class="p-8">
+                <input type="hidden" id="fornitoreId">
+                
+                <!-- Dati Anagrafici -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        Dati Anagrafici
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Ragione Sociale *</label>
+                            <input type="text" id="ragioneSociale" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Partita IVA</label>
+                            <input type="text" id="partitaIva" maxlength="16" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Codice Fiscale</label>
+                            <input type="text" id="codiceFiscale" maxlength="16" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Riferimento -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Riferimento
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nome</label>
+                            <input type="text" id="riferimentoNome" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Cognome</label>
+                            <input type="text" id="riferimentoCognome" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contatti -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Contatti
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Telefono</label>
+                            <input type="tel" id="telefono" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                            <input type="email" id="email" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indirizzo -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Indirizzo
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Indirizzo</label>
+                            <input type="text" id="indirizzo" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">CAP</label>
+                            <input type="text" id="cap" maxlength="10" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Città</label>
+                            <input type="text" id="citta" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Provincia</label>
+                            <input type="text" id="provincia" maxlength="2" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Paese</label>
+                            <input type="text" id="paese" value="Italia" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dati Bancari -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        Dati Bancari
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">IBAN</label>
+                            <input type="text" id="iban" maxlength="34" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">BIC/SWIFT</label>
+                            <input type="text" id="bicSwift" maxlength="11" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condizioni Pagamento -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Condizioni di Pagamento
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo Pagamento</label>
+                            <select id="tipoPagamento" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="Carta di Credito">Carta di Credito</option>
+                                <option value="Bonifico" selected>Bonifico</option>
+                                <option value="Addebito Diretto">Addebito Diretto</option>
+                                <option value="Contanti">Contanti</option>
+                                <option value="Assegno">Assegno</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Termini Pagamento</label>
+                            <select id="terminiPagamento" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="Anticipato Ordine">Anticipato all'Ordine</option>
+                                <option value="Alla Consegna">Alla Consegna</option>
+                                <option value="Data Fattura" selected>Data Fattura</option>
+                                <option value="30gg Data Fattura">30gg Data Fattura</option>
+                                <option value="60gg Data Fattura">60gg Data Fattura</option>
+                                <option value="90gg Data Fattura">90gg Data Fattura</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="fineMese" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm font-semibold text-gray-700">Pagamento a Fine Mese</span>
+                            </label>
+                            <p class="text-xs text-gray-500 mt-2 ml-8">Se attivo, la scadenza è alla fine del mese (es: 30gg FM invece di 30gg)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Note
+                    </h3>
+                    <textarea id="note" rows="3" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Note aggiuntive..."></textarea>
+                </div>
+
+                <!-- Stato Attivo -->
+                <div class="mb-8">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="attivo" checked class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                        <span class="text-sm font-semibold text-gray-700">Fornitore Attivo</span>
+                    </label>
+                </div>
+
+                <!-- Pulsanti -->
+                <div class="flex space-x-4 pt-4 border-t">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Salva Modifiche</span>
+                    </button>
+                    <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Conferma Eliminazione -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div class="text-center mb-6">
+                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
+                <p id="deleteMessage" class="text-gray-600"></p>
+            </div>
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <p class="text-sm text-yellow-800"><strong>⚠️ Attenzione:</strong> Questa azione è irreversibile!</p>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Fatture Fornitore -->
+    <div id="modalFattureFornitore" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold">📄 Fatture Fornitore</h2>
+                    <p id="fattureFornitoreNome" class="text-blue-100 text-sm mt-1"></p>
+                </div>
+                <button onclick="closeFattureModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Riepilogo -->
+            <div id="fattureRiepilogo" class="px-8 py-4 bg-gray-50 border-b grid grid-cols-4 gap-4">
+                <div class="text-center">
+                    <p class="text-xs text-gray-500">Totale Fatture</p>
+                    <p id="riepilogoTotale" class="text-lg font-bold text-gray-900">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-500">Da Pagare</p>
+                    <p id="riepilogoDaPagare" class="text-lg font-bold text-orange-600">€0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-500">Scadute</p>
+                    <p id="riepilogoScadute" class="text-lg font-bold text-red-600">€0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-500">Pagate</p>
+                    <p id="riepilogoPagate" class="text-lg font-bold text-green-600">€0</p>
+                </div>
+            </div>
+            
+            <!-- Filtro rapido -->
+            <div class="px-8 py-3 bg-white border-b flex items-center space-x-4">
+                <span class="text-sm text-gray-600">Mostra:</span>
+                <button onclick="filterFatture('tutte')" class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors" id="btnFiltroTutte">Tutte</button>
+                <button onclick="filterFatture('non_pagate')" class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" id="btnFiltroNonPagate">Non pagate</button>
+                <button onclick="filterFatture('scadute')" class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" id="btnFiltroScadute">Scadute</button>
+                <button onclick="filterFatture('pagate')" class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors" id="btnFiltroPagate">Pagate</button>
+            </div>
+            
+            <!-- Tabella Fatture -->
+            <div class="flex-1 overflow-auto px-8 py-4">
+                <table class="w-full">
+                    <thead class="bg-gray-100 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">N° Fattura</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Data</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Importo</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Termini</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Scadenza</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Stato</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Pagato</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fattureFornitoreBody" class="divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+            
+            <!-- Barra modifiche non salvate -->
+            <div id="fattureModificheBar" class="hidden px-8 py-4 bg-orange-50 border-t flex justify-between items-center">
+                <span class="text-sm font-medium text-orange-900">
+                    <span id="modificheCount">0</span> modifiche non salvate
+                </span>
+                <div class="flex space-x-3">
+                    <button onclick="annullaModificheFatture()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-sm">Annulla</button>
+                    <button onclick="salvaModificheFatture()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Salva Modifiche</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="px-8 py-4 bg-gray-50 border-t flex justify-end">
+                <button onclick="closeFattureModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const BATCH_SIZE = 500;
+        
+        let fornitori = [];
+        let deleteTarget = null;
+        
+        // Variabili per modal fatture fornitore
+        let fattureFornitoreCorrente = [];
+        let fornitoreCorrenteId = null;
+        let fornitoreCorrenteNome = null;
+        let filtroFattureCorrente = 'tutte';
+        let fattureModifiche = new Map(); // Traccia le modifiche ai checkbox pagato
+        
+        function logout() {
+            localStorage.removeItem('app_authenticated');
+            window.location.href = 'index.html';
+        }
+
+        // ===== CARICAMENTO DATI =====
+        async function loadFornitori() {
+            try {
+                showLoading(true);
+                
+                // Usa la view con statistiche
+                const { data, error } = await supabaseClient
+                    .from('fornitori_statistiche')
+                    .select('*')
+                    .order('ragione_sociale', { ascending: true });
+                
+                if (error) throw error;
+                
+                fornitori = data || [];
+                updateStats();
+                applyFilters();
+                
+                showLoading(false);
+            } catch (err) {
+                console.error('Errore caricamento fornitori:', err);
+                showToast('Errore nel caricamento dei fornitori', 'error');
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loadingProgress');
+            if (show) loading.classList.remove('hidden');
+            else loading.classList.add('hidden');
+        }
+
+        function updateStats() {
+            document.getElementById('totalFornitori').textContent = fornitori.length;
+            document.getElementById('fatturatoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatturato_totale || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('daPagareTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatture_da_pagare || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('scadutoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.importo_scaduto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        // ===== FILTRI =====
+        function applyFilters() {
+            const search = document.getElementById('searchRagioneSociale').value.toLowerCase();
+            const tipo = document.getElementById('filterTipoPagamento').value;
+            
+            let filtered = fornitori;
+            
+            if (search) {
+                filtered = filtered.filter(f => f.ragione_sociale?.toLowerCase().includes(search));
+            }
+            
+            if (tipo) {
+                filtered = filtered.filter(f => f.tipo_pagamento === tipo);
+            }
+            
+            renderTable(filtered);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchRagioneSociale').value = '';
+            document.getElementById('filterTipoPagamento').value = '';
+            applyFilters();
+        }
+
+        // ===== RENDER TABELLA =====
+        function renderTable(data) {
+            const tbody = document.getElementById('fornitoriTableBody');
+            
+            if (!data.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center">
+                            <div class="text-gray-400">
+                                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                <p class="text-lg font-medium">Nessun fornitore trovato</p>
+                                <p class="text-sm mt-1">Clicca su "Nuovo Fornitore" per iniziare</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map(f => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div>
+                            <p class="font-semibold text-gray-900">${f.ragione_sociale}</p>
+                            <p class="text-xs text-gray-500">${f.partita_iva || 'P.IVA: N/D'}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm">
+                            ${f.telefono ? `<p class="text-gray-700">📞 ${f.telefono}</p>` : ''}
+                            ${f.email ? `<p class="text-gray-600">✉️ ${f.email}</p>` : ''}
+                            ${!f.telefono && !f.email ? '<p class="text-gray-400">N/D</p>' : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <select 
+                            class="editable-field px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer" 
+                            onchange="updateTipoPagamento('${f.id}', this.value)"
+                            onclick="event.stopPropagation()">
+                            <option value="Carta di Credito" ${f.tipo_pagamento === 'Carta di Credito' ? 'selected' : ''}>Carta</option>
+                            <option value="Bonifico" ${f.tipo_pagamento === 'Bonifico' ? 'selected' : ''}>Bonifico</option>
+                            <option value="Addebito Diretto" ${f.tipo_pagamento === 'Addebito Diretto' ? 'selected' : ''}>Addebito</option>
+                            <option value="Contanti" ${f.tipo_pagamento === 'Contanti' ? 'selected' : ''}>Contanti</option>
+                            <option value="Assegno" ${f.tipo_pagamento === 'Assegno' ? 'selected' : ''}>Assegno</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <select 
+                            class="editable-field px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer" 
+                            onchange="updateTerminiPagamento('${f.id}', this.value)"
+                            onclick="event.stopPropagation()">
+                            <option value="Anticipato Ordine" ${f.termini_pagamento === 'Anticipato Ordine' ? 'selected' : ''}>Anticip.</option>
+                            <option value="Alla Consegna" ${f.termini_pagamento === 'Alla Consegna' ? 'selected' : ''}>Consegna</option>
+                            <option value="Data Fattura" ${f.termini_pagamento === 'Data Fattura' ? 'selected' : ''}>Data Fatt.</option>
+                            <option value="30gg Data Fattura" ${f.termini_pagamento === '30gg Data Fattura' ? 'selected' : ''}>30gg</option>
+                            <option value="60gg Data Fattura" ${f.termini_pagamento === '60gg Data Fattura' ? 'selected' : ''}>60gg</option>
+                            <option value="90gg Data Fattura" ${f.termini_pagamento === '90gg Data Fattura' ? 'selected' : ''}>90gg</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <input 
+                            type="checkbox" 
+                            ${f.fine_mese ? 'checked' : ''} 
+                            onchange="updateFineMese('${f.id}', this.checked)"
+                            onclick="event.stopPropagation()"
+                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div>
+                            <p class="font-bold text-gray-900">€${(f.fatturato_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                            ${f.fatture_da_pagare > 0 ? `<p class="text-xs text-orange-600">€${(f.fatture_da_pagare || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} da pagare</p>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-700 cursor-pointer hover:text-blue-600 hover:underline" onclick="openFattureModal('${f.id}', '${f.ragione_sociale.replace(/'/g, "\\'")}', 'tutte')" title="Clicca per vedere tutte le fatture">${f.numero_fatture || 0}</p>
+                            ${f.numero_fatture_non_pagate > 0 ? `<p class="text-xs text-orange-600 cursor-pointer hover:text-orange-800 hover:underline" onclick="openFattureModal('${f.id}', '${f.ragione_sociale.replace(/'/g, "\\'")}', 'non_pagate')" title="Clicca per vedere le fatture non pagate">${f.numero_fatture_non_pagate} non pagate</p>` : ''}
+                            ${f.fatture_scadute > 0 ? `<p class="text-xs text-red-600 cursor-pointer hover:text-red-800 hover:underline" onclick="openFattureModal('${f.id}', '${f.ragione_sociale.replace(/'/g, "\\'")}', 'scadute')" title="Clicca per vedere le fatture scadute">${f.fatture_scadute} scadute</p>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="openEditModal('${f.id}')" class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors" title="Dettagli">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="showDeleteModal('${f.id}', '${f.ragione_sociale}')" class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Elimina">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ===== EDITING INLINE =====
+        async function updateTipoPagamento(fornitoreId, value) {
+            try {
+                const { error } = await supabaseClient
+                    .from('fornitori')
+                    .update({ tipo_pagamento: value })
+                    .eq('id', fornitoreId);
+                
+                if (error) throw error;
+                
+                showToast('Tipo pagamento aggiornato', 'success');
+                await loadFornitori();
+            } catch (err) {
+                console.error('Errore aggiornamento:', err);
+                showToast('Errore nell\'aggiornamento', 'error');
+            }
+        }
+
+        async function updateTerminiPagamento(fornitoreId, value) {
+            try {
+                const { error } = await supabaseClient
+                    .from('fornitori')
+                    .update({ termini_pagamento: value })
+                    .eq('id', fornitoreId);
+                
+                if (error) throw error;
+                
+                showToast('Termini pagamento aggiornati', 'success');
+                await loadFornitori();
+            } catch (err) {
+                console.error('Errore aggiornamento:', err);
+                showToast('Errore nell\'aggiornamento', 'error');
+            }
+        }
+
+        async function updateFineMese(fornitoreId, value) {
+            try {
+                const { error } = await supabaseClient
+                    .from('fornitori')
+                    .update({ fine_mese: value })
+                    .eq('id', fornitoreId);
+                
+                if (error) throw error;
+                
+                showToast(value ? 'Fine mese attivato' : 'Fine mese disattivato', 'success');
+                await loadFornitori();
+            } catch (err) {
+                console.error('Errore aggiornamento:', err);
+                showToast('Errore nell\'aggiornamento', 'error');
+            }
+        }
+
+        // ===== MODAL NUOVO/MODIFICA =====
+        window.openNewFornitoreModal = function() {
+            document.getElementById('modalTitle').textContent = 'Nuovo Fornitore';
+            document.getElementById('fornitoreForm').reset();
+            document.getElementById('fornitoreId').value = '';
+            document.getElementById('paese').value = 'Italia';
+            document.getElementById('modalFornitore').classList.remove('hidden');
+        };
+
+        window.openEditModal = async function(id) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('fornitori')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('modalTitle').textContent = 'Modifica Fornitore';
+                document.getElementById('fornitoreId').value = data.id;
+                document.getElementById('ragioneSociale').value = data.ragione_sociale || '';
+                document.getElementById('partitaIva').value = data.partita_iva || '';
+                document.getElementById('codiceFiscale').value = data.codice_fiscale || '';
+                document.getElementById('riferimentoNome').value = data.riferimento_nome || '';
+                document.getElementById('riferimentoCognome').value = data.riferimento_cognome || '';
+                document.getElementById('telefono').value = data.telefono || '';
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('indirizzo').value = data.indirizzo || '';
+                document.getElementById('cap').value = data.cap || '';
+                document.getElementById('citta').value = data.citta || '';
+                document.getElementById('provincia').value = data.provincia || '';
+                document.getElementById('paese').value = data.paese || 'Italia';
+                document.getElementById('iban').value = data.iban || '';
+                document.getElementById('bicSwift').value = data.bic_swift || '';
+                document.getElementById('tipoPagamento').value = data.tipo_pagamento || 'Bonifico';
+                document.getElementById('terminiPagamento').value = data.termini_pagamento || 'Data Fattura';
+                document.getElementById('fineMese').checked = data.fine_mese || false;
+                document.getElementById('note').value = data.note || '';
+                document.getElementById('attivo').checked = data.attivo !== false;
+                
+                document.getElementById('modalFornitore').classList.remove('hidden');
+            } catch (err) {
+                console.error('Errore caricamento fornitore:', err);
+                showToast('Errore nel caricamento del fornitore', 'error');
+            }
+        };
+
+        window.saveFornitore = async function(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('fornitoreId').value;
+            const fornitoreData = {
+                ragione_sociale: document.getElementById('ragioneSociale').value,
+                partita_iva: document.getElementById('partitaIva').value || null,
+                codice_fiscale: document.getElementById('codiceFiscale').value || null,
+                riferimento_nome: document.getElementById('riferimentoNome').value || null,
+                riferimento_cognome: document.getElementById('riferimentoCognome').value || null,
+                telefono: document.getElementById('telefono').value || null,
+                email: document.getElementById('email').value || null,
+                indirizzo: document.getElementById('indirizzo').value || null,
+                cap: document.getElementById('cap').value || null,
+                citta: document.getElementById('citta').value || null,
+                provincia: document.getElementById('provincia').value || null,
+                paese: document.getElementById('paese').value || 'Italia',
+                iban: document.getElementById('iban').value || null,
+                bic_swift: document.getElementById('bicSwift').value || null,
+                tipo_pagamento: document.getElementById('tipoPagamento').value,
+                termini_pagamento: document.getElementById('terminiPagamento').value,
+                fine_mese: document.getElementById('fineMese').checked,
+                note: document.getElementById('note').value || null,
+                attivo: document.getElementById('attivo').checked
+            };
+            
+            try {
+                if (id) {
+                    // Update
+                    const { error } = await supabaseClient
+                        .from('fornitori')
+                        .update(fornitoreData)
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                    showToast('Fornitore aggiornato con successo', 'success');
+                } else {
+                    // Insert
+                    const { error } = await supabaseClient
+                        .from('fornitori')
+                        .insert([fornitoreData]);
+                    
+                    if (error) throw error;
+                    showToast('Fornitore creato con successo', 'success');
+                }
+                
+                closeModal();
+                await loadFornitori();
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                showToast('Errore nel salvataggio: ' + err.message, 'error');
+            }
+        };
+
+        window.closeModal = function() {
+            document.getElementById('modalFornitore').classList.add('hidden');
+        };
+
+        // ===== ELIMINAZIONE =====
+        window.showDeleteModal = function(id, ragione) {
+            deleteTarget = id;
+            document.getElementById('deleteMessage').textContent = `Vuoi eliminare il fornitore "${ragione}"?`;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+
+        window.closeDeleteModal = function() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            deleteTarget = null;
+        };
+
+        window.confirmDelete = async function() {
+            if (!deleteTarget) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('fornitori')
+                    .delete()
+                    .eq('id', deleteTarget);
+                
+                if (error) throw error;
+                
+                showToast('Fornitore eliminato con successo', 'success');
+                closeDeleteModal();
+                await loadFornitori();
+            } catch (err) {
+                console.error('Errore eliminazione:', err);
+                showToast('Errore nell\'eliminazione: ' + err.message, 'error');
+            }
+        };
+
+        // ===== TOASTS =====
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast px-6 py-4 rounded-lg shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${type === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"></path>
+                    </svg>
+                    <span class="font-medium">${message}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // ===== MODAL FATTURE FORNITORE =====
+        window.openFattureModal = async function(fornitoreId, nomeFornitore, filtro = 'tutte') {
+            fornitoreCorrenteId = fornitoreId;
+            fornitoreCorrenteNome = nomeFornitore;
+            filtroFattureCorrente = filtro;
+            fattureModifiche.clear();
+            
+            document.getElementById('fattureFornitoreNome').textContent = nomeFornitore;
+            document.getElementById('modalFattureFornitore').classList.remove('hidden');
+            document.getElementById('fattureModificheBar').classList.add('hidden');
+            
+            // Aggiorna stile bottoni filtro
+            updateFiltroButtons(filtro);
+            
+            await loadFattureFornitore();
+        };
+
+        window.closeFattureModal = function() {
+            if (fattureModifiche.size > 0) {
+                if (!confirm('Hai modifiche non salvate. Vuoi davvero chiudere?')) {
+                    return;
+                }
+            }
+            document.getElementById('modalFattureFornitore').classList.add('hidden');
+            fattureFornitoreCorrente = [];
+            fornitoreCorrenteId = null;
+            fornitoreCorrenteNome = null;
+            fattureModifiche.clear();
+        };
+
+        function updateFiltroButtons(filtroAttivo) {
+            const buttons = {
+                'tutte': 'btnFiltroTutte',
+                'non_pagate': 'btnFiltroNonPagate',
+                'scadute': 'btnFiltroScadute',
+                'pagate': 'btnFiltroPagate'
+            };
+            
+            Object.entries(buttons).forEach(([filtro, btnId]) => {
+                const btn = document.getElementById(btnId);
+                if (filtro === filtroAttivo) {
+                    btn.className = 'px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors';
+                } else {
+                    btn.className = 'px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors';
+                }
+            });
+        }
+
+        window.filterFatture = function(filtro) {
+            filtroFattureCorrente = filtro;
+            updateFiltroButtons(filtro);
+            renderFattureFornitore();
+        };
+
+        async function loadFattureFornitore() {
+            const tbody = document.getElementById('fattureFornitoreBody');
+            tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-12 text-center text-gray-400">Caricamento...</td></tr>`;
+            
+            try {
+                // Trova il fornitore per ottenere PIVA e denominazione
+                const fornitore = fornitori.find(f => f.id === fornitoreCorrenteId);
+                if (!fornitore) throw new Error('Fornitore non trovato');
+                
+                // Query fatture che corrispondono al fornitore
+                let query = supabaseClient
+                    .from('fatture')
+                    .select('id, numero_fattura, data_fattura, importo_totale, pagato, cedente_denominazione, cedente_piva')
+                    .order('data_fattura', { ascending: false });
+                
+                // Filtra per denominazione O partita IVA
+                if (fornitore.partita_iva) {
+                    query = query.or(`cedente_denominazione.ilike.%${fornitore.ragione_sociale}%,cedente_piva.eq.${fornitore.partita_iva}`);
+                } else {
+                    query = query.ilike('cedente_denominazione', `%${fornitore.ragione_sociale}%`);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                // Calcola scadenze per ogni fattura
+                fattureFornitoreCorrente = (data || []).map(f => {
+                    const scadenza = calcolaScadenza(f.data_fattura, fornitore.termini_pagamento, fornitore.fine_mese);
+                    const oggi = new Date();
+                    oggi.setHours(0, 0, 0, 0);
+                    const isScaduta = !f.pagato && scadenza && scadenza < oggi;
+                    
+                    return {
+                        ...f,
+                        scadenza: scadenza,
+                        isScaduta: isScaduta,
+                        termini: fornitore.termini_pagamento || 'Data Fattura'
+                    };
+                });
+                
+                updateRiepilogo();
+                renderFattureFornitore();
+                
+            } catch (err) {
+                console.error('Errore caricamento fatture:', err);
+                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-12 text-center text-red-500">Errore: ${err.message}</td></tr>`;
+            }
+        }
+
+        function calcolaScadenza(dataFattura, termini, fineMese) {
+            if (!dataFattura) return null;
+            
+            const data = new Date(dataFattura);
+            
+            // Aggiungi giorni in base ai termini
+            let giorniDaAggiungere = 0;
+            if (termini === '30gg Data Fattura') giorniDaAggiungere = 30;
+            else if (termini === '60gg Data Fattura') giorniDaAggiungere = 60;
+            else if (termini === '90gg Data Fattura') giorniDaAggiungere = 90;
+            else if (termini === 'Anticipato Ordine' || termini === 'Alla Consegna') return data;
+            // 'Data Fattura' = scadenza immediata
+            
+            data.setDate(data.getDate() + giorniDaAggiungere);
+            
+            // Se fine mese, sposta alla fine del mese
+            if (fineMese && giorniDaAggiungere > 0) {
+                data.setMonth(data.getMonth() + 1);
+                data.setDate(0); // Ultimo giorno del mese precedente
+            }
+            
+            return data;
+        }
+
+        function updateRiepilogo() {
+            const totale = fattureFornitoreCorrente.length;
+            const pagate = fattureFornitoreCorrente.filter(f => f.pagato);
+            const nonPagate = fattureFornitoreCorrente.filter(f => !f.pagato);
+            const scadute = fattureFornitoreCorrente.filter(f => f.isScaduta);
+            
+            const importoDaPagare = nonPagate.reduce((sum, f) => sum + (f.importo_totale || 0), 0);
+            const importoScaduto = scadute.reduce((sum, f) => sum + (f.importo_totale || 0), 0);
+            const importoPagato = pagate.reduce((sum, f) => sum + (f.importo_totale || 0), 0);
+            
+            document.getElementById('riepilogoTotale').textContent = totale;
+            document.getElementById('riepilogoDaPagare').textContent = `€${importoDaPagare.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('riepilogoScadute').textContent = `€${importoScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('riepilogoPagate').textContent = `€${importoPagato.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        }
+
+        function renderFattureFornitore() {
+            const tbody = document.getElementById('fattureFornitoreBody');
+            
+            // Applica filtro
+            let fattureFiltrate = fattureFornitoreCorrente;
+            if (filtroFattureCorrente === 'non_pagate') {
+                fattureFiltrate = fattureFornitoreCorrente.filter(f => !f.pagato);
+            } else if (filtroFattureCorrente === 'scadute') {
+                fattureFiltrate = fattureFornitoreCorrente.filter(f => f.isScaduta);
+            } else if (filtroFattureCorrente === 'pagate') {
+                fattureFiltrate = fattureFornitoreCorrente.filter(f => f.pagato);
+            }
+            
+            if (fattureFiltrate.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-12 text-center text-gray-400">Nessuna fattura trovata</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = fattureFiltrate.map(f => {
+                const dataFattura = f.data_fattura ? new Date(f.data_fattura).toLocaleDateString('it-IT') : '-';
+                const scadenza = f.scadenza ? f.scadenza.toLocaleDateString('it-IT') : '-';
+                const isModificata = fattureModifiche.has(f.id);
+                const isPagato = fattureModifiche.has(f.id) ? fattureModifiche.get(f.id) : f.pagato;
+                
+                let statoClass = 'bg-gray-100 text-gray-800';
+                let statoText = 'In attesa';
+                
+                if (isPagato) {
+                    statoClass = 'bg-green-100 text-green-800';
+                    statoText = '✅ Pagato';
+                } else if (f.isScaduta) {
+                    statoClass = 'bg-red-100 text-red-800';
+                    statoText = '⚠️ Scaduta';
+                }
+                
+                const rowClass = isModificata ? 'bg-orange-50' : (f.isScaduta && !isPagato ? 'bg-red-50' : (isPagato ? 'bg-green-50' : ''));
+                
+                return `
+                    <tr class="hover:bg-gray-50 ${rowClass}">
+                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${f.numero_fattura || '-'}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${dataFattura}</td>
+                        <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">€${(f.importo_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600 text-center">${f.termini}</td>
+                        <td class="px-4 py-3 text-sm text-center ${f.isScaduta && !isPagato ? 'text-red-600 font-semibold' : 'text-gray-600'}">${scadenza}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${statoClass}">${statoText}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <input 
+                                type="checkbox" 
+                                ${isPagato ? 'checked' : ''} 
+                                onchange="togglePagatoFattura('${f.id}', this.checked)"
+                                class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer">
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.togglePagatoFattura = function(fatturaId, nuovoValore) {
+            const fattura = fattureFornitoreCorrente.find(f => f.id === fatturaId);
+            if (!fattura) return;
+            
+            // Se il valore è uguale all'originale, rimuovi dalla mappa modifiche
+            if (fattura.pagato === nuovoValore) {
+                fattureModifiche.delete(fatturaId);
+            } else {
+                fattureModifiche.set(fatturaId, nuovoValore);
+            }
+            
+            // Aggiorna barra modifiche
+            updateModificheBar();
+            
+            // Re-render
+            renderFattureFornitore();
+        };
+
+        function updateModificheBar() {
+            const bar = document.getElementById('fattureModificheBar');
+            const count = document.getElementById('modificheCount');
+            
+            if (fattureModifiche.size > 0) {
+                bar.classList.remove('hidden');
+                count.textContent = fattureModifiche.size;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        window.annullaModificheFatture = function() {
+            fattureModifiche.clear();
+            updateModificheBar();
+            renderFattureFornitore();
+        };
+
+        window.salvaModificheFatture = async function() {
+            if (fattureModifiche.size === 0) return;
+            
+            try {
+                // Salva ogni modifica
+                for (const [fatturaId, pagato] of fattureModifiche.entries()) {
+                    const { error } = await supabaseClient
+                        .from('fatture')
+                        .update({ pagato: pagato })
+                        .eq('id', fatturaId);
+                    
+                    if (error) throw error;
+                }
+                
+                showToast(`${fattureModifiche.size} fatture aggiornate`, 'success');
+                fattureModifiche.clear();
+                updateModificheBar();
+                
+                // Ricarica fatture e fornitori per aggiornare le statistiche
+                await loadFattureFornitore();
+                await loadFornitori();
+                
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                showToast('Errore nel salvataggio: ' + err.message, 'error');
+            }
+        };
+
+        // Inizializzazione
+        loadFornitori();
+        console.log('✅ Gestione Fornitori caricata');
+    </script>
+</body>
+</html>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         <!-- Header -->
