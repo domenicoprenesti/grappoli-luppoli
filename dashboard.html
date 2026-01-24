@@ -232,9 +232,9 @@
                 </div>
             </div>
 
-            <!-- Grafico per Categoria -->
+            <!-- Grafico per Categoria / Tipo -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">🏷️ Distribuzione per Categoria</h2>
+                <h2 id="chartCategorieTitle" class="text-xl font-bold text-gray-900 mb-4">🏷️ Distribuzione per Categoria</h2>
                 <div class="h-80">
                     <canvas id="chartCategorie"></canvas>
                 </div>
@@ -508,6 +508,19 @@
 
             dashboardData.categorie = Object.values(byCategoria).sort((a, b) => b.costoIvato - a.costoIvato);
             
+            // Raggruppa per TIPO (usato quando filtro categoria è attivo)
+            const byTipo = {};
+            prodottiFiltrati.forEach(p => {
+                const tipo = p.tipo_prodotto?.nome || 'Senza tipo';
+                if (!byTipo[tipo]) {
+                    byTipo[tipo] = { nome: tipo, numProdotti: 0, costoIvato: 0 };
+                }
+                byTipo[tipo].numProdotti++;
+                byTipo[tipo].costoIvato += (p.prezzo_ivato || 0) * (p.quantita || 0);
+            });
+            
+            dashboardData.tipi = Object.values(byTipo).sort((a, b) => b.costoIvato - a.costoIvato);
+            
             // Conta fatture (se filtrate per periodo)
             if (filterAnno || filterMese) {
                 const fattureIdsSet = new Set();
@@ -760,7 +773,7 @@
             });
         }
 
-        // ========== GRAFICO CATEGORIE ==========
+        // ========== GRAFICO CATEGORIE / TIPI ==========
         function renderChartCategorie() {
             // Distruggi grafico precedente se esiste
             if (chartCategorieInstance) {
@@ -768,6 +781,24 @@
             }
             
             const ctx = document.getElementById('chartCategorie').getContext('2d');
+            const titleElement = document.getElementById('chartCategorieTitle');
+            
+            // Verifica se il filtro categoria è attivo
+            const filterCategoria = document.getElementById('filterCategoria').value;
+            
+            // Se filtro categoria attivo -> mostra distribuzione per TIPO
+            // Altrimenti -> mostra distribuzione per CATEGORIA
+            const useTipi = filterCategoria && filterCategoria !== '';
+            const dataSource = useTipi ? (dashboardData.tipi || []) : dashboardData.categorie;
+            
+            // Aggiorna titolo del grafico
+            if (titleElement) {
+                if (useTipi) {
+                    titleElement.textContent = `📦 Distribuzione per Tipo (${filterCategoria})`;
+                } else {
+                    titleElement.textContent = '🏷️ Distribuzione per Categoria';
+                }
+            }
             
             const colors = [
                 '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', 
@@ -778,9 +809,9 @@
             chartCategorieInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: dashboardData.categorie.map(c => c.nome),
+                    labels: dataSource.map(c => c.nome),
                     datasets: [{
-                        data: dashboardData.categorie.map(c => c.costoIvato),
+                        data: dataSource.map(c => c.costoIvato),
                         backgroundColor: colors,
                         borderWidth: 2,
                         borderColor: '#fff'
