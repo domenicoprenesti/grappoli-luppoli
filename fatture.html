@@ -221,7 +221,13 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Ragione Sociale / Fornitore *</label>
-                        <input type="text" id="manuale_ragione_sociale" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Es: Birrificio Artigianale SRL">
+                        <select id="manuale_fornitore_select" onchange="toggleNuovoFornitore()" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="">-- Seleziona fornitore --</option>
+                            <option value="__nuovo__">➕ Nuovo fornitore...</option>
+                        </select>
+                        <div id="nuovoFornitoreContainer" class="hidden mt-2">
+                            <input type="text" id="manuale_nuovo_fornitore" class="w-full px-4 py-3 border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-orange-50" placeholder="Inserisci nome nuovo fornitore...">
+                        </div>
                     </div>
                     
                     <div>
@@ -442,7 +448,37 @@
             document.getElementById('formFatturaManuale').reset();
             // Imposta data odierna come default
             document.getElementById('manuale_data_pagamento').value = new Date().toISOString().split('T')[0];
+            
+            // Popola la select con i fornitori esistenti dalle fatture
+            const fornitoriUnici = [...new Set(state.fatture.map(f => f.ced.nm).filter(Boolean))].sort();
+            const select = document.getElementById('manuale_fornitore_select');
+            select.innerHTML = '<option value="">-- Seleziona fornitore --</option>';
+            fornitoriUnici.forEach(f => {
+                select.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+            select.innerHTML += '<option value="__nuovo__">➕ Nuovo fornitore...</option>';
+            
+            // Nascondi il campo nuovo fornitore
+            document.getElementById('nuovoFornitoreContainer').classList.add('hidden');
+            document.getElementById('manuale_nuovo_fornitore').value = '';
+            
             document.getElementById('modalFatturaManuale').classList.remove('hidden');
+        };
+
+        window.toggleNuovoFornitore = function() {
+            const select = document.getElementById('manuale_fornitore_select');
+            const container = document.getElementById('nuovoFornitoreContainer');
+            const input = document.getElementById('manuale_nuovo_fornitore');
+            
+            if (select.value === '__nuovo__') {
+                container.classList.remove('hidden');
+                input.required = true;
+                input.focus();
+            } else {
+                container.classList.add('hidden');
+                input.required = false;
+                input.value = '';
+            }
         };
 
         window.closeModalFatturaManuale = function() {
@@ -452,7 +488,16 @@
         window.saveFatturaManuale = async function(event) {
             event.preventDefault();
             
-            const ragioneSociale = document.getElementById('manuale_ragione_sociale').value.trim();
+            // Determina la ragione sociale
+            const selectValue = document.getElementById('manuale_fornitore_select').value;
+            let ragioneSociale = '';
+            
+            if (selectValue === '__nuovo__') {
+                ragioneSociale = document.getElementById('manuale_nuovo_fornitore').value.trim();
+            } else {
+                ragioneSociale = selectValue;
+            }
+            
             const importo = parseFloat(document.getElementById('manuale_importo').value);
             const dataPagamento = document.getElementById('manuale_data_pagamento').value;
             const note = document.getElementById('manuale_note').value.trim();
