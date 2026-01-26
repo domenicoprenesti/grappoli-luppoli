@@ -24,6 +24,12 @@
             background: rgba(255, 255, 255, 0.25);
             border-color: rgba(255, 255, 255, 0.5);
         }
+        /* Stile per le opzioni del dropdown */
+        .filter-input option {
+            background: #1e40af;
+            color: white;
+            padding: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
@@ -89,7 +95,7 @@
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                 <p class="text-sm text-yellow-800">
-                    <strongâš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!
+                    <strong⚠️ Attenzione:</strong> Questa azione è irreversibile!
                 </p>
             </div>
             <div class="flex space-x-4">
@@ -126,8 +132,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                     <p class="text-xl font-bold mb-2">Carica Fatture XML</p>
-                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o piÃ¹ file (anche drag & drop)</p>
-                    <p class="text-xs text-blue-600 font-medium">âœ“ Controllo duplicati automatico</p>
+                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o più file (anche drag & drop)</p>
+                    <p class="text-xs text-blue-600 font-medium">✓ Controllo duplicati automatico</p>
                 </div>
             </div>
 
@@ -138,11 +144,11 @@
                     <svg class="w-20 h-20 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                     </svg>
-                    <p class="text-xl font-bold mb-2 text-purple-700">ðŸ“ Carica Cartella Completa</p>
+                    <p class="text-xl font-bold mb-2 text-purple-700">📁 Carica Cartella Completa</p>
                     <p class="text-sm text-gray-600 mb-3">Seleziona una cartella con tutte le fatture XML</p>
                     <div class="space-y-1">
-                        <p class="text-xs text-purple-600 font-medium">âœ“ Elaborazione automatica in batch</p>
-                        <p class="text-xs text-purple-600 font-medium">âœ“ Skip automatico duplicati</p>
+                        <p class="text-xs text-purple-600 font-medium">✓ Elaborazione automatica in batch</p>
+                        <p class="text-xs text-purple-600 font-medium">✓ Skip automatico duplicati</p>
                         <p class="text-xs text-gray-500 mt-2">Perfetto per importare centinaia di fatture</p>
                     </div>
                 </div>
@@ -157,7 +163,7 @@
                 <div class="w-full bg-blue-200 rounded-full h-3">
                     <div id="modalProgressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
                 </div>
-                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">âš ï¸ 0 duplicati saltati</p>
+                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">⚠️ 0 duplicati saltati</p>
             </div>
         </div>
     </div>
@@ -166,7 +172,7 @@
     <div id="dettagliModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6 flex justify-between items-center">
-                <h2 class="text-2xl font-bold">ðŸ“„ Dettagli Fattura</h2>
+                <h2 class="text-2xl font-bold">📄 Dettagli Fattura</h2>
                 <button onclick="closeDettagliModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -193,6 +199,64 @@
         </div>
     </div>
 
+    <!-- Modal Inserimento Fattura Manuale -->
+    <div id="modalFatturaManuale" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+            <div class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-6 rounded-t-2xl flex justify-between items-center">
+                <h2 class="text-2xl font-bold">✏️ Inserimento Manuale</h2>
+                <button onclick="closeModalFatturaManuale()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="formFatturaManuale" onsubmit="saveFatturaManuale(event)" class="p-8">
+                <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded">
+                    <p class="text-sm text-amber-800">
+                        <strong>ℹ️ Info:</strong> Usa questo form per registrare pagamenti di fatture non ancora importate come XML. Potrai eliminarle quando importerai la fattura corrispondente.
+                    </p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Ragione Sociale / Fornitore *</label>
+                        <select id="manuale_fornitore_select" onchange="toggleNuovoFornitore()" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="">-- Seleziona fornitore --</option>
+                            <option value="__nuovo__">➕ Nuovo fornitore...</option>
+                        </select>
+                        <div id="nuovoFornitoreContainer" class="hidden mt-2">
+                            <input type="text" id="manuale_nuovo_fornitore" class="w-full px-4 py-3 border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-orange-50" placeholder="Inserisci nome nuovo fornitore...">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Importo Totale (€) *</label>
+                        <input type="number" step="0.01" id="manuale_importo" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Es: 1250.50">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Data Pagamento *</label>
+                        <input type="date" id="manuale_data_pagamento" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Note (opzionale)</label>
+                        <textarea id="manuale_note" rows="2" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Es: Bonifico bancario, rif. ordine #123"></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4 mt-6">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 font-medium shadow-lg flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Salva Fattura Manuale</span>
+                    </button>
+                    <button type="button" onclick="closeModalFatturaManuale()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
@@ -205,7 +269,7 @@
         
         // ===== VERIFICA CAMPI DATABASE ALL'AVVIO =====
         async function verificaCampiDatabase() {
-            console.log('ðŸ” Verifica campi database...');
+            console.log('🔍 Verifica campi database...');
             
             try {
                 // Prova a fare una query di test con i campi fattura_id e data_fattura
@@ -217,10 +281,10 @@
                 if (error) {
                     // Se l'errore menziona una colonna mancante, avvisa l'utente
                     if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
-                        console.error('âŒ CAMPI MANCANTI NEL DATABASE!', error);
+                        console.error('❌ CAMPI MANCANTI NEL DATABASE!', error);
                         
                         const conferma = confirm(
-                            'âš ï¸ ATTENZIONE: DATABASE NON AGGIORNATO!\n\n' +
+                            '⚠️ ATTENZIONE: DATABASE NON AGGIORNATO!\n\n' +
                             'I campi "fattura_id" e "data_fattura" non esistono nella tabella prodotti.\n\n' +
                             'DEVI eseguire le query SQL di aggiornamento prima di poter caricare fatture.\n\n' +
                             'Vuoi vedere le istruzioni?'
@@ -241,11 +305,11 @@
                     }
                 }
                 
-                console.log('âœ… Campi database verificati correttamente');
+                console.log('✅ Campi database verificati correttamente');
                 return true;
                 
             } catch (err) {
-                console.error('âŒ Errore verifica database:', err);
+                console.error('❌ Errore verifica database:', err);
                 return false;
             }
         }
@@ -255,7 +319,7 @@
         verificaCampiDatabase().then(ok => {
             databaseOK = ok;
             if (!ok) {
-                console.warn('âš ï¸ Database non pronto. Il caricamento fatture potrebbe fallire.');
+                console.warn('⚠️ Database non pronto. Il caricamento fatture potrebbe fallire.');
             }
         });
         
@@ -275,7 +339,8 @@
                 dataFattura: '',
                 fornitore: '',
                 importo: '',
-                delta: ''
+                delta: '',
+                pagato: 'all' // 'all', 'da_pagare', 'pagato'
             },
             uploading: false,
             uploadProgress: null,
@@ -283,148 +348,15 @@
             loadingProgress: { loaded: 0, total: 0, isLoading: false },
             deleteAction: null,
             uploadMode: 'single',
-            pagatoChanges: new Map()
+            pagatoChanges: new Map(),
+            fattureManuali: []
         };
 
-        // ===== SISTEMA DI CATEGORIZZAZIONE INTELLIGENTE =====
-        // Cache per tipi prodotto e aggreganti (caricati dal database)
-        let tipiProdottoCache = [];
-        let aggregantiCache = [];
-        let categorizzazioneStats = { categorizzati: 0, fallback: 0 };
-
-        // Carica tipi prodotto con keyword dal database
-        async function loadTipiProdottoPerCategorizzazione() {
-            console.log('🏷️ Caricamento tipi prodotto per categorizzazione intelligente...');
-            
-            try {
-                // Carica aggreganti (categorie principali)
-                const { data: aggreganti, error: aggError } = await supabaseClient
-                    .from('aggregante_prodotto')
-                    .select('*')
-                    .order('ordine', { ascending: true });
-                
-                if (aggError) {
-                    console.error('❌ Errore caricamento aggreganti:', aggError);
-                    return false;
-                }
-                
-                aggregantiCache = aggreganti || [];
-                console.log(`✅ Caricati ${aggregantiCache.length} aggreganti:`, aggregantiCache.map(a => a.nome));
-                
-                // Carica tipi prodotto con relazione ad aggregante
-                const { data: tipi, error: tipiError } = await supabaseClient
-                    .from('tipo_prodotto')
-                    .select('*, aggregante_prodotto(id, nome, colore)')
-                    .order('nome', { ascending: true });
-                
-                if (tipiError) {
-                    console.error('❌ Errore caricamento tipi:', tipiError);
-                    return false;
-                }
-                
-                tipiProdottoCache = tipi || [];
-                
-                // Log dettagliato delle keyword
-                let totalKeywords = 0;
-                tipiProdottoCache.forEach(t => {
-                    const kw = t.keywords || [];
-                    totalKeywords += kw.length;
-                    if (kw.length > 0) {
-                        console.log(`  📌 ${t.nome} (${t.aggregante_prodotto?.nome || 'N/A'}): ${kw.join(', ')}`);
-                    }
-                });
-                
-                console.log(`✅ Caricati ${tipiProdottoCache.length} tipi con ${totalKeywords} keyword totali`);
-                return true;
-                
-            } catch (err) {
-                console.error('❌ Eccezione caricamento tipi:', err);
-                return false;
-            }
-        }
-
-        // Trova tipo prodotto basandosi su keyword matching
-        function findTipoByKeywords(descrizione) {
-            if (!descrizione || tipiProdottoCache.length === 0) {
-                return null;
-            }
-            
-            const descLower = descrizione.toLowerCase().trim();
-            const descWords = descLower.split(/[\s\-\/,.:;()]+/).filter(w => w.length > 2);
-            
-            let bestMatch = null;
-            let bestScore = 0;
-            let matchedKeyword = null;
-            
-            for (const tipo of tipiProdottoCache) {
-                const keywords = tipo.keywords || [];
-                
-                for (const keyword of keywords) {
-                    if (!keyword) continue;
-                    const kwLower = keyword.toLowerCase().trim();
-                    
-                    // Match esatto nella descrizione
-                    if (descLower.includes(kwLower)) {
-                        const score = kwLower.length; // Keyword più lunghe = match più specifico
-                        
-                        if (score > bestScore) {
-                            bestScore = score;
-                            bestMatch = tipo;
-                            matchedKeyword = keyword;
-                        }
-                    }
-                    
-                    // Match per parole singole (fallback)
-                    if (!bestMatch) {
-                        for (const word of descWords) {
-                            if (word === kwLower || kwLower.includes(word) || word.includes(kwLower)) {
-                                const score = Math.min(word.length, kwLower.length);
-                                if (score > bestScore) {
-                                    bestScore = score;
-                                    bestMatch = tipo;
-                                    matchedKeyword = keyword;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
-            if (bestMatch) {
-                const aggregante = bestMatch.aggregante_prodotto || 
-                    aggregantiCache.find(a => a.id === bestMatch.aggregante_id);
-                
-                return {
-                    tipo_id: bestMatch.id,
-                    tipo_nome: bestMatch.nome,
-                    aggregante_id: aggregante?.id || null,
-                    aggregante_nome: aggregante?.nome || 'Altro',
-                    aggregante_colore: aggregante?.colore || '#6B7280',
-                    matched_keyword: matchedKeyword,
-                    score: bestScore
-                };
-            }
-            
-            return null;
-        }
-
-        // Funzione legacy per fallback (quando non trova match)
-        function generateTagFallback(description) {
-            const desc = description.toLowerCase();
-            if (desc.includes('vino') || desc.includes('wine') || desc.includes('rosso') || desc.includes('bianco') || desc.includes('prosecco') || desc.includes('spumante')) return 'Vino';
-            if (desc.includes('birra') || desc.includes('beer') || desc.includes('lager') || desc.includes('ale') || desc.includes('pilsner')) return 'Birra';
-            if (desc.includes('whisky') || desc.includes('gin') || desc.includes('vodka') || desc.includes('rum') || desc.includes('tequila') || desc.includes('liquore') || desc.includes('amaro')) return 'Spirits';
-            if (desc.includes('acqua') || desc.includes('succo') || desc.includes('coca') || desc.includes('fanta') || desc.includes('sprite') || desc.includes('tonic') || desc.includes('soda')) return 'Bevande';
-            if (desc.includes('patatine') || desc.includes('chips') || desc.includes('snack') || desc.includes('noccioline') || desc.includes('arachidi')) return 'Food';
-            if (desc.includes('bicchier') || desc.includes('tovaglio') || desc.includes('cannuc') || desc.includes('posate')) return 'Consumabili';
-            return 'Altro';
-        }
-
         async function loadProdottiPerFatture() {
-            console.log('ðŸ“¦ Caricamento prodotti per calcolare delta...');
+            console.log('📦 Caricamento prodotti per calcolare delta...');
             
             if (!state.fattureConProdotti) {
-                console.error('âŒ state.fattureConProdotti non inizializzato!');
+                console.error('❌ state.fattureConProdotti non inizializzato!');
                 return;
             }
             
@@ -437,14 +369,14 @@
                     .not('fattura_id', 'is', null);
                 
                 if (countError) {
-                    console.warn('âš ï¸ Errore count prodotti:', countError);
+                    console.warn('⚠️ Errore count prodotti:', countError);
                     return;
                 }
                 
-                console.log(`ðŸ“¦ Totale prodotti con fattura: ${prodottiCount || 0}`);
+                console.log(`📦 Totale prodotti con fattura: ${prodottiCount || 0}`);
                 
                 if (!prodottiCount || prodottiCount === 0) {
-                    console.log('â„¹ï¸ Nessun prodotto con fattura_id');
+                    console.log('ℹ️ Nessun prodotto con fattura_id');
                     return;
                 }
                 
@@ -459,17 +391,17 @@
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     
                     if (error) {
-                        console.error('âŒ Errore batch prodotti:', error);
+                        console.error('❌ Errore batch prodotti:', error);
                         continue;
                     }
                     
                     if (data) allProdotti = [...allProdotti, ...data];
                 }
                 
-                console.log(`âœ… Caricati ${allProdotti.length} prodotti totali`);
+                console.log(`✅ Caricati ${allProdotti.length} prodotti totali`);
                 
                 if (allProdotti.length === 0) {
-                    console.log('â„¹ï¸ Nessun prodotto caricato');
+                    console.log('ℹ️ Nessun prodotto caricato');
                     return;
                 }
                 
@@ -482,7 +414,7 @@
                         groupedByFattura[fid] = { valoreTotale: 0, numProdotti: 0 };
                     }
                     
-                    // USA DIRETTAMENTE prezzo_ivato dal database (giÃ  calcolato correttamente)
+                    // USA DIRETTAMENTE prezzo_ivato dal database (già calcolato correttamente)
                     const prezzoIvato = p.prezzo_ivato || 0;
                     const quantita = p.quantita || 0;
                     const valoreProdotto = prezzoIvato * quantita;
@@ -499,10 +431,10 @@
                     });
                 }
                 
-                console.log(`âœ… Aggregati dati per ${state.fattureConProdotti.size} fatture`);
+                console.log(`✅ Aggregati dati per ${state.fattureConProdotti.size} fatture`);
                 
             } catch (err) {
-                console.error('âŒ Errore caricamento prodotti:', err);
+                console.error('❌ Errore caricamento prodotti:', err);
             }
         }
 
@@ -511,7 +443,134 @@
             window.location.href = 'index.html';
         }
 
-        // ===== SWITCH MODALITÃ€ UPLOAD =====
+        // ===== GESTIONE FATTURE MANUALI =====
+        window.openModalFatturaManuale = function() {
+            document.getElementById('formFatturaManuale').reset();
+            // Imposta data odierna come default
+            document.getElementById('manuale_data_pagamento').value = new Date().toISOString().split('T')[0];
+            
+            // Popola la select con i fornitori esistenti dalle fatture
+            const fornitoriUnici = [...new Set(state.fatture.map(f => f.ced.nm).filter(Boolean))].sort();
+            const select = document.getElementById('manuale_fornitore_select');
+            select.innerHTML = '<option value="">-- Seleziona fornitore --</option>';
+            fornitoriUnici.forEach(f => {
+                select.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+            select.innerHTML += '<option value="__nuovo__">➕ Nuovo fornitore...</option>';
+            
+            // Nascondi il campo nuovo fornitore
+            document.getElementById('nuovoFornitoreContainer').classList.add('hidden');
+            document.getElementById('manuale_nuovo_fornitore').value = '';
+            
+            document.getElementById('modalFatturaManuale').classList.remove('hidden');
+        };
+
+        window.toggleNuovoFornitore = function() {
+            const select = document.getElementById('manuale_fornitore_select');
+            const container = document.getElementById('nuovoFornitoreContainer');
+            const input = document.getElementById('manuale_nuovo_fornitore');
+            
+            if (select.value === '__nuovo__') {
+                container.classList.remove('hidden');
+                input.required = true;
+                input.focus();
+            } else {
+                container.classList.add('hidden');
+                input.required = false;
+                input.value = '';
+            }
+        };
+
+        window.closeModalFatturaManuale = function() {
+            document.getElementById('modalFatturaManuale').classList.add('hidden');
+        };
+
+        window.saveFatturaManuale = async function(event) {
+            event.preventDefault();
+            
+            // Determina la ragione sociale
+            const selectValue = document.getElementById('manuale_fornitore_select').value;
+            let ragioneSociale = '';
+            
+            if (selectValue === '__nuovo__') {
+                ragioneSociale = document.getElementById('manuale_nuovo_fornitore').value.trim();
+            } else {
+                ragioneSociale = selectValue;
+            }
+            
+            const importo = parseFloat(document.getElementById('manuale_importo').value);
+            const dataPagamento = document.getElementById('manuale_data_pagamento').value;
+            const note = document.getElementById('manuale_note').value.trim();
+            
+            if (!ragioneSociale || !importo || !dataPagamento) {
+                alert('⚠️ Compila tutti i campi obbligatori');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('fatture_manuali')
+                    .insert([{
+                        ragione_sociale: ragioneSociale,
+                        importo: importo,
+                        data_pagamento: dataPagamento,
+                        note: note || null
+                    }])
+                    .select();
+                
+                if (error) throw error;
+                
+                console.log('✅ Fattura manuale salvata:', data);
+                closeModalFatturaManuale();
+                await loadFattureManuali();
+                render();
+                
+            } catch (err) {
+                console.error('❌ Errore salvataggio fattura manuale:', err);
+                alert('❌ Errore durante il salvataggio: ' + err.message);
+            }
+        };
+
+        async function loadFattureManuali() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('fatture_manuali')
+                    .select('*')
+                    .order('data_pagamento', { ascending: false });
+                
+                if (error) throw error;
+                
+                state.fattureManuali = data || [];
+                console.log(`📋 Caricate ${state.fattureManuali.length} fatture manuali`);
+                
+            } catch (err) {
+                console.error('❌ Errore caricamento fatture manuali:', err);
+                state.fattureManuali = [];
+            }
+        }
+
+        window.deleteFatturaManuale = async function(id) {
+            if (!confirm('Sei sicuro di voler eliminare questa fattura manuale?')) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('fatture_manuali')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                console.log('✅ Fattura manuale eliminata');
+                await loadFattureManuali();
+                render();
+                
+            } catch (err) {
+                console.error('❌ Errore eliminazione fattura manuale:', err);
+                alert('❌ Errore durante l\'eliminazione: ' + err.message);
+            }
+        };
+
+        // ===== SWITCH MODALITÀ UPLOAD =====
         window.switchUploadMode = function(mode) {
             state.uploadMode = mode;
             
@@ -526,7 +585,7 @@
                 modalSingle.classList.remove('hidden');
                 modalFolder.classList.add('hidden');
             } else {
-                modalTitle.textContent = 'ðŸ“ Carica Cartella Completa';
+                modalTitle.textContent = '📁 Carica Cartella Completa';
                 modalSingle.classList.add('hidden');
                 modalFolder.classList.remove('hidden');
             }
@@ -576,7 +635,7 @@
             if (state.pagatoChanges.size === 0) return;
             
             try {
-                state.error = 'ðŸ’¾ Salvataggio in corso...';
+                state.error = '💾 Salvataggio in corso...';
                 render();
                 
                 // Salva tutte le modifiche
@@ -590,14 +649,14 @@
                 }
                 
                 state.pagatoChanges.clear();
-                state.error = 'âœ… Modifiche salvate con successo!';
+                state.error = '✅ Modifiche salvate con successo!';
                 
                 setTimeout(() => { state.error = ''; render(); }, 3000);
                 render();
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                state.error = 'âŒ Errore durante il salvataggio';
+                state.error = '❌ Errore durante il salvataggio';
                 render();
             }
         };
@@ -623,11 +682,11 @@
             );
             
             if (files.length === 0) {
-                alert('âš ï¸ Nessun file XML trovato nella cartella selezionata');
+                alert('⚠️ Nessun file XML trovato nella cartella selezionata');
                 return;
             }
             
-            console.log(`ðŸ“ Upload cartella: ${files.length} file XML trovati`);
+            console.log(`📁 Upload cartella: ${files.length} file XML trovati`);
             await processFiles(files);
         };
 
@@ -691,8 +750,8 @@
                 }
                 
                 const prodottiList = prodotti || [];
-                // Calcolo con IVA: Î£(prezzo_ivato Ã— quantitÃ )
-                // USA prezzo_ivato dal database (giÃ  include IVA e sconti)
+                // Calcolo con IVA: Σ(prezzo_ivato × quantità)
+                // USA prezzo_ivato dal database (già include IVA e sconti)
                 const totaleProdotti = prodottiList.reduce((sum, p) => {
                     const prezzoIvato = p.prezzo_ivato || 0;
                     const quantita = p.quantita || 0;
@@ -827,7 +886,7 @@
                                     Prodotti (${prodottiList.length})
                                 </div>
                                 <div class="text-sm font-medium text-teal-700">
-                                    Totale: â‚¬${totaleProdotti.toFixed(2)}
+                                    Totale: €${totaleProdotti.toFixed(2)}
                                 </div>
                             </h3>
                             
@@ -846,11 +905,11 @@
                                             <tr>
                                                 <th class="px-3 py-2 text-left text-xs font-semibold">Prodotto</th>
                                                 <th class="px-3 py-2 text-left text-xs font-semibold">Cat.</th>
-                                                <th class="px-3 py-2 text-right text-xs font-semibold">QtÃ </th>
-                                                <th class="px-3 py-2 text-right text-xs font-semibold">â‚¬ Base</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">Qtà</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">€ Base</th>
                                                 <th class="px-3 py-2 text-center text-xs font-semibold">Sc1%</th>
                                                 <th class="px-3 py-2 text-center text-xs font-semibold">Sc2%</th>
-                                                <th class="px-3 py-2 text-right text-xs font-semibold">â‚¬ Finale</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">€ Finale</th>
                                                 <th class="px-3 py-2 text-center text-xs font-semibold">IVA</th>
                                                 <th class="px-3 py-2 text-right text-xs font-semibold">Totale</th>
                                             </tr>
@@ -867,7 +926,7 @@
                                                     <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-teal-50 transition-colors">
                                                         <td class="px-3 py-2">
                                                             <div class="font-medium text-gray-900">${p.nome || 'N/D'}</div>
-                                                            ${p.tipo_cessione === 'SC' ? '<div class="text-xs text-orange-600 font-semibold">ðŸŽ OMAGGIO/SCONTO</div>' : ''}
+                                                            ${p.tipo_cessione === 'SC' ? '<div class="text-xs text-orange-600 font-semibold">🎁 OMAGGIO/SCONTO</div>' : ''}
                                                         </td>
                                                         <td class="px-3 py-2">
                                                             <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded ${
@@ -884,7 +943,7 @@
                                                             ${(p.quantita || 0).toLocaleString('it-IT')} ${p.unita_misura || 'pz'}
                                                         </td>
                                                         <td class="px-3 py-2 text-right ${hasSconti ? 'line-through text-gray-400' : 'font-semibold'}">
-                                                            â‚¬${prezzoBase.toFixed(2)}
+                                                            €${prezzoBase.toFixed(2)}
                                                         </td>
                                                         <td class="px-3 py-2 text-center">
                                                             ${p.sconto1 ? `<span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded bg-orange-100 text-orange-800">${p.sconto1.toFixed(1)}%</span>` : '<span class="text-gray-300">-</span>'}
@@ -893,7 +952,7 @@
                                                             ${p.sconto2 ? `<span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded bg-orange-100 text-orange-800">${p.sconto2.toFixed(1)}%</span>` : '<span class="text-gray-300">-</span>'}
                                                         </td>
                                                         <td class="px-3 py-2 text-right font-bold text-green-600">
-                                                            â‚¬${prezzoScontato.toFixed(2)}
+                                                            €${prezzoScontato.toFixed(2)}
                                                         </td>
                                                         <td class="px-3 py-2 text-center">
                                                             <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-800">
@@ -901,7 +960,7 @@
                                                             </span>
                                                         </td>
                                                         <td class="px-3 py-2 text-right font-bold text-teal-700">
-                                                            â‚¬${totaleRiga.toFixed(2)}
+                                                            €${totaleRiga.toFixed(2)}
                                                         </td>
                                                     </tr>
                                                 `;
@@ -910,7 +969,7 @@
                                         <tfoot class="bg-teal-700 text-white">
                                             <tr>
                                                 <td colspan="8" class="px-3 py-2 text-right font-bold">TOTALE PRODOTTI:</td>
-                                                <td class="px-3 py-2 text-right font-bold text-lg">â‚¬${totaleProdotti.toFixed(2)}</td>
+                                                <td class="px-3 py-2 text-right font-bold text-lg">€${totaleProdotti.toFixed(2)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -925,11 +984,11 @@
                                             <div class="flex-1">
                                                 <p class="text-sm font-medium text-yellow-800">Attenzione: Discrepanza importi</p>
                                                 <p class="text-sm text-yellow-700 mt-1">
-                                                    Il totale prodotti (â‚¬${totaleProdotti.toFixed(2)}) non corrisponde all'importo fattura (â‚¬${data.importo_totale.toFixed(2)})
+                                                    Il totale prodotti (€${totaleProdotti.toFixed(2)}) non corrisponde all'importo fattura (€${data.importo_totale.toFixed(2)})
                                                 </p>
                                                 <p class="text-xs text-yellow-600 mt-1">
-                                                    Differenza: â‚¬${Math.abs(totaleProdotti - data.importo_totale).toFixed(2)} 
-                                                    ${totaleProdotti > data.importo_totale ? '(prodotti in piÃ¹)' : '(spese/bolli/trasporti)'}
+                                                    Differenza: €${Math.abs(totaleProdotti - data.importo_totale).toFixed(2)} 
+                                                    ${totaleProdotti > data.importo_totale ? '(prodotti in più)' : '(spese/bolli/trasporti)'}
                                                 </p>
                                             </div>
                                         </div>
@@ -995,11 +1054,11 @@
                 // Ricarica i dati
                 await loadAllFatture();
                 
-                alert('âœ… Modifiche salvate con successo!');
+                alert('✅ Modifiche salvate con successo!');
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                alert('âŒ Errore durante il salvataggio: ' + err.message);
+                alert('❌ Errore durante il salvataggio: ' + err.message);
             }
         };
 
@@ -1065,11 +1124,11 @@
                         deltaCalcolati++;
                         
                         if (deltaCalcolati <= 5) {
-                            console.log(`Delta ${f.num}: â‚¬${f.tot.toFixed(2)} - â‚¬${datiProdotti.valoreProdotti.toFixed(2)} = â‚¬${delta.toFixed(2)}`);
+                            console.log(`Delta ${f.num}: €${f.tot.toFixed(2)} - €${datiProdotti.valoreProdotti.toFixed(2)} = €${delta.toFixed(2)}`);
                         }
                     }
                 });
-                console.log(`âœ… Calcolati ${deltaCalcolati} delta su ${state.fatture.length} fatture`);
+                console.log(`✅ Calcolati ${deltaCalcolati} delta su ${state.fatture.length} fatture`);
                 
                 state.loadingProgress.isLoading = false;
                 render();
@@ -1087,7 +1146,7 @@
             if (!databaseOK) {
                 const riprova = await verificaCampiDatabase();
                 if (!riprova) {
-                    alert('âŒ Database non pronto. Impossibile caricare fatture.\n\nEsegui prima le query SQL di aggiornamento!');
+                    alert('❌ Database non pronto. Impossibile caricare fatture.\n\nEsegui prima le query SQL di aggiornamento!');
                     return;
                 }
                 databaseOK = true;
@@ -1131,7 +1190,7 @@
                         
                         // Mostra contatore duplicati
                         if (state.uploadProgress.duplicates.length > 0) {
-                            modalDuplicatesText.textContent = `âš ï¸ ${state.uploadProgress.duplicates.length} duplicati saltati`;
+                            modalDuplicatesText.textContent = `⚠️ ${state.uploadProgress.duplicates.length} duplicati saltati`;
                             modalDuplicatesText.classList.remove('hidden');
                         }
                     } else {
@@ -1141,9 +1200,9 @@
             }
 
             state.uploading = false;
-            state.error = `âœ“ ${successCount} fatture caricate!`;
-            if (state.uploadProgress.duplicates.length > 0) state.error += ` | âš ï¸ ${state.uploadProgress.duplicates.length} duplicati`;
-            if (state.uploadProgress.errors.length > 0) state.error += ` | âŒ ${state.uploadProgress.errors.length} errori`;
+            state.error = `✓ ${successCount} fatture caricate!`;
+            if (state.uploadProgress.duplicates.length > 0) state.error += ` | ⚠️ ${state.uploadProgress.duplicates.length} duplicati`;
+            if (state.uploadProgress.errors.length > 0) state.error += ` | ❌ ${state.uploadProgress.errors.length} errori`;
             
             // Chiudi modal dopo 2 secondi
             setTimeout(() => {
@@ -1174,7 +1233,7 @@
             const partitaIVACedente = getTextContent(datiCedente.getElementsByTagName('IdFiscaleIVA')[0], 'IdCodice');
             
             const { data: existing } = await supabaseClient.from('fatture').select('id').eq('numero_fattura', numeroFattura).eq('data_fattura', dataFattura).eq('cedente_piva', partitaIVACedente).single();
-            if (existing) throw new Error(`Duplicato: Fattura ${numeroFattura} giÃ  presente`);
+            if (existing) throw new Error(`Duplicato: Fattura ${numeroFattura} già presente`);
 
             const cedenteNome = getTextContent(datiCedente.getElementsByTagName('Anagrafica')[0], 'Denominazione');
             const sedeCedente = cedente.getElementsByTagName('Sede')[0];
@@ -1208,34 +1267,34 @@
                 user_id: null
             };
 
-            console.log('ðŸ“„ Inserimento fattura in database...', fatturaData);
+            console.log('📄 Inserimento fattura in database...', fatturaData);
             
             const { data: insertedFattura, error } = await supabaseClient.from('fatture').insert([fatturaData]).select().single();
             
             if (error) {
-                console.error('âŒ ERRORE inserimento fattura:', error);
+                console.error('❌ ERRORE inserimento fattura:', error);
                 throw new Error(`Errore database fattura: ${error.message}`);
             }
             
             if (!insertedFattura) {
-                console.error('âŒ Fattura inserita ma nessun dato restituito!');
+                console.error('❌ Fattura inserita ma nessun dato restituito!');
                 throw new Error('Errore: fattura inserita ma ID non recuperato');
             }
             
-            console.log('âœ… Fattura inserita con ID:', insertedFattura.id);
+            console.log('✅ Fattura inserita con ID:', insertedFattura.id);
 
             // Passa l'ID della fattura e la data alla funzione di estrazione prodotti
-            console.log('ðŸ“¦ Avvio estrazione prodotti...');
+            console.log('📦 Avvio estrazione prodotti...');
             await extractAndSaveProducts(xmlDoc, cedenteNome, insertedFattura.id, dataFattura);
-            console.log('âœ… Estrazione prodotti completata!');
+            console.log('✅ Estrazione prodotti completata!');
         }
 
         // ===== PARSER CON GESTIONE IVA COMPLETA E COLLEGAMENTO FATTURA =====
         async function extractAndSaveProducts(xmlDoc, fornitore, fatturaId, dataFattura) {
             const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
             
-            console.log(`ðŸ“¦ Inizio estrazione prodotti per fattura ID: ${fatturaId}`);
-            console.log(`ðŸ“¦ Trovate ${dettaglioLinee.length} righe di dettaglio`);
+            console.log(`📦 Inizio estrazione prodotti per fattura ID: ${fatturaId}`);
+            console.log(`📦 Trovate ${dettaglioLinee.length} righe di dettaglio`);
             
             let prodottiCreati = 0;
             let prodottiSaltati = 0;
@@ -1244,13 +1303,13 @@
             for (let i = 0; i < dettaglioLinee.length; i++) {
                 const linea = dettaglioLinee[i];
                 
-                console.log(`\nðŸ” === RIGA ${i + 1} ===`);
+                console.log(`\n🔍 === RIGA ${i + 1} ===`);
                 
                 const descrizione = getTextContent(linea, 'Descrizione');
-                console.log(`ðŸ“ Descrizione: ${descrizione}`);
+                console.log(`📝 Descrizione: ${descrizione}`);
                 
                 if (!descrizione || descrizione.trim() === '') {
-                    console.log(`âš ï¸ SALTATO: Descrizione vuota`);
+                    console.log(`⚠️ SALTATO: Descrizione vuota`);
                     prodottiSaltati++;
                     continue;
                 }
@@ -1259,7 +1318,7 @@
                 quantitaText = quantitaText.replace(',', '.');
                 const quantita = parseFloat(quantitaText) || 0;
                 
-                // Estrai unitÃ  di misura dal XML
+                // Estrai unità di misura dal XML
                 const unitaMisura = getTextContent(linea, 'UnitaMisura') || 'pz';
                 
                 let prezzoText = getTextContent(linea, 'PrezzoUnitario') || getTextContent(linea, 'UnitPrice') || getTextContent(linea, 'Prezzo') || '0';
@@ -1272,7 +1331,7 @@
                 
                 // ===== ESTRAZIONE TIPO CESSIONE/PRESTAZIONE =====
                 const tipoCessione = getTextContent(linea, 'TipoCessione') || getTextContent(linea, 'TipoCessionePrestazione') || null;
-                console.log(`ðŸ·ï¸ Tipo cessione: ${tipoCessione || 'Standard'}`);
+                console.log(`🏷️ Tipo cessione: ${tipoCessione || 'Standard'}`);
                 
                 // ===== ESTRAZIONE SCONTI/MAGGIORAZIONI =====
                 const scontiMaggiorazioni = linea.getElementsByTagName('ScontoMaggiorazione');
@@ -1282,24 +1341,24 @@
                     const scontoEl = scontiMaggiorazioni[s];
                     const tipo = getTextContent(scontoEl, 'Tipo'); // SC = sconto, MG = maggiorazione
                     
-                    // Controlla se Ã¨ percentuale o importo
+                    // Controlla se è percentuale o importo
                     let percentualeText = getTextContent(scontoEl, 'Percentuale');
                     let importoText = getTextContent(scontoEl, 'Importo');
                     
                     if (tipo === 'SC') { // Solo sconti, ignora maggiorazioni
                         if (percentualeText) {
-                            // Sconto giÃ  in percentuale
+                            // Sconto già in percentuale
                             percentualeText = percentualeText.replace(',', '.');
                             const percentuale = parseFloat(percentualeText);
                             sconti.push(percentuale);
-                            console.log(`  ðŸ’° Sconto ${s + 1}: ${percentuale}%`);
+                            console.log(`  💰 Sconto ${s + 1}: ${percentuale}%`);
                         } else if (importoText && prezzoUnitario > 0) {
                             // Sconto in importo - converti in percentuale
                             importoText = importoText.replace(',', '.');
                             const importo = parseFloat(importoText);
                             const percentuale = (importo / prezzoUnitario) * 100;
                             sconti.push(parseFloat(percentuale.toFixed(3)));
-                            console.log(`  ðŸ’° Sconto ${s + 1}: â‚¬${importo} â†’ ${percentuale.toFixed(2)}%`);
+                            console.log(`  💰 Sconto ${s + 1}: €${importo} → ${percentuale.toFixed(2)}%`);
                         }
                     }
                 }
@@ -1307,7 +1366,7 @@
                 // ===== CALCOLO PREZZO BASE =====
                 let prezzoBase = prezzoUnitario;
                 
-                // Se PrezzoUnitario Ã¨ 0, prova a ricavare dal PrezzoTotale
+                // Se PrezzoUnitario è 0, prova a ricavare dal PrezzoTotale
                 if (prezzoUnitario === 0 && quantita > 0) {
                     let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
                     totaleText = totaleText.replace(',', '.');
@@ -1326,43 +1385,23 @@
                     prezzoScontato = prezzoScontato * (1 - sconto / 100);
                 }
                 
-                console.log(`ðŸ’µ Prezzo base: â‚¬${prezzoBase.toFixed(2)} â†’ Prezzo scontato: â‚¬${prezzoScontato.toFixed(2)}`);
+                console.log(`💵 Prezzo base: €${prezzoBase.toFixed(2)} → Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
-                    console.log(`âš ï¸ SALTATO: QuantitÃ =0 E Prezzo=0 per "${descrizione}"`);
+                    console.log(`⚠️ SALTATO: Quantità=0 E Prezzo=0 per "${descrizione}"`);
                     prodottiSaltati++;
                     continue;
                 }
                 
                 const categoria = generateTag(descrizione);
 
-                // ===== CATEGORIZZAZIONE INTELLIGENTE =====
-                // Cerca match tra descrizione e keyword dei tipi nel database
-                const categorizzazione = findTipoByKeywords(descrizione);
-                
-                let categoriaIntelligente = categoria; // Default: usa vecchio sistema
-                let tipoId = null;
-                
-                if (categorizzazione) {
-                    categoriaIntelligente = categorizzazione.aggregante_nome;
-                    tipoId = categorizzazione.tipo_id;
-                    categorizzazioneStats.categorizzati++;
-                    console.log(`🏷️ MATCH: "${descrizione.substring(0,40)}..." → ${categorizzazione.tipo_nome} (${categoriaIntelligente}) [keyword: "${categorizzazione.matched_keyword}"]`);
-                } else {
-                    // Fallback: usa categoria da generateTag
-                    categoriaIntelligente = generateTagFallback(descrizione);
-                    categorizzazioneStats.fallback++;
-                    console.log(`⚪ FALLBACK: "${descrizione.substring(0,40)}..." → ${categoriaIntelligente}`);
-                }
-
                 try {
-                    // IMPORTANTE: Ora ogni prodotto Ã¨ collegato ad una fattura specifica E ha tipo_id
+                    // IMPORTANTE: Ora ogni prodotto è collegato ad una fattura specifica
                     const prodottoData = {
                         nome: descrizione,
                         descrizione: descrizione,
-                        categoria: categoriaIntelligente,  // Campo testuale (ora intelligente)
-                        tipo_id: tipoId,                   // NUOVO: collegamento a tipo_prodotto
-                        prezzo: prezzoBase > 0 ? prezzoBase : null,
+                        categoria: categoria,
+                        prezzo: prezzoBase > 0 ? prezzoBase : null,  // Prezzo PRIMA degli sconti
                         prezzo_base: prezzoBase > 0 ? prezzoBase : null,
                         prezzo_scontato: prezzoScontato,  // IMPORTANTE: salva 0 invece di null per sconti 100%
                         aliquota_iva: aliquotaIVA,
@@ -1377,11 +1416,11 @@
                         sconto3: sconti[2] || null,
                         sconto4: sconti[3] || null,
                         sconto5: sconti[4] || null,
-                        sconto_fattura: null,  // VerrÃ  popolato dopo se c'Ã¨ uno sconto generale
+                        sconto_fattura: null,  // Verrà popolato dopo se c'è uno sconto generale
                         attivo: true
                     };
                     
-                    console.log(`ðŸ’¾ INSERIMENTO #${prodottiCreati + 1}:`, {
+                    console.log(`💾 INSERIMENTO #${prodottiCreati + 1}:`, {
                         nome: descrizione.substring(0, 40),
                         prezzo_base: prezzoBase,
                         prezzo_scontato: prezzoScontato,
@@ -1396,44 +1435,36 @@
                         .insert([prodottoData]);
                     
                     if (error) {
-                        console.error(`âŒ ERRORE INSERT prodotto "${descrizione}":`, error);
-                        console.error(`âŒ Dettaglio errore:`, JSON.stringify(error));
+                        console.error(`❌ ERRORE INSERT prodotto "${descrizione}":`, error);
+                        console.error(`❌ Dettaglio errore:`, JSON.stringify(error));
                         errori++;
                         
-                        // Se Ã¨ un errore di colonna mancante, mostra un alert
+                        // Se è un errore di colonna mancante, mostra un alert
                         if (error.message && error.message.includes('column')) {
-                            alert(`âš ï¸ ERRORE DATABASE: La colonna non esiste!\n\n${error.message}\n\nDevi eseguire le query SQL per aggiungere i campi fattura_id e data_fattura alla tabella prodotti!`);
+                            alert(`⚠️ ERRORE DATABASE: La colonna non esiste!\n\n${error.message}\n\nDevi eseguire le query SQL per aggiungere i campi fattura_id e data_fattura alla tabella prodotti!`);
                             throw error; // Ferma il caricamento
                         }
                     } else {
                         prodottiCreati++;
                         const scontiStr = sconti.length > 0 ? ` sconti: [${sconti.join('%, ')}%]` : '';
-                        console.log(`âœ… Creato prodotto ${prodottiCreati}: ${descrizione} (qtÃ : ${quantita}, base: â‚¬${prezzoBase.toFixed(2)}, finale: â‚¬${prezzoScontato.toFixed(2)}${scontiStr}, IVA: ${aliquotaIVA}%)`);
+                        console.log(`✅ Creato prodotto ${prodottiCreati}: ${descrizione} (qtà: ${quantita}, base: €${prezzoBase.toFixed(2)}, finale: €${prezzoScontato.toFixed(2)}${scontiStr}, IVA: ${aliquotaIVA}%)`);
                     }
                 } catch (err) {
-                    console.error(`âŒ ECCEZIONE prodotto "${descrizione}":`, err);
+                    console.error(`❌ ECCEZIONE prodotto "${descrizione}":`, err);
                     errori++;
                     
-                    // Se Ã¨ il primo errore, mostra un alert dettagliato
+                    // Se è il primo errore, mostra un alert dettagliato
                     if (errori === 1) {
-                        alert(`âš ï¸ ERRORE nel salvataggio prodotti!\n\nErrore: ${err.message}\n\nVerifica:\n1. Che i campi fattura_id e data_fattura esistano nella tabella prodotti\n2. Che hai eseguito le query SQL di aggiornamento\n3. La console del browser per dettagli`);
+                        alert(`⚠️ ERRORE nel salvataggio prodotti!\n\nErrore: ${err.message}\n\nVerifica:\n1. Che i campi fattura_id e data_fattura esistano nella tabella prodotti\n2. Che hai eseguito le query SQL di aggiornamento\n3. La console del browser per dettagli`);
                     }
                 }
             }
             
-            console.log(`\nðŸ“Š RIEPILOGO ESTRAZIONE PRODOTTI:`);
-            console.log(`âœ… Prodotti creati: ${prodottiCreati}`);
-            console.log(`âš ï¸ Prodotti saltati: ${prodottiSaltati}`);
-            console.log(`âŒ Errori: ${errori}`);
-            console.log(`ðŸ“¦ Totale righe elaborate: ${dettaglioLinee.length}\n`);
-            console.log(`\n🏷️ CATEGORIZZAZIONE:`);
-            console.log(`  ✅ Categorizzati automaticamente: ${categorizzazioneStats.categorizzati}`);
-            console.log(`  ⚪ Fallback (keyword estese): ${categorizzazioneStats.fallback}`);
-            const percentuale = prodottiCreati > 0 ? ((categorizzazioneStats.categorizzati / prodottiCreati) * 100).toFixed(1) : 0;
-            console.log(`  📈 Precisione categorizzazione: ${percentuale}%\n`);
-            
-            // Reset statistiche per prossimo upload
-            categorizzazioneStats = { categorizzati: 0, fallback: 0 };
+            console.log(`\n📊 RIEPILOGO ESTRAZIONE PRODOTTI:`);
+            console.log(`✅ Prodotti creati: ${prodottiCreati}`);
+            console.log(`⚠️ Prodotti saltati: ${prodottiSaltati}`);
+            console.log(`❌ Errori: ${errori}`);
+            console.log(`📦 Totale righe elaborate: ${dettaglioLinee.length}\n`);
             
             if (errori > 0) {
                 throw new Error(`Errore nel salvataggio di ${errori} prodotti. Controlla la console per i dettagli.`);
@@ -1472,7 +1503,7 @@
             closeDeleteModal();
             
             try {
-                state.error = 'ðŸ—‘ï¸ Eliminazione in corso...';
+                state.error = '🗑️ Eliminazione in corso...';
                 render();
                 
                 const idsToDelete = actionToExecute.ids;
@@ -1488,7 +1519,7 @@
                     
                     if (!prodError && count) {
                         deletedProdotti += count;
-                        console.log(`âœ… Eliminati ${count} prodotti della fattura ID: ${id}`);
+                        console.log(`✅ Eliminati ${count} prodotti della fattura ID: ${id}`);
                     }
                     
                     // 2. Elimina la fattura
@@ -1503,7 +1534,7 @@
                 }
                 
                 state.selectedIds.clear();
-                state.error = `âœ… ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
+                state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
                 
                 await loadAllFatture();
                 
@@ -1511,7 +1542,7 @@
                 
             } catch (err) {
                 console.error('Errore eliminazione:', err);
-                state.error = 'âŒ Errore durante l\'eliminazione';
+                state.error = '❌ Errore durante l\'eliminazione';
                 render();
             }
         };
@@ -1563,6 +1594,10 @@
                     if (!delta.toFixed(2).includes(state.filters.delta)) return false;
                 }
                 
+                // Filtro pagato/da pagare
+                if (state.filters.pagato === 'da_pagare' && f.pagato) return false;
+                if (state.filters.pagato === 'pagato' && !f.pagato) return false;
+                
                 return true;
             });
         }
@@ -1573,7 +1608,7 @@
 
         window.applyFilter = function(filterType, value) { state.filters[filterType] = value; render(); };
         window.applyColumnFilter = function(filterName, value) { state.filters[filterName] = value; render(); };
-        window.clearFilters = function() { state.filters = { invoiceYear: 'all', invoiceMonth: 'all', supplier: 'all', minAmount: '', maxAmount: '', numeroFattura: '', dataFattura: '', fornitore: '', importo: '', delta: '' }; render(); };
+        window.clearFilters = function() { state.filters = { invoiceYear: 'all', invoiceMonth: 'all', supplier: 'all', minAmount: '', maxAmount: '', numeroFattura: '', dataFattura: '', fornitore: '', importo: '', delta: '', pagato: 'all' }; render(); };
         window.handleFileUpload = function(event) { if (event.target.files && event.target.files.length > 0) processFiles(event.target.files); };
         window.handleDrop = function(event) { event.preventDefault(); if (event.dataTransfer.files && event.dataTransfer.files.length > 0) processFiles(event.dataTransfer.files); };
         window.handleDragOver = function(event) { event.preventDefault(); };
@@ -1603,15 +1638,19 @@
                                 </div>
                             </div>
                             
-                            <!-- Pulsanti ModalitÃ  Upload -->
+                            <!-- Pulsanti Modalità Upload -->
                             <div class="flex space-x-3">
                                 <button onclick="switchUploadMode('single')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2">
-                                    <span>ðŸ“„</span>
+                                    <span>📄</span>
                                     <span>Upload Singolo</span>
                                 </button>
                                 <button onclick="switchUploadMode('folder')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 flex items-center space-x-2">
-                                    <span>ðŸ“</span>
+                                    <span>📁</span>
                                     <span>Upload Cartella</span>
+                                </button>
+                                <button onclick="openModalFatturaManuale()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-md">
+                                    <span>✏️</span>
+                                    <span>Inserimento Manuale</span>
                                 </button>
                             </div>
                         </div>
@@ -1631,15 +1670,54 @@
                             </div>
                             <div class="bg-green-50 px-6 py-4 rounded-xl">
                                 <p class="text-xs text-gray-600 mb-1">Importo ${hasActiveFilters ? 'filtrato' : 'totale'}</p>
-                                <p class="text-3xl font-bold text-green-600">â‚¬${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                <p class="text-3xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                             </div>
                             <div class="bg-purple-50 px-6 py-4 rounded-xl">
                                 <p class="text-xs text-gray-600 mb-1">Fornitori</p>
                                 <p class="text-3xl font-bold text-purple-600">${state.stats.fornitori}</p>
                             </div>
                         </div>
-                        ${state.error ? `<div class="mt-4 ${state.error.includes('âŒ') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
+                        ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
                     </div>
+
+                    <!-- SEZIONE FATTURE MANUALI -->
+                    ${state.fattureManuali.length > 0 ? `
+                    <div class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl shadow-lg p-6 mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-orange-800 flex items-center">
+                                <span class="mr-2">✏️</span>
+                                Fatture Inserite Manualmente (${state.fattureManuali.length})
+                            </h3>
+                            <span class="text-sm text-orange-600">Totale: €${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <p class="text-sm text-orange-700 mb-4">Queste sono fatture pagate ma non ancora importate come XML. Eliminale quando importi la fattura corrispondente.</p>
+                        <div class="grid gap-3">
+                            ${state.fattureManuali.map(fm => `
+                                <div class="bg-white rounded-lg p-4 flex items-center justify-between shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center space-x-6">
+                                        <div class="bg-orange-100 p-2 rounded-lg">
+                                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-900">${fm.ragione_sociale}</p>
+                                            <p class="text-sm text-gray-500">Pagata il ${new Date(fm.data_pagamento).toLocaleDateString('it-IT')}${fm.note ? ` • ${fm.note}` : ''}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-4">
+                                        <span class="text-xl font-bold text-orange-600">€${parseFloat(fm.importo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <button onclick="deleteFatturaManuale('${fm.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Elimina fattura manuale">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
                         <h3 class="font-bold mb-4">Filtri</h3>
@@ -1664,7 +1742,7 @@
                         
                         ${state.pagatoChanges.size > 0 ? `
                             <div class="bg-orange-50 border-b px-6 py-4 flex justify-between items-center">
-                                <span class="text-sm font-medium text-orange-900">ðŸ’¾ ${state.pagatoChanges.size} modifiche non salvate</span>
+                                <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
                                 <div class="flex space-x-2">
                                     <button onclick="cancelPagatoChanges()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                                     <button onclick="savePagatoChanges()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center space-x-2">
@@ -1696,14 +1774,19 @@
                                         <input type="text" placeholder="Filtra..." value="${state.filters.importo}" onkeyup="applyColumnFilter('importo', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
                                     <th class="px-4 py-2.5 text-right">
-                                        <div class="text-sm font-semibold mb-1">Î” Delta</div>
+                                        <div class="text-sm font-semibold mb-1">Δ Delta</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.delta}" onkeyup="applyColumnFilter('delta', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
                                     <th class="px-4 py-2.5 text-center">
-                                        <div class="flex items-center justify-center space-x-2">
+                                        <div class="flex items-center justify-center space-x-2 mb-1">
                                             <span class="text-sm font-semibold">Pagato</span>
                                             <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-4 h-4 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''}>
                                         </div>
+                                        <select onchange="applyColumnFilter('pagato', this.value)" class="filter-input text-center" style="padding: 0.2rem 0.3rem;">
+                                            <option value="all" ${state.filters.pagato === 'all' ? 'selected' : ''}>Tutte</option>
+                                            <option value="da_pagare" ${state.filters.pagato === 'da_pagare' ? 'selected' : ''}>Da pagare</option>
+                                            <option value="pagato" ${state.filters.pagato === 'pagato' ? 'selected' : ''}>Pagate</option>
+                                        </select>
                                     </th>
                                     <th class="px-4 py-2.5 text-center text-sm font-semibold">Azioni</th>
                                 </tr>
@@ -1718,9 +1801,9 @@
                                     <td class="px-4 py-2.5 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
                                     <td class="px-4 py-2.5 text-sm font-medium">${f.num}</td>
                                     <td class="px-4 py-2.5 text-sm">${f.ced.nm}</td>
-                                    <td class="px-4 py-2.5 text-sm font-bold text-right">â‚¬${f.tot.toFixed(2)}</td>
-                                    <td class="px-4 py-2.5 text-sm font-bold text-right ${deltaClass}" title="Totale Fattura - Î£(Prezzo Ã— QtÃ  Ã— (1+IVA%))">
-                                        â‚¬${delta.toFixed(2)}
+                                    <td class="px-4 py-2.5 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
+                                    <td class="px-4 py-2.5 text-sm font-bold text-right ${deltaClass}" title="Totale Fattura - Σ(Prezzo × Qtà × (1+IVA%))">
+                                        €${delta.toFixed(2)}
                                     </td>
                                     <td class="px-4 py-2.5 text-center">
                                         <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-4 h-4 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
@@ -1744,24 +1827,9 @@
             `;
         }
 
-        // ===== INIZIALIZZAZIONE =====
-        // Prima carica i tipi per la categorizzazione, poi le fatture
-        (async function init() {
-            console.log('🚀 Inizializzazione Gestione Fatture con Categorizzazione Intelligente...');
-            
-            // Carica tipi prodotto e aggreganti per la categorizzazione
-            const tipiCaricati = await loadTipiProdottoPerCategorizzazione();
-            if (tipiCaricati) {
-                console.log('✅ Sistema di categorizzazione intelligente pronto!');
-            } else {
-                console.warn('⚠️ Categorizzazione intelligente non disponibile - userà fallback');
-            }
-            
-            // Ora carica le fatture
-            await loadAllFatture();
-            
-            console.log('✅ Gestione Fatture v2.0 - Con Categorizzazione Intelligente');
-        })();
+        loadAllFatture();
+        loadFattureManuali();
+        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali)');
     </script>
 </body>
 </html>
