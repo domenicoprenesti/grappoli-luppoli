@@ -267,6 +267,86 @@
 
         const BATCH_SIZE = 500;
         
+        // ===== CACHE PER CATEGORIZZAZIONE INTELLIGENTE =====
+        let tipiProdottoCache = [];
+        let aggregantiCache = [];
+        let categorizzazioneCaricata = false;
+        
+        // ===== CARICAMENTO TIPI PRODOTTO DAL DATABASE =====
+        async function loadTipiProdottoPerCategorizzazione() {
+            try {
+                console.log('🏷️ Caricamento tipi prodotto per categorizzazione...');
+                
+                // Carica aggreganti
+                const { data: aggreganti, error: aggError } = await supabaseClient
+                    .from('aggregante_prodotto')
+                    .select('*')
+                    .order('ordine', { ascending: true });
+                
+                if (aggError) {
+                    console.error('❌ Errore caricamento aggreganti:', aggError);
+                    return false;
+                }
+                aggregantiCache = aggreganti || [];
+                console.log(`✅ Caricati ${aggregantiCache.length} aggreganti`);
+                
+                // Carica tipi con relazione all'aggregante
+                const { data: tipi, error: tipiError } = await supabaseClient
+                    .from('tipo_prodotto')
+                    .select('*, aggregante_prodotto(id, nome, colore)')
+                    .order('nome', { ascending: true });
+                
+                if (tipiError) {
+                    console.error('❌ Errore caricamento tipi:', tipiError);
+                    return false;
+                }
+                tipiProdottoCache = tipi || [];
+                console.log(`✅ Caricati ${tipiProdottoCache.length} tipi prodotto`);
+                
+                // Log delle keyword disponibili
+                const tipiConKeywords = tipiProdottoCache.filter(t => t.keywords && t.keywords.length > 0);
+                console.log(`📋 ${tipiConKeywords.length} tipi hanno keywords definite`);
+                
+                categorizzazioneCaricata = true;
+                return true;
+                
+            } catch (err) {
+                console.error('❌ Errore caricamento categorizzazione:', err);
+                return false;
+            }
+        }
+        
+        // ===== FUNZIONE DI MATCHING INTELLIGENTE =====
+        function findTipoByKeywords(descrizione) {
+            if (!categorizzazioneCaricata || tipiProdottoCache.length === 0) {
+                return null;
+            }
+            
+            const descLower = descrizione.toLowerCase();
+            
+            // Cerca match nelle keywords dei tipi
+            for (const tipo of tipiProdottoCache) {
+                if (!tipo.keywords || !Array.isArray(tipo.keywords)) continue;
+                
+                for (const keyword of tipo.keywords) {
+                    if (keyword && descLower.includes(keyword.toLowerCase())) {
+                        const aggregante = tipo.aggregante_prodotto || 
+                            aggregantiCache.find(a => a.id === tipo.aggregante_id);
+                        
+                        return {
+                            tipo_id: tipo.id,
+                            tipo_nome: tipo.nome,
+                            aggregante_id: tipo.aggregante_id,
+                            aggregante_nome: aggregante?.nome || 'Altro',
+                            matched_keyword: keyword
+                        };
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
         // ===== VERIFICA CAMPI DATABASE ALL'AVVIO =====
         async function verificaCampiDatabase() {
             console.log('🔍 Verifica campi database...');
@@ -700,14 +780,98 @@
             return el ? el.textContent.trim() : '';
         }
 
-        function generateTag(description) {
+        // ===== CATEGORIZZAZIONE INTELLIGENTE =====
+        function categorizzaProdotto(description) {
+            // 1. Prima prova con il sistema database (keywords)
+            const matchDB = findTipoByKeywords(description);
+            if (matchDB) {
+                console.log(`🏷️ MATCH DB: "${description.substring(0, 40)}..." → ${matchDB.tipo_nome} (${matchDB.aggregante_nome}) [keyword: "${matchDB.matched_keyword}"]`);
+                return {
+                    categoria: matchDB.aggregante_nome,
+                    tipo_id: matchDB.tipo_id,
+                    source: 'database'
+                };
+            }
+            
+            // 2. Fallback con keywords estese hardcoded
             const desc = description.toLowerCase();
-            if (desc.includes('vino') || desc.includes('wine')) return 'Vini';
-            if (desc.includes('birra') || desc.includes('beer')) return 'Birre';
-            if (desc.includes('whisky') || desc.includes('gin') || desc.includes('vodka')) return 'Spirits';
-            if (desc.includes('acqua') || desc.includes('succo')) return 'Bevande';
-            if (desc.includes('patatine') || desc.includes('chips')) return 'Snacks';
-            return 'Altro';
+            
+            // VINO
+            if (desc.includes('vino') || desc.includes('wine') || desc.includes('prosecco') || 
+                desc.includes('champagne') || desc.includes('spumante') || desc.includes('franciacorta') ||
+                desc.includes('chianti') || desc.includes('barolo') || desc.includes('amarone') ||
+                desc.includes('brunello') || desc.includes('lambrusco') || desc.includes('moscato') ||
+                desc.includes('pinot') || desc.includes('chardonnay') || desc.includes('merlot') ||
+                desc.includes('cabernet') || desc.includes('sangiovese') || desc.includes('nebbiolo') ||
+                desc.includes('vermentino') || desc.includes('trebbiano') || desc.includes('primitivo') ||
+                desc.includes('barbera') || desc.includes('montepulciano') || desc.includes('nero d\'avola') ||
+                desc.includes('sauvignon') || desc.includes('riesling') || desc.includes('gewurztraminer')) {
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." → Vino`);
+                return { categoria: 'Vino', tipo_id: null, source: 'fallback' };
+            }
+            
+            // BIRRA  
+            if (desc.includes('birra') || desc.includes('beer') || desc.includes('lager') ||
+                desc.includes('pilsner') || desc.includes('ale') || desc.includes('ipa') ||
+                desc.includes('stout') || desc.includes('porter') || desc.includes('weiss') ||
+                desc.includes('bock') || desc.includes('helles') || desc.includes('pils') ||
+                desc.includes('craft') || desc.includes('artigianale')) {
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." → Birra`);
+                return { categoria: 'Birra', tipo_id: null, source: 'fallback' };
+            }
+            
+            // SPIRITS/LIQUORI
+            if (desc.includes('whisky') || desc.includes('whiskey') || desc.includes('gin') || 
+                desc.includes('vodka') || desc.includes('rum') || desc.includes('tequila') ||
+                desc.includes('brandy') || desc.includes('cognac') || desc.includes('grappa') ||
+                desc.includes('amaro') || desc.includes('limoncello') || desc.includes('sambuca') ||
+                desc.includes('liquore') || desc.includes('aperol') || desc.includes('campari') ||
+                desc.includes('vermouth') || desc.includes('martini') || desc.includes('scotch') ||
+                desc.includes('bourbon') || desc.includes('mezcal') || desc.includes('calvados')) {
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." → Spirits`);
+                return { categoria: 'Spirits', tipo_id: null, source: 'fallback' };
+            }
+            
+            // BEVANDE
+            if (desc.includes('acqua') || desc.includes('succo') || desc.includes('cola') ||
+                desc.includes('aranciata') || desc.includes('limonata') || desc.includes('tonica') ||
+                desc.includes('ginger') || desc.includes('energy') || desc.includes('redbull') ||
+                desc.includes('schweppes') || desc.includes('sprite') || desc.includes('fanta') ||
+                desc.includes('the ') || desc.includes(' te ') || desc.includes('caffè') ||
+                desc.includes('latte') || desc.includes('soda')) {
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." → Bevande`);
+                return { categoria: 'Bevande', tipo_id: null, source: 'fallback' };
+            }
+            
+            // SNACKS/FOOD
+            if (desc.includes('patatine') || desc.includes('chips') || desc.includes('noccioline') ||
+                desc.includes('arachidi') || desc.includes('olive') || desc.includes('taralli') ||
+                desc.includes('grissini') || desc.includes('crackers') || desc.includes('snack')) {
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." → Snacks`);
+                return { categoria: 'Snacks', tipo_id: null, source: 'fallback' };
+            }
+            
+            // CAPEX (spese in conto capitale)
+            if (desc.includes('attrezzatura') || desc.includes('macchinario') || desc.includes('frigorifero') ||
+                desc.includes('bancone') || desc.includes('scaffale') || desc.includes('arredamento')) {
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." → Capex`);
+                return { categoria: 'Capex', tipo_id: null, source: 'fallback' };
+            }
+            
+            // RICORRENTI (spese ricorrenti)
+            if (desc.includes('affitto') || desc.includes('utenze') || desc.includes('energia') ||
+                desc.includes('telefono') || desc.includes('internet') || desc.includes('assicurazione')) {
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." → Ricorrenti`);
+                return { categoria: 'Ricorrenti', tipo_id: null, source: 'fallback' };
+            }
+            
+            console.log(`⚫ NON CATEGORIZZATO: "${description.substring(0, 40)}..." → Altro`);
+            return { categoria: 'Altro', tipo_id: null, source: 'none' };
+        }
+        
+        // Funzione legacy per retrocompatibilità
+        function generateTag(description) {
+            return categorizzaProdotto(description).categoria;
         }
 
         // ===== GESTIONE MODAL DETTAGLI FATTURA =====
@@ -1393,14 +1557,16 @@
                     continue;
                 }
                 
-                const categoria = generateTag(descrizione);
+                // ===== CATEGORIZZAZIONE INTELLIGENTE =====
+                const categorizzazione = categorizzaProdotto(descrizione);
 
                 try {
                     // IMPORTANTE: Ora ogni prodotto è collegato ad una fattura specifica
                     const prodottoData = {
                         nome: descrizione,
                         descrizione: descrizione,
-                        categoria: categoria,
+                        categoria: categorizzazione.categoria,
+                        tipo_id: categorizzazione.tipo_id,  // NUOVO: collegamento al tipo_prodotto
                         prezzo: prezzoBase > 0 ? prezzoBase : null,  // Prezzo PRIMA degli sconti
                         prezzo_base: prezzoBase > 0 ? prezzoBase : null,
                         prezzo_scontato: prezzoScontato,  // IMPORTANTE: salva 0 invece di null per sconti 100%
@@ -1422,6 +1588,8 @@
                     
                     console.log(`💾 INSERIMENTO #${prodottiCreati + 1}:`, {
                         nome: descrizione.substring(0, 40),
+                        categoria: categorizzazione.categoria,
+                        tipo_id: categorizzazione.tipo_id ? '✓' : '✗',
                         prezzo_base: prezzoBase,
                         prezzo_scontato: prezzoScontato,
                         sconti: sconti.length > 0 ? sconti : 'nessuno',
@@ -1827,9 +1995,10 @@
             `;
         }
 
+        loadTipiProdottoPerCategorizzazione(); // Carica tipi per categorizzazione intelligente
         loadAllFatture();
         loadFattureManuali();
-        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali)');
+        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali + Categorizzazione Intelligente)');
     </script>
 </body>
 </html>
