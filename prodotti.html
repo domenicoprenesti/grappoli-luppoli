@@ -675,6 +675,29 @@
                 }
                 
                 loadingProgress.isLoading = false;
+                
+                // DEBUG: Analizza i prodotti con categoria "Altro"
+                console.log('=== DEBUG CATEGORIA ALTRO ===');
+                const prodottiConCategoriaAltro = allProdotti.filter(p => p.categoria === 'Altro');
+                console.log('Prodotti con campo categoria = "Altro":', prodottiConCategoriaAltro.length);
+                
+                const prodottiSenzaTipo = allProdotti.filter(p => !p.tipo_prodotto);
+                console.log('Prodotti SENZA tipo_prodotto:', prodottiSenzaTipo.length);
+                
+                const prodottiAltroConTipo = prodottiConCategoriaAltro.filter(p => p.tipo_prodotto);
+                console.log('Prodotti con categoria="Altro" MA CON tipo_prodotto:', prodottiAltroConTipo.length);
+                if (prodottiAltroConTipo.length > 0) {
+                    console.log('Esempio:', prodottiAltroConTipo[0]);
+                }
+                
+                // Mostra tutte le categorie uniche
+                const tutteCategorie = new Set(allProdotti.map(p => p.categoria).filter(Boolean));
+                console.log('Valori unici campo categoria:', Array.from(tutteCategorie));
+                
+                const tuttiAggreganti = new Set(allProdotti.map(p => p.tipo_prodotto?.aggregante_prodotto?.nome).filter(Boolean));
+                console.log('Valori unici aggregante_prodotto.nome:', Array.from(tuttiAggreganti));
+                console.log('=== FINE DEBUG ===');
+                
                 updateStats();
                 updateFilters();
                 applyFilters();
@@ -703,11 +726,7 @@
             
             const aggregantiUnici = new Set();
             allProdotti.forEach(p => {
-                if (p.tipo_prodotto?.aggregante_prodotto?.nome) {
-                    aggregantiUnici.add(p.tipo_prodotto.aggregante_prodotto.nome);
-                } else if (p.categoria) {
-                    aggregantiUnici.add(p.categoria);
-                }
+                aggregantiUnici.add(getCategoriaEffettiva(p));
             });
             document.getElementById('totalCategorie').textContent = aggregantiUnici.size;
             
@@ -720,17 +739,24 @@
             document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} (${percentualeIVA.toFixed(2)}%)`;
         }
         
+        // Helper per determinare la categoria effettiva di un prodotto
+        function getCategoriaEffettiva(p) {
+            // Prima priorità: tipo_prodotto.aggregante_prodotto.nome
+            if (p.tipo_prodotto?.aggregante_prodotto?.nome) {
+                return p.tipo_prodotto.aggregante_prodotto.nome;
+            }
+            // Seconda priorità: campo categoria testuale
+            if (p.categoria) {
+                return p.categoria;
+            }
+            // Default: "Non categorizzato"
+            return 'Non categorizzato';
+        }
+        
         function updateFilters() {
             const aggregantiSet = new Set();
             allProdotti.forEach(p => {
-                // Prima prova con tipo_prodotto.aggregante_prodotto.nome
-                if (p.tipo_prodotto?.aggregante_prodotto?.nome) {
-                    aggregantiSet.add(p.tipo_prodotto.aggregante_prodotto.nome);
-                } 
-                // Altrimenti usa il campo categoria testuale
-                else if (p.categoria) {
-                    aggregantiSet.add(p.categoria);
-                }
+                aggregantiSet.add(getCategoriaEffettiva(p));
             });
             
             const cat = Array.from(aggregantiSet).sort();
@@ -823,13 +849,7 @@
             const forn = document.getElementById('filterFornitore').value;
             let filtered = allProdotti;
             if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
-            if (cat) filtered = filtered.filter(p => {
-                // Prima controlla tipo_prodotto.aggregante_prodotto.nome
-                if (p.tipo_prodotto?.aggregante_prodotto?.nome === cat) return true;
-                // Altrimenti controlla il campo categoria testuale
-                if (p.categoria === cat) return true;
-                return false;
-            });
+            if (cat) filtered = filtered.filter(p => getCategoriaEffettiva(p) === cat);
             if (tipo) filtered = filtered.filter(p => p.tipo_prodotto?.id == tipo);
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
             renderTable(filtered);
@@ -898,11 +918,7 @@
                 const forn = document.getElementById('filterFornitore').value;
                 let filtered = allProdotti;
                 if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
-                if (cat) filtered = filtered.filter(p => {
-                    if (p.tipo_prodotto?.aggregante_prodotto?.nome === cat) return true;
-                    if (p.categoria === cat) return true;
-                    return false;
-                });
+                if (cat) filtered = filtered.filter(p => getCategoriaEffettiva(p) === cat);
                 if (tipo) filtered = filtered.filter(p => p.tipo_prodotto?.id == tipo);
                 if (forn) filtered = filtered.filter(p => p.fornitore === forn);
                 selectedIds = new Set(filtered.map(p => p.id));
