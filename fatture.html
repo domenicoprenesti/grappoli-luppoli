@@ -429,7 +429,13 @@
             deleteAction: null,
             uploadMode: 'single',
             pagatoChanges: new Map(),
-            fattureManuali: []
+            fattureManuali: [],
+            // NUOVO: Per report scadenze
+            fornitori: [],
+            reportScadenze: {
+                anno: new Date().getFullYear(),
+                mese: new Date().getMonth() + 1 // 1-12
+            }
         };
 
         async function loadProdottiPerFatture() {
@@ -516,6 +522,349 @@
             } catch (err) {
                 console.error('❌ Errore caricamento prodotti:', err);
             }
+        }
+
+        // ===== GESTIONE REPORT SCADENZE =====
+        async function loadFornitori() {
+            try {
+                console.log('🏢 Caricamento fornitori per calcolo scadenze...');
+                
+                const { data, error } = await supabaseClient
+                    .from('fornitori')
+                    .select('id, ragione_sociale, partita_iva, termini_pagamento, fine_mese, tipo_pagamento');
+                
+                if (error) {
+                    console.warn('⚠️ Errore caricamento fornitori:', error);
+                    return;
+                }
+                
+                state.fornitori = data || [];
+                console.log(`✅ Caricati ${state.fornitori.length} fornitori`);
+                
+            } catch (err) {
+                console.error('❌ Errore caricamento fornitori:', err);
+            }
+        }
+
+        function calcolaDataScadenza(dataFattura, terminiPagamento, fineMese) {
+            if (!dataFattura) return null;
+            
+            const data = new Date(dataFattura);
+            if (isNaN(data.getTime())) return null;
+            
+            // Determina i giorni da aggiungere in base ai termini
+            let giorni = 0;
+            switch (terminiPagamento) {
+                case 'Anticipato Ordine':
+                case 'Alla Consegna':
+                case 'Data Fattura':
+                    giorni = 0;
+                    break;
+                case '30gg Data Fattura':
+                    giorni = 30;
+                    break;
+                case '60gg Data Fattura':
+                    giorni = 60;
+                    break;
+                case '90gg Data Fattura':
+                    giorni = 90;
+                    break;
+                default:
+                    giorni = 30; // Default 30gg se non specificato
+            }
+            
+            // Aggiungi i giorni
+            data.setDate(data.getDate() + giorni);
+            
+            // Se fine mese, sposta all'ultimo giorno del mese
+            if (fineMese) {
+                data.setMonth(data.getMonth() + 1);
+                data.setDate(0); // Ultimo giorno del mese precedente
+            }
+            
+            return data;
+        }
+
+        function getFornitoreByName(nomeCedente) {
+            if (!nomeCedente || !state.fornitori.length) return null;
+            
+            // Cerca corrispondenza esatta o parziale
+            const nomeNormalizzato = nomeCedente.toLowerCase().trim();
+            
+            // Prima cerca corrispondenza esatta
+            let fornitore = state.fornitori.find(f => 
+                f.ragione_sociale?.toLowerCase().trim() === nomeNormalizzato
+            );
+            
+            // Se non trovato, cerca corrispondenza parziale
+            if (!fornitore) {
+                fornitore = state.fornitori.find(f => 
+                    f.ragione_sociale?.toLowerCase().includes(nomeNormalizzato) ||
+                    nomeNormalizzato.includes(f.ragione_sociale?.toLowerCase() || '')
+                );
+            }
+            
+            return fornitore;
+        }
+
+        function getScadenzePerMese(anno, mese) {
+            const fattureDaPagare = state.fatture.filter(f => !f.pagato);
+            const scadenze = [];
+            
+            fattureDaPagare.forEach(fattura => {
+                // Trova il fornitore
+                const fornitore = getFornitoreByName(fattura.ced.nm);
+                
+                // Calcola la scadenza
+                const termini = fornitore?.termini_pagamento || '30gg Data Fattura';
+                const fineMese = fornitore?.fine_mese || false;
+                const dataScadenza = calcolaDataScadenza(fattura.dt, termini, fineMese);
+                
+                if (!dataScadenza) return;
+                
+                // Verifica se la scadenza è nel mese richiesto
+                const scadenzaAnno = dataScadenza.getFullYear();
+                const scadenzaMese = dataScadenza.getMonth() + 1;
+                
+                if (scadenzaAnno === anno && scadenzaMese === mese) {
+                    scadenze.push({
+                        ...fattura,
+                        dataScadenza: dataScadenza,
+                        terminiPagamento: termini,
+                        fineMese: fineMese,
+                        tipoPagamento: fornitore?.tipo_pagamento || 'N/D',
+                        fornitoreMatch: !!fornitore
+                    });
+                }
+            });
+            
+            // Ordina per data scadenza
+            scadenze.sort((a, b) => a.dataScadenza - b.dataScadenza);
+            
+            return scadenze;
+        }
+
+        function getScadenzeStats() {
+            const oggi = new Date();
+            oggi.setHours(0, 0, 0, 0);
+            
+            const fattureDaPagare = state.fatture.filter(f => !f.pagato);
+            let totaleScaduto = 0;
+            let fattureScadute = 0;
+            let totaleInScadenza = 0;
+            let fattureInScadenza = 0;
+            
+            fattureDaPagare.forEach(fattura => {
+                const fornitore = getFornitoreByName(fattura.ced.nm);
+                const termini = fornitore?.termini_pagamento || '30gg Data Fattura';
+                const fineMese = fornitore?.fine_mese || false;
+                const dataScadenza = calcolaDataScadenza(fattura.dt, termini, fineMese);
+                
+                if (!dataScadenza) return;
+                
+                if (dataScadenza < oggi) {
+                    totaleScaduto += fattura.tot;
+                    fattureScadute++;
+                } else {
+                    // In scadenza nei prossimi 30 giorni
+                    const tra30gg = new Date(oggi);
+                    tra30gg.setDate(tra30gg.getDate() + 30);
+                    if (dataScadenza <= tra30gg) {
+                        totaleInScadenza += fattura.tot;
+                        fattureInScadenza++;
+                    }
+                }
+            });
+            
+            return { totaleScaduto, fattureScadute, totaleInScadenza, fattureInScadenza };
+        }
+
+        window.changeReportMese = function(direzione) {
+            if (direzione === 'prev') {
+                state.reportScadenze.mese--;
+                if (state.reportScadenze.mese < 1) {
+                    state.reportScadenze.mese = 12;
+                    state.reportScadenze.anno--;
+                }
+            } else if (direzione === 'next') {
+                state.reportScadenze.mese++;
+                if (state.reportScadenze.mese > 12) {
+                    state.reportScadenze.mese = 1;
+                    state.reportScadenze.anno++;
+                }
+            } else if (direzione === 'today') {
+                state.reportScadenze.anno = new Date().getFullYear();
+                state.reportScadenze.mese = new Date().getMonth() + 1;
+            }
+            render();
+        };
+
+        window.setReportMese = function(anno, mese) {
+            state.reportScadenze.anno = parseInt(anno);
+            state.reportScadenze.mese = parseInt(mese);
+            render();
+        };
+
+        function renderReportScadenze() {
+            const { anno, mese } = state.reportScadenze;
+            const scadenze = getScadenzePerMese(anno, mese);
+            const stats = getScadenzeStats();
+            const totaleDelMese = scadenze.reduce((sum, s) => sum + s.tot, 0);
+            
+            const mesiNomi = ['', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                             'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            
+            const oggi = new Date();
+            const isCurrentMonth = anno === oggi.getFullYear() && mese === (oggi.getMonth() + 1);
+            
+            return `
+                <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg p-6 mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-red-800 flex items-center">
+                            <span class="mr-2">📅</span>
+                            Report Scadenze Mensili
+                        </h3>
+                        
+                        <!-- Statistiche rapide -->
+                        <div class="flex space-x-4">
+                            ${stats.fattureScadute > 0 ? `
+                                <div class="bg-red-100 border border-red-300 px-4 py-2 rounded-lg">
+                                    <p class="text-xs text-red-600">⚠️ Scadute</p>
+                                    <p class="text-lg font-bold text-red-700">€${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
+                                </div>
+                            ` : ''}
+                            ${stats.fattureInScadenza > 0 ? `
+                                <div class="bg-orange-100 border border-orange-300 px-4 py-2 rounded-lg">
+                                    <p class="text-xs text-orange-600">⏰ Prossimi 30gg</p>
+                                    <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Selettore Mese -->
+                    <div class="flex items-center justify-center space-x-4 mb-6 bg-white rounded-lg p-3 border border-red-200">
+                        <button onclick="changeReportMese('prev')" class="p-2 hover:bg-red-100 rounded-lg transition-colors">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        
+                        <div class="flex items-center space-x-2">
+                            <select onchange="setReportMese(${anno}, this.value)" class="px-4 py-2 border-2 border-red-200 rounded-lg font-semibold text-red-800 bg-red-50">
+                                ${mesiNomi.slice(1).map((m, i) => `<option value="${i + 1}" ${mese === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+                            </select>
+                            <select onchange="setReportMese(this.value, ${mese})" class="px-4 py-2 border-2 border-red-200 rounded-lg font-semibold text-red-800 bg-red-50">
+                                ${[oggi.getFullYear() - 1, oggi.getFullYear(), oggi.getFullYear() + 1].map(a => `<option value="${a}" ${anno === a ? 'selected' : ''}>${a}</option>`).join('')}
+                            </select>
+                        </div>
+                        
+                        <button onclick="changeReportMese('next')" class="p-2 hover:bg-red-100 rounded-lg transition-colors">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        
+                        ${!isCurrentMonth ? `
+                            <button onclick="changeReportMese('today')" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                                Oggi
+                            </button>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Riepilogo Mese -->
+                    <div class="bg-white rounded-lg p-4 mb-4 border border-red-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Scadenze in <span class="font-semibold">${mesiNomi[mese]} ${anno}</span></p>
+                                <p class="text-3xl font-bold text-red-600">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600">Fatture</p>
+                                <p class="text-3xl font-bold text-red-600">${scadenze.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabella Scadenze -->
+                    ${scadenze.length === 0 ? `
+                        <div class="text-center py-8 bg-white rounded-lg border border-red-100">
+                            <svg class="w-16 h-16 text-green-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p class="text-gray-600 font-medium">Nessuna scadenza per ${mesiNomi[mese]} ${anno}</p>
+                            <p class="text-sm text-gray-500 mt-1">Tutte le fatture sono state pagate! 🎉</p>
+                        </div>
+                    ` : `
+                        <div class="overflow-x-auto">
+                            <table class="w-full bg-white rounded-lg overflow-hidden">
+                                <thead class="bg-red-600 text-white">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold">Scadenza</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold">Fornitore</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold">Fattura</th>
+                                        <th class="px-4 py-3 text-center text-sm font-semibold">Data Fatt.</th>
+                                        <th class="px-4 py-3 text-center text-sm font-semibold">Termini</th>
+                                        <th class="px-4 py-3 text-center text-sm font-semibold">Tipo Pag.</th>
+                                        <th class="px-4 py-3 text-right text-sm font-semibold">Importo</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${scadenze.map((s, idx) => {
+                                        const oggi = new Date();
+                                        oggi.setHours(0, 0, 0, 0);
+                                        const isScaduta = s.dataScadenza < oggi;
+                                        const isOggi = s.dataScadenza.toDateString() === oggi.toDateString();
+                                        const giorniRimanenti = Math.ceil((s.dataScadenza - oggi) / (1000 * 60 * 60 * 24));
+                                        
+                                        return `
+                                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScaduta ? 'bg-red-50' : ''} ${isOggi ? 'bg-yellow-50' : ''} hover:bg-red-100 transition-colors">
+                                                <td class="px-4 py-3">
+                                                    <div class="flex items-center space-x-2">
+                                                        ${isScaduta ? '<span class="text-red-600 font-bold">⚠️</span>' : ''}
+                                                        ${isOggi ? '<span class="text-yellow-600 font-bold">🔔</span>' : ''}
+                                                        <div>
+                                                            <p class="font-semibold ${isScaduta ? 'text-red-700' : ''}">${s.dataScadenza.toLocaleDateString('it-IT')}</p>
+                                                            <p class="text-xs ${isScaduta ? 'text-red-600' : 'text-gray-500'}">
+                                                                ${isScaduta ? `Scaduta da ${Math.abs(giorniRimanenti)} gg` : isOggi ? 'Scade OGGI!' : `Tra ${giorniRimanenti} gg`}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <p class="font-medium text-gray-900">${s.ced.nm}</p>
+                                                    ${!s.fornitoreMatch ? '<p class="text-xs text-orange-600">⚠️ Fornitore non in anagrafica</p>' : ''}
+                                                </td>
+                                                <td class="px-4 py-3 font-mono text-sm">${s.num}</td>
+                                                <td class="px-4 py-3 text-center text-sm text-gray-600">${new Date(s.dt).toLocaleDateString('it-IT')}</td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded ${s.fineMese ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+                                                        ${s.terminiPagamento.replace(' Data Fattura', '')}${s.fineMese ? ' FM' : ''}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
+                                                        ${s.tipoPagamento}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 text-right">
+                                                    <p class="text-lg font-bold ${isScaduta ? 'text-red-600' : 'text-gray-900'}">€${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                                <tfoot class="bg-red-700 text-white">
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-3 text-right font-bold">TOTALE DA PAGARE:</td>
+                                        <td class="px-4 py-3 text-right text-xl font-bold">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `}
+                </div>
+            `;
         }
 
         function logout() {
@@ -1848,6 +2197,9 @@
                         ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
                     </div>
 
+                    <!-- REPORT SCADENZE MENSILI -->
+                    ${renderReportScadenze()}
+
                     <!-- SEZIONE FATTURE MANUALI -->
                     ${state.fattureManuali.length > 0 ? `
                     <div class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl shadow-lg p-6 mb-8">
@@ -1996,9 +2348,10 @@
         }
 
         loadTipiProdottoPerCategorizzazione(); // Carica tipi per categorizzazione intelligente
+        loadFornitori(); // Carica fornitori per calcolo scadenze
         loadAllFatture();
         loadFattureManuali();
-        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali + Categorizzazione Intelligente)');
+        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali + Categorizzazione Intelligente + Report Scadenze)');
     </script>
 </body>
 </html>
