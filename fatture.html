@@ -615,6 +615,12 @@
                 // Trova il fornitore
                 const fornitore = getFornitoreByName(fattura.ced.nm);
                 
+                // NUOVO: Se pagamento con Carta di Credito o Addebito Diretto → già pagata, skip
+                const tipoPagamento = fornitore?.tipo_pagamento || 'Bonifico';
+                if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
+                    return; // Skip - già pagata automaticamente
+                }
+                
                 // Calcola la scadenza
                 const termini = fornitore?.termini_pagamento || '30gg Data Fattura';
                 const fineMese = fornitore?.fine_mese || false;
@@ -632,7 +638,7 @@
                         dataScadenza: dataScadenza,
                         terminiPagamento: termini,
                         fineMese: fineMese,
-                        tipoPagamento: fornitore?.tipo_pagamento || 'N/D',
+                        tipoPagamento: tipoPagamento,
                         fornitoreMatch: !!fornitore
                     });
                 }
@@ -656,6 +662,13 @@
             
             fattureDaPagare.forEach(fattura => {
                 const fornitore = getFornitoreByName(fattura.ced.nm);
+                
+                // NUOVO: Skip Carta di Credito e Addebito Diretto
+                const tipoPagamento = fornitore?.tipo_pagamento || 'Bonifico';
+                if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
+                    return;
+                }
+                
                 const termini = fornitore?.termini_pagamento || '30gg Data Fattura';
                 const fineMese = fornitore?.fine_mese || false;
                 const dataScadenza = calcolaDataScadenza(fattura.dt, termini, fineMese);
@@ -678,6 +691,51 @@
             
             return { totaleScaduto, fattureScadute, totaleInScadenza, fattureInScadenza };
         }
+
+        // Funzione per toggle pagato dal report scadenze
+        window.togglePagatoFromReport = function(id) {
+            const fattura = state.fatture.find(f => f.id === id);
+            if (!fattura) return;
+            
+            // Inverti lo stato
+            const nuovoStato = !fattura.pagato;
+            fattura.pagato = nuovoStato;
+            
+            // Traccia modifica
+            state.pagatoChanges.set(id, nuovoStato);
+            
+            render();
+        };
+
+        // Salva modifiche pagato dal report
+        window.savePagatoFromReport = async function() {
+            if (state.pagatoChanges.size === 0) return;
+            
+            try {
+                state.error = '💾 Salvataggio in corso...';
+                render();
+                
+                for (const [id, pagato] of state.pagatoChanges.entries()) {
+                    const { error } = await supabaseClient
+                        .from('fatture')
+                        .update({ pagato: pagato })
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                }
+                
+                state.pagatoChanges.clear();
+                state.error = '✅ Modifiche salvate con successo!';
+                
+                setTimeout(() => { state.error = ''; render(); }, 3000);
+                render();
+                
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                state.error = '❌ Errore durante il salvataggio';
+                render();
+            }
+        };
 
         window.changeReportMese = function(direzione) {
             if (direzione === 'prev') {
@@ -786,6 +844,20 @@
                         </div>
                     </div>
                     
+                    <!-- Barra Salvataggio Modifiche -->
+                    ${state.pagatoChanges.size > 0 ? `
+                        <div class="bg-orange-100 border-2 border-orange-300 rounded-lg px-4 py-3 mb-4 flex justify-between items-center">
+                            <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
+                            <div class="flex space-x-2">
+                                <button onclick="cancelPagatoChanges()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-sm">Annulla</button>
+                                <button onclick="savePagatoFromReport()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Salva</span>
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
                     <!-- Tabella Scadenze -->
                     ${scadenze.length === 0 ? `
                         <div class="text-center py-8 bg-white rounded-lg border border-red-100">
@@ -807,6 +879,7 @@
                                         <th class="px-4 py-3 text-center text-sm font-semibold">Termini</th>
                                         <th class="px-4 py-3 text-center text-sm font-semibold">Tipo Pag.</th>
                                         <th class="px-4 py-3 text-right text-sm font-semibold">Importo</th>
+                                        <th class="px-4 py-3 text-center text-sm font-semibold">Pagato</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
@@ -816,9 +889,10 @@
                                         const isScaduta = s.dataScadenza < oggi;
                                         const isOggi = s.dataScadenza.toDateString() === oggi.toDateString();
                                         const giorniRimanenti = Math.ceil((s.dataScadenza - oggi) / (1000 * 60 * 60 * 24));
+                                        const hasChange = state.pagatoChanges.has(s.id);
                                         
                                         return `
-                                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScaduta ? 'bg-red-50' : ''} ${isOggi ? 'bg-yellow-50' : ''} hover:bg-red-100 transition-colors">
+                                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScaduta ? 'bg-red-50' : ''} ${isOggi ? 'bg-yellow-50' : ''} ${hasChange ? 'bg-orange-50' : ''} hover:bg-red-100 transition-colors">
                                                 <td class="px-4 py-3">
                                                     <div class="flex items-center space-x-2">
                                                         ${isScaduta ? '<span class="text-red-600 font-bold">⚠️</span>' : ''}
@@ -850,14 +924,21 @@
                                                 <td class="px-4 py-3 text-right">
                                                     <p class="text-lg font-bold ${isScaduta ? 'text-red-600' : 'text-gray-900'}">€${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                                 </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <input type="checkbox" 
+                                                        ${s.pagato ? 'checked' : ''} 
+                                                        onchange="togglePagatoFromReport('${s.id}')" 
+                                                        class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+                                                        title="${s.pagato ? 'Segna come non pagata' : 'Segna come pagata'}">
+                                                </td>
                                             </tr>
                                         `;
                                     }).join('')}
                                 </tbody>
                                 <tfoot class="bg-red-700 text-white">
                                     <tr>
-                                        <td colspan="6" class="px-4 py-3 text-right font-bold">TOTALE DA PAGARE:</td>
-                                        <td class="px-4 py-3 text-right text-xl font-bold">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td colspan="7" class="px-4 py-3 text-right font-bold">TOTALE DA PAGARE:</td>
+                                        <td class="px-4 py-3 text-center text-xl font-bold">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                     </tr>
                                 </tfoot>
                             </table>
