@@ -855,164 +855,110 @@
             const isCurrentMonth = anno === oggi.getFullYear() && mese === (oggi.getMonth() + 1);
             
             return `
-                    <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg p-6 mb-8">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-xl font-bold text-red-800 flex items-center">
-                                <span class="mr-2">📅</span>
-                                Report Scadenze Mensili
-                            </h3>
-                            
-                            <!-- Statistiche rapide -->
-                            <div class="flex space-x-4">
-                                ${stats.fattureScadute > 0 ? `
-                                    <div class="bg-red-100 border border-red-300 px-4 py-2 rounded-lg">
-                                        <p class="text-xs text-red-600">⚠️ Scadute</p>
-                                        <p class="text-lg font-bold text-red-700">€${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
-                                    </div>
-                                ` : ''}
-                                ${stats.fattureInScadenza > 0 ? `
-                                    <div class="bg-orange-100 border border-orange-300 px-4 py-2 rounded-lg">
-                                        <p class="text-xs text-orange-600">⏰ Prossimi 30gg</p>
-                                        <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
-                                    </div>
-                                ` : ''}
+                <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg overflow-hidden">
+                    <!-- HEADER: Titolo + Selettore + Statistiche -->
+                    <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-red-200">
+                        <!-- Sinistra: Icona + Titolo -->
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
+                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
                             </div>
+                            <span class="font-bold text-gray-800">Report Scadenze Mensili</span>
                         </div>
                         
-                        <!-- ALERT: Fornitori senza termini di pagamento -->
-                        ${fornitoriSenzaTermini.length > 0 ? `
-                            <div class="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 mb-6">
-                                <div class="flex items-start">
-                                    <span class="text-2xl mr-3">⚠️</span>
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-yellow-800 mb-2">Indicare termini di pagamento!</h4>
-                                        <p class="text-sm text-yellow-700 mb-2">I seguenti fornitori non hanno i termini di pagamento configurati:</p>
-                                        <div class="flex flex-wrap gap-2">
-                                            ${fornitoriSenzaTermini.map(f => `
-                                                <span class="inline-flex items-center px-3 py-1 bg-yellow-200 text-yellow-800 rounded-full text-sm font-medium">
-                                                    ${f}
-                                                </span>
-                                            `).join('')}
-                                        </div>
-                                        <p class="text-xs text-yellow-600 mt-3">
-                                            👉 Vai su <a href="fornitori.html" class="underline font-semibold hover:text-yellow-800">Gestione Fornitori</a> per configurare i termini di pagamento
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        ` : ''}
-                    
-                        <!-- Selettore Mese -->
-                    <div class="flex items-center justify-center space-x-4 mb-6 bg-white rounded-lg p-3 border border-red-200">
-                        <button onclick="changeReportMese('prev')" class="p-2 hover:bg-red-100 rounded-lg transition-colors">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
-                        </button>
-                        
+                        <!-- Centro: Selettore Mese -->
                         <div class="flex items-center space-x-2">
-                            <select onchange="setReportMese(${anno}, this.value)" class="px-4 py-2 border-2 border-red-200 rounded-lg font-semibold text-red-800 bg-red-50">
+                            <button onclick="changeReportMese('prev')" class="p-1 hover:bg-gray-100 rounded transition-colors">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            <select onchange="setReportMese(${anno}, this.value)" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium">
                                 ${mesiNomi.slice(1).map((m, i) => `<option value="${i + 1}" ${mese === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
                             </select>
-                            <select onchange="setReportMese(this.value, ${mese})" class="px-4 py-2 border-2 border-red-200 rounded-lg font-semibold text-red-800 bg-red-50">
+                            <select onchange="setReportMese(this.value, ${mese})" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium">
                                 ${[oggi.getFullYear() - 1, oggi.getFullYear(), oggi.getFullYear() + 1].map(a => `<option value="${a}" ${anno === a ? 'selected' : ''}>${a}</option>`).join('')}
                             </select>
-                        </div>
-                        
-                        <button onclick="changeReportMese('next')" class="p-2 hover:bg-red-100 rounded-lg transition-colors">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                        
-                        ${!isCurrentMonth ? `
-                            <button onclick="changeReportMese('today')" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-                                Oggi
+                            <button onclick="changeReportMese('next')" class="p-1 hover:bg-gray-100 rounded transition-colors">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </button>
-                        ` : ''}
-                    </div>
-                    
-                    <!-- Riepilogo Mese -->
-                    <div class="bg-white rounded-lg p-4 mb-4 border border-red-200">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Scadenze in <span class="font-semibold">${mesiNomi[mese]} ${anno}</span></p>
-                                <p class="text-3xl font-bold text-red-600">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                        
+                        <!-- Destra: 3 Badge statistiche -->
+                        <div class="flex items-center space-x-2">
+                            <!-- Badge Scadenza del mese -->
+                            <div class="bg-green-100 border border-green-300 rounded-lg px-3 py-1.5">
+                                <p class="text-xs text-green-700 font-medium">Scadenza in ${mesiNomi[mese]} ${anno}</p>
+                                <p class="text-lg font-bold text-green-800">€ ${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
-                            <div class="text-right">
-                                <p class="text-sm text-gray-600">Fatture</p>
-                                <p class="text-3xl font-bold text-red-600">${scadenze.length}</p>
+                            <!-- Badge Scadute -->
+                            <div class="bg-red-100 border border-red-300 rounded-lg px-3 py-1.5">
+                                <p class="text-xs text-red-600 font-medium">Scadute</p>
+                                <p class="text-lg font-bold text-red-700">€${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
+                            </div>
+                            <!-- Badge Prossimi 30gg -->
+                            <div class="bg-orange-100 border border-orange-300 rounded-lg px-3 py-1.5">
+                                <p class="text-xs text-orange-600 font-medium">Prossimi 30gg</p>
+                                <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Alert Fornitori Senza Termini -->
-                    ${(() => {
-                        const fornitoriSenzaTermini = getFornitoriSenzaTermini();
-                        if (fornitoriSenzaTermini.length === 0) return '';
-                        return `
-                            <div class="bg-yellow-100 border-2 border-yellow-400 rounded-lg px-4 py-3 mb-4">
-                                <div class="flex items-start">
-                                    <svg class="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                    </svg>
-                                    <div class="flex-1">
-                                        <p class="font-bold text-yellow-800">⚠️ Indicare termini di pagamento!</p>
-                                        <p class="text-sm text-yellow-700 mt-1">I seguenti fornitori non hanno termini di pagamento configurati:</p>
-                                        <ul class="mt-2 space-y-1">
-                                            ${fornitoriSenzaTermini.map(f => `
-                                                <li class="text-sm text-yellow-800 flex items-center">
-                                                    <span class="mr-2">•</span>
-                                                    <span class="font-medium">${f}</span>
-                                                    <a href="fornitori.html" class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">→ Configura</a>
-                                                </li>
-                                            `).join('')}
-                                        </ul>
-                                    </div>
+                    <!-- ALERT: Fornitori senza termini di pagamento -->
+                    ${fornitoriSenzaTermini.length > 0 ? `
+                        <div class="bg-yellow-100 border-b-2 border-yellow-400 px-4 py-3">
+                            <div class="flex items-start">
+                                <span class="text-lg mr-2">⚠️</span>
+                                <div class="flex-1">
+                                    <span class="font-bold text-yellow-800">Indicare termini di pagamento!</span>
+                                    <span class="text-sm text-yellow-700 ml-2">Fornitori senza termini:</span>
+                                    <span class="text-sm text-yellow-800 font-medium ml-1">${fornitoriSenzaTermini.join(', ')}</span>
+                                    <a href="fornitori.html" class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">→ Configura</a>
                                 </div>
-                            </div>
-                        `;
-                    })()}
-                    
-                    <!-- Barra Salvataggio Modifiche -->
-                    ${state.pagatoChanges.size > 0 ? `
-                        <div class="bg-orange-100 border-2 border-orange-300 rounded-lg px-4 py-3 mb-4 flex justify-between items-center">
-                            <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
-                            <div class="flex space-x-2">
-                                <button onclick="cancelPagatoChanges()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-sm">Annulla</button>
-                                <button onclick="savePagatoFromReport()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm flex items-center space-x-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    <span>Salva</span>
-                                </button>
                             </div>
                         </div>
                     ` : ''}
                     
-                    <!-- Tabella Scadenze -->
+                    <!-- Barra Salvataggio Modifiche -->
+                    ${state.pagatoChanges.size > 0 ? `
+                        <div class="bg-orange-100 border-b-2 border-orange-300 px-4 py-2 flex justify-between items-center">
+                            <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
+                            <div class="flex space-x-2">
+                                <button onclick="cancelPagatoChanges()" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">Annulla</button>
+                                <button onclick="savePagatoFromReport()" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">Salva</button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- TABELLA SCADENZE -->
                     ${scadenze.length === 0 ? `
-                        <div class="text-center py-8 bg-white rounded-lg border border-red-100">
-                            <svg class="w-16 h-16 text-green-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="text-center py-8 bg-white">
+                            <svg class="w-12 h-12 text-green-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <p class="text-gray-600 font-medium">Nessuna scadenza per ${mesiNomi[mese]} ${anno}</p>
-                            <p class="text-sm text-gray-500 mt-1">Tutte le fatture sono state pagate! 🎉</p>
+                            <p class="text-sm text-gray-500">Tutte le fatture sono state pagate! 🎉</p>
                         </div>
                     ` : `
                         <div class="overflow-x-auto">
-                            <table class="w-full bg-white rounded-lg overflow-hidden">
-                                <thead class="bg-red-600 text-white">
+                            <table class="w-full">
+                                <thead class="bg-red-400 text-white">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold">Scadenza</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold">Fornitore</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold">Fattura</th>
-                                        <th class="px-4 py-3 text-center text-sm font-semibold">Data Fatt.</th>
-                                        <th class="px-4 py-3 text-center text-sm font-semibold">Termini</th>
-                                        <th class="px-4 py-3 text-center text-sm font-semibold">Tipo Pag.</th>
-                                        <th class="px-4 py-3 text-right text-sm font-semibold">Importo</th>
-                                        <th class="px-4 py-3 text-center text-sm font-semibold">Pagato</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold">Scadenza</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold">Fornitore</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold">Fattura</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Data Fatt.</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Termini</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Tipo Pag.</th>
+                                        <th class="px-3 py-2 text-right text-xs font-semibold">Importo</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Pagato</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+                                <tbody class="divide-y divide-gray-200 bg-white">
                                     ${scadenze.map((s, idx) => {
                                         const oggi = new Date();
                                         oggi.setHours(0, 0, 0, 0);
@@ -1022,59 +968,61 @@
                                         const hasChange = state.pagatoChanges.has(s.id);
                                         
                                         return `
-                                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScaduta ? 'bg-red-50' : ''} ${isOggi ? 'bg-yellow-50' : ''} ${hasChange ? 'bg-orange-50' : ''} hover:bg-red-100 transition-colors">
-                                                <td class="px-4 py-3">
-                                                    <div class="flex items-center space-x-2">
-                                                        ${isScaduta ? '<span class="text-red-600 font-bold">⚠️</span>' : ''}
-                                                        ${isOggi ? '<span class="text-yellow-600 font-bold">🔔</span>' : ''}
+                                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScaduta ? 'bg-red-50' : ''} ${hasChange ? 'bg-orange-50' : ''} hover:bg-red-100 transition-colors">
+                                                <td class="px-3 py-2">
+                                                    <div class="flex items-start space-x-1">
+                                                        ${isScaduta ? '<span class="text-red-600 text-xs">⚠️</span>' : ''}
                                                         <div>
-                                                            <p class="font-semibold ${isScaduta ? 'text-red-700' : ''}">${s.dataScadenza.toLocaleDateString('it-IT')}</p>
+                                                            <p class="text-sm font-semibold ${isScaduta ? 'text-red-700' : ''}">${s.dataScadenza.toLocaleDateString('it-IT')}</p>
                                                             <p class="text-xs ${isScaduta ? 'text-red-600' : 'text-gray-500'}">
                                                                 ${isScaduta ? `Scaduta da ${Math.abs(giorniRimanenti)} gg` : isOggi ? 'Scade OGGI!' : `Tra ${giorniRimanenti} gg`}
                                                             </p>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3">
-                                                    <p class="font-medium text-gray-900">${s.ced.nm}</p>
-                                                    ${!s.fornitoreMatch ? '<p class="text-xs text-orange-600">⚠️ Fornitore non in anagrafica</p>' : ''}
+                                                <td class="px-3 py-2">
+                                                    <p class="text-sm font-medium text-gray-900">${s.ced.nm}</p>
                                                 </td>
-                                                <td class="px-4 py-3 font-mono text-sm">${s.num}</td>
-                                                <td class="px-4 py-3 text-center text-sm text-gray-600">${new Date(s.dt).toLocaleDateString('it-IT')}</td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded ${s.fineMese ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
-                                                        ${s.terminiPagamento.replace(' Data Fattura', '')}${s.fineMese ? ' FM' : ''}
+                                                <td class="px-3 py-2 font-mono text-xs text-gray-700">${s.num}</td>
+                                                <td class="px-3 py-2 text-center text-xs text-gray-600">${new Date(s.dt).toLocaleDateString('it-IT')}</td>
+                                                <td class="px-3 py-2 text-center">
+                                                    <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+                                                        s.terminiPagamento === 'Alla Consegna' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                                                        s.fineMese ? 'bg-orange-100 text-orange-800 border border-orange-300' : 
+                                                        'bg-gray-100 text-gray-800 border border-gray-300'
+                                                    }">
+                                                        ${s.terminiPagamento === 'Alla Consegna' ? 'Alla Consegna' : s.terminiPagamento.replace(' Data Fattura', '')}${s.fineMese && s.terminiPagamento !== 'Alla Consegna' ? ' FM' : ''}
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
+                                                <td class="px-3 py-2 text-center">
+                                                    <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 border border-gray-300">
                                                         ${s.tipoPagamento}
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 text-right">
-                                                    <p class="text-lg font-bold ${isScaduta ? 'text-red-600' : 'text-gray-900'}">€${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                                <td class="px-3 py-2 text-right">
+                                                    <p class="text-sm font-bold text-red-600">€${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                                 </td>
-                                                <td class="px-4 py-3 text-center">
+                                                <td class="px-3 py-2 text-center">
                                                     <input type="checkbox" 
                                                         ${s.pagato ? 'checked' : ''} 
                                                         onchange="togglePagatoFromReport('${s.id}')" 
-                                                        class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
-                                                        title="${s.pagato ? 'Segna come non pagata' : 'Segna come pagata'}">
+                                                        class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer">
                                                 </td>
                                             </tr>
                                         `;
                                     }).join('')}
                                 </tbody>
-                                <tfoot class="bg-red-700 text-white">
+                                <tfoot class="bg-red-600 text-white">
                                     <tr>
-                                        <td colspan="7" class="px-4 py-3 text-right font-bold">TOTALE DA PAGARE:</td>
-                                        <td class="px-4 py-3 text-center text-xl font-bold">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td colspan="6" class="px-3 py-2 text-right text-sm font-bold">TOTALE DA PAGARE:</td>
+                                        <td class="px-3 py-2 text-right text-lg font-bold">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
                     `}
-                    </div>
+                </div>
             `;
         }
 
