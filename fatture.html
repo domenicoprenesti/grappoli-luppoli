@@ -549,40 +549,64 @@
         function calcolaDataScadenza(dataFattura, terminiPagamento, fineMese) {
             if (!dataFattura) return null;
             
+            // Se termini non specificati, ritorna oggetto errore
+            if (!terminiPagamento || terminiPagamento === '' || terminiPagamento === 'Non specificato') {
+                return { error: 'TERMINI_MANCANTI' };
+            }
+            
             const data = new Date(dataFattura);
             if (isNaN(data.getTime())) return null;
             
-            // Determina i giorni da aggiungere in base ai termini
-            let giorni = 0;
+            // Logica calcolo scadenza:
+            // - Con Fine Mese (FM): vai all'ultimo giorno del mese target
+            //   - 30gg FM = fine mese +1 dalla data fattura
+            //   - 60gg FM = fine mese +2 dalla data fattura
+            //   - 90gg FM = fine mese +3 dalla data fattura
+            // - Senza Fine Mese: aggiungi semplicemente i giorni alla data fattura
+            
             switch (terminiPagamento) {
                 case 'Anticipato Ordine':
                 case 'Alla Consegna':
                 case 'Data Fattura':
-                    giorni = 0;
-                    break;
+                    // Scadenza immediata = data fattura
+                    return data;
+                    
                 case '30gg Data Fattura':
-                    giorni = 30;
-                    break;
+                    if (fineMese) {
+                        // 30gg FM: ultimo giorno del mese successivo
+                        data.setMonth(data.getMonth() + 2); // Vai al mese +2
+                        data.setDate(0); // Torna all'ultimo giorno del mese precedente (= mese +1)
+                    } else {
+                        // 30gg semplice: +30 giorni
+                        data.setDate(data.getDate() + 30);
+                    }
+                    return data;
+                    
                 case '60gg Data Fattura':
-                    giorni = 60;
-                    break;
+                    if (fineMese) {
+                        // 60gg FM: ultimo giorno del mese +2
+                        data.setMonth(data.getMonth() + 3); // Vai al mese +3
+                        data.setDate(0); // Torna all'ultimo giorno del mese precedente (= mese +2)
+                    } else {
+                        // 60gg semplice: +60 giorni
+                        data.setDate(data.getDate() + 60);
+                    }
+                    return data;
+                    
                 case '90gg Data Fattura':
-                    giorni = 90;
-                    break;
+                    if (fineMese) {
+                        // 90gg FM: ultimo giorno del mese +3
+                        data.setMonth(data.getMonth() + 4);
+                        data.setDate(0);
+                    } else {
+                        data.setDate(data.getDate() + 90);
+                    }
+                    return data;
+                    
                 default:
-                    giorni = 30; // Default 30gg se non specificato
+                    // Termini non riconosciuti
+                    return { error: 'TERMINI_MANCANTI' };
             }
-            
-            // Aggiungi i giorni
-            data.setDate(data.getDate() + giorni);
-            
-            // Se fine mese, sposta all'ultimo giorno del mese
-            if (fineMese) {
-                data.setMonth(data.getMonth() + 1);
-                data.setDate(0); // Ultimo giorno del mese precedente
-            }
-            
-            return data;
         }
 
         function getFornitoreByName(nomeCedente) {
@@ -615,16 +639,36 @@
                 // Trova il fornitore
                 const fornitore = getFornitoreByName(fattura.ced.nm);
                 
-                // NUOVO: Se pagamento con Carta di Credito o Addebito Diretto → già pagata, skip
-                const tipoPagamento = fornitore?.tipo_pagamento || 'Bonifico';
+                // Se pagamento con Carta di Credito o Addebito Diretto → già pagata, skip
+                const tipoPagamento = fornitore?.tipo_pagamento || '';
                 if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
                     return; // Skip - già pagata automaticamente
                 }
                 
-                // Calcola la scadenza
-                const termini = fornitore?.termini_pagamento || '30gg Data Fattura';
+                // Prendi i termini dal fornitore (senza default!)
+                const termini = fornitore?.termini_pagamento || null;
                 const fineMese = fornitore?.fine_mese || false;
+                
+                // Calcola la scadenza
                 const dataScadenza = calcolaDataScadenza(fattura.dt, termini, fineMese);
+                
+                // Se errore termini mancanti, aggiungi comunque alla lista con flag
+                if (dataScadenza && dataScadenza.error === 'TERMINI_MANCANTI') {
+                    // Aggiungi solo per il mese corrente per mostrare l'alert
+                    const oggi = new Date();
+                    if (anno === oggi.getFullYear() && mese === (oggi.getMonth() + 1)) {
+                        scadenze.push({
+                            ...fattura,
+                            dataScadenza: null,
+                            terminiPagamento: 'NON SPECIFICATI',
+                            fineMese: false,
+                            tipoPagamento: tipoPagamento || 'N/D',
+                            fornitoreMatch: !!fornitore,
+                            terminiMancanti: true
+                        });
+                    }
+                    return;
+                }
                 
                 if (!dataScadenza) return;
                 
@@ -638,16 +682,46 @@
                         dataScadenza: dataScadenza,
                         terminiPagamento: termini,
                         fineMese: fineMese,
-                        tipoPagamento: tipoPagamento,
-                        fornitoreMatch: !!fornitore
+                        tipoPagamento: tipoPagamento || 'N/D',
+                        fornitoreMatch: !!fornitore,
+                        terminiMancanti: false
                     });
                 }
             });
             
-            // Ordina per data scadenza
-            scadenze.sort((a, b) => a.dataScadenza - b.dataScadenza);
+            // Ordina: prima quelli con termini mancanti (alert), poi per data scadenza
+            scadenze.sort((a, b) => {
+                if (a.terminiMancanti && !b.terminiMancanti) return -1;
+                if (!a.terminiMancanti && b.terminiMancanti) return 1;
+                if (!a.dataScadenza) return 1;
+                if (!b.dataScadenza) return -1;
+                return a.dataScadenza - b.dataScadenza;
+            });
             
             return scadenze;
+        }
+        
+        // Funzione per ottenere fornitori con termini mancanti
+        function getFornitoriSenzaTermini() {
+            const fattureDaPagare = state.fatture.filter(f => !f.pagato);
+            const fornitoriSenzaTermini = new Set();
+            
+            fattureDaPagare.forEach(fattura => {
+                const fornitore = getFornitoreByName(fattura.ced.nm);
+                
+                // Skip carta/addebito
+                const tipoPagamento = fornitore?.tipo_pagamento || '';
+                if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
+                    return;
+                }
+                
+                const termini = fornitore?.termini_pagamento;
+                if (!termini || termini === '' || termini === 'Non specificato') {
+                    fornitoriSenzaTermini.add(fattura.ced.nm);
+                }
+            });
+            
+            return Array.from(fornitoriSenzaTermini);
         }
 
         function getScadenzeStats() {
@@ -663,17 +737,18 @@
             fattureDaPagare.forEach(fattura => {
                 const fornitore = getFornitoreByName(fattura.ced.nm);
                 
-                // NUOVO: Skip Carta di Credito e Addebito Diretto
-                const tipoPagamento = fornitore?.tipo_pagamento || 'Bonifico';
+                // Skip Carta di Credito e Addebito Diretto
+                const tipoPagamento = fornitore?.tipo_pagamento || '';
                 if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
                     return;
                 }
                 
-                const termini = fornitore?.termini_pagamento || '30gg Data Fattura';
+                const termini = fornitore?.termini_pagamento;
                 const fineMese = fornitore?.fine_mese || false;
                 const dataScadenza = calcolaDataScadenza(fattura.dt, termini, fineMese);
                 
-                if (!dataScadenza) return;
+                // Skip se termini mancanti o errore
+                if (!dataScadenza || dataScadenza.error) return;
                 
                 if (dataScadenza < oggi) {
                     totaleScaduto += fattura.tot;
@@ -767,7 +842,11 @@
             const { anno, mese } = state.reportScadenze;
             const scadenze = getScadenzePerMese(anno, mese);
             const stats = getScadenzeStats();
-            const totaleDelMese = scadenze.reduce((sum, s) => sum + s.tot, 0);
+            const fornitoriSenzaTermini = getFornitoriSenzaTermini();
+            
+            // Calcola totale solo delle scadenze con data valida
+            const scadenzeValide = scadenze.filter(s => !s.terminiMancanti);
+            const totaleDelMese = scadenzeValide.reduce((sum, s) => sum + s.tot, 0);
             
             const mesiNomi = ['', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
                              'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
@@ -797,6 +876,31 @@
                                     <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
                                 </div>
                             ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- ALERT: Fornitori senza termini di pagamento -->
+                    ${fornitoriSenzaTermini.length > 0 ? `
+                        <div class="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 mb-6">
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">⚠️</span>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-yellow-800 mb-2">Indicare termini di pagamento!</h4>
+                                    <p class="text-sm text-yellow-700 mb-2">I seguenti fornitori non hanno i termini di pagamento configurati:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${fornitoriSenzaTermini.map(f => `
+                                            <span class="inline-flex items-center px-3 py-1 bg-yellow-200 text-yellow-800 rounded-full text-sm font-medium">
+                                                ${f}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                    <p class="text-xs text-yellow-600 mt-3">
+                                        👉 Vai su <a href="fornitori.html" class="underline font-semibold hover:text-yellow-800">Gestione Fornitori</a> per configurare i termini di pagamento
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
                         </div>
                     </div>
                     
@@ -843,6 +947,34 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Alert Fornitori Senza Termini -->
+                    ${(() => {
+                        const fornitoriSenzaTermini = getFornitoriSenzaTermini();
+                        if (fornitoriSenzaTermini.length === 0) return '';
+                        return `
+                            <div class="bg-yellow-100 border-2 border-yellow-400 rounded-lg px-4 py-3 mb-4">
+                                <div class="flex items-start">
+                                    <svg class="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="font-bold text-yellow-800">⚠️ Indicare termini di pagamento!</p>
+                                        <p class="text-sm text-yellow-700 mt-1">I seguenti fornitori non hanno termini di pagamento configurati:</p>
+                                        <ul class="mt-2 space-y-1">
+                                            ${fornitoriSenzaTermini.map(f => `
+                                                <li class="text-sm text-yellow-800 flex items-center">
+                                                    <span class="mr-2">•</span>
+                                                    <span class="font-medium">${f}</span>
+                                                    <a href="fornitori.html" class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">→ Configura</a>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    })()}
                     
                     <!-- Barra Salvataggio Modifiche -->
                     ${state.pagatoChanges.size > 0 ? `
