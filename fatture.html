@@ -855,56 +855,55 @@
             const isCurrentMonth = anno === oggi.getFullYear() && mese === (oggi.getMonth() + 1);
             
             return `
-                <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg p-6 mb-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-red-800 flex items-center">
-                            <span class="mr-2">📅</span>
-                            Report Scadenze Mensili
-                        </h3>
-                        
-                        <!-- Statistiche rapide -->
-                        <div class="flex space-x-4">
-                            ${stats.fattureScadute > 0 ? `
-                                <div class="bg-red-100 border border-red-300 px-4 py-2 rounded-lg">
-                                    <p class="text-xs text-red-600">⚠️ Scadute</p>
-                                    <p class="text-lg font-bold text-red-700">€${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
-                                </div>
-                            ` : ''}
-                            ${stats.fattureInScadenza > 0 ? `
-                                <div class="bg-orange-100 border border-orange-300 px-4 py-2 rounded-lg">
-                                    <p class="text-xs text-orange-600">⏰ Prossimi 30gg</p>
-                                    <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                    
-                    <!-- ALERT: Fornitori senza termini di pagamento -->
-                    ${fornitoriSenzaTermini.length > 0 ? `
-                        <div class="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 mb-6">
-                            <div class="flex items-start">
-                                <span class="text-2xl mr-3">⚠️</span>
-                                <div class="flex-1">
-                                    <h4 class="font-bold text-yellow-800 mb-2">Indicare termini di pagamento!</h4>
-                                    <p class="text-sm text-yellow-700 mb-2">I seguenti fornitori non hanno i termini di pagamento configurati:</p>
-                                    <div class="flex flex-wrap gap-2">
-                                        ${fornitoriSenzaTermini.map(f => `
-                                            <span class="inline-flex items-center px-3 py-1 bg-yellow-200 text-yellow-800 rounded-full text-sm font-medium">
-                                                ${f}
-                                            </span>
-                                        `).join('')}
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg p-6 mb-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-red-800 flex items-center">
+                                <span class="mr-2">📅</span>
+                                Report Scadenze Mensili
+                            </h3>
+                            
+                            <!-- Statistiche rapide -->
+                            <div class="flex space-x-4">
+                                ${stats.fattureScadute > 0 ? `
+                                    <div class="bg-red-100 border border-red-300 px-4 py-2 rounded-lg">
+                                        <p class="text-xs text-red-600">⚠️ Scadute</p>
+                                        <p class="text-lg font-bold text-red-700">€${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
                                     </div>
-                                    <p class="text-xs text-yellow-600 mt-3">
-                                        👉 Vai su <a href="fornitori.html" class="underline font-semibold hover:text-yellow-800">Gestione Fornitori</a> per configurare i termini di pagamento
-                                    </p>
-                                </div>
+                                ` : ''}
+                                ${stats.fattureInScadenza > 0 ? `
+                                    <div class="bg-orange-100 border border-orange-300 px-4 py-2 rounded-lg">
+                                        <p class="text-xs text-orange-600">⏰ Prossimi 30gg</p>
+                                        <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
-                    ` : ''}
-                        </div>
-                    </div>
+                        
+                        <!-- ALERT: Fornitori senza termini di pagamento -->
+                        ${fornitoriSenzaTermini.length > 0 ? `
+                            <div class="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 mb-6">
+                                <div class="flex items-start">
+                                    <span class="text-2xl mr-3">⚠️</span>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-yellow-800 mb-2">Indicare termini di pagamento!</h4>
+                                        <p class="text-sm text-yellow-700 mb-2">I seguenti fornitori non hanno i termini di pagamento configurati:</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            ${fornitoriSenzaTermini.map(f => `
+                                                <span class="inline-flex items-center px-3 py-1 bg-yellow-200 text-yellow-800 rounded-full text-sm font-medium">
+                                                    ${f}
+                                                </span>
+                                            `).join('')}
+                                        </div>
+                                        <p class="text-xs text-yellow-600 mt-3">
+                                            👉 Vai su <a href="fornitori.html" class="underline font-semibold hover:text-yellow-800">Gestione Fornitori</a> per configurare i termini di pagamento
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
                     
-                    <!-- Selettore Mese -->
+                        <!-- Selettore Mese -->
                     <div class="flex items-center justify-center space-x-4 mb-6 bg-white rounded-lg p-3 border border-red-200">
                         <button onclick="changeReportMese('prev')" class="p-2 hover:bg-red-100 rounded-lg transition-colors">
                             <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1076,6 +1075,7 @@
                             </table>
                         </div>
                     `}
+                    </div>
                 </div>
             `;
         }
