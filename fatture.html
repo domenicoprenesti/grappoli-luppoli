@@ -2620,64 +2620,64 @@
             const hasActiveFilters = state.filters.invoiceYear !== 'all' || state.filters.invoiceMonth !== 'all' || state.filters.supplier !== 'all' || state.filters.minAmount !== '' || state.filters.maxAmount !== '';
             
             app.innerHTML = `
-                <div class="max-w-screen-xl mx-auto px-4">
-                <div class="flex gap-6">
+                <div class="w-full px-4">
+                <div class="flex gap-4">
                     <!-- SIDEBAR SINISTRA -->
-                    <div class="w-52 flex-shrink-0">
+                    <div class="w-44 flex-shrink-0">
                         <!-- Header con titolo -->
-                        <div class="bg-white rounded-2xl shadow-xl p-5 mb-6">
-                            <div class="flex items-center space-x-3 mb-6">
-                                <div class="bg-blue-600 p-2.5 rounded-xl">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+                            <div class="flex items-center space-x-2 mb-4">
+                                <div class="bg-blue-600 p-2 rounded-lg">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h1 class="text-lg font-bold leading-tight">Gestione Fatture</h1>
+                                    <h1 class="text-base font-bold leading-tight">Gestione Fatture</h1>
                                     <p class="text-xs text-gray-500">Con estrazione IVA e cancellazione</p>
                                 </div>
                             </div>
 
-                            <!-- Statistiche in verticale -->
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 px-4 py-3 rounded-xl border-l-4 border-blue-500">
-                                    <p class="text-xs text-gray-600 mb-1">Fatture ${hasActiveFilters ? 'filtrate' : 'totali'}</p>
-                                    <p class="text-2xl font-bold text-blue-600">${filteredFatture.length.toLocaleString('it-IT')}${state.stats.total !== filteredFatture.length ? `<span class="text-sm font-normal text-gray-400"> / ${state.stats.total.toLocaleString('it-IT')}</span>` : ''}</p>
+                            <!-- Statistiche in verticale compatte -->
+                            <div class="space-y-2">
+                                <div class="bg-blue-50 px-3 py-2 rounded-lg border-l-3 border-blue-500">
+                                    <p class="text-xs text-gray-600">Fatture totali</p>
+                                    <p class="text-xl font-bold text-blue-600">${filteredFatture.length.toLocaleString('it-IT')}</p>
                                 </div>
-                                <div class="bg-green-50 px-4 py-3 rounded-xl border-l-4 border-green-500">
-                                    <p class="text-xs text-gray-600 mb-1">Importo ${hasActiveFilters ? 'filtrato' : 'totale'}</p>
-                                    <p class="text-2xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                <div class="bg-green-50 px-3 py-2 rounded-lg border-l-3 border-green-500">
+                                    <p class="text-xs text-gray-600">Importo totale</p>
+                                    <p class="text-xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                                 </div>
-                                <div class="bg-purple-50 px-4 py-3 rounded-xl border-l-4 border-purple-500">
-                                    <p class="text-xs text-gray-600 mb-1">Fornitori</p>
-                                    <p class="text-2xl font-bold text-purple-600">${state.stats.fornitori}</p>
+                                <div class="bg-purple-50 px-3 py-2 rounded-lg border-l-3 border-purple-500">
+                                    <p class="text-xs text-gray-600">Fornitori</p>
+                                    <p class="text-xl font-bold text-purple-600">${state.stats.fornitori}</p>
                                 </div>
                             </div>
 
-                            ${state.error ? `<div class="mt-4 text-xs ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-3 py-2 rounded">${state.error}</div>` : ''}
+                            ${state.error ? `<div class="mt-3 text-xs ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-2 py-1 rounded">${state.error}</div>` : ''}
                         </div>
                     </div>
 
                     <!-- AREA PRINCIPALE -->
-                    <div class="flex-1 min-w-0 overflow-hidden">
+                    <div class="flex-1 min-w-0">
                         <!-- Header con Report Scadenze e Pulsanti Upload -->
-                        <div class="flex gap-4 mb-6">
+                        <div class="flex gap-3 mb-4">
                             <!-- Report Scadenze -->
                             <div class="flex-1">
                                 ${renderReportScadenze()}
                             </div>
                             
                             <!-- Pulsanti Upload in verticale -->
-                            <div class="flex flex-col gap-2 flex-shrink-0">
-                                <button onclick="switchUploadMode('single')" class="px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2 text-sm whitespace-nowrap">
+                            <div class="flex flex-col gap-1.5 flex-shrink-0">
+                                <button onclick="switchUploadMode('single')" class="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2 text-xs whitespace-nowrap">
                                     <span>📄</span>
                                     <span>Upload Singolo</span>
                                 </button>
-                                <button onclick="switchUploadMode('folder')" class="px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 flex items-center space-x-2 text-sm whitespace-nowrap">
+                                <button onclick="switchUploadMode('folder')" class="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 flex items-center space-x-2 text-xs whitespace-nowrap">
                                     <span>📁</span>
                                     <span>Upload Cartella</span>
                                 </button>
-                                <button onclick="openModalFatturaManuale()" class="px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-md text-sm whitespace-nowrap">
+                                <button onclick="openModalFatturaManuale()" class="px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-sm text-xs whitespace-nowrap">
                                     <span>✏️</span>
                                     <span>Inserimento Manuale</span>
                                 </button>
@@ -2731,18 +2731,18 @@
                         ` : ''}
 
                         <!-- Filtri -->
-                        <div class="bg-white rounded-xl shadow-lg p-5 mb-6">
-                            <h3 class="font-bold mb-3 text-sm">Filtri</h3>
-                            <div class="grid grid-cols-4 gap-3">
-                                <select onchange="applyFilter('invoiceYear', this.value)" class="px-3 py-2 border rounded text-sm"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
-                                <select onchange="applyFilter('invoiceMonth', this.value)" class="px-3 py-2 border rounded text-sm"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
-                                <select onchange="applyFilter('supplier', this.value)" class="px-3 py-2 border rounded text-sm"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
-                                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Pulisci</button>
+                        <div class="bg-white rounded-lg shadow p-4 mb-4">
+                            <h3 class="font-bold mb-2 text-sm">Filtri</h3>
+                            <div class="grid grid-cols-4 gap-2">
+                                <select onchange="applyFilter('invoiceYear', this.value)" class="px-2 py-1.5 border rounded text-sm"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
+                                <select onchange="applyFilter('invoiceMonth', this.value)" class="px-2 py-1.5 border rounded text-sm"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
+                                <select onchange="applyFilter('supplier', this.value)" class="px-2 py-1.5 border rounded text-sm"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
+                                <button onclick="clearFilters()" class="px-3 py-1.5 bg-gray-200 rounded hover:bg-gray-300 text-sm">Pulisci</button>
                             </div>
                         </div>
 
                         <!-- Tabella Fatture -->
-                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         ${state.selectedIds.size > 0 ? `
                             <div class="bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
                                 <span class="text-sm font-medium text-blue-900">${state.selectedIds.size} fatture selezionate</span>
@@ -2766,31 +2766,31 @@
                             </div>
                         ` : ''}
                         
-                        <table class="w-full" style="table-layout: fixed;">
+                        <table class="w-full">
                             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                                 <tr>
-                                    <th class="w-10 px-2 py-2.5"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''} class="w-4 h-4"></th>
-                                    <th class="w-24 px-2 py-2.5 text-left">
+                                    <th class="w-8 px-2 py-2"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''} class="w-4 h-4"></th>
+                                    <th class="px-2 py-2 text-left">
                                         <div class="text-xs font-semibold mb-1">Data</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.dataFattura}" onkeyup="applyColumnFilter('dataFattura', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-2 py-2.5 text-left" style="width: 18%;">
+                                    <th class="px-2 py-2 text-left">
                                         <div class="text-xs font-semibold mb-1">Numero</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.numeroFattura}" onkeyup="applyColumnFilter('numeroFattura', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-2 py-2.5 text-left" style="width: 28%;">
+                                    <th class="px-2 py-2 text-left">
                                         <div class="text-xs font-semibold mb-1">Fornitore</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.fornitore}" onkeyup="applyColumnFilter('fornitore', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="w-24 px-2 py-2.5 text-right">
+                                    <th class="px-2 py-2 text-right">
                                         <div class="text-xs font-semibold mb-1">Importo</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.importo}" onkeyup="applyColumnFilter('importo', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="w-20 px-2 py-2.5 text-right">
+                                    <th class="px-2 py-2 text-right">
                                         <div class="text-xs font-semibold mb-1">Δ Delta</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.delta}" onkeyup="applyColumnFilter('delta', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="w-24 px-2 py-2.5 text-center">
+                                    <th class="px-2 py-2 text-center">
                                         <div class="flex items-center justify-center space-x-1 mb-1">
                                             <span class="text-xs font-semibold">Pagato</span>
                                             <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-3 h-3 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''}>
@@ -2801,7 +2801,7 @@
                                             <option value="pagato" ${state.filters.pagato === 'pagato' ? 'selected' : ''}>Pagate</option>
                                         </select>
                                     </th>
-                                    <th class="w-16 px-2 py-2.5 text-center text-xs font-semibold">Azioni</th>
+                                    <th class="px-2 py-2 text-center text-xs font-semibold">Azioni</th>
                                 </tr>
                             </thead>
                             <tbody>${!filteredFatture.length ? `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => {
