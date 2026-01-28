@@ -2660,36 +2660,19 @@
 
                     <!-- AREA PRINCIPALE -->
                     <div class="flex-1 min-w-0">
-                        <!-- Header con Report Scadenze e Pulsanti Upload -->
-                        <div class="flex gap-3 mb-4">
-                            <!-- Report Scadenze -->
-                            <div class="flex-1">
+                        <!-- Contenitore flex: contenuto a sinistra, pulsanti a destra -->
+                        <div class="flex gap-3">
+                            <!-- CONTENUTO PRINCIPALE (tutto allineato) -->
+                            <div class="flex-1 min-w-0">
+                                <!-- Report Scadenze -->
                                 ${renderReportScadenze()}
-                            </div>
-                            
-                            <!-- Pulsanti Upload in verticale -->
-                            <div class="flex flex-col gap-1.5 flex-shrink-0">
-                                <button onclick="switchUploadMode('single')" class="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2 text-xs whitespace-nowrap">
-                                    <span>📄</span>
-                                    <span>Upload Singolo</span>
-                                </button>
-                                <button onclick="switchUploadMode('folder')" class="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 flex items-center space-x-2 text-xs whitespace-nowrap">
-                                    <span>📁</span>
-                                    <span>Upload Cartella</span>
-                                </button>
-                                <button onclick="openModalFatturaManuale()" class="px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-sm text-xs whitespace-nowrap">
-                                    <span>✏️</span>
-                                    <span>Inserimento Manuale</span>
-                                </button>
-                            </div>
-                        </div>
 
-                        ${state.loadingProgress.isLoading ? `
-                            <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div class="flex justify-between mb-2"><span class="text-sm font-medium text-blue-900">Caricamento...</span><span class="text-sm text-blue-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span></div>
-                                <div class="w-full bg-blue-200 rounded-full h-3"><div class="bg-blue-600 h-3 rounded-full" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div></div>
-                            </div>
-                        ` : ''}
+                                ${state.loadingProgress.isLoading ? `
+                                    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div class="flex justify-between mb-2"><span class="text-sm font-medium text-blue-900">Caricamento...</span><span class="text-sm text-blue-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span></div>
+                                        <div class="w-full bg-blue-200 rounded-full h-3"><div class="bg-blue-600 h-3 rounded-full" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div></div>
+                                    </div>
+                                ` : ''}
 
                         <!-- SEZIONE FATTURE MANUALI -->
                         ${state.fattureManuali.length > 0 ? `
