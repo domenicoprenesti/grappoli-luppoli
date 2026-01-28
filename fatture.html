@@ -2682,7 +2682,7 @@
                         <!-- Contenitore flex: contenuto a sinistra, pulsanti a destra -->
                         <div class="flex gap-3">
                             <!-- CONTENUTO PRINCIPALE (tutto allineato) -->
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1 min-w-0" style="overflow: visible;">
                                 <!-- Report Scadenze -->
                                 ${renderReportScadenze()}
 
@@ -2733,12 +2733,12 @@
                         ` : ''}
 
                         <!-- Filtri -->
-                        <div class="bg-white rounded-lg shadow p-4 mb-4">
+                        <div class="bg-white rounded-lg shadow p-4 mb-4 relative z-10" style="overflow: visible;">
                             <h3 class="font-bold mb-2 text-sm">Filtri</h3>
                             <div class="grid grid-cols-4 gap-2">
-                                <select onchange="applyFilter('invoiceYear', this.value)" class="px-2 py-1.5 border rounded text-sm"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
-                                <select onchange="applyFilter('invoiceMonth', this.value)" class="px-2 py-1.5 border rounded text-sm"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
-                                <select onchange="applyFilter('supplier', this.value)" class="px-2 py-1.5 border rounded text-sm"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
+                                <select onchange="applyFilter('invoiceYear', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
+                                <select onchange="applyFilter('invoiceMonth', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
+                                <select onchange="applyFilter('supplier', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
                                 <button onclick="clearFilters()" class="px-3 py-1.5 bg-gray-200 rounded hover:bg-gray-300 text-sm">Pulisci</button>
                             </div>
                         </div>
@@ -2837,6 +2837,9 @@
                             `;
                             }).join('')}</tbody>
                         </table>
+                    </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 </div>
