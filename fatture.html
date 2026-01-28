@@ -38,11 +38,7 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
-                    </div>
+                    <img src="data:image/png;base64,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" alt="Logo" class="w-10 h-10 rounded-lg">
                     <span class="text-lg font-bold">Grappoli & Luppoli</span>
                 </button>
                 
@@ -2635,6 +2631,7 @@
                                 </div>
                                 <div>
                                     <h1 class="text-base font-bold leading-tight">Gestione Fatture</h1>
+                                    <p class="text-xs text-gray-500">Con estrazione IVA e cancellazione</p>
                                 </div>
                             </div>
 
