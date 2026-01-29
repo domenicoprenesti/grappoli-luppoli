@@ -635,20 +635,43 @@
                 
                 console.log('Righe lette:', jsonData.length);
                 
+                // Helper: trova valore colonna case-insensitive
+                const getCol = (row, ...names) => {
+                    const keys = Object.keys(row);
+                    for (const name of names) {
+                        // Cerca esatto
+                        if (row[name] !== undefined) return row[name];
+                        // Cerca case-insensitive
+                        const found = keys.find(k => k.toLowerCase().trim() === name.toLowerCase().trim());
+                        if (found) return row[found];
+                    }
+                    return null;
+                };
+                
+                // Debug: mostra colonne del primo record
+                if (jsonData.length > 0) {
+                    console.log('Colonne Excel:', Object.keys(jsonData[0]));
+                    console.log('Primo record:', jsonData[0]);
+                    console.log('FATTURATO raw:', jsonData[0]['FATTURATO'], 'trovato con getCol:', getCol(jsonData[0], 'FATTURATO', 'Fatturato', 'fatturato'));
+                }
+                
                 // Map data to database format
                 const venditeData = jsonData.map(row => ({
-                    mese: row['Mese'] || null,
-                    sku_origine: row['SKU ORIGINE'] || null,
-                    nome: row['NOME'] || null,
-                    sku_conversione: row['SKU CONVERSIONE'] || null,
-                    id_settore: row['ID SETTORE'] || null,
-                    nome_univoco: row['NOME UNIVOCO'] || null,
-                    categoria: row['Categoria'] || null,
-                    prezzo: parseFloat(row['Prezzo']) || 0,
-                    prezzo_medio: parseFloat(row['Prezzo medio']) || 0,
-                    pezzi_venduti: parseFloat(row['Pezzi Venduti']) || 0,
-                    fatturato: parseFloat(row['FATTURATO']) || 0
+                    mese: getCol(row, 'Mese', 'MESE', 'mese') || null,
+                    sku_origine: getCol(row, 'SKU ORIGINE', 'SKU_ORIGINE', 'sku origine') || null,
+                    nome: getCol(row, 'NOME', 'Nome', 'nome') || null,
+                    sku_conversione: getCol(row, 'SKU CONVERSIONE', 'SKU_CONVERSIONE') || null,
+                    id_settore: getCol(row, 'ID SETTORE', 'ID_SETTORE', 'Settore', 'settore') || null,
+                    nome_univoco: getCol(row, 'NOME UNIVOCO', 'NOME_UNIVOCO') || null,
+                    categoria: getCol(row, 'Categoria', 'CATEGORIA', 'categoria') || null,
+                    prezzo: parseFloat(getCol(row, 'Prezzo', 'PREZZO', 'prezzo')) || 0,
+                    prezzo_medio: parseFloat(getCol(row, 'Prezzo medio', 'PREZZO MEDIO', 'prezzo_medio')) || 0,
+                    pezzi_venduti: parseFloat(getCol(row, 'Pezzi Venduti', 'PEZZI VENDUTI', 'pezzi_venduti', 'Pezzi')) || 0,
+                    fatturato: parseFloat(getCol(row, 'FATTURATO', 'Fatturato', 'fatturato')) || 0
                 })).filter(v => v.mese && v.nome);
+                
+                // Debug: mostra primi 3 record mappati
+                console.log('Primi 3 record mappati:', venditeData.slice(0, 3));
                 
                 console.log('Righe valide:', venditeData.length);
                 
