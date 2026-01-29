@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi Margini - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+            backdrop-filter: blur(10px);
+        }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+    </script>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
+                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
+                        <a href="ricavi.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Ricavi</a>
+                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium bg-purple-100 text-purple-700">Margini</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 pt-24 pb-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Analisi Margini per Aggregante</h1>
+            <p class="text-gray-600">Confronto Ricavi vs Costi per macro-categoria</p>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingProgress" class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-purple-900">Caricamento dati...</span>
+                <span id="progressText" class="text-sm text-purple-700">0%</span>
+            </div>
+            <div class="w-full bg-purple-200 rounded-full h-3">
+                <div id="progressBar" class="bg-purple-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+            <p id="progressDetail" class="text-xs text-gray-500 mt-2"></p>
+        </div>
+
+        <!-- Filtri -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="font-bold mb-4">🔍 Filtri Periodo</h3>
+            <div class="grid md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Anno</label>
+                    <select id="filterAnno" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                        <option value="">Tutti gli anni</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Mese</label>
+                    <select id="filterMese" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                        <option value="">Tutti i mesi</option>
+                        <option value="01">Gennaio</option>
+                        <option value="02">Febbraio</option>
+                        <option value="03">Marzo</option>
+                        <option value="04">Aprile</option>
+                        <option value="05">Maggio</option>
+                        <option value="06">Giugno</option>
+                        <option value="07">Luglio</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Settembre</option>
+                        <option value="10">Ottobre</option>
+                        <option value="11">Novembre</option>
+                        <option value="12">Dicembre</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Aggregante</label>
+                    <select id="filterAggregante" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                        <option value="">Tutti</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="clearFilters()" class="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Pulisci</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Ricavi Totali</p>
+                        <p id="kpiRicavi" class="text-2xl font-bold text-green-600">€0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Costi Totali</p>
+                        <p id="kpiCosti" class="text-2xl font-bold text-red-600">€0</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Margine Lordo</p>
+                        <p id="kpiMargine" class="text-2xl font-bold text-purple-600">€0</p>
+                        <p id="kpiMarginePerc" class="text-xs text-gray-500">0%</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Margine Medio</p>
+                        <p id="kpiMargineMedio" class="text-2xl font-bold text-blue-600">0%</p>
+                        <p class="text-xs text-gray-500">su ricavi</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafici Row 1 -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+            <!-- Grafico Margini per Aggregante -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">📊 Margini per Aggregante</h3>
+                <div class="h-80">
+                    <canvas id="chartMargini"></canvas>
+                </div>
+            </div>
+
+            <!-- Grafico Ricavi vs Costi -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">⚖️ Ricavi vs Costi per Aggregante</h3>
+                <div class="h-80">
+                    <canvas id="chartConfrontoRC"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafici Row 2 -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+            <!-- Trend Mensile Margine -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">📈 Trend Margine Mensile</h3>
+                <div class="h-80">
+                    <canvas id="chartTrendMargine"></canvas>
+                </div>
+            </div>
+
+            <!-- Distribuzione % Margine -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4">🎯 Distribuzione % Margine</h3>
+                <div class="h-80">
+                    <canvas id="chartDistribuzione"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella Dettaglio Aggreganti -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600">
+                <h3 class="text-lg font-bold text-white">📋 Dettaglio per Aggregante</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Aggregante</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Ricavi</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Costi</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine €</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine %</th>
+                            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabellaAggreganti" class="divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mappatura Categorie -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+            <!-- Mappatura Vendite -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600">
+                    <h3 class="text-lg font-bold text-white">🏷️ Mappatura Categorie Vendite → Aggregante</h3>
+                </div>
+                <div class="p-4">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Categoria Vendita</th>
+                                <th class="px-4 py-2 text-left">Aggregante</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappingVendite" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mappatura Prodotti -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 bg-gradient-to-r from-red-500 to-orange-600">
+                    <h3 class="text-lg font-bold text-white">🏷️ Mappatura Categorie Prodotti → Aggregante</h3>
+                </div>
+                <div class="p-4">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Categoria Prodotto</th>
+                                <th class="px-4 py-2 text-left">Aggregante</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappingProdotti" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Setup -->
+        <div id="setupInfo" class="hidden bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 mb-8">
+            <h3 class="text-lg font-bold text-yellow-800 mb-4">⚙️ Setup Aggreganti</h3>
+            <p class="text-yellow-700 mb-4">Gli aggreganti non sono ancora stati configurati nel database. Clicca il pulsante per crearli automaticamente.</p>
+            <button onclick="setupAggreganti()" class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium">
+                🔧 Crea Aggreganti nel Database
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const BATCH_SIZE = 500;
+
+        function logout() {
+            localStorage.removeItem('app_authenticated');
+            window.location.href = 'index.html';
+        }
+
+        // ===== DEFINIZIONE AGGREGANTI E MAPPATURE =====
+        const AGGREGANTI = [
+            { nome: 'Vino', colore: '#7C3AED', ordine: 1 },
+            { nome: 'Birra', colore: '#F59E0B', ordine: 2 },
+            { nome: 'Cibo', colore: '#EF4444', ordine: 3 },
+            { nome: 'Alcolici', colore: '#3B82F6', ordine: 4 },
+            { nome: 'Bevande', colore: '#10B981', ordine: 5 },
+            { nome: 'Miscellaneo', colore: '#6B7280', ordine: 6 }
+        ];
+
+        // Mappatura categorie VENDITE → Aggregante
+        const MAPPING_VENDITE = {
+            'Birra': 'Birra',
+            'Menu cibo': 'Cibo',
+            'Vino bottiglia mescita': 'Vino',
+            'Vino al calice': 'Vino',
+            'Drink': 'Alcolici',
+            'Menu fisso': 'Cibo',
+            'Vino  bottiglia asporto': 'Vino',
+            'Vino bottiglia asporto': 'Vino',
+            'Bibite': 'Bevande',
+            'Vetrina': 'Miscellaneo'
+        };
+
+        // Mappatura categorie PRODOTTI (fatture) → Aggregante
+        const MAPPING_PRODOTTI = {
+            'Vini': 'Vino',
+            'Birre': 'Birra',
+            'Spirits': 'Alcolici',
+            'Bevande': 'Bevande',
+            'Snacks': 'Cibo',
+            'Altro': 'Miscellaneo',
+            // Aggiungi altre mappature se necessario
+            'Liquori': 'Alcolici',
+            'Distillati': 'Alcolici',
+            'Amari': 'Alcolici',
+            'Cocktail': 'Alcolici',
+            'Acqua': 'Bevande',
+            'Succhi': 'Bevande',
+            'Soft Drink': 'Bevande',
+            'Alimentari': 'Cibo',
+            'Salumi': 'Cibo',
+            'Formaggi': 'Cibo'
+        };
+
+        // Dati globali
+        let allVendite = [];
+        let allProdotti = [];
+        let filteredData = { vendite: [], prodotti: [] };
+        let charts = {};
+
+        // ===== CARICAMENTO DATI =====
+        async function loadData() {
+            try {
+                updateProgress(0, 'Inizializzazione...');
+
+                // 1. Carica vendite
+                updateProgress(10, 'Caricamento vendite...');
+                const { count: countVendite } = await supabaseClient
+                    .from('vendite')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countVendite > 0) {
+                    const numBatchesV = Math.ceil(countVendite / BATCH_SIZE);
+                    allVendite = [];
+                    
+                    for (let i = 0; i < numBatchesV; i++) {
+                        const { data } = await supabaseClient
+                            .from('vendite')
+                            .select('*')
+                            .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                        
+                        if (data) allVendite = [...allVendite, ...data];
+                        updateProgress(10 + (i / numBatchesV * 30), `Vendite: ${allVendite.length}/${countVendite}`);
+                    }
+                }
+
+                // 2. Carica prodotti (costi da fatture)
+                updateProgress(45, 'Caricamento prodotti...');
+                const { count: countProdotti } = await supabaseClient
+                    .from('prodotti')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countProdotti > 0) {
+                    const numBatchesP = Math.ceil(countProdotti / BATCH_SIZE);
+                    allProdotti = [];
+                    
+                    for (let i = 0; i < numBatchesP; i++) {
+                        const { data } = await supabaseClient
+                            .from('prodotti')
+                            .select('id, nome, categoria, prezzo, prezzo_ivato, quantita, data_fattura')
+                            .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                        
+                        if (data) allProdotti = [...allProdotti, ...data];
+                        updateProgress(45 + (i / numBatchesP * 30), `Prodotti: ${allProdotti.length}/${countProdotti}`);
+                    }
+                }
+
+                updateProgress(80, 'Elaborazione dati...');
+                
+                // Popola filtri
+                populateFilters();
+                
+                // Mostra mappature
+                renderMappature();
+
+                updateProgress(90, 'Generazione grafici...');
+                
+                // Applica filtri e calcola
+                applyFilters();
+
+                updateProgress(100, 'Completato!');
+                setTimeout(() => {
+                    document.getElementById('loadingProgress').classList.add('hidden');
+                }, 500);
+
+            } catch (err) {
+                console.error('Errore caricamento:', err);
+                document.getElementById('progressDetail').textContent = '❌ Errore: ' + err.message;
+            }
+        }
+
+        function updateProgress(percent, detail) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').textContent = Math.round(percent) + '%';
+            document.getElementById('progressDetail').textContent = detail;
+        }
+
+        // ===== FILTRI =====
+        function populateFilters() {
+            // Estrai anni dalle vendite
+            const anniVendite = new Set();
+            allVendite.forEach(v => {
+                if (v.mese) {
+                    const year = v.mese.split('_')[0];
+                    if (year) anniVendite.add(year);
+                }
+            });
+            
+            // Estrai anni dai prodotti
+            allProdotti.forEach(p => {
+                if (p.data_fattura) {
+                    const year = p.data_fattura.substring(0, 4);
+                    if (year) anniVendite.add(year);
+                }
+            });
+
+            const selectAnno = document.getElementById('filterAnno');
+            selectAnno.innerHTML = '<option value="">Tutti gli anni</option>';
+            [...anniVendite].sort().reverse().forEach(anno => {
+                selectAnno.innerHTML += `<option value="${anno}">${anno}</option>`;
+            });
+
+            // Popola aggreganti
+            const selectAgg = document.getElementById('filterAggregante');
+            selectAgg.innerHTML = '<option value="">Tutti</option>';
+            AGGREGANTI.forEach(a => {
+                selectAgg.innerHTML += `<option value="${a.nome}">${a.nome}</option>`;
+            });
+        }
+
+        function applyFilters() {
+            const annoFilter = document.getElementById('filterAnno').value;
+            const meseFilter = document.getElementById('filterMese').value;
+            const aggFilter = document.getElementById('filterAggregante').value;
+
+            // Filtra vendite
+            filteredData.vendite = allVendite.filter(v => {
+                if (!v.mese) return false;
+                const [anno, mese] = v.mese.split('_');
+                
+                if (annoFilter && anno !== annoFilter) return false;
+                if (meseFilter && mese !== meseFilter) return false;
+                
+                const aggregante = getAggreganteVendita(v.categoria);
+                if (aggFilter && aggregante !== aggFilter) return false;
+                
+                return true;
+            });
+
+            // Filtra prodotti
+            filteredData.prodotti = allProdotti.filter(p => {
+                if (annoFilter || meseFilter) {
+                    if (!p.data_fattura) return false;
+                    const anno = p.data_fattura.substring(0, 4);
+                    const mese = p.data_fattura.substring(5, 7);
+                    
+                    if (annoFilter && anno !== annoFilter) return false;
+                    if (meseFilter && mese !== meseFilter) return false;
+                }
+                
+                const aggregante = getAggreganteProdotto(p.categoria);
+                if (aggFilter && aggregante !== aggFilter) return false;
+                
+                return true;
+            });
+
+            // Calcola e visualizza
+            calculateAndRender();
+        }
+
+        function clearFilters() {
+            document.getElementById('filterAnno').value = '';
+            document.getElementById('filterMese').value = '';
+            document.getElementById('filterAggregante').value = '';
+            applyFilters();
+        }
+
+        // ===== FUNZIONI HELPER =====
+        function getAggreganteVendita(categoria) {
+            if (!categoria) return 'Miscellaneo';
+            return MAPPING_VENDITE[categoria] || 'Miscellaneo';
+        }
+
+        function getAggreganteProdotto(categoria) {
+            if (!categoria) return 'Miscellaneo';
+            return MAPPING_PRODOTTI[categoria] || 'Miscellaneo';
+        }
+
+        function getAggreganteColor(nome) {
+            const agg = AGGREGANTI.find(a => a.nome === nome);
+            return agg ? agg.colore : '#6B7280';
+        }
+
+        // ===== CALCOLI E RENDERING =====
+        function calculateAndRender() {
+            // Calcola totali per aggregante
+            const dataPerAggregante = {};
+            
+            AGGREGANTI.forEach(a => {
+                dataPerAggregante[a.nome] = {
+                    ricavi: 0,
+                    costi: 0,
+                    margine: 0,
+                    marginePerc: 0
+                };
+            });
+
+            // Somma ricavi (vendite)
+            filteredData.vendite.forEach(v => {
+                const agg = getAggreganteVendita(v.categoria);
+                const fatturato = parseFloat(v.fatturato) || 0;
+                if (dataPerAggregante[agg]) {
+                    dataPerAggregante[agg].ricavi += fatturato;
+                }
+            });
+
+            // Somma costi (prodotti)
+            filteredData.prodotti.forEach(p => {
+                const agg = getAggreganteProdotto(p.categoria);
+                const costo = (parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0) * (parseFloat(p.quantita) || 0);
+                if (dataPerAggregante[agg]) {
+                    dataPerAggregante[agg].costi += costo;
+                }
+            });
+
+            // Calcola margini
+            let totaleRicavi = 0;
+            let totaleCosti = 0;
+            
+            Object.keys(dataPerAggregante).forEach(agg => {
+                const d = dataPerAggregante[agg];
+                d.margine = d.ricavi - d.costi;
+                d.marginePerc = d.ricavi > 0 ? (d.margine / d.ricavi * 100) : 0;
+                totaleRicavi += d.ricavi;
+                totaleCosti += d.costi;
+            });
+
+            const totaleMargine = totaleRicavi - totaleCosti;
+            const marginePercTotale = totaleRicavi > 0 ? (totaleMargine / totaleRicavi * 100) : 0;
+
+            // Aggiorna KPI
+            document.getElementById('kpiRicavi').textContent = '€' + totaleRicavi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiCosti').textContent = '€' + totaleCosti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiMargine').textContent = '€' + totaleMargine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiMargine').className = `text-2xl font-bold ${totaleMargine >= 0 ? 'text-purple-600' : 'text-red-600'}`;
+            document.getElementById('kpiMarginePerc').textContent = marginePercTotale.toFixed(1) + '% su ricavi';
+            document.getElementById('kpiMargineMedio').textContent = marginePercTotale.toFixed(1) + '%';
+
+            // Aggiorna grafici
+            updateCharts(dataPerAggregante);
+            
+            // Aggiorna tabella
+            updateTabella(dataPerAggregante);
+        }
+
+        // ===== GRAFICI =====
+        function updateCharts(data) {
+            const labels = AGGREGANTI.map(a => a.nome);
+            const colors = AGGREGANTI.map(a => a.colore);
+            
+            const ricavi = labels.map(l => data[l]?.ricavi || 0);
+            const costi = labels.map(l => data[l]?.costi || 0);
+            const margini = labels.map(l => data[l]?.margine || 0);
+            const marginiPerc = labels.map(l => data[l]?.marginePerc || 0);
+
+            // Distruggi grafici esistenti
+            Object.values(charts).forEach(c => c?.destroy());
+
+            // 1. Grafico Margini per Aggregante (bar orizzontale)
+            const ctx1 = document.getElementById('chartMargini').getContext('2d');
+            charts.margini = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Margine €',
+                        data: margini,
+                        backgroundColor: margini.map(m => m >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
+                        borderColor: margini.map(m => m >= 0 ? '#10B981' : '#EF4444'),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => '€' + ctx.raw.toLocaleString('it-IT', { minimumFractionDigits: 0 })
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                callback: v => '€' + (v/1000).toFixed(0) + 'K'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 2. Grafico Confronto Ricavi vs Costi
+            const ctx2 = document.getElementById('chartConfrontoRC').getContext('2d');
+            charts.confronto = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Ricavi',
+                            data: ricavi,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: '#10B981',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Costi',
+                            data: costi,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: '#EF4444',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': €' + ctx.raw.toLocaleString('it-IT', { minimumFractionDigits: 0 })
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: v => '€' + (v/1000).toFixed(0) + 'K'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Trend Mensile Margine
+            const trendData = calculateTrendMensile();
+            const ctx3 = document.getElementById('chartTrendMargine').getContext('2d');
+            charts.trend = new Chart(ctx3, {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: [
+                        {
+                            label: 'Ricavi',
+                            data: trendData.ricavi,
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Costi',
+                            data: trendData.costi,
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Margine',
+                            data: trendData.margini,
+                            borderColor: '#7C3AED',
+                            backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': €' + ctx.raw.toLocaleString('it-IT', { minimumFractionDigits: 0 })
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: v => '€' + (v/1000).toFixed(0) + 'K'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 4. Distribuzione % Margine (doughnut)
+            const ctx4 = document.getElementById('chartDistribuzione').getContext('2d');
+            charts.distribuzione = new Chart(ctx4, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: marginiPerc.map(m => Math.max(0, m)),
+                        backgroundColor: colors.map(c => c + 'CC'),
+                        borderColor: colors,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.label + ': ' + ctx.raw.toFixed(1) + '%'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculateTrendMensile() {
+            const mesiMap = {};
+
+            // Aggrega vendite per mese
+            filteredData.vendite.forEach(v => {
+                if (!v.mese) return;
+                const mese = v.mese; // formato: 2024_01
+                if (!mesiMap[mese]) mesiMap[mese] = { ricavi: 0, costi: 0 };
+                mesiMap[mese].ricavi += parseFloat(v.fatturato) || 0;
+            });
+
+            // Aggrega costi per mese
+            filteredData.prodotti.forEach(p => {
+                if (!p.data_fattura) return;
+                const mese = p.data_fattura.substring(0, 4) + '_' + p.data_fattura.substring(5, 7);
+                if (!mesiMap[mese]) mesiMap[mese] = { ricavi: 0, costi: 0 };
+                const costo = (parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0) * (parseFloat(p.quantita) || 0);
+                mesiMap[mese].costi += costo;
+            });
+
+            // Ordina e prepara dati
+            const mesiOrdinati = Object.keys(mesiMap).sort();
+            const labels = mesiOrdinati.map(m => {
+                const [anno, mese] = m.split('_');
+                const mesiNomi = ['', 'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+                return mesiNomi[parseInt(mese)] + ' ' + anno.substring(2);
+            });
+
+            return {
+                labels: labels.slice(-12), // Ultimi 12 mesi
+                ricavi: mesiOrdinati.slice(-12).map(m => mesiMap[m].ricavi),
+                costi: mesiOrdinati.slice(-12).map(m => mesiMap[m].costi),
+                margini: mesiOrdinati.slice(-12).map(m => mesiMap[m].ricavi - mesiMap[m].costi)
+            };
+        }
+
+        // ===== TABELLA =====
+        function updateTabella(data) {
+            const tbody = document.getElementById('tabellaAggreganti');
+            
+            // Ordina per margine decrescente
+            const sorted = AGGREGANTI.map(a => ({
+                nome: a.nome,
+                colore: a.colore,
+                ...data[a.nome]
+            })).sort((a, b) => b.margine - a.margine);
+
+            tbody.innerHTML = sorted.map(row => {
+                const isPositive = row.margine >= 0;
+                const barWidth = Math.min(100, Math.abs(row.marginePerc));
+                const barColor = isPositive ? 'bg-green-500' : 'bg-red-500';
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full mr-3" style="background-color: ${row.colore}"></div>
+                                <span class="font-medium">${row.nome}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right font-medium text-green-600">
+                            €${row.ricavi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </td>
+                        <td class="px-6 py-4 text-right font-medium text-red-600">
+                            €${row.costi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </td>
+                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
+                            ${isPositive ? '+' : ''}€${row.margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </td>
+                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
+                            ${row.marginePerc.toFixed(1)}%
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="${barColor} h-4 rounded-full transition-all" style="width: ${barWidth}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ===== MAPPATURE =====
+        function renderMappature() {
+            // Mappatura Vendite
+            const tbodyVendite = document.getElementById('mappingVendite');
+            const categorieVendite = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))].sort();
+            
+            tbodyVendite.innerHTML = categorieVendite.map(cat => {
+                const agg = getAggreganteVendita(cat);
+                const color = getAggreganteColor(agg);
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">${cat}</td>
+                        <td class="px-4 py-2">
+                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${color}20; color: ${color}">
+                                ${agg}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Mappatura Prodotti
+            const tbodyProdotti = document.getElementById('mappingProdotti');
+            const categorieProdotti = [...new Set(allProdotti.map(p => p.categoria).filter(Boolean))].sort();
+            
+            tbodyProdotti.innerHTML = categorieProdotti.map(cat => {
+                const agg = getAggreganteProdotto(cat);
+                const color = getAggreganteColor(agg);
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">${cat}</td>
+                        <td class="px-4 py-2">
+                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${color}20; color: ${color}">
+                                ${agg}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ===== SETUP AGGREGANTI NEL DATABASE =====
+        async function setupAggreganti() {
+            try {
+                // Verifica se esistono già
+                const { data: existing } = await supabaseClient
+                    .from('aggregante_prodotto')
+                    .select('nome');
+                
+                const existingNames = existing ? existing.map(e => e.nome) : [];
+                
+                // Inserisci solo quelli mancanti
+                const toInsert = AGGREGANTI.filter(a => !existingNames.includes(a.nome));
+                
+                if (toInsert.length === 0) {
+                    alert('✅ Tutti gli aggreganti sono già presenti nel database!');
+                    return;
+                }
+                
+                const { error } = await supabaseClient
+                    .from('aggregante_prodotto')
+                    .insert(toInsert);
+                
+                if (error) throw error;
+                
+                alert(`✅ Creati ${toInsert.length} aggreganti: ${toInsert.map(a => a.nome).join(', ')}`);
+                document.getElementById('setupInfo').classList.add('hidden');
+                
+            } catch (err) {
+                console.error('Errore setup:', err);
+                alert('❌ Errore: ' + err.message);
+            }
+        }
+
+        // ===== INIT =====
+        loadData();
+        console.log('✅ Pagina Margini caricata');
+    </script>
+</body>
+</html>
