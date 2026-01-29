@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Vendite - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        .filter-input {
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.375rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            outline: none;
+        }
+        .filter-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+        .filter-input:focus { background: rgba(255, 255, 255, 0.25); border-color: rgba(255, 255, 255, 0.5); }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+    </script>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <img src="data:image/png;base64,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" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium bg-green-100 text-green-700">Vendite</a>
+                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">💰 Gestione Vendite & Ricavi</h1>
+                <p class="text-gray-600">Analisi fatturato, vendite per categoria e trend mensili</p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="openImportModal()" class="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <span class="font-semibold">Importa Excel</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Progress -->
+        <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-green-900">Caricamento vendite...</span>
+                <span id="progressText" class="text-sm text-green-700">0 / 0</span>
+            </div>
+            <div class="w-full bg-green-200 rounded-full h-3">
+                <div id="progressBar" class="bg-green-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-green-500">
+                <p class="text-xs text-gray-600 mb-1">Fatturato Totale</p>
+                <p id="kpiFatturato" class="text-2xl font-bold text-green-600">€0</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500">
+                <p class="text-xs text-gray-600 mb-1">Pezzi Venduti</p>
+                <p id="kpiPezzi" class="text-2xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-purple-500">
+                <p class="text-xs text-gray-600 mb-1">Prezzo Medio</p>
+                <p id="kpiPrezzoMedio" class="text-2xl font-bold text-purple-600">€0</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-orange-500">
+                <p class="text-xs text-gray-600 mb-1">Prodotti Unici</p>
+                <p id="kpiProdotti" class="text-2xl font-bold text-orange-600">0</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-pink-500">
+                <p class="text-xs text-gray-600 mb-1">Categorie</p>
+                <p id="kpiCategorie" class="text-2xl font-bold text-pink-600">0</p>
+            </div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-teal-500">
+                <p class="text-xs text-gray-600 mb-1">Mesi Dati</p>
+                <p id="kpiMesi" class="text-2xl font-bold text-teal-600">0</p>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid lg:grid-cols-2 gap-6 mb-8">
+            <!-- Monthly Trend Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">📈 Trend Fatturato Mensile</h3>
+                <div class="h-72">
+                    <canvas id="chartTrendMensile"></canvas>
+                </div>
+            </div>
+            
+            <!-- Category Breakdown Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">🥧 Fatturato per Categoria</h3>
+                <div class="h-72">
+                    <canvas id="chartCategorie"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Year Comparison -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">📊 Confronto Annuale</h3>
+            <div class="h-80">
+                <canvas id="chartConfrontoAnnuale"></canvas>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="font-bold mb-4">🔍 Filtri</h3>
+            <div class="grid md:grid-cols-5 gap-4">
+                <select id="filterAnno" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutti gli anni</option>
+                </select>
+                <select id="filterMese" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutti i mesi</option>
+                    <option value="01">Gennaio</option>
+                    <option value="02">Febbraio</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Aprile</option>
+                    <option value="05">Maggio</option>
+                    <option value="06">Giugno</option>
+                    <option value="07">Luglio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Settembre</option>
+                    <option value="10">Ottobre</option>
+                    <option value="11">Novembre</option>
+                    <option value="12">Dicembre</option>
+                </select>
+                <select id="filterCategoria" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutte le categorie</option>
+                </select>
+                <select id="filterSettore" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
+                    <option value="">Tutti i settori</option>
+                </select>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Pulisci Filtri</button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white flex justify-between items-center">
+                <h3 class="font-bold">Dettaglio Vendite</h3>
+                <div class="flex items-center space-x-4">
+                    <span id="tableInfo" class="text-sm opacity-90">0 righe</span>
+                    <button onclick="exportToExcel()" class="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 text-sm font-medium flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span>Esporta</span>
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Mese</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Prodotto</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Categoria</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Settore</th>
+                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Prezzo</th>
+                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Pezzi</th>
+                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Fatturato</th>
+                        </tr>
+                    </thead>
+                    <tbody id="venditeTableBody" class="divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">📥 Importa Dati Vendite</h2>
+                <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="border-2 border-dashed border-green-300 rounded-xl p-12 text-center hover:border-green-500 cursor-pointer transition-colors" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)">
+                <svg class="w-16 h-16 mx-auto mb-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-xl font-bold text-green-700 mb-2">Carica File Excel</p>
+                <p class="text-sm text-gray-600 mb-3">Seleziona file .xlsx o .csv con dati vendite</p>
+                <p class="text-xs text-green-600 font-medium">✓ Formato atteso: Mese, Nome, Categoria, Prezzo, Pezzi Venduti, Fatturato</p>
+            </div>
+
+            <div id="importProgress" class="hidden mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-medium text-green-900">Importazione in corso...</span>
+                    <span id="importProgressText" class="text-sm text-green-700">0 / 0</span>
+                </div>
+                <div class="w-full bg-green-200 rounded-full h-3">
+                    <div id="importProgressBar" class="bg-green-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                <p class="text-sm text-yellow-800">
+                    <strong>💡 Suggerimento:</strong> Il file deve contenere colonne: Mese, NOME, Categoria, Prezzo, Pezzi Venduti, FATTURATO. I dati esistenti verranno sovrascritti.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const BATCH_SIZE = 500;
+
+        let allVendite = [];
+        let chartTrend = null;
+        let chartCategorie = null;
+        let chartConfronto = null;
+
+        function logout() {
+            localStorage.removeItem('app_authenticated');
+            window.location.href = 'index.html';
+        }
+
+        // ===== LOAD DATA =====
+        async function loadVendite() {
+            try {
+                showLoading(true);
+                
+                const { count, error: countError } = await supabaseClient
+                    .from('vendite')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (countError) {
+                    console.log('Tabella vendite non trovata, creazione necessaria');
+                    showLoading(false);
+                    updateKPIs();
+                    renderTable([]);
+                    return;
+                }
+                
+                const total = count || 0;
+                if (total === 0) {
+                    showLoading(false);
+                    updateKPIs();
+                    renderTable([]);
+                    return;
+                }
+                
+                const numBatches = Math.ceil(total / BATCH_SIZE);
+                allVendite = [];
+                
+                for (let i = 0; i < numBatches; i++) {
+                    const { data, error } = await supabaseClient
+                        .from('vendite')
+                        .select('*')
+                        .order('mese', { ascending: false })
+                        .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                    
+                    if (error) throw error;
+                    if (data) allVendite = [...allVendite, ...data];
+                    
+                    updateLoadingProgress(allVendite.length, total);
+                }
+                
+                showLoading(false);
+                updateKPIs();
+                updateFilters();
+                applyFilters();
+                updateCharts();
+                
+            } catch (err) {
+                console.error('Errore caricamento vendite:', err);
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingProgress').classList.toggle('hidden', !show);
+        }
+
+        function updateLoadingProgress(loaded, total) {
+            document.getElementById('progressText').textContent = `${loaded} / ${total}`;
+            document.getElementById('progressBar').style.width = `${(loaded / total * 100).toFixed(1)}%`;
+        }
+
+        // ===== KPIs =====
+        function updateKPIs() {
+            const fatturato = allVendite.reduce((sum, v) => sum + (v.fatturato || 0), 0);
+            const pezzi = allVendite.reduce((sum, v) => sum + (v.pezzi_venduti || 0), 0);
+            const prezzoMedio = pezzi > 0 ? fatturato / pezzi : 0;
+            const prodottiUnici = new Set(allVendite.map(v => v.nome)).size;
+            const categorie = new Set(allVendite.map(v => v.categoria).filter(Boolean)).size;
+            const mesi = new Set(allVendite.map(v => v.mese)).size;
+            
+            document.getElementById('kpiFatturato').textContent = `€${fatturato.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('kpiPezzi').textContent = pezzi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiPrezzoMedio').textContent = `€${prezzoMedio.toFixed(2)}`;
+            document.getElementById('kpiProdotti').textContent = prodottiUnici.toLocaleString('it-IT');
+            document.getElementById('kpiCategorie').textContent = categorie;
+            document.getElementById('kpiMesi').textContent = mesi;
+        }
+
+        // ===== FILTERS =====
+        function updateFilters() {
+            // Years
+            const anni = [...new Set(allVendite.map(v => v.mese?.split('_')[0]).filter(Boolean))].sort().reverse();
+            const filterAnno = document.getElementById('filterAnno');
+            filterAnno.innerHTML = '<option value="">Tutti gli anni</option>' + anni.map(a => `<option value="${a}">${a}</option>`).join('');
+            
+            // Categories
+            const categorie = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))].sort();
+            const filterCategoria = document.getElementById('filterCategoria');
+            filterCategoria.innerHTML = '<option value="">Tutte le categorie</option>' + categorie.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Sectors
+            const settori = [...new Set(allVendite.map(v => v.id_settore).filter(Boolean))].sort();
+            const filterSettore = document.getElementById('filterSettore');
+            filterSettore.innerHTML = '<option value="">Tutti i settori</option>' + settori.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        function applyFilters() {
+            const anno = document.getElementById('filterAnno').value;
+            const mese = document.getElementById('filterMese').value;
+            const categoria = document.getElementById('filterCategoria').value;
+            const settore = document.getElementById('filterSettore').value;
+            
+            let filtered = allVendite;
+            
+            if (anno) filtered = filtered.filter(v => v.mese?.startsWith(anno));
+            if (mese) filtered = filtered.filter(v => v.mese?.endsWith('_' + mese));
+            if (categoria) filtered = filtered.filter(v => v.categoria === categoria);
+            if (settore) filtered = filtered.filter(v => v.id_settore === settore);
+            
+            renderTable(filtered);
+            updateFilteredKPIs(filtered);
+        }
+
+        function updateFilteredKPIs(filtered) {
+            const fatturato = filtered.reduce((sum, v) => sum + (v.fatturato || 0), 0);
+            const pezzi = filtered.reduce((sum, v) => sum + (v.pezzi_venduti || 0), 0);
+            
+            document.getElementById('tableInfo').textContent = `${filtered.length.toLocaleString('it-IT')} righe | €${fatturato.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        }
+
+        function clearFilters() {
+            document.getElementById('filterAnno').value = '';
+            document.getElementById('filterMese').value = '';
+            document.getElementById('filterCategoria').value = '';
+            document.getElementById('filterSettore').value = '';
+            applyFilters();
+        }
+
+        // ===== TABLE =====
+        function renderTable(data) {
+            const tbody = document.getElementById('venditeTableBody');
+            
+            if (!data.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="text-lg font-medium">Nessun dato vendite</p>
+                            <p class="text-sm mt-1">Importa un file Excel per iniziare</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Limit to 500 rows for performance
+            const displayData = data.slice(0, 500);
+            
+            tbody.innerHTML = displayData.map((v, idx) => {
+                const meseDisplay = v.mese ? v.mese.replace('_', '/') : '-';
+                return `
+                    <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-green-50 transition-colors">
+                        <td class="px-4 py-2 font-medium text-gray-900">${meseDisplay}</td>
+                        <td class="px-4 py-2 text-gray-700 max-w-xs truncate" title="${v.nome || ''}">${v.nome || '-'}</td>
+                        <td class="px-4 py-2">
+                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(v.categoria)}">${v.categoria || '-'}</span>
+                        </td>
+                        <td class="px-4 py-2 text-gray-600 text-xs">${v.id_settore || '-'}</td>
+                        <td class="px-4 py-2 text-right">€${(v.prezzo || 0).toFixed(2)}</td>
+                        <td class="px-4 py-2 text-right font-medium">${(v.pezzi_venduti || 0).toLocaleString('it-IT')}</td>
+                        <td class="px-4 py-2 text-right font-bold text-green-600">€${(v.fatturato || 0).toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            if (data.length > 500) {
+                tbody.innerHTML += `
+                    <tr class="bg-yellow-50">
+                        <td colspan="7" class="px-4 py-3 text-center text-yellow-700 text-sm">
+                            ⚠️ Mostrate solo le prime 500 righe su ${data.length.toLocaleString('it-IT')} totali. Usa i filtri per raffinare.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function getCategoryColor(categoria) {
+            const colors = {
+                'Birra': 'bg-amber-100 text-amber-800',
+                'Menu cibo': 'bg-orange-100 text-orange-800',
+                'Vino bottiglia mescita': 'bg-purple-100 text-purple-800',
+                'Vino al calice': 'bg-pink-100 text-pink-800',
+                'Drink': 'bg-blue-100 text-blue-800',
+                'Menu fisso': 'bg-red-100 text-red-800',
+                'Vino  bottiglia asporto': 'bg-indigo-100 text-indigo-800',
+                'Bibite': 'bg-cyan-100 text-cyan-800',
+                'Vetrina': 'bg-gray-100 text-gray-800'
+            };
+            return colors[categoria] || 'bg-gray-100 text-gray-800';
+        }
+
+        // ===== CHARTS =====
+        function updateCharts() {
+            updateTrendChart();
+            updateCategorieChart();
+            updateConfrontoChart();
+        }
+
+        function updateTrendChart() {
+            const monthlyData = {};
+            allVendite.forEach(v => {
+                if (!v.mese) return;
+                if (!monthlyData[v.mese]) monthlyData[v.mese] = 0;
+                monthlyData[v.mese] += v.fatturato || 0;
+            });
+            
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const labels = sortedMonths.map(m => m.replace('_', '/'));
+            const data = sortedMonths.map(m => monthlyData[m]);
+            
+            const ctx = document.getElementById('chartTrendMensile').getContext('2d');
+            
+            if (chartTrend) chartTrend.destroy();
+            
+            chartTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Fatturato',
+                        data: data,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => '€' + value.toLocaleString('it-IT')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCategorieChart() {
+            const catData = {};
+            allVendite.forEach(v => {
+                const cat = v.categoria || 'Altro';
+                if (!catData[cat]) catData[cat] = 0;
+                catData[cat] += v.fatturato || 0;
+            });
+            
+            const sorted = Object.entries(catData).sort((a, b) => b[1] - a[1]);
+            const labels = sorted.map(([k]) => k);
+            const data = sorted.map(([, v]) => v);
+            
+            const colors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#84CC16', '#6366F1'];
+            
+            const ctx = document.getElementById('chartCategorie').getContext('2d');
+            
+            if (chartCategorie) chartCategorie.destroy();
+            
+            chartCategorie = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateConfrontoChart() {
+            const yearlyData = {};
+            allVendite.forEach(v => {
+                if (!v.mese) return;
+                const [anno, mese] = v.mese.split('_');
+                if (!yearlyData[anno]) yearlyData[anno] = {};
+                if (!yearlyData[anno][mese]) yearlyData[anno][mese] = 0;
+                yearlyData[anno][mese] += v.fatturato || 0;
+            });
+            
+            const years = Object.keys(yearlyData).sort();
+            const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+            const monthLabels = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            
+            const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
+            
+            const datasets = years.map((year, idx) => ({
+                label: year,
+                data: months.map(m => yearlyData[year]?.[m] || 0),
+                borderColor: colors[idx % colors.length],
+                backgroundColor: colors[idx % colors.length] + '20',
+                fill: false,
+                tension: 0.4
+            }));
+            
+            const ctx = document.getElementById('chartConfrontoAnnuale').getContext('2d');
+            
+            if (chartConfronto) chartConfronto.destroy();
+            
+            chartConfronto = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => '€' + value.toLocaleString('it-IT')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== IMPORT =====
+        window.openImportModal = function() {
+            document.getElementById('importModal').classList.remove('hidden');
+        };
+
+        window.closeImportModal = function() {
+            document.getElementById('importModal').classList.add('hidden');
+        };
+
+        window.handleFileUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const progressDiv = document.getElementById('importProgress');
+            const progressBar = document.getElementById('importProgressBar');
+            const progressText = document.getElementById('importProgressText');
+            
+            progressDiv.classList.remove('hidden');
+            progressText.textContent = 'Lettura file...';
+            progressBar.style.width = '10%';
+            
+            try {
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data);
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet);
+                
+                console.log('Righe lette:', jsonData.length);
+                
+                // Map data to database format
+                const venditeData = jsonData.map(row => ({
+                    mese: row['Mese'] || null,
+                    sku_origine: row['SKU ORIGINE'] || null,
+                    nome: row['NOME'] || null,
+                    sku_conversione: row['SKU CONVERSIONE'] || null,
+                    id_settore: row['ID SETTORE'] || null,
+                    nome_univoco: row['NOME UNIVOCO'] || null,
+                    categoria: row['Categoria'] || null,
+                    prezzo: parseFloat(row['Prezzo']) || 0,
+                    prezzo_medio: parseFloat(row['Prezzo medio']) || 0,
+                    pezzi_venduti: parseFloat(row['Pezzi Venduti']) || 0,
+                    fatturato: parseFloat(row['FATTURATO']) || 0
+                })).filter(v => v.mese && v.nome);
+                
+                console.log('Righe valide:', venditeData.length);
+                
+                // Clear existing data
+                progressText.textContent = 'Pulizia dati esistenti...';
+                progressBar.style.width = '20%';
+                
+                await supabaseClient.from('vendite').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                
+                // Insert in batches
+                const totalRows = venditeData.length;
+                let inserted = 0;
+                
+                for (let i = 0; i < venditeData.length; i += BATCH_SIZE) {
+                    const batch = venditeData.slice(i, i + BATCH_SIZE);
+                    
+                    const { error } = await supabaseClient.from('vendite').insert(batch);
+                    if (error) {
+                        console.error('Errore inserimento batch:', error);
+                        throw error;
+                    }
+                    
+                    inserted += batch.length;
+                    const progress = 20 + (inserted / totalRows * 80);
+                    progressBar.style.width = `${progress.toFixed(0)}%`;
+                    progressText.textContent = `${inserted} / ${totalRows}`;
+                    
+                    await new Promise(r => setTimeout(r, 100));
+                }
+                
+                progressText.textContent = '✅ Importazione completata!';
+                progressBar.style.width = '100%';
+                
+                setTimeout(() => {
+                    closeImportModal();
+                    progressDiv.classList.add('hidden');
+                    loadVendite();
+                }, 1500);
+                
+            } catch (err) {
+                console.error('Errore importazione:', err);
+                progressText.textContent = '❌ Errore: ' + err.message;
+                progressBar.classList.add('bg-red-600');
+                progressBar.classList.remove('bg-green-600');
+            }
+        };
+
+        // ===== EXPORT =====
+        window.exportToExcel = function() {
+            const anno = document.getElementById('filterAnno').value;
+            const mese = document.getElementById('filterMese').value;
+            const categoria = document.getElementById('filterCategoria').value;
+            const settore = document.getElementById('filterSettore').value;
+            
+            let filtered = allVendite;
+            if (anno) filtered = filtered.filter(v => v.mese?.startsWith(anno));
+            if (mese) filtered = filtered.filter(v => v.mese?.endsWith('_' + mese));
+            if (categoria) filtered = filtered.filter(v => v.categoria === categoria);
+            if (settore) filtered = filtered.filter(v => v.id_settore === settore);
+            
+            const exportData = filtered.map(v => ({
+                'Mese': v.mese,
+                'Prodotto': v.nome,
+                'Categoria': v.categoria,
+                'Settore': v.id_settore,
+                'Prezzo': v.prezzo,
+                'Pezzi Venduti': v.pezzi_venduti,
+                'Fatturato': v.fatturato
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Vendite');
+            XLSX.writeFile(wb, `vendite_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+        };
+
+        // Initialize
+        loadVendite();
+        console.log('✅ Gestione Vendite caricata');
+    </script>
+</body>
+</html>
