@@ -6,23 +6,10 @@
     <title>Gestione Vendite - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        .filter-input {
-            width: 100%;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 0.375rem;
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            outline: none;
-        }
-        .filter-input::placeholder { color: rgba(255, 255, 255, 0.6); }
-        .filter-input:focus { background: rgba(255, 255, 255, 0.25); border-color: rgba(255, 255, 255, 0.5); }
-        .stat-card { transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-2px); }
+        .table-compact th, .table-compact td { padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+        .truncate-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -37,15 +24,20 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfqARwTDA4JySzxAAAHr0lEQVRYw+2Ye1BVxx3Hf7t7XvcBXBSuCEUqBCGAD4yPGp2IFUs1CEbFR6LVZiSN1WjH2jo6Jn0kHTPVaMdWO23TNGqnie0kTs00dsaqMQoGoijUVzUEUQjhcd/33PPc3f5xScZJEbDTGdMZ9q/f2bN79rP7+/5+u3uQq3AafJkKftAAQ0BDQENAQ0APGmAI6H8MxDn/ghG371Xfv91nr8ECxfsIhNiUMsYwxpxzyhgAYIwBAAEghOKNKWOcc0Iw55xSihDCCGGMbZsyxggh8TkghO427gMo3gcAwqGQJyFBlkRd1xFCTofCKNV1HRNi2bZpGBhjxpjToWCEYmoMY+x2uXRNsymNhsLJnkRZFNVwJD6HwRQieTP/sxYhhBDSNH3ruurvrqiqKC251txSXJC37ydbZ0wubr7ddvvjW7OmT50xeWL96ZqFlfP2bN88+9GpHT2+769ZuWbJguKiglO19dvWVz+zbNHS8rJOfyDdm1JRWnL6xPsFhfnrVy49drpGkaQ+l6hvcIxxNBypmFNSXJi/5Lktvzz4pi8QzMnKfP2toydr61cvroBQeHVV5XOrloMgjPSm/unosT2v/XHDquWKJK3a/DxC8OuXtntThi1et3njiz+vXrZwQmF+gssFAA5FTktNAcbhM3d/oQh91iIEYFnZWZk1tfW6PzB7+tSNq5+sb7q8eG6pKAgV1RunzimJxmLHTtdUVVW23G57afP6qzebXz18pHrZwkO7f1Z74ZKqaXdablttHTe6etraOzLSvG132qHHZ2g64yyui/twGXDOBaG9o3PLujWK20Uwtqnd2eNvuHI9FIm6nI7y2TMzRqQCoMnji0KRSGv7J+t/tKP1TnvV42XP797/xtvv3Grv3LrhWdGT8OTSJ1wu54mauiXlZabbleZNHZWe9s7J92VJ6lPXqM8jLOccY6xpWlZG+oonyjVd33/wcG72KEppW0dX+eyZ3f7gmQ8v6Ib52JRigQifdvdcb77lcChfmzD2g0tNls1syxibmzmvdK4vGDrwl7dThycvmjtHFsULl6/FdP180xVCSN/OudeZOs5kmqYZiQJCTk+SaVicgygLuhZ7OEP6qtdV85GtqpqAkWGYQIjDoVDL4kRM9wgl+XJUM967EqAM29gdMyjTosC4oCgII0lROOeoVxyD0FA80BhjkiQqqSkIIGbYRVlOgSCHCJLgIBi8iUgRbUtWLFOfNuWRlGGes/UNqm1jTDKSsWkzWZJmjk0TMPij9s0u2hkeJguIMQYAlDF0X6K+i4kDp5rF89OE0SnYZmAzGOYEw4awxhNk1B0yD+76aWXprGAkwjksWrvp/OXr3kTPJ0HqlNGlVmvGGGm4G49IwnXNVlvAJji+Luheg/aXr+Lp0bB51nCSORxjBDblls3DOtdM3hHmCoo9teDxFQvKd7168PjZulHpaTu3/WCkRwxr1KJcIiAKEIqx5i4bOEzOFu+NMTgghBBlPMmJRqcSt4xtBk4ZKSKyKXRH2fkWm2BW9uh4APAFQsmJCbfa2gvHPDQpN6WuWfer3K+y6Q9JDgkNc+NWH/VFWJID24z/90BxzdkUNJPHTB7WOOegGvxfn9oXWy2CQTWhs7MtpBqJbufLv/nDmQ8v+oPBYCiIELnVQzkHn8owAo8T53iFOwGqGpwMtEion5tr3GWMcUIwcC4JgDFyiKgrTGURWxSSneiR0cqOH+8clZXHOdiWtusXLx49WdsSkAlmpg0C5t5EgoAzDu1BJmJA6PN98v6BoDf4kWlYCAERJdu0GKWKS9E1nWBsmtQhWqJIZk6f5UlKOFVTq6v+sIpMSjHBQKnicmmqThQZATDbkCQZDUR0j0z9+WtCopHIonnfyMoYeeViY8lj00qmTaqrqVv79FOJCe4XNj5TVVFx806X26lUlpaMyc45fq5p0riHd27btHT+NzXT6vb5135r6bnzDS6HvOHbK5qu3zAsq/+dv7+wj+saTCs7MyMa00A30kekFuRmg2EW5ubIkuQPhff/6ncv/3BjKBp9/a2j4/Jyd2//Xkpy8r5Dhzu6e17ZtikpwZ0z6iscEMZ4YmG+QEg/R7NBAQFwQIgypqoqhCOUMl3TIRSyTVPT9aIxOVueffr8P696EhPWr1zW0dUdiERD3b73/voucP73d49PGl8UCIZoJKoJgk0pH2iwwQD1Ont8QV5h2ddVTRtXkDdt4fzRWZlnGxr9wfDeA280NjTu3fFCzYVLr/35iGXZR367Z3n1qm6/v7Jy3t4Db65aNH/mrBlqTEP95sPBaggBWBxEUSguyp8yruhvp850+QLfWb5436HDjdduRmOxE6fOEKcz0e36x9m69s4uzvm5hsbF8+ZMLMh/5feHPrjYNKEgb+qEIsu2r3708Y2WVtum/WMNHGUII8swzZgGAIrbZRoGMy1BlkVZtk1DcbkY50YsJkoSEQQAMA0j3liQJdnhUENh4JxIIgIkOZQBowwN+Actvu1jjAE4pQxjjBBwxhnnGCNKGQAQjDnnjHMAwBhjjAB62xCCARBnDBAwxgfIQoPQEMTnRCmNP8a368/s3q/HUeI25/xu+caJAXpPiAPK6P/tojgENAQ0BDQENAT0wMuXDujfE/f+I1sFyOsAAAAASUVORK5CYII=" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
                         <span class="text-lg font-bold">Grappoli & Luppoli</span>
                     </button>
                     
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
-                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium bg-green-100 text-green-700">Vendite</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
+                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium bg-green-100 text-green-700">Vendite</a>
+                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
                         <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
@@ -59,191 +51,384 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">💰 Gestione Vendite & Ricavi</h1>
-                <p class="text-gray-600">Analisi fatturato, vendite per categoria e trend mensili</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Gestione Vendite</h1>
+                <p class="text-gray-600">Import Excel, categorizzazione e Gruppi Vendita</p>
             </div>
             <div class="flex space-x-3">
-                <button onclick="openImportModal()" class="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    <span class="font-semibold">Importa Excel</span>
+                <button onclick="openImportModal()" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 font-semibold shadow-lg flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <span>Import Excel</span>
+                </button>
+                <button onclick="openGruppiVenditaModal()" class="px-4 py-3 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 font-medium flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>Gestisci Gruppi Vendita</span>
                 </button>
             </div>
         </div>
 
-        <!-- Loading Progress -->
+        <!-- Loading -->
         <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-green-900">Caricamento vendite...</span>
-                <span id="progressText" class="text-sm text-green-700">0 / 0</span>
+                <span class="text-sm font-medium text-green-900">Caricamento...</span>
+                <span id="progressText" class="text-sm text-green-700">0%</span>
             </div>
             <div class="w-full bg-green-200 rounded-full h-3">
                 <div id="progressBar" class="bg-green-600 h-3 rounded-full transition-all" style="width: 0%"></div>
             </div>
+            <p id="progressDetail" class="text-xs text-gray-500 mt-2"></p>
         </div>
 
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-green-500">
-                <p class="text-xs text-gray-600 mb-1">Fatturato Totale</p>
-                <p id="kpiFatturato" class="text-2xl font-bold text-green-600">€0</p>
+        <!-- Statistiche -->
+        <div class="grid md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-green-500">
+                <p class="text-xs text-gray-600">Righe Totali</p>
+                <p id="statRighe" class="text-2xl font-bold text-green-600">0</p>
             </div>
-            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500">
-                <p class="text-xs text-gray-600 mb-1">Pezzi Venduti</p>
-                <p id="kpiPezzi" class="text-2xl font-bold text-blue-600">0</p>
+            <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-blue-500">
+                <p class="text-xs text-gray-600">Fatturato</p>
+                <p id="statFatturato" class="text-2xl font-bold text-blue-600">€0</p>
             </div>
-            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-purple-500">
-                <p class="text-xs text-gray-600 mb-1">Prezzo Medio</p>
-                <p id="kpiPrezzoMedio" class="text-2xl font-bold text-purple-600">€0</p>
+            <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-purple-500">
+                <p class="text-xs text-gray-600">Pezzi Venduti</p>
+                <p id="statPezzi" class="text-2xl font-bold text-purple-600">0</p>
             </div>
-            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-orange-500">
-                <p class="text-xs text-gray-600 mb-1">Prodotti Unici</p>
-                <p id="kpiProdotti" class="text-2xl font-bold text-orange-600">0</p>
+            <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-orange-500">
+                <p class="text-xs text-gray-600">Categorie</p>
+                <p id="statCategorie" class="text-2xl font-bold text-orange-600">0</p>
             </div>
-            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-pink-500">
-                <p class="text-xs text-gray-600 mb-1">Categorie</p>
-                <p id="kpiCategorie" class="text-2xl font-bold text-pink-600">0</p>
-            </div>
-            <div class="stat-card bg-white rounded-xl shadow-lg p-5 border-l-4 border-teal-500">
-                <p class="text-xs text-gray-600 mb-1">Mesi Dati</p>
-                <p id="kpiMesi" class="text-2xl font-bold text-teal-600">0</p>
+            <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-indigo-500">
+                <p class="text-xs text-gray-600">Gruppi Vendita</p>
+                <p id="statGruppi" class="text-2xl font-bold text-indigo-600">0</p>
             </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="grid lg:grid-cols-2 gap-6 mb-8">
-            <!-- Monthly Trend Chart -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">📈 Trend Fatturato Mensile</h3>
-                <div class="h-72">
-                    <canvas id="chartTrendMensile"></canvas>
-                </div>
-            </div>
-            
-            <!-- Category Breakdown Chart -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">🥧 Fatturato per Categoria</h3>
-                <div class="h-72">
-                    <canvas id="chartCategorie"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Year Comparison -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">📊 Confronto Annuale</h3>
-            <div class="h-80">
-                <canvas id="chartConfrontoAnnuale"></canvas>
-            </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="font-bold mb-4">🔍 Filtri</h3>
-            <div class="grid md:grid-cols-5 gap-4">
-                <select id="filterAnno" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
-                    <option value="">Tutti gli anni</option>
-                </select>
-                <select id="filterMese" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
-                    <option value="">Tutti i mesi</option>
-                    <option value="01">Gennaio</option>
-                    <option value="02">Febbraio</option>
-                    <option value="03">Marzo</option>
-                    <option value="04">Aprile</option>
-                    <option value="05">Maggio</option>
-                    <option value="06">Giugno</option>
-                    <option value="07">Luglio</option>
-                    <option value="08">Agosto</option>
-                    <option value="09">Settembre</option>
-                    <option value="10">Ottobre</option>
-                    <option value="11">Novembre</option>
-                    <option value="12">Dicembre</option>
-                </select>
-                <select id="filterCategoria" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
+        <!-- Filtri -->
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div class="grid md:grid-cols-6 gap-3">
+                <input type="text" id="filterNome" placeholder="Cerca prodotto..." class="px-3 py-2 border rounded-lg text-sm" onkeyup="applyFilters()">
+                <select id="filterCategoria" class="px-3 py-2 border rounded-lg text-sm" onchange="applyFilters()">
                     <option value="">Tutte le categorie</option>
                 </select>
-                <select id="filterSettore" class="px-4 py-2 border-2 border-gray-200 rounded-lg" onchange="applyFilters()">
+                <select id="filterSettore" class="px-3 py-2 border rounded-lg text-sm" onchange="applyFilters()">
                     <option value="">Tutti i settori</option>
                 </select>
-                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Pulisci Filtri</button>
+                <select id="filterGruppo" class="px-3 py-2 border rounded-lg text-sm" onchange="applyFilters()">
+                    <option value="">Tutti i gruppi</option>
+                </select>
+                <select id="filterMese" class="px-3 py-2 border rounded-lg text-sm" onchange="applyFilters()">
+                    <option value="">Tutti i mesi</option>
+                </select>
+                <button onclick="clearFilters()" class="px-3 py-2 bg-gray-200 rounded-lg text-sm hover:bg-gray-300">Pulisci</button>
             </div>
         </div>
 
-        <!-- Data Table -->
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div class="px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white flex justify-between items-center">
-                <h3 class="font-bold">Dettaglio Vendite</h3>
-                <div class="flex items-center space-x-4">
-                    <span id="tableInfo" class="text-sm opacity-90">0 righe</span>
-                    <button onclick="exportToExcel()" class="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 text-sm font-medium flex items-center space-x-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <span>Esporta</span>
-                    </button>
-                </div>
+        <!-- Barra Selezione -->
+        <div id="selectionBar" class="hidden bg-blue-50 rounded-xl p-4 mb-4 flex justify-between items-center">
+            <span id="selectionCount" class="text-sm font-medium text-blue-900">0 righe selezionate</span>
+            <div class="flex space-x-3">
+                <button onclick="openBulkEditModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <span>Modifica Massiva</span>
+                </button>
+                <button onclick="deleteSelected()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>Elimina</span>
+                </button>
             </div>
-            <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 sticky top-0">
+        </div>
+
+        <!-- Tabella Vendite -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full table-compact">
+                    <thead class="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Mese</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Prodotto</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Categoria</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Settore</th>
-                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Prezzo</th>
-                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Pezzi</th>
-                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Fatturato</th>
+                            <th class="px-2 py-3 w-10"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4"></th>
+                            <th class="px-3 py-3 text-left text-xs">Mese</th>
+                            <th class="px-3 py-3 text-left text-xs">Nome Prodotto</th>
+                            <th class="px-3 py-3 text-left text-xs">Categoria</th>
+                            <th class="px-3 py-3 text-left text-xs">Settore</th>
+                            <th class="px-3 py-3 text-left text-xs">Gruppo Vendita</th>
+                            <th class="px-3 py-3 text-right text-xs">Prezzo</th>
+                            <th class="px-3 py-3 text-right text-xs">Pezzi</th>
+                            <th class="px-3 py-3 text-right text-xs">Fatturato</th>
+                            <th class="px-3 py-3 text-center text-xs">Azioni</th>
                         </tr>
                     </thead>
-                    <tbody id="venditeTableBody" class="divide-y divide-gray-200"></tbody>
+                    <tbody id="venditeTableBody" class="divide-y divide-gray-100"></tbody>
                 </table>
+            </div>
+            
+            <!-- Paginazione -->
+            <div class="px-6 py-4 bg-gray-50 flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    Mostrando <span id="showingFrom">0</span>-<span id="showingTo">0</span> di <span id="showingTotal">0</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="prevPage()" id="btnPrev" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50" disabled>← Prec</button>
+                    <span id="pageInfo" class="px-3 py-1">Pagina 1</span>
+                    <button onclick="nextPage()" id="btnNext" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Succ →</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Import Modal -->
+    <!-- Modal Import Excel -->
     <div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold">📥 Importa Dati Vendite</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">📥 Import Vendite da Excel</h2>
                 <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
-            <div class="border-2 border-dashed border-green-300 rounded-xl p-12 text-center hover:border-green-500 cursor-pointer transition-colors" onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)">
-                <svg class="w-16 h-16 mx-auto mb-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-green-500 cursor-pointer transition-colors" onclick="document.getElementById('excelInput').click()">
+                <input type="file" id="excelInput" accept=".xlsx,.xls" class="hidden" onchange="handleExcelUpload(event)">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                 </svg>
-                <p class="text-xl font-bold text-green-700 mb-2">Carica File Excel</p>
-                <p class="text-sm text-gray-600 mb-3">Seleziona file .xlsx o .csv con dati vendite</p>
-                <p class="text-xs text-green-600 font-medium">✓ Formato atteso: Mese, Nome, Categoria, Prezzo, Pezzi Venduti, Fatturato</p>
+                <p class="text-lg font-bold mb-2">Carica file VENDITE.xlsx</p>
+                <p class="text-sm text-gray-600">Trascina qui o clicca per selezionare</p>
             </div>
-
-            <div id="importProgress" class="hidden mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            
+            <div id="importProgress" class="hidden mt-6">
                 <div class="flex justify-between mb-2">
-                    <span class="text-sm font-medium text-green-900">Importazione in corso...</span>
-                    <span id="importProgressText" class="text-sm text-green-700">0 / 0</span>
+                    <span class="text-sm font-medium">Importazione in corso...</span>
+                    <span id="importProgressText" class="text-sm">0%</span>
                 </div>
-                <div class="w-full bg-green-200 rounded-full h-3">
+                <div class="w-full bg-gray-200 rounded-full h-3">
                     <div id="importProgressBar" class="bg-green-600 h-3 rounded-full transition-all" style="width: 0%"></div>
                 </div>
             </div>
+            
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-blue-800"><strong>Formato atteso:</strong></p>
+                <p class="text-xs text-blue-700 mt-1">Mese, SKU ORIGINE, NOME, SKU CONVERSIONE, ID SETTORE, NOME UNIVOCO, Categoria, Prezzo, Prezzo medio, Pezzi Venduti, FATTURATO</p>
+            </div>
+        </div>
+    </div>
 
-            <div class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                <p class="text-sm text-yellow-800">
-                    <strong>💡 Suggerimento:</strong> Il file deve contenere colonne: Mese, NOME, Categoria, Prezzo, Pezzi Venduti, FATTURATO. I dati esistenti verranno sovrascritti.
-                </p>
+    <!-- Modal Modifica Singola Vendita -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">✏️ Modifica Vendita</h2>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form onsubmit="saveVendita(event)" class="space-y-6">
+                <input type="hidden" id="editId">
+                
+                <!-- Info Prodotto (read-only) -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Prodotto</p>
+                            <p id="editNomeProdotto" class="font-bold text-lg"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Mese</p>
+                            <p id="editMese" class="font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sezione Categorizzazione -->
+                <div class="bg-purple-50 rounded-lg p-4">
+                    <h3 class="font-bold text-purple-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        Categorizzazione
+                    </h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-purple-800 mb-2">Categoria</label>
+                            <div class="flex space-x-2">
+                                <select id="editCategoria" class="flex-1 px-4 py-2 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                    <option value="">Seleziona categoria</option>
+                                </select>
+                                <button type="button" onclick="showNewCategoriaInput()" class="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200" title="Nuova categoria">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            </div>
+                            <input type="text" id="newCategoriaInput" class="hidden mt-2 w-full px-3 py-2 border rounded-lg text-sm" placeholder="Nuova categoria...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-purple-800 mb-2">Settore</label>
+                            <div class="flex space-x-2">
+                                <select id="editSettore" class="flex-1 px-4 py-2 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                    <option value="">Seleziona settore</option>
+                                </select>
+                                <button type="button" onclick="showNewSettoreInput()" class="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200" title="Nuovo settore">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            </div>
+                            <input type="text" id="newSettoreInput" class="hidden mt-2 w-full px-3 py-2 border rounded-lg text-sm" placeholder="Nuovo settore...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-purple-800 mb-2">Gruppo Vendita *</label>
+                            <select id="editGruppoVendita" class="w-full px-4 py-2 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                <option value="">Seleziona gruppo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sezione Valori Economici -->
+                <div class="bg-green-50 rounded-lg p-4">
+                    <h3 class="font-bold text-green-900 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Valori Economici
+                    </h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-green-800 mb-2">Prezzo Unitario €</label>
+                            <input type="number" step="0.01" id="editPrezzo" class="w-full px-4 py-2 border-2 border-green-200 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-green-800 mb-2">Pezzi Venduti</label>
+                            <input type="number" step="0.01" id="editPezzi" class="w-full px-4 py-2 border-2 border-green-200 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-green-800 mb-2">Fatturato €</label>
+                            <input type="number" step="0.01" id="editFatturato" class="w-full px-4 py-2 border-2 border-green-200 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pulsanti -->
+                <div class="flex space-x-4 pt-4 border-t">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 font-medium shadow-lg flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Salva Modifiche</span>
+                    </button>
+                    <button type="button" onclick="closeEditModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Modifica Massiva -->
+    <div id="bulkEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">✏️ Modifica Massiva</h2>
+                <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                <p class="text-sm text-blue-800"><strong id="bulkCount">0</strong> righe selezionate</p>
+                <p class="text-xs text-blue-600 mt-1">Lascia vuoto il campo che non vuoi modificare</p>
+            </div>
+            
+            <form onsubmit="saveBulkEdit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Categoria</label>
+                    <select id="bulkCategoria" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="">-- Non modificare --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Settore</label>
+                    <select id="bulkSettore" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="">-- Non modificare --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
+                    <select id="bulkGruppoVendita" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="">-- Non modificare --</option>
+                    </select>
+                </div>
+                
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">✅ Applica a tutti</button>
+                    <button type="button" onclick="closeBulkEditModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Gestione Gruppi Vendita -->
+    <div id="gruppiModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">📦 Gestione Gruppi Vendita</h2>
+                <button onclick="closeGruppiVenditaModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Form Nuovo Gruppo -->
+            <div class="bg-green-50 rounded-lg p-4 mb-6">
+                <h3 class="font-bold text-green-800 mb-3">➕ Nuovo Gruppo Vendita</h3>
+                <div class="grid md:grid-cols-4 gap-3">
+                    <div class="md:col-span-2">
+                        <input type="text" id="nuovoGruppoNome" placeholder="Nome gruppo" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <input type="color" id="nuovoGruppoColore" value="#10B981" class="w-full h-10 border rounded-lg">
+                    </div>
+                    <div>
+                        <button type="button" onclick="createGruppoVendita()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Crea</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista Gruppi -->
+            <div class="border rounded-lg overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold">Colore</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold">Nome</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Prodotti</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gruppiTableBody" class="divide-y"></tbody>
+                </table>
+            </div>
+            
+            <!-- Setup Automatico -->
+            <div class="mt-6 bg-purple-50 rounded-lg p-4">
+                <h3 class="font-bold text-purple-800 mb-2">🔧 Setup Automatico</h3>
+                <p class="text-sm text-purple-700 mb-3">Crea automaticamente i 6 gruppi vendita standard: Vino, Birra, Cibo, Alcolici, Bevande, Miscellaneo</p>
+                <button onclick="setupGruppiDefault()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">Crea Gruppi Standard</button>
+            </div>
+            
+            <!-- Mappatura Automatica -->
+            <div class="mt-4 bg-blue-50 rounded-lg p-4">
+                <h3 class="font-bold text-blue-800 mb-2">🔄 Mappatura Automatica</h3>
+                <p class="text-sm text-blue-700 mb-3">Assegna automaticamente il Gruppo Vendita a tutte le vendite in base alla Categoria</p>
+                <button onclick="autoMapGruppi()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Esegui Mappatura</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Conferma Eliminazione -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div class="text-center mb-6">
+                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
+                <p id="deleteMessage" class="text-gray-600"></p>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Elimina</button>
             </div>
         </div>
     </div>
@@ -253,504 +438,890 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const BATCH_SIZE = 500;
-
-        let allVendite = [];
-        let chartTrend = null;
-        let chartCategorie = null;
-        let chartConfronto = null;
+        const PAGE_SIZE = 100;
 
         function logout() {
             localStorage.removeItem('app_authenticated');
             window.location.href = 'index.html';
         }
 
-        // ===== LOAD DATA =====
-        async function loadVendite() {
+        // ===== STATO GLOBALE =====
+        let allVendite = [];
+        let filteredVendite = [];
+        let allGruppiVendita = [];
+        let allCategorie = [];
+        let allSettori = [];
+        let selectedIds = new Set();
+        let currentPage = 1;
+        let deleteAction = null;
+
+        // ===== GRUPPI VENDITA DEFAULT =====
+        const GRUPPI_DEFAULT = [
+            { nome: 'Vino', colore: '#7C3AED', ordine: 1 },
+            { nome: 'Birra', colore: '#F59E0B', ordine: 2 },
+            { nome: 'Cibo', colore: '#EF4444', ordine: 3 },
+            { nome: 'Alcolici', colore: '#3B82F6', ordine: 4 },
+            { nome: 'Bevande', colore: '#10B981', ordine: 5 },
+            { nome: 'Miscellaneo', colore: '#6B7280', ordine: 6 }
+        ];
+
+        // Mappatura automatica Categoria → Gruppo Vendita
+        const MAPPING_CATEGORIA_GRUPPO = {
+            'Birra': 'Birra',
+            'Menu cibo': 'Cibo',
+            'Vino bottiglia mescita': 'Vino',
+            'Vino al calice': 'Vino',
+            'Drink': 'Alcolici',
+            'Menu fisso': 'Cibo',
+            'Vino  bottiglia asporto': 'Vino',
+            'Vino bottiglia asporto': 'Vino',
+            'Bibite': 'Bevande',
+            'Vetrina': 'Miscellaneo'
+        };
+
+        // ===== CARICAMENTO DATI =====
+        async function loadData() {
             try {
-                showLoading(true);
+                showLoading(true, 0, 'Inizializzazione...');
                 
-                const { count, error: countError } = await supabaseClient
-                    .from('vendite')
-                    .select('*', { count: 'exact', head: true });
+                // Carica gruppi vendita
+                showLoading(true, 10, 'Caricamento gruppi vendita...');
+                await loadGruppiVendita();
                 
-                if (countError) {
-                    console.log('Tabella vendite non trovata, creazione necessaria');
+                // Carica vendite
+                showLoading(true, 20, 'Conteggio vendite...');
+                const { count } = await supabaseClient.from('vendite').select('*', { count: 'exact', head: true });
+                
+                if (!count || count === 0) {
                     showLoading(false);
-                    updateKPIs();
                     renderTable([]);
+                    updateStats();
                     return;
                 }
                 
-                const total = count || 0;
-                if (total === 0) {
-                    showLoading(false);
-                    updateKPIs();
-                    renderTable([]);
-                    return;
-                }
-                
-                const numBatches = Math.ceil(total / BATCH_SIZE);
                 allVendite = [];
+                const numBatches = Math.ceil(count / BATCH_SIZE);
                 
                 for (let i = 0; i < numBatches; i++) {
+                    showLoading(true, 20 + (i / numBatches * 70), `Caricamento ${allVendite.length}/${count}...`);
+                    
                     const { data, error } = await supabaseClient
                         .from('vendite')
-                        .select('*')
+                        .select('*, gruppo_vendita:gruppo_vendita_id(id, nome, colore)')
                         .order('mese', { ascending: false })
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     
                     if (error) throw error;
                     if (data) allVendite = [...allVendite, ...data];
-                    
-                    updateLoadingProgress(allVendite.length, total);
                 }
                 
-                showLoading(false);
-                updateKPIs();
-                updateFilters();
+                showLoading(true, 95, 'Elaborazione...');
+                
+                // Estrai categorie e settori unici
+                allCategorie = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))].sort();
+                allSettori = [...new Set(allVendite.map(v => v.id_settore).filter(Boolean))].sort();
+                
+                populateFilters();
                 applyFilters();
-                updateCharts();
+                updateStats();
+                
+                showLoading(false);
                 
             } catch (err) {
-                console.error('Errore caricamento vendite:', err);
+                console.error('Errore caricamento:', err);
                 showLoading(false);
+                alert('❌ Errore: ' + err.message);
             }
         }
 
-        function showLoading(show) {
-            document.getElementById('loadingProgress').classList.toggle('hidden', !show);
+        async function loadGruppiVendita() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('gruppo_vendita')
+                    .select('*')
+                    .order('ordine', { ascending: true });
+                
+                if (error) {
+                    console.log('Tabella gruppo_vendita non trovata, verrà creata al primo setup');
+                    allGruppiVendita = [];
+                    return;
+                }
+                
+                allGruppiVendita = data || [];
+                updateGruppiSelects();
+                
+            } catch (err) {
+                console.error('Errore caricamento gruppi:', err);
+                allGruppiVendita = [];
+            }
         }
 
-        function updateLoadingProgress(loaded, total) {
-            document.getElementById('progressText').textContent = `${loaded} / ${total}`;
-            document.getElementById('progressBar').style.width = `${(loaded / total * 100).toFixed(1)}%`;
+        function showLoading(show, percent = 0, detail = '') {
+            const el = document.getElementById('loadingProgress');
+            if (show) {
+                el.classList.remove('hidden');
+                document.getElementById('progressBar').style.width = percent + '%';
+                document.getElementById('progressText').textContent = Math.round(percent) + '%';
+                document.getElementById('progressDetail').textContent = detail;
+            } else {
+                el.classList.add('hidden');
+            }
         }
 
-        // ===== KPIs =====
-        function updateKPIs() {
-            const fatturato = allVendite.reduce((sum, v) => sum + (v.fatturato || 0), 0);
-            const pezzi = allVendite.reduce((sum, v) => sum + (v.pezzi_venduti || 0), 0);
-            const prezzoMedio = pezzi > 0 ? fatturato / pezzi : 0;
-            const prodottiUnici = new Set(allVendite.map(v => v.nome)).size;
-            const categorie = new Set(allVendite.map(v => v.categoria).filter(Boolean)).size;
-            const mesi = new Set(allVendite.map(v => v.mese)).size;
+        // ===== FILTRI =====
+        function populateFilters() {
+            const mesi = [...new Set(allVendite.map(v => v.mese).filter(Boolean))].sort().reverse();
             
-            document.getElementById('kpiFatturato').textContent = `€${fatturato.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('kpiPezzi').textContent = pezzi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('kpiPrezzoMedio').textContent = `€${prezzoMedio.toFixed(2)}`;
-            document.getElementById('kpiProdotti').textContent = prodottiUnici.toLocaleString('it-IT');
-            document.getElementById('kpiCategorie').textContent = categorie;
-            document.getElementById('kpiMesi').textContent = mesi;
+            // Categorie
+            document.getElementById('filterCategoria').innerHTML = '<option value="">Tutte le categorie</option>' +
+                allCategorie.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Settori
+            document.getElementById('filterSettore').innerHTML = '<option value="">Tutti i settori</option>' +
+                allSettori.map(s => `<option value="${s}">${s}</option>`).join('');
+            
+            // Mesi
+            document.getElementById('filterMese').innerHTML = '<option value="">Tutti i mesi</option>' +
+                mesi.map(m => `<option value="${m}">${m}</option>`).join('');
+            
+            updateGruppiSelects();
+            updateEditSelects();
+            updateBulkSelects();
         }
 
-        // ===== FILTERS =====
-        function updateFilters() {
-            // Years
-            const anni = [...new Set(allVendite.map(v => v.mese?.split('_')[0]).filter(Boolean))].sort().reverse();
-            const filterAnno = document.getElementById('filterAnno');
-            filterAnno.innerHTML = '<option value="">Tutti gli anni</option>' + anni.map(a => `<option value="${a}">${a}</option>`).join('');
+        function updateGruppiSelects() {
+            const options = '<option value="">Tutti i gruppi</option>' +
+                allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
             
-            // Categories
-            const categorie = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))].sort();
-            const filterCategoria = document.getElementById('filterCategoria');
-            filterCategoria.innerHTML = '<option value="">Tutte le categorie</option>' + categorie.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('filterGruppo').innerHTML = options;
+        }
+
+        function updateEditSelects() {
+            // Categorie nel modal edit
+            const catOptions = '<option value="">Seleziona categoria</option>' +
+                allCategorie.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('editCategoria').innerHTML = catOptions;
             
-            // Sectors
-            const settori = [...new Set(allVendite.map(v => v.id_settore).filter(Boolean))].sort();
-            const filterSettore = document.getElementById('filterSettore');
-            filterSettore.innerHTML = '<option value="">Tutti i settori</option>' + settori.map(s => `<option value="${s}">${s}</option>`).join('');
+            // Settori nel modal edit
+            const setOptions = '<option value="">Seleziona settore</option>' +
+                allSettori.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('editSettore').innerHTML = setOptions;
+            
+            // Gruppi nel modal edit
+            const grpOptions = '<option value="">Seleziona gruppo</option>' +
+                allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
+            document.getElementById('editGruppoVendita').innerHTML = grpOptions;
+        }
+
+        function updateBulkSelects() {
+            // Categorie bulk
+            const catOptions = '<option value="">-- Non modificare --</option>' +
+                allCategorie.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('bulkCategoria').innerHTML = catOptions;
+            
+            // Settori bulk
+            const setOptions = '<option value="">-- Non modificare --</option>' +
+                allSettori.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('bulkSettore').innerHTML = setOptions;
+            
+            // Gruppi bulk
+            const grpOptions = '<option value="">-- Non modificare --</option>' +
+                allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
+            document.getElementById('bulkGruppoVendita').innerHTML = grpOptions;
         }
 
         function applyFilters() {
-            const anno = document.getElementById('filterAnno').value;
-            const mese = document.getElementById('filterMese').value;
+            const nome = document.getElementById('filterNome').value.toLowerCase();
             const categoria = document.getElementById('filterCategoria').value;
             const settore = document.getElementById('filterSettore').value;
+            const gruppo = document.getElementById('filterGruppo').value;
+            const mese = document.getElementById('filterMese').value;
             
-            let filtered = allVendite;
+            filteredVendite = allVendite.filter(v => {
+                if (nome && !v.nome?.toLowerCase().includes(nome) && !v.nome_univoco?.toLowerCase().includes(nome)) return false;
+                if (categoria && v.categoria !== categoria) return false;
+                if (settore && v.id_settore !== settore) return false;
+                if (gruppo && v.gruppo_vendita_id != gruppo) return false;
+                if (mese && v.mese !== mese) return false;
+                return true;
+            });
             
-            if (anno) filtered = filtered.filter(v => v.mese?.startsWith(anno));
-            if (mese) filtered = filtered.filter(v => v.mese?.endsWith('_' + mese));
-            if (categoria) filtered = filtered.filter(v => v.categoria === categoria);
-            if (settore) filtered = filtered.filter(v => v.id_settore === settore);
-            
-            renderTable(filtered);
-            updateFilteredKPIs(filtered);
-        }
-
-        function updateFilteredKPIs(filtered) {
-            const fatturato = filtered.reduce((sum, v) => sum + (v.fatturato || 0), 0);
-            const pezzi = filtered.reduce((sum, v) => sum + (v.pezzi_venduti || 0), 0);
-            
-            document.getElementById('tableInfo').textContent = `${filtered.length.toLocaleString('it-IT')} righe | €${fatturato.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            currentPage = 1;
+            renderTable(filteredVendite);
+            updateStats();
         }
 
         function clearFilters() {
-            document.getElementById('filterAnno').value = '';
-            document.getElementById('filterMese').value = '';
+            document.getElementById('filterNome').value = '';
             document.getElementById('filterCategoria').value = '';
             document.getElementById('filterSettore').value = '';
+            document.getElementById('filterGruppo').value = '';
+            document.getElementById('filterMese').value = '';
             applyFilters();
         }
 
-        // ===== TABLE =====
+        // ===== STATISTICHE =====
+        function updateStats() {
+            const data = filteredVendite.length > 0 ? filteredVendite : allVendite;
+            
+            document.getElementById('statRighe').textContent = data.length.toLocaleString('it-IT');
+            document.getElementById('statFatturato').textContent = '€' + data.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('statPezzi').textContent = data.reduce((s, v) => s + (parseFloat(v.pezzi_venduti) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('statCategorie').textContent = new Set(data.map(v => v.categoria).filter(Boolean)).size;
+            document.getElementById('statGruppi').textContent = allGruppiVendita.length;
+        }
+
+        // ===== TABELLA =====
         function renderTable(data) {
             const tbody = document.getElementById('venditeTableBody');
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            const pageData = data.slice(start, end);
             
-            if (!data.length) {
+            if (pageData.length === 0) {
                 tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-400">
-                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <p class="text-lg font-medium">Nessun dato vendite</p>
-                            <p class="text-sm mt-1">Importa un file Excel per iniziare</p>
-                        </td>
-                    </tr>
+                    <tr><td colspan="10" class="px-6 py-12 text-center text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        <p class="text-lg font-medium">Nessun dato</p>
+                        <p class="text-sm mt-1">Importa un file Excel per iniziare</p>
+                    </td></tr>
+                `;
+            } else {
+                tbody.innerHTML = pageData.map(v => {
+                    const gruppo = v.gruppo_vendita || {};
+                    const gruppoNome = gruppo.nome || '-';
+                    const gruppoColore = gruppo.colore || '#6B7280';
+                    
+                    return `
+                        <tr class="hover:bg-gray-50 ${selectedIds.has(v.id) ? 'bg-blue-50' : ''}">
+                            <td class="px-2 py-2 text-center">
+                                <input type="checkbox" ${selectedIds.has(v.id) ? 'checked' : ''} onchange="toggleSelect('${v.id}')" class="w-4 h-4">
+                            </td>
+                            <td class="px-3 py-2 text-xs">${v.mese || '-'}</td>
+                            <td class="px-3 py-2 truncate-cell" title="${v.nome || v.nome_univoco || ''}">${v.nome || v.nome_univoco || '-'}</td>
+                            <td class="px-3 py-2 text-xs">${v.categoria || '-'}</td>
+                            <td class="px-3 py-2 text-xs">${v.id_settore || '-'}</td>
+                            <td class="px-3 py-2">
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${gruppoColore}20; color: ${gruppoColore}; border: 1px solid ${gruppoColore}40">
+                                    ${gruppoNome}
+                                </span>
+                            </td>
+                            <td class="px-3 py-2 text-right text-xs">€${(parseFloat(v.prezzo) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-right text-xs">${(parseFloat(v.pezzi_venduti) || 0).toLocaleString('it-IT')}</td>
+                            <td class="px-3 py-2 text-right text-xs font-bold text-green-600">€${(parseFloat(v.fatturato) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-center">
+                                <button onclick="editVendita('${v.id}')" class="text-blue-600 hover:text-blue-800 p-1" title="Modifica">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            
+            // Aggiorna paginazione
+            const totalPages = Math.ceil(data.length / PAGE_SIZE);
+            document.getElementById('showingFrom').textContent = data.length > 0 ? start + 1 : 0;
+            document.getElementById('showingTo').textContent = Math.min(end, data.length);
+            document.getElementById('showingTotal').textContent = data.length;
+            document.getElementById('pageInfo').textContent = `Pagina ${currentPage} di ${totalPages || 1}`;
+            document.getElementById('btnPrev').disabled = currentPage <= 1;
+            document.getElementById('btnNext').disabled = currentPage >= totalPages;
+            
+            updateSelectionBar();
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable(filteredVendite);
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredVendite.length / PAGE_SIZE);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable(filteredVendite);
+            }
+        }
+
+        // ===== SELEZIONE =====
+        function toggleSelect(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            renderTable(filteredVendite);
+        }
+
+        function toggleSelectAll() {
+            const checkbox = document.getElementById('selectAll');
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            const pageData = filteredVendite.slice(start, end);
+            
+            if (checkbox.checked) {
+                pageData.forEach(v => selectedIds.add(v.id));
+            } else {
+                pageData.forEach(v => selectedIds.delete(v.id));
+            }
+            renderTable(filteredVendite);
+        }
+
+        function updateSelectionBar() {
+            const bar = document.getElementById('selectionBar');
+            if (selectedIds.size > 0) {
+                bar.classList.remove('hidden');
+                document.getElementById('selectionCount').textContent = `${selectedIds.size} righe selezionate`;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        // ===== MODAL IMPORT =====
+        function openImportModal() {
+            document.getElementById('importModal').classList.remove('hidden');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.add('hidden');
+            document.getElementById('importProgress').classList.add('hidden');
+        }
+
+        // ===== MODAL EDIT SINGOLO =====
+        function editVendita(id) {
+            const v = allVendite.find(x => x.id === id);
+            if (!v) return;
+            
+            document.getElementById('editId').value = v.id;
+            document.getElementById('editNomeProdotto').textContent = v.nome || v.nome_univoco || '-';
+            document.getElementById('editMese').textContent = v.mese || '-';
+            document.getElementById('editCategoria').value = v.categoria || '';
+            document.getElementById('editSettore').value = v.id_settore || '';
+            document.getElementById('editGruppoVendita').value = v.gruppo_vendita_id || '';
+            document.getElementById('editPrezzo').value = v.prezzo || '';
+            document.getElementById('editPezzi').value = v.pezzi_venduti || '';
+            document.getElementById('editFatturato').value = v.fatturato || '';
+            
+            // Nascondi input nuovi
+            document.getElementById('newCategoriaInput').classList.add('hidden');
+            document.getElementById('newSettoreInput').classList.add('hidden');
+            
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function showNewCategoriaInput() {
+            const input = document.getElementById('newCategoriaInput');
+            input.classList.toggle('hidden');
+            if (!input.classList.contains('hidden')) input.focus();
+        }
+
+        function showNewSettoreInput() {
+            const input = document.getElementById('newSettoreInput');
+            input.classList.toggle('hidden');
+            if (!input.classList.contains('hidden')) input.focus();
+        }
+
+        async function saveVendita(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('editId').value;
+            
+            // Check per nuova categoria
+            let categoria = document.getElementById('editCategoria').value;
+            const newCat = document.getElementById('newCategoriaInput').value.trim();
+            if (newCat) {
+                categoria = newCat;
+                if (!allCategorie.includes(newCat)) {
+                    allCategorie.push(newCat);
+                    allCategorie.sort();
+                }
+            }
+            
+            // Check per nuovo settore
+            let settore = document.getElementById('editSettore').value;
+            const newSet = document.getElementById('newSettoreInput').value.trim();
+            if (newSet) {
+                settore = newSet;
+                if (!allSettori.includes(newSet)) {
+                    allSettori.push(newSet);
+                    allSettori.sort();
+                }
+            }
+            
+            const gruppoVenditaId = document.getElementById('editGruppoVendita').value || null;
+            
+            const updateData = {
+                categoria: categoria || null,
+                id_settore: settore || null,
+                gruppo_vendita_id: gruppoVenditaId,
+                prezzo: parseFloat(document.getElementById('editPrezzo').value) || null,
+                pezzi_venduti: parseFloat(document.getElementById('editPezzi').value) || null,
+                fatturato: parseFloat(document.getElementById('editFatturato').value) || null
+            };
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('vendite')
+                    .update(updateData)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                closeEditModal();
+                
+                // Aggiorna localmente
+                const idx = allVendite.findIndex(v => v.id === id);
+                if (idx >= 0) {
+                    allVendite[idx] = { ...allVendite[idx], ...updateData };
+                    if (gruppoVenditaId) {
+                        allVendite[idx].gruppo_vendita = allGruppiVendita.find(g => g.id == gruppoVenditaId) || null;
+                    } else {
+                        allVendite[idx].gruppo_vendita = null;
+                    }
+                }
+                
+                populateFilters();
+                applyFilters();
+                
+                alert('✅ Vendita aggiornata!');
+                
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                alert('❌ Errore: ' + err.message);
+            }
+        }
+
+        // ===== MODAL BULK EDIT =====
+        function openBulkEditModal() {
+            if (selectedIds.size === 0) {
+                alert('Seleziona almeno una riga');
+                return;
+            }
+            document.getElementById('bulkCount').textContent = selectedIds.size;
+            
+            // Reset selects
+            document.getElementById('bulkCategoria').value = '';
+            document.getElementById('bulkSettore').value = '';
+            document.getElementById('bulkGruppoVendita').value = '';
+            
+            document.getElementById('bulkEditModal').classList.remove('hidden');
+        }
+
+        function closeBulkEditModal() {
+            document.getElementById('bulkEditModal').classList.add('hidden');
+        }
+
+        async function saveBulkEdit(e) {
+            e.preventDefault();
+            
+            const categoria = document.getElementById('bulkCategoria').value;
+            const settore = document.getElementById('bulkSettore').value;
+            const gruppoId = document.getElementById('bulkGruppoVendita').value;
+            
+            if (!categoria && !settore && !gruppoId) {
+                alert('Seleziona almeno un campo da modificare');
+                return;
+            }
+            
+            const ids = Array.from(selectedIds);
+            
+            try {
+                closeBulkEditModal();
+                showLoading(true, 0, 'Aggiornamento in corso...');
+                
+                // Prepara dati update
+                const updateData = {};
+                if (categoria) updateData.categoria = categoria;
+                if (settore) updateData.id_settore = settore;
+                if (gruppoId) updateData.gruppo_vendita_id = gruppoId;
+                
+                const BATCH_UPDATE = 100;
+                for (let i = 0; i < ids.length; i += BATCH_UPDATE) {
+                    const batch = ids.slice(i, i + BATCH_UPDATE);
+                    
+                    const { error } = await supabaseClient
+                        .from('vendite')
+                        .update(updateData)
+                        .in('id', batch);
+                    
+                    if (error) throw error;
+                    
+                    showLoading(true, (i / ids.length) * 100, `Aggiornamento ${i}/${ids.length}...`);
+                }
+                
+                selectedIds.clear();
+                await loadData();
+                alert(`✅ ${ids.length} righe aggiornate!`);
+                
+            } catch (err) {
+                console.error('Errore bulk edit:', err);
+                showLoading(false);
+                alert('❌ Errore: ' + err.message);
+            }
+        }
+
+        // ===== GRUPPI VENDITA =====
+        function openGruppiVenditaModal() {
+            renderGruppiTable();
+            document.getElementById('gruppiModal').classList.remove('hidden');
+        }
+
+        function closeGruppiVenditaModal() {
+            document.getElementById('gruppiModal').classList.add('hidden');
+        }
+
+        function renderGruppiTable() {
+            const tbody = document.getElementById('gruppiTableBody');
+            
+            if (allGruppiVendita.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">
+                        Nessun gruppo vendita. Usa il setup automatico o creane uno nuovo.
+                    </td></tr>
                 `;
                 return;
             }
             
-            // Limit to 500 rows for performance
-            const displayData = data.slice(0, 500);
+            // Conta prodotti per gruppo
+            const countPerGruppo = {};
+            allVendite.forEach(v => {
+                const gid = v.gruppo_vendita_id;
+                if (gid) countPerGruppo[gid] = (countPerGruppo[gid] || 0) + 1;
+            });
             
-            tbody.innerHTML = displayData.map((v, idx) => {
-                const meseDisplay = v.mese ? v.mese.replace('_', '/') : '-';
-                return `
-                    <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-green-50 transition-colors">
-                        <td class="px-4 py-2 font-medium text-gray-900">${meseDisplay}</td>
-                        <td class="px-4 py-2 text-gray-700 max-w-xs truncate" title="${v.nome || ''}">${v.nome || '-'}</td>
-                        <td class="px-4 py-2">
-                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(v.categoria)}">${v.categoria || '-'}</span>
-                        </td>
-                        <td class="px-4 py-2 text-gray-600 text-xs">${v.id_settore || '-'}</td>
-                        <td class="px-4 py-2 text-right">€${(v.prezzo || 0).toFixed(2)}</td>
-                        <td class="px-4 py-2 text-right font-medium">${(v.pezzi_venduti || 0).toLocaleString('it-IT')}</td>
-                        <td class="px-4 py-2 text-right font-bold text-green-600">€${(v.fatturato || 0).toFixed(2)}</td>
-                    </tr>
-                `;
-            }).join('');
+            tbody.innerHTML = allGruppiVendita.map(g => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3">
+                        <div class="w-6 h-6 rounded-full" style="background-color: ${g.colore}"></div>
+                    </td>
+                    <td class="px-4 py-3 font-medium">${g.nome}</td>
+                    <td class="px-4 py-3 text-center">${countPerGruppo[g.id] || 0}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteGruppoVendita('${g.id}', '${g.nome}')" class="text-red-600 hover:text-red-800 p-1" title="Elimina">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function createGruppoVendita() {
+            const nome = document.getElementById('nuovoGruppoNome').value.trim();
+            const colore = document.getElementById('nuovoGruppoColore').value;
             
-            if (data.length > 500) {
-                tbody.innerHTML += `
-                    <tr class="bg-yellow-50">
-                        <td colspan="7" class="px-4 py-3 text-center text-yellow-700 text-sm">
-                            ⚠️ Mostrate solo le prime 500 righe su ${data.length.toLocaleString('it-IT')} totali. Usa i filtri per raffinare.
-                        </td>
-                    </tr>
-                `;
+            if (!nome) {
+                alert('Inserisci un nome');
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('gruppo_vendita')
+                    .insert([{ nome, colore, ordine: allGruppiVendita.length + 1 }]);
+                
+                if (error) throw error;
+                
+                document.getElementById('nuovoGruppoNome').value = '';
+                await loadGruppiVendita();
+                renderGruppiTable();
+                updateEditSelects();
+                updateBulkSelects();
+                
+            } catch (err) {
+                console.error('Errore creazione:', err);
+                alert('❌ Errore: ' + err.message);
             }
         }
 
-        function getCategoryColor(categoria) {
-            const colors = {
-                'Birra': 'bg-amber-100 text-amber-800',
-                'Menu cibo': 'bg-orange-100 text-orange-800',
-                'Vino bottiglia mescita': 'bg-purple-100 text-purple-800',
-                'Vino al calice': 'bg-pink-100 text-pink-800',
-                'Drink': 'bg-blue-100 text-blue-800',
-                'Menu fisso': 'bg-red-100 text-red-800',
-                'Vino  bottiglia asporto': 'bg-indigo-100 text-indigo-800',
-                'Bibite': 'bg-cyan-100 text-cyan-800',
-                'Vetrina': 'bg-gray-100 text-gray-800'
-            };
-            return colors[categoria] || 'bg-gray-100 text-gray-800';
+        async function deleteGruppoVendita(id, nome) {
+            if (!confirm(`Eliminare il gruppo "${nome}"?`)) return;
+            
+            try {
+                // Prima rimuovi il riferimento dalle vendite
+                await supabaseClient
+                    .from('vendite')
+                    .update({ gruppo_vendita_id: null })
+                    .eq('gruppo_vendita_id', id);
+                
+                // Poi elimina il gruppo
+                const { error } = await supabaseClient
+                    .from('gruppo_vendita')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                await loadGruppiVendita();
+                renderGruppiTable();
+                updateEditSelects();
+                updateBulkSelects();
+                
+            } catch (err) {
+                console.error('Errore eliminazione:', err);
+                alert('❌ Errore: ' + err.message);
+            }
         }
 
-        // ===== CHARTS =====
-        function updateCharts() {
-            updateTrendChart();
-            updateCategorieChart();
-            updateConfrontoChart();
-        }
-
-        function updateTrendChart() {
-            const monthlyData = {};
-            allVendite.forEach(v => {
-                if (!v.mese) return;
-                if (!monthlyData[v.mese]) monthlyData[v.mese] = 0;
-                monthlyData[v.mese] += v.fatturato || 0;
-            });
-            
-            const sortedMonths = Object.keys(monthlyData).sort();
-            const labels = sortedMonths.map(m => m.replace('_', '/'));
-            const data = sortedMonths.map(m => monthlyData[m]);
-            
-            const ctx = document.getElementById('chartTrendMensile').getContext('2d');
-            
-            if (chartTrend) chartTrend.destroy();
-            
-            chartTrend = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Fatturato',
-                        data: data,
-                        borderColor: '#10B981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: value => '€' + value.toLocaleString('it-IT')
-                            }
-                        }
-                    }
+        async function setupGruppiDefault() {
+            try {
+                const existingNames = allGruppiVendita.map(g => g.nome);
+                const toInsert = GRUPPI_DEFAULT.filter(g => !existingNames.includes(g.nome));
+                
+                if (toInsert.length === 0) {
+                    alert('Tutti i gruppi standard sono già presenti!');
+                    return;
                 }
-            });
+                
+                const { error } = await supabaseClient
+                    .from('gruppo_vendita')
+                    .insert(toInsert);
+                
+                if (error) throw error;
+                
+                await loadGruppiVendita();
+                renderGruppiTable();
+                updateEditSelects();
+                updateBulkSelects();
+                alert(`✅ Creati ${toInsert.length} gruppi: ${toInsert.map(g => g.nome).join(', ')}`);
+                
+            } catch (err) {
+                console.error('Errore setup:', err);
+                alert('❌ Errore: ' + err.message);
+            }
         }
 
-        function updateCategorieChart() {
-            const catData = {};
-            allVendite.forEach(v => {
-                const cat = v.categoria || 'Altro';
-                if (!catData[cat]) catData[cat] = 0;
-                catData[cat] += v.fatturato || 0;
-            });
+        async function autoMapGruppi() {
+            if (allGruppiVendita.length === 0) {
+                alert('Prima crea i gruppi vendita standard');
+                return;
+            }
             
-            const sorted = Object.entries(catData).sort((a, b) => b[1] - a[1]);
-            const labels = sorted.map(([k]) => k);
-            const data = sorted.map(([, v]) => v);
+            const confermato = confirm(
+                'Questa operazione assegnerà automaticamente il Gruppo Vendita a tutte le vendite basandosi sulla Categoria.\n\n' +
+                'Mappatura:\n' +
+                '• Birra → Birra\n' +
+                '• Menu cibo, Menu fisso → Cibo\n' +
+                '• Vino bottiglia/calice/asporto → Vino\n' +
+                '• Drink → Alcolici\n' +
+                '• Bibite → Bevande\n' +
+                '• Vetrina → Miscellaneo\n\n' +
+                'Continuare?'
+            );
             
-            const colors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#84CC16', '#6366F1'];
+            if (!confermato) return;
             
-            const ctx = document.getElementById('chartCategorie').getContext('2d');
-            
-            if (chartCategorie) chartCategorie.destroy();
-            
-            chartCategorie = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: colors
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { font: { size: 11 } }
-                        }
+            try {
+                closeGruppiVenditaModal();
+                showLoading(true, 0, 'Mappatura automatica...');
+                
+                // Crea mappa nome -> id
+                const gruppoMap = {};
+                allGruppiVendita.forEach(g => gruppoMap[g.nome] = g.id);
+                
+                let updated = 0;
+                const BATCH_UPDATE = 100;
+                
+                // Per ogni categoria, aggiorna le vendite
+                for (const [categoria, gruppoNome] of Object.entries(MAPPING_CATEGORIA_GRUPPO)) {
+                    const gruppoId = gruppoMap[gruppoNome];
+                    if (!gruppoId) continue;
+                    
+                    // Trova vendite con questa categoria
+                    const venditeConCategoria = allVendite.filter(v => v.categoria === categoria && v.gruppo_vendita_id != gruppoId);
+                    
+                    if (venditeConCategoria.length === 0) continue;
+                    
+                    const ids = venditeConCategoria.map(v => v.id);
+                    
+                    for (let i = 0; i < ids.length; i += BATCH_UPDATE) {
+                        const batch = ids.slice(i, i + BATCH_UPDATE);
+                        
+                        await supabaseClient
+                            .from('vendite')
+                            .update({ gruppo_vendita_id: gruppoId })
+                            .in('id', batch);
+                        
+                        updated += batch.length;
                     }
+                    
+                    showLoading(true, 50 + (updated / allVendite.length * 50), `Aggiornate ${updated} vendite...`);
                 }
-            });
+                
+                await loadData();
+                alert(`✅ Mappatura completata! ${updated} vendite aggiornate.`);
+                
+            } catch (err) {
+                console.error('Errore mappatura:', err);
+                showLoading(false);
+                alert('❌ Errore: ' + err.message);
+            }
         }
 
-        function updateConfrontoChart() {
-            const yearlyData = {};
-            allVendite.forEach(v => {
-                if (!v.mese) return;
-                const [anno, mese] = v.mese.split('_');
-                if (!yearlyData[anno]) yearlyData[anno] = {};
-                if (!yearlyData[anno][mese]) yearlyData[anno][mese] = 0;
-                yearlyData[anno][mese] += v.fatturato || 0;
-            });
+        // ===== ELIMINAZIONE =====
+        function deleteSelected() {
+            if (selectedIds.size === 0) return;
             
-            const years = Object.keys(yearlyData).sort();
-            const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-            const monthLabels = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-            
-            const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
-            
-            const datasets = years.map((year, idx) => ({
-                label: year,
-                data: months.map(m => yearlyData[year]?.[m] || 0),
-                borderColor: colors[idx % colors.length],
-                backgroundColor: colors[idx % colors.length] + '20',
-                fill: false,
-                tension: 0.4
-            }));
-            
-            const ctx = document.getElementById('chartConfrontoAnnuale').getContext('2d');
-            
-            if (chartConfronto) chartConfronto.destroy();
-            
-            chartConfronto = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: monthLabels,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: value => '€' + value.toLocaleString('it-IT')
-                            }
-                        }
-                    }
-                }
-            });
+            document.getElementById('deleteMessage').textContent = `Eliminare ${selectedIds.size} righe selezionate?`;
+            deleteAction = { ids: Array.from(selectedIds) };
+            document.getElementById('deleteModal').classList.remove('hidden');
         }
 
-        // ===== IMPORT =====
-        window.openImportModal = function() {
-            document.getElementById('importModal').classList.remove('hidden');
-        };
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            deleteAction = null;
+        }
 
-        window.closeImportModal = function() {
-            document.getElementById('importModal').classList.add('hidden');
-        };
+        async function confirmDelete() {
+            if (!deleteAction) return;
+            
+            const ids = deleteAction.ids;
+            closeDeleteModal();
+            
+            try {
+                showLoading(true, 0, 'Eliminazione...');
+                
+                const BATCH_DELETE = 100;
+                for (let i = 0; i < ids.length; i += BATCH_DELETE) {
+                    const batch = ids.slice(i, i + BATCH_DELETE);
+                    
+                    const { error } = await supabaseClient
+                        .from('vendite')
+                        .delete()
+                        .in('id', batch);
+                    
+                    if (error) throw error;
+                    
+                    showLoading(true, (i / ids.length) * 100, `Eliminazione ${i}/${ids.length}...`);
+                }
+                
+                selectedIds.clear();
+                await loadData();
+                alert(`✅ ${ids.length} righe eliminate!`);
+                
+            } catch (err) {
+                console.error('Errore eliminazione:', err);
+                showLoading(false);
+                alert('❌ Errore: ' + err.message);
+            }
+        }
 
-        window.handleFileUpload = async function(event) {
+        // ===== IMPORT EXCEL =====
+        async function handleExcelUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
             
-            const progressDiv = document.getElementById('importProgress');
-            const progressBar = document.getElementById('importProgressBar');
-            const progressText = document.getElementById('importProgressText');
-            
-            progressDiv.classList.remove('hidden');
-            progressText.textContent = 'Lettura file...';
-            progressBar.style.width = '10%';
-            
             try {
+                document.getElementById('importProgress').classList.remove('hidden');
+                updateImportProgress(5, 'Lettura file...');
+                
                 const data = await file.arrayBuffer();
-                const workbook = XLSX.read(data);
-                const sheetName = workbook.SheetNames[0];
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                // Cerca il foglio corretto
+                let sheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('prodotti') || n.toLowerCase().includes('db'));
+                if (!sheetName) sheetName = workbook.SheetNames[0];
+                
                 const sheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(sheet);
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: null });
                 
-                console.log('Righe lette:', jsonData.length);
+                if (jsonData.length === 0) {
+                    alert('Il file è vuoto');
+                    return;
+                }
                 
-                // Helper: trova valore colonna case-insensitive
+                updateImportProgress(15, `Trovate ${jsonData.length} righe...`);
+                
+                // Mapping colonne
                 const getCol = (row, ...names) => {
-                    const keys = Object.keys(row);
                     for (const name of names) {
-                        // Cerca esatto
-                        if (row[name] !== undefined) return row[name];
-                        // Cerca case-insensitive
-                        const found = keys.find(k => k.toLowerCase().trim() === name.toLowerCase().trim());
-                        if (found) return row[found];
+                        for (const key of Object.keys(row)) {
+                            if (key.toLowerCase().trim() === name.toLowerCase().trim()) {
+                                return row[key];
+                            }
+                        }
                     }
                     return null;
                 };
                 
-                // Debug: mostra colonne del primo record
-                if (jsonData.length > 0) {
-                    console.log('Colonne Excel:', Object.keys(jsonData[0]));
-                    console.log('Primo record:', jsonData[0]);
-                    console.log('FATTURATO raw:', jsonData[0]['FATTURATO'], 'trovato con getCol:', getCol(jsonData[0], 'FATTURATO', 'Fatturato', 'fatturato'));
+                // Prepara i record
+                const records = jsonData.map(row => ({
+                    mese: getCol(row, 'Mese', 'MESE') || null,
+                    sku_origine: getCol(row, 'SKU ORIGINE', 'SKU') || null,
+                    nome: getCol(row, 'NOME', 'Nome') || null,
+                    sku_conversione: getCol(row, 'SKU CONVERSIONE') || null,
+                    id_settore: getCol(row, 'ID SETTORE', 'SETTORE', 'Settore') || null,
+                    nome_univoco: getCol(row, 'NOME UNIVOCO') || null,
+                    categoria: getCol(row, 'Categoria', 'CATEGORIA') || null,
+                    prezzo: parseFloat(getCol(row, 'Prezzo', 'PREZZO')) || null,
+                    prezzo_medio: parseFloat(getCol(row, 'Prezzo medio', 'PREZZO MEDIO')) || null,
+                    pezzi_venduti: parseFloat(getCol(row, 'Pezzi Venduti', 'PEZZI VENDUTI', 'Pezzi')) || null,
+                    fatturato: parseFloat(getCol(row, 'FATTURATO', 'Fatturato')) || null,
+                    gruppo_vendita_id: null
+                })).filter(r => r.nome || r.nome_univoco);
+                
+                updateImportProgress(25, `Preparati ${records.length} record validi...`);
+                
+                // Assegna gruppo vendita automatico
+                for (const record of records) {
+                    if (record.categoria && MAPPING_CATEGORIA_GRUPPO[record.categoria]) {
+                        const gruppoNome = MAPPING_CATEGORIA_GRUPPO[record.categoria];
+                        const gruppo = allGruppiVendita.find(g => g.nome === gruppoNome);
+                        if (gruppo) {
+                            record.gruppo_vendita_id = gruppo.id;
+                        }
+                    }
                 }
                 
-                // Map data to database format
-                const venditeData = jsonData.map(row => ({
-                    mese: getCol(row, 'Mese', 'MESE', 'mese') || null,
-                    sku_origine: getCol(row, 'SKU ORIGINE', 'SKU_ORIGINE', 'sku origine') || null,
-                    nome: getCol(row, 'NOME', 'Nome', 'nome') || null,
-                    sku_conversione: getCol(row, 'SKU CONVERSIONE', 'SKU_CONVERSIONE') || null,
-                    id_settore: getCol(row, 'ID SETTORE', 'ID_SETTORE', 'Settore', 'settore') || null,
-                    nome_univoco: getCol(row, 'NOME UNIVOCO', 'NOME_UNIVOCO') || null,
-                    categoria: getCol(row, 'Categoria', 'CATEGORIA', 'categoria') || null,
-                    prezzo: parseFloat(getCol(row, 'Prezzo', 'PREZZO', 'prezzo')) || 0,
-                    prezzo_medio: parseFloat(getCol(row, 'Prezzo medio', 'PREZZO MEDIO', 'prezzo_medio')) || 0,
-                    pezzi_venduti: parseFloat(getCol(row, 'Pezzi Venduti', 'PEZZI VENDUTI', 'pezzi_venduti', 'Pezzi')) || 0,
-                    fatturato: parseFloat(getCol(row, 'FATTURATO', 'Fatturato', 'fatturato')) || 0
-                })).filter(v => v.mese && v.nome);
-                
-                // Debug: mostra primi 3 record mappati
-                console.log('Primi 3 record mappati:', venditeData.slice(0, 3));
-                
-                console.log('Righe valide:', venditeData.length);
-                
-                // Clear existing data
-                progressText.textContent = 'Pulizia dati esistenti...';
-                progressBar.style.width = '20%';
-                
-                await supabaseClient.from('vendite').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                
-                // Insert in batches
-                const totalRows = venditeData.length;
+                // Insert in batch
+                const BATCH_INSERT = 500;
                 let inserted = 0;
                 
-                for (let i = 0; i < venditeData.length; i += BATCH_SIZE) {
-                    const batch = venditeData.slice(i, i + BATCH_SIZE);
+                for (let i = 0; i < records.length; i += BATCH_INSERT) {
+                    const batch = records.slice(i, i + BATCH_INSERT);
                     
-                    const { error } = await supabaseClient.from('vendite').insert(batch);
-                    if (error) {
-                        console.error('Errore inserimento batch:', error);
-                        throw error;
-                    }
+                    const { error } = await supabaseClient
+                        .from('vendite')
+                        .insert(batch);
+                    
+                    if (error) throw error;
                     
                     inserted += batch.length;
-                    const progress = 20 + (inserted / totalRows * 80);
-                    progressBar.style.width = `${progress.toFixed(0)}%`;
-                    progressText.textContent = `${inserted} / ${totalRows}`;
-                    
-                    await new Promise(r => setTimeout(r, 100));
+                    updateImportProgress(25 + (inserted / records.length * 70), `Inserite ${inserted}/${records.length}...`);
                 }
                 
-                progressText.textContent = '✅ Importazione completata!';
-                progressBar.style.width = '100%';
+                updateImportProgress(100, 'Completato!');
                 
-                setTimeout(() => {
+                setTimeout(async () => {
                     closeImportModal();
-                    progressDiv.classList.add('hidden');
-                    loadVendite();
-                }, 1500);
+                    await loadData();
+                    alert(`✅ Importate ${inserted} righe!`);
+                }, 500);
                 
             } catch (err) {
-                console.error('Errore importazione:', err);
-                progressText.textContent = '❌ Errore: ' + err.message;
-                progressBar.classList.add('bg-red-600');
-                progressBar.classList.remove('bg-green-600');
+                console.error('Errore import:', err);
+                alert('❌ Errore: ' + err.message);
             }
-        };
+            
+            event.target.value = '';
+        }
 
-        // ===== EXPORT =====
-        window.exportToExcel = function() {
-            const anno = document.getElementById('filterAnno').value;
-            const mese = document.getElementById('filterMese').value;
-            const categoria = document.getElementById('filterCategoria').value;
-            const settore = document.getElementById('filterSettore').value;
-            
-            let filtered = allVendite;
-            if (anno) filtered = filtered.filter(v => v.mese?.startsWith(anno));
-            if (mese) filtered = filtered.filter(v => v.mese?.endsWith('_' + mese));
-            if (categoria) filtered = filtered.filter(v => v.categoria === categoria);
-            if (settore) filtered = filtered.filter(v => v.id_settore === settore);
-            
-            const exportData = filtered.map(v => ({
-                'Mese': v.mese,
-                'Prodotto': v.nome,
-                'Categoria': v.categoria,
-                'Settore': v.id_settore,
-                'Prezzo': v.prezzo,
-                'Pezzi Venduti': v.pezzi_venduti,
-                'Fatturato': v.fatturato
-            }));
-            
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Vendite');
-            XLSX.writeFile(wb, `vendite_export_${new Date().toISOString().slice(0,10)}.xlsx`);
-        };
+        function updateImportProgress(percent, text) {
+            document.getElementById('importProgressBar').style.width = percent + '%';
+            document.getElementById('importProgressText').textContent = text;
+        }
 
-        // Initialize
-        loadVendite();
-        console.log('✅ Gestione Vendite caricata');
+        // ===== INIT =====
+        loadData();
+        console.log('✅ Vendite.html caricata');
     </script>
 </body>
 </html>
