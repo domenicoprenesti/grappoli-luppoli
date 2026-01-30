@@ -11,7 +11,6 @@
         .col-checkbox { width: 40px; }
         .col-nome { min-width: 200px; max-width: 300px; }
         .col-categoria { width: 120px; }
-        .col-gruppo { width: 100px; }
         .col-fornitore { width: 140px; }
         .col-prezzo { width: 90px; text-align: right; }
         .col-iva { width: 60px; text-align: center; }
@@ -20,6 +19,23 @@
         .col-stato { width: 80px; text-align: center; }
         .col-azioni { width: 100px; text-align: center; }
         .truncate-cell { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            height: calc(100vh - 64px);
+            position: sticky;
+            top: 64px;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -28,421 +44,259 @@
         if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
-<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex items-center">
-                <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    </button>
+                    
+                    <div class="hidden md:ml-10 md:flex md:space-x-4">
+                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
+                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
+                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Prodotti</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
+                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
-                    <span class="text-lg font-bold">Grappoli & Luppoli</span>
-                </button>
+                </div>
                 
-                <div class="hidden md:ml-10 md:flex md:space-x-4">
-                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
-                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
-                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
                 </div>
             </div>
-            
-            <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
-                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
-            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-    <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
-        <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
-        <p class="text-gray-600 mb-8">Prodotti con categorizzazione completa e gruppi vendita</p>
+    <div class="flex pt-16">
+        <aside class="sidebar bg-gradient-to-b from-blue-600 via-indigo-600 to-purple-700 text-white p-4 overflow-y-auto">
+            <div class="mb-6">
+                <h1 class="text-xl font-bold flex items-center">📦 Prodotti</h1>
+                <p class="text-blue-200 text-xs mt-1">Gestione completa catalogo</p>
+            </div>
 
-        <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-blue-900">Caricamento prodotti...</span>
-                <span id="progressText" class="text-sm text-blue-700">0 / 0</span>
-            </div>
-            <div class="w-full bg-blue-200 rounded-full h-3">
-                <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <div class="grid md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <p class="text-sm text-gray-600">Totale Prodotti</p>
-                <p id="totalProdotti" class="text-3xl font-bold text-blue-600">0</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <p class="text-sm text-gray-600">Categorie</p>
-                <p id="totalCategorie" class="text-3xl font-bold text-green-600">0</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <p class="text-sm text-gray-600">Valore (senza IVA)</p>
-                <p id="valoreTotale" class="text-3xl font-bold text-purple-600">€0</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <p class="text-sm text-gray-600">Valore (con IVA)</p>
-                <p id="valoreTotaleIvato" class="text-3xl font-bold text-orange-600">€0</p>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="font-bold mb-4">Filtri</h3>
-            <div class="grid md:grid-cols-5 gap-4">
-                <input type="text" id="searchNome" placeholder="Cerca prodotto..." class="px-4 py-2 border rounded-lg" onkeyup="applyFilters()">
-                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutte le categorie</option></select>
-                <select id="filterGruppoVendita" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i gruppi vendita</option></select>
-                <select id="filterFornitore" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i fornitori</option></select>
-                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg">Pulisci</button>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
-                <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
-                <div class="flex space-x-3">
-                    <button onclick="openBulkEditModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        <span>Modifica Categoria/Tipo/Gruppo</span>
-                    </button>
-                    <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                        <span>Elimina Selezionati</span>
-                    </button>
+            <div id="loadingProgress" class="hidden mb-4">
+                <div class="bg-white/20 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium">Caricamento...</span>
+                        <span id="progressText" class="text-xs">0 / 0</span>
+                    </div>
+                    <div class="w-full bg-white/30 rounded-full h-2">
+                        <div id="progressBar" class="bg-white h-2 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="overflow-auto">
-                <table class="w-full table-compact">
-                    <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                        <tr>
-                            <th class="col-checkbox"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4"></th>
-                            <th class="col-nome text-left text-sm">Nome</th>
-                            <th class="col-categoria text-left text-sm">Categoria</th>
-                            <th class="col-gruppo text-center text-sm">Gruppo Vendita</th>
-                            <th class="col-fornitore text-left text-sm">Fornitore</th>
-                            <th class="col-prezzo text-sm">€ base</th>
-                            <th class="col-prezzo text-sm">€ scontato</th>
-                            <th class="col-iva text-sm">IVA</th>
-                            <th class="col-prezzo-ivato text-sm">€ IVA</th>
-                            <th class="col-qta text-sm">Q.tà</th>
-                            <th class="col-stato text-sm">U.M.</th>
-                            <th class="col-azioni text-sm">Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody id="prodottiTableBody"></tbody>
-                </table>
+            <div class="space-y-3 mb-6">
+                <div class="stat-card rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Totale Prodotti</p>
+                            <p id="totalProdotti" class="text-2xl font-bold text-blue-600">0</p>
+                        </div>
+                        <div class="bg-blue-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Categorie</p>
+                            <p id="totalCategorie" class="text-2xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="bg-green-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (no IVA)</p>
+                            <p id="valoreTotale" class="text-xl font-bold text-purple-600">€0</p>
+                        </div>
+                        <div class="bg-purple-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (con IVA)</p>
+                            <p id="valoreTotaleIvato" class="text-xl font-bold text-orange-600">€0</p>
+                        </div>
+                        <div class="bg-orange-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-white/90 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Filtri
+                </h3>
+                <div class="space-y-2">
+                    <input type="text" id="searchNome" placeholder="🔍 Cerca prodotto..." class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onkeyup="applyFilters()">
+                    <select id="filterCategoria" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutte le categorie</option></select>
+                    <select id="filterGruppoVendita" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutti i gruppi vendita</option></select>
+                    <select id="filterFornitore" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutti i fornitori</option></select>
+                    <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">✕ Pulisci filtri</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content p-4">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
+                    <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
+                    <div class="flex space-x-3">
+                        <button onclick="openBulkEditModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center space-x-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <span>Modifica Categoria/Tipo</span>
+                        </button>
+                        <button onclick="deleteSelected()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <span>Elimina</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-auto" style="max-height: calc(100vh - 140px);">
+                    <table class="w-full table-compact">
+                        <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0 z-10">
+                            <tr>
+                                <th class="col-checkbox"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4"></th>
+                                <th class="col-nome text-left text-sm">Nome</th>
+                                <th class="col-categoria text-left text-sm">Categoria</th>
+                                <th class="col-categoria text-left text-sm">Gruppo Vendita</th>
+                                <th class="col-fornitore text-left text-sm">Fornitore</th>
+                                <th class="col-prezzo text-sm">€ base</th>
+                                <th class="col-prezzo text-sm">€ scontato</th>
+                                <th class="col-iva text-sm">IVA</th>
+                                <th class="col-prezzo-ivato text-sm">€ IVA</th>
+                                <th class="col-qta text-sm">Q.tà</th>
+                                <th class="col-stato text-sm">U.M.</th>
+                                <th class="col-azioni text-sm">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prodottiTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Modal Modifica Massiva -->
     <div id="modalBulkEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold">✏️ Modifica Massiva</h2>
-                <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+                <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-
             <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <div>
-                        <p class="text-sm font-medium text-blue-900">Prodotti selezionati: <span id="bulkEditCount" class="font-bold">0</span></p>
-                        <p class="text-xs text-blue-700 mt-1">Le modifiche verranno applicate a tutti i prodotti selezionati</p>
-                    </div>
-                </div>
+                <p class="text-sm font-medium text-blue-900">Prodotti selezionati: <span id="bulkEditCount" class="font-bold">0</span></p>
             </div>
-
             <form onsubmit="saveBulkEdit(event)" class="space-y-6">
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Categoria e Tipo</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
-                            <select id="bulkAggregate" class="w-full px-4 py-2 border rounded-lg" onchange="onBulkAggregateChange()">
-                                <option value="">Non modificare</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Tipo</label>
-                            <select id="bulkType" class="w-full px-4 py-2 border rounded-lg" disabled>
-                                <option value="">Seleziona prima categoria</option>
-                            </select>
-                        </div>
+                        <div><label class="block text-sm font-medium mb-2">Categoria</label><select id="bulkAggregate" class="w-full px-4 py-2 border rounded-lg" onchange="onBulkAggregateChange()"><option value="">Non modificare</option></select></div>
+                        <div><label class="block text-sm font-medium mb-2">Tipo</label><select id="bulkType" class="w-full px-4 py-2 border rounded-lg" disabled><option value="">Seleziona categoria</option></select></div>
                     </div>
                 </div>
-
                 <div class="bg-green-50 rounded-lg p-4">
                     <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
-                        <select id="bulkGruppoVendita" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="">Non modificare</option>
-                        </select>
-                    </div>
-                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                        <p class="text-xs text-yellow-800">
-                            <strong>💡 Info:</strong> Il gruppo vendita determina come il prodotto viene classificato nelle vendite (Vino, Birra, Cibo, Alcolici, Bevande, Miscellaneo).
-                        </p>
-                    </div>
+                    <select id="bulkGruppoVendita" class="w-full px-4 py-2 border rounded-lg"><option value="">Non modificare</option></select>
                 </div>
-
                 <div class="flex space-x-4 pt-4 border-t">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg flex items-center justify-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span>Applica a <span id="bulkEditCountBtn">0</span> Prodotti</span>
-                    </button>
-                    <button type="button" onclick="closeBulkEditModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
-                        Annulla
-                    </button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Applica a <span id="bulkEditCountBtn">0</span> Prodotti</button>
+                    <button type="button" onclick="closeBulkEditModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Modifica Prodotto -->
     <div id="modalProdotto" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-auto">
             <h2 id="modalTitle" class="text-2xl font-bold mb-6">Modifica Prodotto</h2>
             <form onsubmit="saveProdotto(event)" class="space-y-6">
                 <input type="hidden" id="prodottoId">
-                
                 <div class="bg-blue-50 rounded-lg p-4">
                     <h3 class="font-bold text-blue-900 mb-3">📋 Dati Base</h3>
                     <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Nome *</label>
-                            <input type="text" id="prodottoNome" required class="w-full px-4 py-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Fornitore</label>
-                            <input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg">
-                        </div>
+                        <div><label class="block text-sm font-medium mb-2">Nome *</label><input type="text" id="prodottoNome" required class="w-full px-4 py-2 border rounded-lg"></div>
+                        <div><label class="block text-sm font-medium mb-2">Fornitore</label><input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg"></div>
                     </div>
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium mb-2">Descrizione</label>
-                        <textarea id="prodottoDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
-                    </div>
+                    <div class="mt-4"><label class="block text-sm font-medium mb-2">Descrizione</label><textarea id="prodottoDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
                 </div>
-
                 <div class="bg-purple-50 rounded-lg p-4">
                     <h3 class="font-bold text-purple-900 mb-3">🏷️ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
-                            <div class="flex space-x-2">
-                                <select id="prodottoAggregante" class="flex-1 px-4 py-2 border rounded-lg" onchange="onAggreganteChange()">
-                                    <option value="">Non categorizzato</option>
-                                </select>
-                                <button type="button" onclick="editAggregante()" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200" title="Modifica categoria">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Tipo</label>
-                            <div class="flex space-x-2">
-                                <select id="prodottoTipo" class="flex-1 px-4 py-2 border rounded-lg" disabled>
-                                    <option value="">Seleziona prima categoria</option>
-                                </select>
-                                <button type="button" onclick="editTipo()" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200" title="Modifica tipo">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                </button>
-                            </div>
-                        </div>
+                        <div><label class="block text-sm font-medium mb-2">Categoria</label><select id="prodottoAggregante" class="w-full px-4 py-2 border rounded-lg" onchange="onAggreganteChange()"><option value="">Non categorizzato</option></select></div>
+                        <div><label class="block text-sm font-medium mb-2">Tipo</label><select id="prodottoTipo" class="w-full px-4 py-2 border rounded-lg" disabled><option value="">Seleziona categoria</option></select></div>
                     </div>
-                    
                     <div id="formNuovoAggregante" class="hidden mt-4 bg-green-50 border-2 border-green-300 rounded-lg p-4">
-                        <h4 class="font-bold text-green-900 mb-3">✨ Crea Nuova Categoria</h4>
+                        <h4 class="font-bold text-green-900 mb-3">✨ Nuova Categoria</h4>
                         <div class="grid md:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Nome *</label>
-                                <input type="text" id="nuovoAggreganteNome" class="w-full px-3 py-2 border rounded text-sm" oninput="checkAggreganteExists()">
-                                <div id="aggreganteExistsWarning" class="hidden mt-1 text-xs text-orange-600 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    <span>Nome già esistente</span>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Colore</label>
-                                <input type="color" id="nuovoAggreganteColore" value="#3B82F6" class="w-full h-10 border rounded">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Ordine</label>
-                                <input type="number" id="nuovoAggreganteOrdine" value="50" class="w-full px-3 py-2 border rounded text-sm">
-                            </div>
+                            <div><label class="block text-xs font-medium mb-1">Nome *</label><input type="text" id="nuovoAggreganteNome" class="w-full px-3 py-2 border rounded text-sm"></div>
+                            <div><label class="block text-xs font-medium mb-1">Colore</label><input type="color" id="nuovoAggreganteColore" value="#3B82F6" class="w-full h-10 border rounded"></div>
+                            <div><label class="block text-xs font-medium mb-1">Ordine</label><input type="number" id="nuovoAggreganteOrdine" value="50" class="w-full px-3 py-2 border rounded text-sm"></div>
                         </div>
                     </div>
-
                     <div id="formNuovoTipo" class="hidden mt-4 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-                        <h4 class="font-bold text-purple-900 mb-3">✨ Crea Nuovo Tipo</h4>
+                        <h4 class="font-bold text-purple-900 mb-3">✨ Nuovo Tipo</h4>
                         <div class="grid md:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Nome *</label>
-                                <input type="text" id="nuovoTipoNome" class="w-full px-3 py-2 border rounded text-sm" oninput="checkTipoExists()">
-                                <div id="tipoExistsWarning" class="hidden mt-1 text-xs text-orange-600 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    <span>Nome già esistente</span>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Keywords (separate da virgola)</label>
-                                <input type="text" id="nuovoTipoKeywords" placeholder="es: vino, rosso, chianti" class="w-full px-3 py-2 border rounded text-sm">
-                            </div>
+                            <div><label class="block text-xs font-medium mb-1">Nome *</label><input type="text" id="nuovoTipoNome" class="w-full px-3 py-2 border rounded text-sm"></div>
+                            <div><label class="block text-xs font-medium mb-1">Keywords</label><input type="text" id="nuovoTipoKeywords" placeholder="vino, rosso" class="w-full px-3 py-2 border rounded text-sm"></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Gruppo Vendita -->
                 <div class="bg-green-50 rounded-lg p-4">
                     <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
-                        <select id="prodottoGruppoVendita" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="">Nessun gruppo</option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-2">💡 Il gruppo vendita classifica il prodotto per le analisi di vendita</p>
-                    </div>
+                    <select id="prodottoGruppoVendita" class="w-full px-4 py-2 border rounded-lg"><option value="">Nessun gruppo</option></select>
                 </div>
-
                 <div class="bg-orange-50 rounded-lg p-4">
-                    <h3 class="font-bold text-orange-900 mb-3">💰 Prezzi e Quantità</h3>
+                    <h3 class="font-bold text-orange-900 mb-3">💰 Prezzi</h3>
                     <div class="grid md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Prezzo (senza IVA)</label>
-                            <input type="number" step="any" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Aliquota IVA (%)</label>
-                            <input type="number" step="any" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Quantità</label>
-                            <input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Unità di Misura</label>
-                            <select id="prodottoUnitaMisura" class="w-full px-4 py-2 border rounded-lg">
-                                <option value="pz">Pezzi (pz)</option>
-                                <option value="kg">Kilogrammi (kg)</option>
-                                <option value="lt">Litri (lt)</option>
-                                <option value="bt">Bottiglie (bt)</option>
-                                <option value="ct">Cartoni (ct)</option>
-                                <option value="cf">Confezioni (cf)</option>
-                            </select>
-                        </div>
+                        <div><label class="block text-sm font-medium mb-2">Prezzo</label><input type="number" step="any" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg"></div>
+                        <div><label class="block text-sm font-medium mb-2">IVA %</label><input type="number" step="any" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg"></div>
+                        <div><label class="block text-sm font-medium mb-2">Quantità</label><input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg"></div>
+                        <div><label class="block text-sm font-medium mb-2">U.M.</label><select id="prodottoUnitaMisura" class="w-full px-4 py-2 border rounded-lg"><option value="pz">Pezzi</option><option value="kg">Kg</option><option value="lt">Litri</option><option value="bt">Bottiglie</option><option value="ct">Cartoni</option></select></div>
                     </div>
                 </div>
-
-                <div class="flex items-center bg-gray-50 rounded-lg p-4">
-                    <input type="checkbox" id="prodottoAttivo" checked class="w-5 h-5 mr-3">
-                    <label class="text-sm font-medium">Prodotto attivo</label>
-                </div>
-
+                <div class="flex items-center bg-gray-50 rounded-lg p-4"><input type="checkbox" id="prodottoAttivo" checked class="w-5 h-5 mr-3"><label class="text-sm font-medium">Prodotto attivo</label></div>
                 <div class="flex space-x-4 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva Modifiche</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
                     <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Eliminazione -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div class="text-center mb-6">
-                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                </div>
+                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6"><p class="text-sm text-yellow-800"><strong>⚠️</strong> Azione irreversibile!</p></div>
             <div class="flex space-x-4">
-                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+                <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Elimina</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Modifica Aggregante -->
-    <div id="modalEditAggregante" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-            <h2 class="text-2xl font-bold mb-6">✏️ Modifica Categoria</h2>
-            <form onsubmit="saveEditAggregante(event)" class="space-y-4">
-                <input type="hidden" id="editAggId">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Nome *</label>
-                    <input type="text" id="editAggNome" required class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Colore</label>
-                    <input type="color" id="editAggColore" class="w-full h-12 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Ordine</label>
-                    <input type="number" id="editAggOrdine" class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Descrizione</label>
-                    <textarea id="editAggDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
-                </div>
-                <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
-                    <button type="button" onclick="closeEditAggregante()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteAggregante()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">🗑️</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Modifica Tipo -->
-    <div id="modalEditTipo" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-            <h2 class="text-2xl font-bold mb-6">✏️ Modifica Tipo</h2>
-            <form onsubmit="saveEditTipo(event)" class="space-y-4">
-                <input type="hidden" id="editTipoId">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Nome *</label>
-                    <input type="text" id="editTipoNome" required class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
-                    <select id="editTipoAggregante" class="w-full px-4 py-2 border rounded-lg"></select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Keywords (separate da virgola)</label>
-                    <input type="text" id="editTipoKeywords" class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Descrizione</label>
-                    <textarea id="editTipoDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
-                </div>
-                <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
-                    <button type="button" onclick="closeEditTipo()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteTipo()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">🗑️</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -452,573 +306,227 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const BATCH_SIZE = 500;
         
-        let allProdotti = [];
-        let allAggreganti = [];
-        let allTipi = [];
-        let allGruppiVendita = [];
+        let allProdotti = [], allAggreganti = [], allTipi = [], allGruppiVendita = [];
         let loadingProgress = { loaded: 0, total: 0, isLoading: false };
         let selectedIds = new Set();
         let deleteAction = null;
 
-        function logout() { 
-            localStorage.removeItem('app_authenticated'); 
-            window.location.href = 'index.html'; 
-        }
+        function logout() { localStorage.removeItem('app_authenticated'); window.location.href = 'index.html'; }
 
-        window.normalizeDecimal = function(input) {
-            if (input.value) {
-                input.value = input.value.replace(',', '.');
-                input.value = input.value.replace(/[^0-9.-]/g, '');
-                const num = parseFloat(input.value);
-                if (!isNaN(num)) input.value = num;
-            }
-        };
-
-        // ===== MODIFICA MASSIVA =====
-        window.openBulkEditModal = function() {
-            if (selectedIds.size === 0) {
-                alert('Seleziona almeno un prodotto');
-                return;
-            }
-
-            document.getElementById('bulkEditCount').textContent = selectedIds.size;
-            document.getElementById('bulkEditCountBtn').textContent = selectedIds.size;
-            
-            const select = document.getElementById('bulkAggregate');
-            select.innerHTML = '<option value="">Non modificare</option>';
-            allAggreganti.forEach(agg => {
-                select.innerHTML += `<option value="${agg.id}">${agg.nome}</option>`;
-            });
-            select.innerHTML += '<option value="__remove__">🗑️ Rimuovi categoria</option>';
-            
-            document.getElementById('bulkType').innerHTML = '<option value="">Seleziona prima categoria</option>';
-            document.getElementById('bulkType').disabled = true;
-            
-            const gruppoSelect = document.getElementById('bulkGruppoVendita');
-            gruppoSelect.innerHTML = '<option value="">Non modificare</option>';
-            allGruppiVendita.forEach(g => {
-                gruppoSelect.innerHTML += `<option value="${g.id}" style="color: ${g.colore}">● ${g.nome}</option>`;
-            });
-            gruppoSelect.innerHTML += '<option value="__remove__">🗑️ Rimuovi gruppo</option>';
-            
-            document.getElementById('modalBulkEdit').classList.remove('hidden');
-        };
-
-        window.closeBulkEditModal = function() {
-            document.getElementById('modalBulkEdit').classList.add('hidden');
-        };
-
-        window.onBulkAggregateChange = function() {
-            const aggreganteId = document.getElementById('bulkAggregate').value;
-            const tipoSelect = document.getElementById('bulkType');
-            
-            if (!aggreganteId || aggreganteId === '' || aggreganteId === '__remove__') {
-                tipoSelect.disabled = true;
-                tipoSelect.innerHTML = '<option value="">Non modificabile</option>';
-            } else {
-                tipoSelect.disabled = false;
-                populateBulkTipiSelect(aggreganteId);
-            }
-        };
-
-        function populateBulkTipiSelect(aggreganteId) {
-            const select = document.getElementById('bulkType');
-            let options = ['<option value="">Non modificare</option>'];
-            
-            const tipiOrdinati = [...allTipi].sort((a, b) => {
-                const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
-                const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
-                if (aggA !== aggB) return aggA.localeCompare(aggB);
-                return a.nome.localeCompare(b.nome);
-            });
-            
-            let currentAgg = null;
-            tipiOrdinati.forEach(tipo => {
-                const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
-                if (aggNome !== currentAgg) {
-                    options.push(`<option value="" disabled class="font-bold">——— ${aggNome} ———</option>`);
-                    currentAgg = aggNome;
-                }
-                options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
-            });
-            
-            options.push('<option value="__remove__">🗑️ Rimuovi tipo</option>');
-            select.innerHTML = options.join('');
-        }
-
-        window.saveBulkEdit = async function(event) {
-            event.preventDefault();
-            
-            const aggreganteId = document.getElementById('bulkAggregate').value;
-            const tipoId = document.getElementById('bulkType').value;
-            const gruppoVenditaId = document.getElementById('bulkGruppoVendita').value;
-            
-            if (!aggreganteId && !tipoId && !gruppoVenditaId) {
-                alert('Seleziona almeno una modifica da applicare');
-                return;
-            }
-            
-            const count = selectedIds.size;
-            if (!window.confirm(`Confermi di voler modificare ${count} prodotti?`)) return;
-            
-            try {
-                closeBulkEditModal();
-                
-                const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-blue-600">✏️ Modifica massiva in corso...<br><span id="bulkProgress">0 / ${count}</span></td></tr>`;
-                
-                let updated = 0;
-                const idsArray = Array.from(selectedIds);
-                let updateData = {};
-                
-                if (aggreganteId === '__remove__' || tipoId === '__remove__') {
-                    updateData.tipo_id = null;
-                } else if (tipoId && tipoId !== '') {
-                    updateData.tipo_id = parseInt(tipoId);
-                } else if (aggreganteId && aggreganteId !== '') {
-                    updateData.tipo_id = null;
-                }
-                
-                if (gruppoVenditaId === '__remove__') {
-                    updateData.gruppo_vendita_id = null;
-                } else if (gruppoVenditaId && gruppoVenditaId !== '') {
-                    updateData.gruppo_vendita_id = parseInt(gruppoVenditaId);
-                }
-                
-                const BATCH_UPDATE_SIZE = 100;
-                for (let i = 0; i < idsArray.length; i += BATCH_UPDATE_SIZE) {
-                    const batch = idsArray.slice(i, i + BATCH_UPDATE_SIZE);
-                    
-                    const { error } = await supabaseClient
-                        .from('prodotti')
-                        .update(updateData)
-                        .in('id', batch);
-                    
-                    if (error) throw error;
-                    
-                    updated += batch.length;
-                    const progressSpan = document.getElementById('bulkProgress');
-                    if (progressSpan) progressSpan.textContent = `${updated} / ${count}`;
-                    
-                    if (i + BATCH_UPDATE_SIZE < idsArray.length) {
-                        await new Promise(resolve => setTimeout(resolve, 300));
-                    }
-                }
-                
-                selectedIds.clear();
-                updateSelectionBar();
-                await loadAllProdotti();
-                
-                alert(`✅ ${updated} prodotti aggiornati con successo!`);
-                
-            } catch (err) {
-                console.error('Errore modifica massiva:', err);
-                alert(`❌ Errore: ${err.message}`);
-                await loadAllProdotti();
-            }
-        };
-
-        // ===== CARICAMENTO DATI =====
         async function loadAnagrafiche() {
-            try {
-                console.log('🔄 Caricamento anagrafiche...');
-                
-                const { data: aggreganti, error: aggError } = await supabaseClient
-                    .from('aggregante_prodotto')
-                    .select('*')
-                    .order('ordine', { ascending: true });
-                
-                if (aggError) throw aggError;
-                allAggreganti = aggreganti || [];
-                
-                const { data: tipi, error: tipiError } = await supabaseClient
-                    .from('tipo_prodotto')
-                    .select('*, aggregante_prodotto(id, nome, colore)')
-                    .order('nome', { ascending: true });
-                
-                if (tipiError) throw tipiError;
-                allTipi = tipi || [];
-                
-                const { data: gruppiVendita, error: gruppiError } = await supabaseClient
-                    .from('gruppo_vendita')
-                    .select('*')
-                    .order('ordine', { ascending: true });
-                
-                if (gruppiError) {
-                    console.warn('⚠️ Errore caricamento gruppi vendita:', gruppiError);
-                    allGruppiVendita = [];
-                } else {
-                    allGruppiVendita = gruppiVendita || [];
-                    console.log(`✅ Caricati ${allGruppiVendita.length} gruppi vendita`);
-                }
-                
-            } catch (err) {
-                console.error('❌ Errore caricamento anagrafiche:', err);
-            }
+            const { data: agg } = await supabaseClient.from('aggregante_prodotto').select('*').order('ordine');
+            allAggreganti = agg || [];
+            const { data: tipi } = await supabaseClient.from('tipo_prodotto').select('*, aggregante_prodotto(id, nome, colore)').order('nome');
+            allTipi = tipi || [];
+            const { data: gruppi } = await supabaseClient.from('gruppo_vendita').select('*').order('ordine');
+            allGruppiVendita = gruppi || [];
         }
 
         async function loadAllProdotti() {
-            try {
-                await loadAnagrafiche();
-                
-                const { count } = await supabaseClient.from('prodotti').select('*', { count: 'exact', head: true });
-                loadingProgress = { loaded: 0, total: count || 0, isLoading: true };
+            await loadAnagrafiche();
+            const { count } = await supabaseClient.from('prodotti').select('*', { count: 'exact', head: true });
+            loadingProgress = { loaded: 0, total: count || 0, isLoading: true };
+            updateLoadingUI();
+            
+            const numBatches = Math.ceil(loadingProgress.total / BATCH_SIZE);
+            allProdotti = [];
+            
+            for (let i = 0; i < numBatches; i++) {
+                const { data } = await supabaseClient.from('prodotti').select('*, tipo_prodotto(id, nome, aggregante_prodotto(id, nome, colore)), gruppo_vendita(id, nome, colore)').order('nome').range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
+                allProdotti = [...allProdotti, ...data];
+                loadingProgress.loaded = allProdotti.length;
                 updateLoadingUI();
-                
-                const numBatches = Math.ceil(loadingProgress.total / BATCH_SIZE);
-                allProdotti = [];
-                
-                for (let i = 0; i < numBatches; i++) {
-                    const { data } = await supabaseClient
-                        .from('prodotti')
-                        .select(`
-                            *,
-                            tipo_prodotto (
-                                id,
-                                nome,
-                                aggregante_prodotto (
-                                    id,
-                                    nome,
-                                    colore
-                                )
-                            ),
-                            gruppo_vendita (
-                                id,
-                                nome,
-                                colore
-                            )
-                        `)
-                        .order('nome', { ascending: true })
-                        .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
-                    
-                    allProdotti = [...allProdotti, ...data];
-                    loadingProgress.loaded = allProdotti.length;
-                    updateLoadingUI();
-                    if (i < numBatches - 1) await new Promise(r => setTimeout(r, 100));
-                }
-                
-                loadingProgress.isLoading = false;
-                updateStats();
-                updateFilters();
-                applyFilters();
-                hideLoadingUI();
-            } catch (err) { 
-                console.error('Errore:', err); 
-                hideLoadingUI(); 
+                if (i < numBatches - 1) await new Promise(r => setTimeout(r, 100));
             }
+            
+            loadingProgress.isLoading = false;
+            updateStats(); updateFilters(); applyFilters(); hideLoadingUI();
         }
 
         function updateLoadingUI() {
             const div = document.getElementById('loadingProgress');
             if (loadingProgress.isLoading) {
                 div.classList.remove('hidden');
-                document.getElementById('progressBar').style.width = `${(loadingProgress.loaded / loadingProgress.total * 100).toFixed(1)}%`;
+                document.getElementById('progressBar').style.width = `${(loadingProgress.loaded / loadingProgress.total * 100)}%`;
                 document.getElementById('progressText').textContent = `${loadingProgress.loaded} / ${loadingProgress.total}`;
             }
         }
-        
-        function hideLoadingUI() { 
-            document.getElementById('loadingProgress').classList.add('hidden'); 
-        }
+        function hideLoadingUI() { document.getElementById('loadingProgress').classList.add('hidden'); }
         
         function updateStats() {
             document.getElementById('totalProdotti').textContent = allProdotti.length.toLocaleString('it-IT');
-            
-            const aggregantiUnici = new Set(
-                allProdotti
-                    .filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome)
-                    .map(p => p.tipo_prodotto.aggregante_prodotto.nome)
-            );
-            document.getElementById('totalCategorie').textContent = aggregantiUnici.size;
-            
-            const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
-            const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
-            
-            document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            const cats = new Set(allProdotti.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome).map(p => p.tipo_prodotto.aggregante_prodotto.nome));
+            document.getElementById('totalCategorie').textContent = cats.size;
+            const valNoIva = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
+            const valIva = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
+            document.getElementById('valoreTotale').textContent = `€${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotaleIvato').textContent = `€${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
         
         function updateFilters() {
-            const aggregantiSet = new Set();
-            allProdotti.forEach(p => {
-                if (p.tipo_prodotto?.aggregante_prodotto?.nome) {
-                    aggregantiSet.add(p.tipo_prodotto.aggregante_prodotto.nome);
-                }
-            });
-            
-            const cat = Array.from(aggregantiSet).sort();
-            const forn = [...new Set(allProdotti.map(p => p.fornitore).filter(Boolean))].sort();
-            
-            document.getElementById('filterCategoria').innerHTML = '<option value="">Tutte le categorie</option>' + 
-                cat.map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('filterFornitore').innerHTML = '<option value="">Tutti i fornitori</option>' + 
-                forn.map(f => `<option value="${f}">${f}</option>`).join('');
-            
-            document.getElementById('filterGruppoVendita').innerHTML = '<option value="">Tutti i gruppi vendita</option>' + 
-                allGruppiVendita.map(g => `<option value="${g.id}">● ${g.nome}</option>`).join('');
+            const cats = [...new Set(allProdotti.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome).map(p => p.tipo_prodotto.aggregante_prodotto.nome))].sort();
+            const forns = [...new Set(allProdotti.map(p => p.fornitore).filter(Boolean))].sort();
+            document.getElementById('filterCategoria').innerHTML = '<option value="">Tutte le categorie</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('filterFornitore').innerHTML = '<option value="">Tutti i fornitori</option>' + forns.map(f => `<option value="${f}">${f}</option>`).join('');
+            document.getElementById('filterGruppoVendita').innerHTML = '<option value="">Tutti i gruppi vendita</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
         }
         
         function applyFilters() {
             const search = document.getElementById('searchNome').value.toLowerCase();
             const cat = document.getElementById('filterCategoria').value;
-            const gruppoVendita = document.getElementById('filterGruppoVendita').value;
             const forn = document.getElementById('filterFornitore').value;
+            const gruppo = document.getElementById('filterGruppoVendita').value;
             let filtered = allProdotti;
             if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
             if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
-            if (gruppoVendita) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppoVendita);
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
+            if (gruppo) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppo);
             renderTable(filtered);
         }
         
         function clearFilters() { 
             document.getElementById('searchNome').value = ''; 
             document.getElementById('filterCategoria').value = ''; 
-            document.getElementById('filterGruppoVendita').value = '';
             document.getElementById('filterFornitore').value = ''; 
+            document.getElementById('filterGruppoVendita').value = ''; 
             applyFilters(); 
         }
         
         function updateSelectionBar() {
             const bar = document.getElementById('selectionBar');
-            const count = document.getElementById('selectionCount');
-            if (selectedIds.size > 0) { 
-                bar.classList.remove('hidden'); 
-                count.textContent = `${selectedIds.size} prodotti selezionati`; 
-            } else { 
-                bar.classList.add('hidden'); 
-            }
+            if (selectedIds.size > 0) { bar.classList.remove('hidden'); document.getElementById('selectionCount').textContent = `${selectedIds.size} prodotti selezionati`; } 
+            else { bar.classList.add('hidden'); }
         }
         
-        function toggleSelect(id) { 
-            selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id); 
-            updateSelectionBar(); 
-            applyFilters(); 
-        }
+        function toggleSelect(id) { selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id); updateSelectionBar(); applyFilters(); }
         
         function toggleSelectAll() {
-            const checkbox = document.getElementById('selectAllCheckbox');
-            if (checkbox.checked) {
+            const cb = document.getElementById('selectAllCheckbox');
+            if (cb.checked) {
+                let filtered = allProdotti;
                 const search = document.getElementById('searchNome').value.toLowerCase();
                 const cat = document.getElementById('filterCategoria').value;
-                const gruppoVendita = document.getElementById('filterGruppoVendita').value;
                 const forn = document.getElementById('filterFornitore').value;
-                let filtered = allProdotti;
+                const gruppo = document.getElementById('filterGruppoVendita').value;
                 if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
                 if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
-                if (gruppoVendita) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppoVendita);
                 if (forn) filtered = filtered.filter(p => p.fornitore === forn);
+                if (gruppo) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppo);
                 selectedIds = new Set(filtered.map(p => p.id));
-            } else { 
-                selectedIds.clear(); 
-            }
-            updateSelectionBar();
-            applyFilters();
+            } else { selectedIds.clear(); }
+            updateSelectionBar(); applyFilters();
         }
 
         function renderTable(prodotti) {
             const tbody = document.getElementById('prodottiTableBody');
-            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-            
-            if (loadingProgress.isLoading) { 
-                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; 
-                return; 
-            }
-            
-            if (!prodotti.length) { 
-                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; 
-                selectAllCheckbox.checked = false; 
-                return; 
-            }
-            
-            const allSelected = prodotti.every(p => selectedIds.has(p.id));
-            selectAllCheckbox.checked = allSelected && prodotti.length > 0;
+            if (loadingProgress.isLoading) { tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; return; }
+            if (!prodotti.length) { tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; return; }
+            document.getElementById('selectAllCheckbox').checked = prodotti.every(p => selectedIds.has(p.id)) && prodotti.length > 0;
             
             tbody.innerHTML = prodotti.map(p => {
                 const hasSconto = p.prezzo_scontato && p.prezzo_scontato < p.prezzo;
-                const aggregante = p.tipo_prodotto?.aggregante_prodotto;
-                const categoriaDisplay = aggregante ? aggregante.nome : 'Non categorizzato';
-                const categoriaColor = aggregante ? aggregante.colore : '#6B7280';
+                const agg = p.tipo_prodotto?.aggregante_prodotto;
+                const catDisplay = agg ? agg.nome : 'Non cat.';
+                const catColor = agg ? agg.colore : '#6B7280';
+                const gv = p.gruppo_vendita;
+                const gvDisplay = gv ? gv.nome : '-';
+                const gvColor = gv ? gv.colore : '#6B7280';
                 
-                const gruppoVendita = p.gruppo_vendita;
-                const gruppoDisplay = gruppoVendita ? gruppoVendita.nome : '-';
-                const gruppoColor = gruppoVendita ? gruppoVendita.colore : '#9CA3AF';
-                
-                return `
-                <tr class="hover:bg-gray-50 border-b ${selectedIds.has(p.id) ? 'bg-blue-50' : ''}">
+                return `<tr class="hover:bg-gray-50 border-b ${selectedIds.has(p.id) ? 'bg-blue-50' : ''}">
                     <td class="col-checkbox"><input type="checkbox" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelect('${p.id}')" class="w-4 h-4"></td>
                     <td class="col-nome truncate-cell" title="${p.nome}">${p.nome}</td>
-                    <td class="col-categoria">
-                        <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${categoriaColor}20; border: 1px solid ${categoriaColor}40; color: ${categoriaColor}">
-                            ${categoriaDisplay}
-                        </span>
-                    </td>
-                    <td class="col-gruppo text-center">
-                        ${gruppoVendita ? `
-                            <span class="inline-flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium" style="background-color: ${gruppoColor}15; color: ${gruppoColor}">
-                                <span class="w-2 h-2 rounded-full" style="background-color: ${gruppoColor}"></span>
-                                <span>${gruppoDisplay}</span>
-                            </span>
-                        ` : `<span class="text-gray-400 text-xs">-</span>`}
-                    </td>
-                    <td class="col-fornitore truncate-cell text-sm" title="${p.fornitore || '-'}">${p.fornitore || '-'}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">€${(p.prezzo_scontato || p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="col-categoria"><span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${catColor}20; border: 1px solid ${catColor}40; color: ${catColor}">${catDisplay}</span></td>
+                    <td class="col-categoria">${gv ? `<span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${gvColor}20; border: 1px solid ${gvColor}40; color: ${gvColor}">${gvDisplay}</span>` : '<span class="text-gray-400">-</span>'}</td>
+                    <td class="col-fornitore truncate-cell text-sm">${p.fornitore || '-'}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">€${(p.prezzo_scontato || p.prezzo || 0).toFixed(2)}</td>
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
-                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toFixed(2)}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
                     <td class="col-stato text-sm text-center">${p.unita_misura || 'pz'}</td>
                     <td class="col-azioni">
-                        <button onclick="editProdotto('${p.id}')" class="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded inline-block" title="Modifica">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        </button>
-                        <button onclick="showDeleteModal('${p.id}')" class="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded inline-block" title="Elimina">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
+                        <button onclick="editProdotto('${p.id}')" class="text-blue-600 hover:text-blue-800 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                        <button onclick="showDeleteModal('${p.id}')" class="text-red-600 hover:text-red-800 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </td>
-                </tr>
-            `}).join('');
+                </tr>`;
+            }).join('');
         }
 
-        // ===== ELIMINAZIONE =====
-        function showDeleteModal(id) {
-            const prodotto = allProdotti.find(p => p.id === id);
-            if (!prodotto) return;
-            document.getElementById('deleteMessage').textContent = `Vuoi eliminare "${prodotto.nome}"?`;
-            deleteAction = { type: 'single', ids: [id] };
-            document.getElementById('deleteModal').classList.remove('hidden');
-        }
-
-        window.deleteSelected = function() {
-            if (selectedIds.size === 0) { 
-                alert('Seleziona almeno un prodotto'); 
-                return; 
-            }
-            document.getElementById('deleteMessage').textContent = `Vuoi eliminare ${selectedIds.size} prodotti?`;
-            deleteAction = { type: 'multiple', ids: Array.from(selectedIds) };
-            document.getElementById('deleteModal').classList.remove('hidden');
+        window.openBulkEditModal = function() {
+            if (selectedIds.size === 0) { alert('Seleziona prodotti'); return; }
+            document.getElementById('bulkEditCount').textContent = selectedIds.size;
+            document.getElementById('bulkEditCountBtn').textContent = selectedIds.size;
+            const sel = document.getElementById('bulkAggregate');
+            sel.innerHTML = '<option value="">Non modificare</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>';
+            document.getElementById('bulkType').innerHTML = '<option value="">Seleziona categoria</option>';
+            document.getElementById('bulkType').disabled = true;
+            const gvSel = document.getElementById('bulkGruppoVendita');
+            gvSel.innerHTML = '<option value="">Non modificare</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>';
+            document.getElementById('modalBulkEdit').classList.remove('hidden');
+        };
+        window.closeBulkEditModal = function() { document.getElementById('modalBulkEdit').classList.add('hidden'); };
+        
+        window.onBulkAggregateChange = function() {
+            const aggId = document.getElementById('bulkAggregate').value;
+            const tipoSel = document.getElementById('bulkType');
+            if (!aggId || aggId === '__remove__') { tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Non modificabile</option>'; }
+            else { tipoSel.disabled = false; tipoSel.innerHTML = '<option value="">Non modificare</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>'; }
         };
 
-        function closeDeleteModal() { 
-            document.getElementById('deleteModal').classList.add('hidden'); 
-        }
-
-        async function confirmDelete() {
-            if (!deleteAction) return;
-            const idsToDelete = deleteAction.ids;
-            const total = idsToDelete.length;
-            deleteAction = null;
-            closeDeleteModal();
-            
-            try {
-                let deletedCount = 0;
-                const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
-                
-                const BATCH_DELETE_SIZE = 100;
-                for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
-                    const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
-                    const { error } = await supabaseClient.from('prodotti').delete().in('id', batch);
-                    if (error) throw error;
-                    deletedCount += batch.length;
-                    const progressSpan = document.getElementById('deleteProgress');
-                    if (progressSpan) progressSpan.textContent = `${deletedCount} / ${total}`;
-                    if (i + BATCH_DELETE_SIZE < idsToDelete.length) await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
-                selectedIds.clear();
-                updateSelectionBar();
-                await loadAllProdotti();
-                alert(`✅ ${deletedCount} prodotti eliminati!`);
-            } catch (err) {
-                console.error('Errore eliminazione:', err);
-                alert(`❌ Errore: ${err.message}`);
-                await loadAllProdotti();
+        window.saveBulkEdit = async function(e) {
+            e.preventDefault();
+            const aggId = document.getElementById('bulkAggregate').value;
+            const tipoId = document.getElementById('bulkType').value;
+            const gvId = document.getElementById('bulkGruppoVendita').value;
+            if (!aggId && !tipoId && !gvId) { alert('Seleziona una modifica'); return; }
+            if (!confirm(`Modificare ${selectedIds.size} prodotti?`)) return;
+            closeBulkEditModal();
+            const tbody = document.getElementById('prodottiTableBody');
+            tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-blue-600">Modifica in corso...</td></tr>`;
+            let updateData = {};
+            if (aggId === '__remove__') updateData.tipo_id = null;
+            else if (tipoId === '__remove__') updateData.tipo_id = null;
+            else if (tipoId) updateData.tipo_id = tipoId;
+            else if (aggId) updateData.tipo_id = null;
+            if (gvId === '__remove__') updateData.gruppo_vendita_id = null;
+            else if (gvId) updateData.gruppo_vendita_id = gvId;
+            const ids = Array.from(selectedIds);
+            for (let i = 0; i < ids.length; i += 100) {
+                await supabaseClient.from('prodotti').update(updateData).in('id', ids.slice(i, i + 100));
             }
-        }
+            selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
+            alert('✅ Prodotti aggiornati!');
+        };
 
-        // ===== MODAL PRODOTTO =====
         function populateAggregantiSelect() {
-            const select = document.getElementById('prodottoAggregante');
-            select.innerHTML = '<option value="">Non categorizzato</option>';
-            allAggreganti.forEach(agg => {
-                select.innerHTML += `<option value="${agg.id}">${agg.nome}</option>`;
-            });
-            select.innerHTML += '<option value="__nuovo__">➕ Crea nuova categoria</option>';
+            const sel = document.getElementById('prodottoAggregante');
+            sel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuova categoria</option>';
         }
-
-        function populateGruppiVenditaSelect(selectedId = null) {
-            const select = document.getElementById('prodottoGruppoVendita');
-            select.innerHTML = '<option value="">Nessun gruppo</option>';
-            allGruppiVendita.forEach(g => {
-                const selected = selectedId && selectedId == g.id ? 'selected' : '';
-                select.innerHTML += `<option value="${g.id}" ${selected}>● ${g.nome}</option>`;
-            });
+        function populateGruppiVenditaSelect() {
+            const sel = document.getElementById('prodottoGruppoVendita');
+            sel.innerHTML = '<option value="">Nessun gruppo</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
         }
 
         window.onAggreganteChange = function() {
-            const aggreganteId = document.getElementById('prodottoAggregante').value;
-            const tipoSelect = document.getElementById('prodottoTipo');
-            const formNuovoAgg = document.getElementById('formNuovoAggregante');
-            const formNuovoTipo = document.getElementById('formNuovoTipo');
-            
-            if (aggreganteId === '__nuovo__') {
-                formNuovoAgg.classList.remove('hidden');
-                tipoSelect.disabled = true;
-                tipoSelect.innerHTML = '<option value="">Prima crea la categoria</option>';
-                formNuovoTipo.classList.add('hidden');
+            const aggId = document.getElementById('prodottoAggregante').value;
+            const tipoSel = document.getElementById('prodottoTipo');
+            document.getElementById('formNuovoAggregante').classList.add('hidden');
+            document.getElementById('formNuovoTipo').classList.add('hidden');
+            if (aggId === '__nuovo__') {
+                document.getElementById('formNuovoAggregante').classList.remove('hidden');
+                tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Prima crea categoria</option>';
+            } else if (aggId) {
+                tipoSel.disabled = false;
+                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuovo tipo</option>';
+                tipoSel.onchange = function() { document.getElementById('formNuovoTipo').classList.toggle('hidden', this.value !== '__nuovo__'); };
             } else {
-                formNuovoAgg.classList.add('hidden');
-                
-                if (aggreganteId === '') {
-                    tipoSelect.disabled = true;
-                    tipoSelect.innerHTML = '<option value="">Seleziona prima categoria</option>';
-                    formNuovoTipo.classList.add('hidden');
-                } else {
-                    tipoSelect.disabled = false;
-                    populateTipiSelect(aggreganteId);
-                }
+                tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Seleziona categoria</option>';
             }
         };
-
-        function populateTipiSelect(aggreganteId) {
-            const select = document.getElementById('prodottoTipo');
-            let options = ['<option value="">Nessun tipo specifico</option>'];
-            
-            const tipiOrdinati = [...allTipi].sort((a, b) => {
-                const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
-                const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
-                if (aggA !== aggB) return aggA.localeCompare(aggB);
-                return a.nome.localeCompare(b.nome);
-            });
-            
-            let currentAgg = null;
-            tipiOrdinati.forEach(tipo => {
-                const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
-                if (aggNome !== currentAgg) {
-                    options.push(`<option value="" disabled class="font-bold">——— ${aggNome} ———</option>`);
-                    currentAgg = aggNome;
-                }
-                options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
-            });
-            
-            options.push('<option value="__nuovo__">➕ Crea nuovo tipo</option>');
-            select.innerHTML = options.join('');
-            
-            select.onchange = function() {
-                const formNuovoTipo = document.getElementById('formNuovoTipo');
-                if (this.value === '__nuovo__') {
-                    formNuovoTipo.classList.remove('hidden');
-                } else {
-                    formNuovoTipo.classList.add('hidden');
-                }
-            };
-        }
 
         function editProdotto(id) {
             const p = allProdotti.find(pr => pr.id === id);
             if (!p) return;
-            
             document.getElementById('modalTitle').textContent = 'Modifica Prodotto';
             document.getElementById('prodottoId').value = p.id;
             document.getElementById('prodottoNome').value = p.nome || '';
@@ -1029,303 +537,81 @@
             document.getElementById('prodottoQuantita').value = p.quantita || '';
             document.getElementById('prodottoUnitaMisura').value = p.unita_misura || 'pz';
             document.getElementById('prodottoAttivo').checked = p.attivo;
-            
-            populateAggregantiSelect();
-            
-            if (p.tipo_prodotto) {
-                const aggreganteId = p.tipo_prodotto.aggregante_prodotto?.id;
-                if (aggreganteId) {
-                    document.getElementById('prodottoAggregante').value = aggreganteId;
-                    populateTipiSelect(aggreganteId);
-                    document.getElementById('prodottoTipo').value = p.tipo_prodotto.id;
-                }
+            populateAggregantiSelect(); populateGruppiVenditaSelect();
+            if (p.tipo_prodotto?.aggregante_prodotto?.id) {
+                document.getElementById('prodottoAggregante').value = p.tipo_prodotto.aggregante_prodotto.id;
+                onAggreganteChange();
+                document.getElementById('prodottoTipo').value = p.tipo_prodotto.id;
             }
-            
-            populateGruppiVenditaSelect(p.gruppo_vendita_id);
-            
+            if (p.gruppo_vendita_id) document.getElementById('prodottoGruppoVendita').value = p.gruppo_vendita_id;
             document.getElementById('formNuovoAggregante').classList.add('hidden');
             document.getElementById('formNuovoTipo').classList.add('hidden');
-            
             document.getElementById('modalProdotto').classList.remove('hidden');
         }
 
         async function saveProdotto(e) {
             e.preventDefault();
             const id = document.getElementById('prodottoId').value;
-            
-            try {
-                let tipoId = null;
-                let aggreganteId = document.getElementById('prodottoAggregante').value;
-                
-                if (aggreganteId === '__nuovo__') {
-                    const nomeAgg = document.getElementById('nuovoAggreganteNome').value.trim();
-                    if (!nomeAgg) {
-                        alert('Inserisci il nome della nuova categoria');
-                        return;
-                    }
-                    
-                    const { data: esistente } = await supabaseClient
-                        .from('aggregante_prodotto')
-                        .select('id, nome')
-                        .eq('nome', nomeAgg)
-                        .maybeSingle();
-                    
-                    if (esistente) {
-                        if (confirm(`La categoria "${nomeAgg}" esiste già. Usare quella esistente?`)) {
-                            aggreganteId = esistente.id;
-                        } else {
-                            return;
-                        }
-                    } else {
-                        const nuovoAgg = {
-                            nome: nomeAgg,
-                            colore: document.getElementById('nuovoAggreganteColore').value,
-                            ordine: parseInt(document.getElementById('nuovoAggreganteOrdine').value) || 50
-                        };
-                        
-                        const { data: aggData, error: aggError } = await supabaseClient
-                            .from('aggregante_prodotto')
-                            .insert([nuovoAgg])
-                            .select()
-                            .single();
-                        
-                        if (aggError) throw aggError;
-                        aggreganteId = aggData.id;
-                    }
-                }
-                
-                const tipoSelect = document.getElementById('prodottoTipo').value;
-                
-                if (tipoSelect === '__nuovo__') {
-                    const nomeTipo = document.getElementById('nuovoTipoNome').value.trim();
-                    if (!nomeTipo) {
-                        alert('Inserisci il nome del nuovo tipo');
-                        return;
-                    }
-                    
-                    const { data: esistente } = await supabaseClient
-                        .from('tipo_prodotto')
-                        .select('id, nome')
-                        .eq('nome', nomeTipo)
-                        .maybeSingle();
-                    
-                    if (esistente) {
-                        if (confirm(`Il tipo "${nomeTipo}" esiste già. Usare quello esistente?`)) {
-                            tipoId = esistente.id;
-                        } else {
-                            return;
-                        }
-                    } else {
-                        const keywordsInput = document.getElementById('nuovoTipoKeywords').value.trim();
-                        const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [nomeTipo.toLowerCase()];
-                        
-                        const nuovoTipo = {
-                            nome: nomeTipo,
-                            aggregante_id: aggreganteId,
-                            keywords: keywords
-                        };
-                        
-                        const { data: tipoData, error: tipoError } = await supabaseClient
-                            .from('tipo_prodotto')
-                            .insert([nuovoTipo])
-                            .select()
-                            .single();
-                        
-                        if (tipoError) throw tipoError;
-                        tipoId = tipoData.id;
-                    }
-                } else if (tipoSelect && tipoSelect !== '') {
-                    tipoId = tipoSelect;
-                }
-                
-                const gruppoVenditaId = document.getElementById('prodottoGruppoVendita').value;
-                
-                const prod = {
-                    nome: document.getElementById('prodottoNome').value,
-                    fornitore: document.getElementById('prodottoFornitore').value || null,
-                    descrizione: document.getElementById('prodottoDescrizione').value || null,
-                    prezzo: parseFloat(document.getElementById('prodottoPrezzo').value) || null,
-                    aliquota_iva: parseFloat(document.getElementById('prodottoAliquotaIVA').value) || 22,
-                    quantita: parseFloat(document.getElementById('prodottoQuantita').value) || 0,
-                    unita_misura: document.getElementById('prodottoUnitaMisura').value || 'pz',
-                    attivo: document.getElementById('prodottoAttivo').checked,
-                    tipo_id: tipoId ? parseInt(tipoId) : null,
-                    gruppo_vendita_id: gruppoVenditaId ? parseInt(gruppoVenditaId) : null
-                };
-                
-                if (id) {
-                    const { error } = await supabaseClient.from('prodotti').update(prod).eq('id', id);
-                    if (error) throw error;
-                } else {
-                    const { error } = await supabaseClient.from('prodotti').insert([prod]);
-                    if (error) throw error;
-                }
-                
-                closeModal();
-                await loadAllProdotti();
-                alert('✅ Prodotto salvato!');
-                
-            } catch (err) {
-                console.error('Errore salvataggio:', err);
-                alert(`❌ Errore: ${err.message}`);
+            let tipoId = null, aggId = document.getElementById('prodottoAggregante').value;
+            if (aggId === '__nuovo__') {
+                const nome = document.getElementById('nuovoAggreganteNome').value.trim();
+                if (!nome) { alert('Inserisci nome categoria'); return; }
+                const { data } = await supabaseClient.from('aggregante_prodotto').insert([{ nome, colore: document.getElementById('nuovoAggreganteColore').value, ordine: parseInt(document.getElementById('nuovoAggreganteOrdine').value) || 50 }]).select().single();
+                aggId = data.id;
             }
+            const tipoVal = document.getElementById('prodottoTipo').value;
+            if (tipoVal === '__nuovo__') {
+                const nome = document.getElementById('nuovoTipoNome').value.trim();
+                if (!nome) { alert('Inserisci nome tipo'); return; }
+                const { data } = await supabaseClient.from('tipo_prodotto').insert([{ nome, aggregante_id: aggId, keywords: document.getElementById('nuovoTipoKeywords').value.split(',').map(k => k.trim().toLowerCase()) }]).select().single();
+                tipoId = data.id;
+            } else if (tipoVal) tipoId = tipoVal;
+            const prod = {
+                nome: document.getElementById('prodottoNome').value,
+                fornitore: document.getElementById('prodottoFornitore').value || null,
+                descrizione: document.getElementById('prodottoDescrizione').value || null,
+                prezzo: parseFloat(document.getElementById('prodottoPrezzo').value) || null,
+                aliquota_iva: parseFloat(document.getElementById('prodottoAliquotaIVA').value) || 22,
+                quantita: parseFloat(document.getElementById('prodottoQuantita').value) || 0,
+                unita_misura: document.getElementById('prodottoUnitaMisura').value || 'pz',
+                attivo: document.getElementById('prodottoAttivo').checked,
+                tipo_id: tipoId,
+                gruppo_vendita_id: document.getElementById('prodottoGruppoVendita').value || null
+            };
+            if (id) await supabaseClient.from('prodotti').update(prod).eq('id', id);
+            else await supabaseClient.from('prodotti').insert([prod]);
+            closeModal(); await loadAllProdotti(); alert('✅ Salvato!');
         }
 
-        function closeModal() { 
-            document.getElementById('modalProdotto').classList.add('hidden'); 
+        function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
+
+        function showDeleteModal(id) {
+            const p = allProdotti.find(pr => pr.id === id);
+            if (!p) return;
+            document.getElementById('deleteMessage').textContent = `Eliminare "${p.nome}"?`;
+            deleteAction = { ids: [id] };
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+        window.deleteSelected = function() {
+            if (selectedIds.size === 0) { alert('Seleziona prodotti'); return; }
+            document.getElementById('deleteMessage').textContent = `Eliminare ${selectedIds.size} prodotti?`;
+            deleteAction = { ids: Array.from(selectedIds) };
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+        function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
+        async function confirmDelete() {
+            if (!deleteAction) return;
+            const ids = deleteAction.ids;
+            deleteAction = null; closeDeleteModal();
+            for (let i = 0; i < ids.length; i += 100) {
+                await supabaseClient.from('prodotti').delete().in('id', ids.slice(i, i + 100));
+            }
+            selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
+            alert('✅ Eliminato!');
         }
 
-        window.checkAggreganteExists = function() {
-            const nome = document.getElementById('nuovoAggreganteNome').value.trim();
-            const warning = document.getElementById('aggreganteExistsWarning');
-            const exists = allAggreganti.some(a => a.nome.toLowerCase() === nome.toLowerCase());
-            warning.classList.toggle('hidden', !exists || !nome);
-        };
-        
-        window.checkTipoExists = function() {
-            const nome = document.getElementById('nuovoTipoNome').value.trim();
-            const warning = document.getElementById('tipoExistsWarning');
-            const exists = allTipi.some(t => t.nome.toLowerCase() === nome.toLowerCase());
-            warning.classList.toggle('hidden', !exists || !nome);
-        };
-
-        // ===== MODIFICA AGGREGANTE =====
-        window.editAggregante = function() {
-            const aggId = document.getElementById('prodottoAggregante').value;
-            if (!aggId || aggId === '' || aggId === '__nuovo__') {
-                alert('Seleziona una categoria da modificare');
-                return;
-            }
-            
-            const agg = allAggreganti.find(a => a.id == aggId);
-            if (!agg) return;
-            
-            document.getElementById('editAggId').value = agg.id;
-            document.getElementById('editAggNome').value = agg.nome || '';
-            document.getElementById('editAggColore').value = agg.colore || '#3B82F6';
-            document.getElementById('editAggOrdine').value = agg.ordine || 50;
-            document.getElementById('editAggDescrizione').value = agg.descrizione || '';
-            
-            document.getElementById('modalEditAggregante').classList.remove('hidden');
-        };
-
-        window.saveEditAggregante = async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('editAggId').value;
-            
-            try {
-                const data = {
-                    nome: document.getElementById('editAggNome').value,
-                    colore: document.getElementById('editAggColore').value,
-                    ordine: parseInt(document.getElementById('editAggOrdine').value) || 50,
-                    descrizione: document.getElementById('editAggDescrizione').value || null
-                };
-                
-                const { error } = await supabaseClient.from('aggregante_prodotto').update(data).eq('id', id);
-                if (error) throw error;
-                
-                closeEditAggregante();
-                await loadAllProdotti();
-                alert('✅ Categoria aggiornata!');
-            } catch (err) {
-                alert(`❌ Errore: ${err.message}`);
-            }
-        };
-
-        window.deleteAggregante = async function() {
-            const id = document.getElementById('editAggId').value;
-            if (!confirm('Eliminare questa categoria?')) return;
-            
-            try {
-                const { error } = await supabaseClient.from('aggregante_prodotto').delete().eq('id', id);
-                if (error) throw error;
-                
-                closeEditAggregante();
-                await loadAllProdotti();
-                alert('✅ Categoria eliminata!');
-            } catch (err) {
-                alert(`❌ Errore: ${err.message}`);
-            }
-        };
-
-        window.closeEditAggregante = function() {
-            document.getElementById('modalEditAggregante').classList.add('hidden');
-        };
-
-        // ===== MODIFICA TIPO =====
-        window.editTipo = function() {
-            const tipoId = document.getElementById('prodottoTipo').value;
-            if (!tipoId || tipoId === '' || tipoId === '__nuovo__') {
-                alert('Seleziona un tipo da modificare');
-                return;
-            }
-            
-            const tipo = allTipi.find(t => t.id == tipoId);
-            if (!tipo) return;
-            
-            document.getElementById('editTipoId').value = tipo.id;
-            document.getElementById('editTipoNome').value = tipo.nome || '';
-            document.getElementById('editTipoKeywords').value = tipo.keywords ? tipo.keywords.join(', ') : '';
-            document.getElementById('editTipoDescrizione').value = tipo.descrizione || '';
-            
-            const aggSelect = document.getElementById('editTipoAggregante');
-            aggSelect.innerHTML = '';
-            allAggreganti.forEach(a => {
-                aggSelect.innerHTML += `<option value="${a.id}" ${a.id == tipo.aggregante_id ? 'selected' : ''}>${a.nome}</option>`;
-            });
-            
-            document.getElementById('modalEditTipo').classList.remove('hidden');
-        };
-
-        window.saveEditTipo = async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('editTipoId').value;
-            
-            try {
-                const keywordsInput = document.getElementById('editTipoKeywords').value.trim();
-                const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [];
-                
-                const data = {
-                    nome: document.getElementById('editTipoNome').value,
-                    aggregante_id: parseInt(document.getElementById('editTipoAggregante').value),
-                    keywords: keywords,
-                    descrizione: document.getElementById('editTipoDescrizione').value || null
-                };
-                
-                const { error } = await supabaseClient.from('tipo_prodotto').update(data).eq('id', id);
-                if (error) throw error;
-                
-                closeEditTipo();
-                await loadAllProdotti();
-                alert('✅ Tipo aggiornato!');
-            } catch (err) {
-                alert(`❌ Errore: ${err.message}`);
-            }
-        };
-
-        window.deleteTipo = async function() {
-            const id = document.getElementById('editTipoId').value;
-            if (!confirm('Eliminare questo tipo?')) return;
-            
-            try {
-                const { error } = await supabaseClient.from('tipo_prodotto').delete().eq('id', id);
-                if (error) throw error;
-                
-                closeEditTipo();
-                await loadAllProdotti();
-                alert('✅ Tipo eliminato!');
-            } catch (err) {
-                alert(`❌ Errore: ${err.message}`);
-            }
-        };
-
-        window.closeEditTipo = function() {
-            document.getElementById('modalEditTipo').classList.add('hidden');
-        };
-
-        // Inizializza
         loadAllProdotti();
-        console.log('✅ Prodotti v3.0 - Con gruppo vendita integrato');
+        console.log('✅ Prodotti con sidebar - Caricato');
     </script>
 </body>
 </html>
