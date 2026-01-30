@@ -11,6 +11,7 @@
         .col-checkbox { width: 40px; }
         .col-nome { min-width: 200px; max-width: 300px; }
         .col-categoria { width: 120px; }
+        .col-gruppo { width: 100px; }
         .col-fornitore { width: 140px; }
         .col-prezzo { width: 90px; text-align: right; }
         .col-iva { width: 60px; text-align: center; }
@@ -32,7 +33,11 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <img src="data:image/png;base64,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" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
                     <span class="text-lg font-bold">Grappoli & Luppoli</span>
                 </button>
                 
@@ -53,9 +58,9 @@
     </div>
 </nav>
 
-    <div class="max-w-[1400px] mx-auto px-4 pt-24 pb-8">
+    <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
         <h1 class="text-3xl font-bold mb-2">📦 Gestione Prodotti</h1>
-        <p class="text-gray-600 mb-8">Prodotti con categorizzazione completa</p>
+        <p class="text-gray-600 mb-8">Prodotti con categorizzazione completa e gruppi vendita</p>
 
         <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
             <div class="flex items-center justify-between mb-2">
@@ -90,10 +95,10 @@
             <h3 class="font-bold mb-4">Filtri</h3>
             <div class="grid md:grid-cols-5 gap-4">
                 <input type="text" id="searchNome" placeholder="Cerca prodotto..." class="px-4 py-2 border rounded-lg" onkeyup="applyFilters()">
-                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="onFilterCategoriaChange()"><option value="">Tutte le categorie</option></select>
-                <select id="filterTipo" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i tipi</option></select>
+                <select id="filterCategoria" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutte le categorie</option></select>
+                <select id="filterGruppoVendita" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i gruppi vendita</option></select>
                 <select id="filterFornitore" class="px-4 py-2 border rounded-lg" onchange="applyFilters()"><option value="">Tutti i fornitori</option></select>
-                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Pulisci</button>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg">Pulisci</button>
             </div>
         </div>
 
@@ -101,12 +106,11 @@
             <div id="selectionBar" class="hidden bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
                 <span id="selectionCount" class="text-sm font-medium text-blue-900">0 prodotti selezionati</span>
                 <div class="flex space-x-3">
-                    <!-- NUOVO PULSANTE MODIFICA MASSIVA -->
                     <button onclick="openBulkEditModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center space-x-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
-                        <span>Modifica Categoria/Tipo</span>
+                        <span>Modifica Categoria/Tipo/Gruppo</span>
                     </button>
                     <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,6 +128,7 @@
                             <th class="col-checkbox"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4"></th>
                             <th class="col-nome text-left text-sm">Nome</th>
                             <th class="col-categoria text-left text-sm">Categoria</th>
+                            <th class="col-gruppo text-center text-sm">Gruppo Vendita</th>
                             <th class="col-fornitore text-left text-sm">Fornitore</th>
                             <th class="col-prezzo text-sm">€ base</th>
                             <th class="col-prezzo text-sm">€ scontato</th>
@@ -140,11 +145,11 @@
         </div>
     </div>
 
-    <!-- Modal Modifica Massiva CATEGORIA/TIPO -->
+    <!-- Modal Modifica Massiva -->
     <div id="modalBulkEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold"✏️ Modifica Massiva Categoria/Tipo</h2>
+                <h2 class="text-2xl font-bold">✏️ Modifica Massiva</h2>
                 <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -159,14 +164,14 @@
                     </svg>
                     <div>
                         <p class="text-sm font-medium text-blue-900">Prodotti selezionati: <span id="bulkEditCount" class="font-bold">0</span></p>
-                        <p class="text-xs text-blue-700 mt-1">La categoria e il tipo verranno applicati a tutti i prodotti selezionati</p>
+                        <p class="text-xs text-blue-700 mt-1">Le modifiche verranno applicate a tutti i prodotti selezionati</p>
                     </div>
                 </div>
             </div>
 
             <form onsubmit="saveBulkEdit(event)" class="space-y-6">
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Nuova Categorizzazione</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Categoria e Tipo</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
@@ -181,10 +186,19 @@
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <div class="bg-green-50 rounded-lg p-4">
+                    <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
+                        <select id="bulkGruppoVendita" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Non modificare</option>
+                        </select>
+                    </div>
+                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
                         <p class="text-xs text-yellow-800">
-                            <strong>💡 Suggerimento:</strong> Se selezioni "Non modificare" per la categoria, i prodotti manterranno la loro categoria attuale. Il tipo può essere modificato solo se selezioni una categoria.
+                            <strong>💡 Info:</strong> Il gruppo vendita determina come il prodotto viene classificato nelle vendite (Vino, Birra, Cibo, Alcolici, Bevande, Miscellaneo).
                         </p>
                     </div>
                 </div>
@@ -204,7 +218,7 @@
         </div>
     </div>
 
-    <!-- Modal Modifica Prodotto (esistente) -->
+    <!-- Modal Modifica Prodotto -->
     <div id="modalProdotto" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-auto">
             <h2 id="modalTitle" class="text-2xl font-bold mb-6">Modifica Prodotto</h2>
@@ -238,7 +252,7 @@
                                 <select id="prodottoAggregante" class="flex-1 px-4 py-2 border rounded-lg" onchange="onAggreganteChange()">
                                     <option value="">Non categorizzato</option>
                                 </select>
-                                <button type="button" onclick="editAggregante()" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200" title="Modifica categoria selezionata">
+                                <button type="button" onclick="editAggregante()" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200" title="Modifica categoria">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </button>
                             </div>
@@ -249,7 +263,7 @@
                                 <select id="prodottoTipo" class="flex-1 px-4 py-2 border rounded-lg" disabled>
                                     <option value="">Seleziona prima categoria</option>
                                 </select>
-                                <button type="button" onclick="editTipo()" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200" title="Modifica tipo selezionato">
+                                <button type="button" onclick="editTipo()" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200" title="Modifica tipo">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </button>
                             </div>
@@ -297,13 +311,24 @@
                     </div>
                 </div>
 
+                <!-- Gruppo Vendita -->
+                <div class="bg-green-50 rounded-lg p-4">
+                    <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
+                        <select id="prodottoGruppoVendita" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Nessun gruppo</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-2">💡 Il gruppo vendita classifica il prodotto per le analisi di vendita</p>
+                    </div>
+                </div>
+
                 <div class="bg-orange-50 rounded-lg p-4">
                     <h3 class="font-bold text-orange-900 mb-3">💰 Prezzi e Quantità</h3>
                     <div class="grid md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Prezzo (senza IVA)</label>
                             <input type="number" step="any" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
-                            <p class="text-xs text-gray-500 mt-1">💡 Usa virgola o punto per i decimali</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Aliquota IVA (%)</label>
@@ -312,7 +337,6 @@
                         <div>
                             <label class="block text-sm font-medium mb-2">Quantità</label>
                             <input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
-                            <p class="text-xs text-gray-500 mt-1">💡 Puoi usare sia virgola (4,49) che punto (4.49)</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Unità di Misura</label>
@@ -323,8 +347,6 @@
                                 <option value="bt">Bottiglie (bt)</option>
                                 <option value="ct">Cartoni (ct)</option>
                                 <option value="cf">Confezioni (cf)</option>
-                                <option value="sc">Scatole (sc)</option>
-                                <option value="pacco">Pacchi (pacco)</option>
                             </select>
                         </div>
                     </div>
@@ -354,9 +376,6 @@
                 </div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
                 <p id="deleteMessage" class="text-gray-600"></p>
-            </div>
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800"><strong>⚠️ Attenzione:</strong> Questa azione è irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -390,7 +409,7 @@
                 <div class="flex space-x-3 pt-4">
                     <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
                     <button type="button" onclick="closeEditAggregante()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteAggregante()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina categoria">🗑️</button>
+                    <button type="button" onclick="deleteAggregante()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">🗑️</button>
                 </div>
             </form>
         </div>
@@ -412,7 +431,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Keywords (separate da virgola)</label>
-                    <input type="text" id="editTipoKeywords" placeholder="es: vino, rosso, chianti" class="w-full px-4 py-2 border rounded-lg">
+                    <input type="text" id="editTipoKeywords" class="w-full px-4 py-2 border rounded-lg">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Descrizione</label>
@@ -421,7 +440,7 @@
                 <div class="flex space-x-3 pt-4">
                     <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
                     <button type="button" onclick="closeEditTipo()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteTipo()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina tipo">🗑️</button>
+                    <button type="button" onclick="deleteTipo()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">🗑️</button>
                 </div>
             </form>
         </div>
@@ -436,6 +455,7 @@
         let allProdotti = [];
         let allAggreganti = [];
         let allTipi = [];
+        let allGruppiVendita = [];
         let loadingProgress = { loaded: 0, total: 0, isLoading: false };
         let selectedIds = new Set();
         let deleteAction = null;
@@ -464,7 +484,6 @@
             document.getElementById('bulkEditCount').textContent = selectedIds.size;
             document.getElementById('bulkEditCountBtn').textContent = selectedIds.size;
             
-            // Popola select aggreganti
             const select = document.getElementById('bulkAggregate');
             select.innerHTML = '<option value="">Non modificare</option>';
             allAggreganti.forEach(agg => {
@@ -472,9 +491,15 @@
             });
             select.innerHTML += '<option value="__remove__">🗑️ Rimuovi categoria</option>';
             
-            // Reset tipo
             document.getElementById('bulkType').innerHTML = '<option value="">Seleziona prima categoria</option>';
             document.getElementById('bulkType').disabled = true;
+            
+            const gruppoSelect = document.getElementById('bulkGruppoVendita');
+            gruppoSelect.innerHTML = '<option value="">Non modificare</option>';
+            allGruppiVendita.forEach(g => {
+                gruppoSelect.innerHTML += `<option value="${g.id}" style="color: ${g.colore}">● ${g.nome}</option>`;
+            });
+            gruppoSelect.innerHTML += '<option value="__remove__">🗑️ Rimuovi gruppo</option>';
             
             document.getElementById('modalBulkEdit').classList.remove('hidden');
         };
@@ -498,11 +523,9 @@
 
         function populateBulkTipiSelect(aggreganteId) {
             const select = document.getElementById('bulkType');
-            const tuttiITipi = allTipi;
-            
             let options = ['<option value="">Non modificare</option>'];
             
-            const tipiOrdinati = [...tuttiITipi].sort((a, b) => {
+            const tipiOrdinati = [...allTipi].sort((a, b) => {
                 const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
                 const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
                 if (aggA !== aggB) return aggA.localeCompare(aggB);
@@ -513,7 +536,7 @@
             tipiOrdinati.forEach(tipo => {
                 const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
                 if (aggNome !== currentAgg) {
-                    options.push(`<option value="" disabled class="font-bold">─── ${aggNome} ───</option>`);
+                    options.push(`<option value="" disabled class="font-bold">——— ${aggNome} ———</option>`);
                     currentAgg = aggNome;
                 }
                 options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
@@ -528,52 +551,40 @@
             
             const aggreganteId = document.getElementById('bulkAggregate').value;
             const tipoId = document.getElementById('bulkType').value;
+            const gruppoVenditaId = document.getElementById('bulkGruppoVendita').value;
             
-            if (!aggreganteId && !tipoId) {
+            if (!aggreganteId && !tipoId && !gruppoVenditaId) {
                 alert('Seleziona almeno una modifica da applicare');
                 return;
             }
             
             const count = selectedIds.size;
-            const confirm = window.confirm(
-                `Confermi di voler modificare ${count} prodotti?\n\n` +
-                (aggreganteId === '__remove__' ? '- La categoria verrà RIMOSSA\n' : aggreganteId ? `- Nuova categoria verrà applicata\n` : '') +
-                (tipoId === '__remove__' ? '- Il tipo verrà RIMOSSO\n' : tipoId ? `- Nuovo tipo verrà applicato\n` : '')
-            );
-            
-            if (!confirm) return;
+            if (!window.confirm(`Confermi di voler modificare ${count} prodotti?`)) return;
             
             try {
                 closeBulkEditModal();
                 
-                // Mostra progress
                 const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `
-                    <tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">
-                        ✏️ Modifica massiva in corso...<br>
-                        <span id="bulkProgress">0 / ${count}</span>
-                    </td></tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-blue-600">✏️ Modifica massiva in corso...<br><span id="bulkProgress">0 / ${count}</span></td></tr>`;
                 
                 let updated = 0;
                 const idsArray = Array.from(selectedIds);
-                
-                // Determina i valori da aggiornare
                 let updateData = {};
                 
-                if (aggreganteId === '__remove__') {
-                    updateData.tipo_id = null;
-                } else if (tipoId === '__remove__') {
+                if (aggreganteId === '__remove__' || tipoId === '__remove__') {
                     updateData.tipo_id = null;
                 } else if (tipoId && tipoId !== '') {
-                    updateData.tipo_id = tipoId;
+                    updateData.tipo_id = parseInt(tipoId);
                 } else if (aggreganteId && aggreganteId !== '') {
-                    // Se cambiamo solo categoria senza tipo, dobbiamo trovare o creare un tipo generico
-                    // Per semplicità rimuoviamo il tipo
                     updateData.tipo_id = null;
                 }
                 
-                // Aggiorna in batch
+                if (gruppoVenditaId === '__remove__') {
+                    updateData.gruppo_vendita_id = null;
+                } else if (gruppoVenditaId && gruppoVenditaId !== '') {
+                    updateData.gruppo_vendita_id = parseInt(gruppoVenditaId);
+                }
+                
                 const BATCH_UPDATE_SIZE = 100;
                 for (let i = 0; i < idsArray.length; i += BATCH_UPDATE_SIZE) {
                     const batch = idsArray.slice(i, i + BATCH_UPDATE_SIZE);
@@ -602,15 +613,15 @@
                 
             } catch (err) {
                 console.error('Errore modifica massiva:', err);
-                alert(`❌ Errore durante la modifica massiva: ${err.message}`);
+                alert(`❌ Errore: ${err.message}`);
                 await loadAllProdotti();
             }
         };
 
-        // ===== CARICAMENTO ANAGRAFICHE E PRODOTTI =====
+        // ===== CARICAMENTO DATI =====
         async function loadAnagrafiche() {
             try {
-                console.log('📄 Caricamento anagrafiche...');
+                console.log('🔄 Caricamento anagrafiche...');
                 
                 const { data: aggreganti, error: aggError } = await supabaseClient
                     .from('aggregante_prodotto')
@@ -619,7 +630,6 @@
                 
                 if (aggError) throw aggError;
                 allAggreganti = aggreganti || [];
-                console.log(`✅ Caricati ${allAggreganti.length} aggreganti:`, allAggreganti.map(a => a.nome));
                 
                 const { data: tipi, error: tipiError } = await supabaseClient
                     .from('tipo_prodotto')
@@ -628,7 +638,19 @@
                 
                 if (tipiError) throw tipiError;
                 allTipi = tipi || [];
-                console.log(`✅ Caricati ${allTipi.length} tipi:`, allTipi.map(t => `${t.nome} (aggregante: ${t.aggregante_prodotto?.nome || t.aggregante_id})`));
+                
+                const { data: gruppiVendita, error: gruppiError } = await supabaseClient
+                    .from('gruppo_vendita')
+                    .select('*')
+                    .order('ordine', { ascending: true });
+                
+                if (gruppiError) {
+                    console.warn('⚠️ Errore caricamento gruppi vendita:', gruppiError);
+                    allGruppiVendita = [];
+                } else {
+                    allGruppiVendita = gruppiVendita || [];
+                    console.log(`✅ Caricati ${allGruppiVendita.length} gruppi vendita`);
+                }
                 
             } catch (err) {
                 console.error('❌ Errore caricamento anagrafiche:', err);
@@ -659,6 +681,11 @@
                                     nome,
                                     colore
                                 )
+                            ),
+                            gruppo_vendita (
+                                id,
+                                nome,
+                                colore
                             )
                         `)
                         .order('nome', { ascending: true })
@@ -671,29 +698,6 @@
                 }
                 
                 loadingProgress.isLoading = false;
-                
-                // DEBUG: Analizza i prodotti con categoria "Altro"
-                console.log('=== DEBUG CATEGORIA ALTRO ===');
-                const prodottiConCategoriaAltro = allProdotti.filter(p => p.categoria === 'Altro');
-                console.log('Prodotti con campo categoria = "Altro":', prodottiConCategoriaAltro.length);
-                
-                const prodottiSenzaTipo = allProdotti.filter(p => !p.tipo_prodotto);
-                console.log('Prodotti SENZA tipo_prodotto:', prodottiSenzaTipo.length);
-                
-                const prodottiAltroConTipo = prodottiConCategoriaAltro.filter(p => p.tipo_prodotto);
-                console.log('Prodotti con categoria="Altro" MA CON tipo_prodotto:', prodottiAltroConTipo.length);
-                if (prodottiAltroConTipo.length > 0) {
-                    console.log('Esempio:', prodottiAltroConTipo[0]);
-                }
-                
-                // Mostra tutte le categorie uniche
-                const tutteCategorie = new Set(allProdotti.map(p => p.categoria).filter(Boolean));
-                console.log('Valori unici campo categoria:', Array.from(tutteCategorie));
-                
-                const tuttiAggreganti = new Set(allProdotti.map(p => p.tipo_prodotto?.aggregante_prodotto?.nome).filter(Boolean));
-                console.log('Valori unici aggregante_prodotto.nome:', Array.from(tuttiAggreganti));
-                console.log('=== FINE DEBUG ===');
-                
                 updateStats();
                 updateFilters();
                 applyFilters();
@@ -720,39 +724,26 @@
         function updateStats() {
             document.getElementById('totalProdotti').textContent = allProdotti.length.toLocaleString('it-IT');
             
-            const aggregantiUnici = new Set();
-            allProdotti.forEach(p => {
-                aggregantiUnici.add(getCategoriaEffettiva(p));
-            });
+            const aggregantiUnici = new Set(
+                allProdotti
+                    .filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome)
+                    .map(p => p.tipo_prodotto.aggregante_prodotto.nome)
+            );
             document.getElementById('totalCategorie').textContent = aggregantiUnici.size;
             
             const valoreSenzaIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
             const valoreConIVA = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
             
-            const percentualeIVA = valoreSenzaIVA > 0 ? ((valoreConIVA - valoreSenzaIVA) / valoreSenzaIVA * 100) : 0;
-            
             document.getElementById('valoreTotale').textContent = `€${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} (${percentualeIVA.toFixed(2)}%)`;
-        }
-        
-        // Helper per determinare la categoria effettiva di un prodotto
-        function getCategoriaEffettiva(p) {
-            // Prima priorità: tipo_prodotto.aggregante_prodotto.nome
-            if (p.tipo_prodotto?.aggregante_prodotto?.nome) {
-                return p.tipo_prodotto.aggregante_prodotto.nome;
-            }
-            // Seconda priorità: campo categoria testuale
-            if (p.categoria) {
-                return p.categoria;
-            }
-            // Default: "Non categorizzato"
-            return 'Non categorizzato';
+            document.getElementById('valoreTotaleIvato').textContent = `€${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
         
         function updateFilters() {
             const aggregantiSet = new Set();
             allProdotti.forEach(p => {
-                aggregantiSet.add(getCategoriaEffettiva(p));
+                if (p.tipo_prodotto?.aggregante_prodotto?.nome) {
+                    aggregantiSet.add(p.tipo_prodotto.aggregante_prodotto.nome);
+                }
             });
             
             const cat = Array.from(aggregantiSet).sort();
@@ -763,90 +754,19 @@
             document.getElementById('filterFornitore').innerHTML = '<option value="">Tutti i fornitori</option>' + 
                 forn.map(f => `<option value="${f}">${f}</option>`).join('');
             
-            // Popola filtro tipo con tutti i tipi
-            updateFilterTipo();
-        }
-        
-        function updateFilterTipo(categoriaSelezionata = '') {
-            const tipoSelect = document.getElementById('filterTipo');
-            const currentTipo = tipoSelect.value; // Salva valore corrente
-            
-            let tipiDaMostrare = [];
-            
-            if (categoriaSelezionata) {
-                // Mostra solo i tipi della categoria selezionata
-                tipiDaMostrare = allTipi.filter(t => {
-                    const aggNome = allAggreganti.find(a => a.id == t.aggregante_id)?.nome;
-                    return aggNome === categoriaSelezionata;
-                });
-            } else {
-                // Mostra tutti i tipi usati nei prodotti
-                const tipiUsati = new Set();
-                allProdotti.forEach(p => {
-                    if (p.tipo_prodotto?.id) {
-                        tipiUsati.add(p.tipo_prodotto.id);
-                    }
-                });
-                tipiDaMostrare = allTipi.filter(t => tipiUsati.has(t.id));
-            }
-            
-            // Ordina per categoria e poi per nome
-            tipiDaMostrare.sort((a, b) => {
-                const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
-                const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
-                if (aggA !== aggB) return aggA.localeCompare(aggB);
-                return a.nome.localeCompare(b.nome);
-            });
-            
-            let options = ['<option value="">Tutti i tipi</option>'];
-            
-            if (!categoriaSelezionata) {
-                // Raggruppa per categoria
-                let currentAgg = null;
-                tipiDaMostrare.forEach(tipo => {
-                    const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
-                    if (aggNome !== currentAgg) {
-                        options.push(`<option value="" disabled class="font-bold">── ${aggNome} ──</option>`);
-                        currentAgg = aggNome;
-                    }
-                    options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
-                });
-            } else {
-                // Lista semplice per categoria singola
-                tipiDaMostrare.forEach(tipo => {
-                    options.push(`<option value="${tipo.id}">${tipo.nome}</option>`);
-                });
-            }
-            
-            tipoSelect.innerHTML = options.join('');
-            
-            // Ripristina valore se ancora disponibile
-            if (currentTipo && tipiDaMostrare.some(t => t.id == currentTipo)) {
-                tipoSelect.value = currentTipo;
-            }
-        }
-        
-        function onFilterCategoriaChange() {
-            const categoriaSelezionata = document.getElementById('filterCategoria').value;
-            
-            // Aggiorna il filtro tipo in base alla categoria
-            updateFilterTipo(categoriaSelezionata);
-            
-            // Resetta il filtro tipo se la categoria cambia
-            document.getElementById('filterTipo').value = '';
-            
-            applyFilters();
+            document.getElementById('filterGruppoVendita').innerHTML = '<option value="">Tutti i gruppi vendita</option>' + 
+                allGruppiVendita.map(g => `<option value="${g.id}">● ${g.nome}</option>`).join('');
         }
         
         function applyFilters() {
             const search = document.getElementById('searchNome').value.toLowerCase();
             const cat = document.getElementById('filterCategoria').value;
-            const tipo = document.getElementById('filterTipo').value;
+            const gruppoVendita = document.getElementById('filterGruppoVendita').value;
             const forn = document.getElementById('filterFornitore').value;
             let filtered = allProdotti;
             if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
-            if (cat) filtered = filtered.filter(p => getCategoriaEffettiva(p) === cat);
-            if (tipo) filtered = filtered.filter(p => p.tipo_prodotto?.id == tipo);
+            if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
+            if (gruppoVendita) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppoVendita);
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
             renderTable(filtered);
         }
@@ -854,9 +774,8 @@
         function clearFilters() { 
             document.getElementById('searchNome').value = ''; 
             document.getElementById('filterCategoria').value = ''; 
-            document.getElementById('filterTipo').value = '';
+            document.getElementById('filterGruppoVendita').value = '';
             document.getElementById('filterFornitore').value = ''; 
-            updateFilterTipo(); // Ripopola tutti i tipi
             applyFilters(); 
         }
         
@@ -865,35 +784,7 @@
             const count = document.getElementById('selectionCount');
             if (selectedIds.size > 0) { 
                 bar.classList.remove('hidden'); 
-                
-                // Calcola statistiche sui prodotti selezionati
-                let costoTotale = 0;
-                let quantitaTotale = 0;
-                
-                selectedIds.forEach(id => {
-                    const prodotto = allProdotti.find(p => p.id === id);
-                    if (prodotto) {
-                        const prezzoIvato = prodotto.prezzo_ivato || 0;
-                        const quantita = prodotto.quantita || 0;
-                        costoTotale += prezzoIvato * quantita;
-                        quantitaTotale += quantita;
-                    }
-                });
-                
-                const costoMedio = quantitaTotale > 0 ? costoTotale / quantitaTotale : 0;
-                
-                // Aggiorna contatore e statistiche
-                count.innerHTML = `
-                    <div class="flex items-center space-x-6">
-                        <span class="font-bold">${selectedIds.size} prodotti selezionati</span>
-                        <span class="text-gray-600">|</span>
-                        <span>Totale: <strong class="text-green-700">€${costoTotale.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
-                        <span class="text-gray-600">|</span>
-                        <span>Q.tà: <strong class="text-purple-700">${quantitaTotale.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong></span>
-                        <span class="text-gray-600">|</span>
-                        <span>Costo medio: <strong class="text-orange-700">€${costoMedio.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
-                    </div>
-                `;
+                count.textContent = `${selectedIds.size} prodotti selezionati`; 
             } else { 
                 bar.classList.add('hidden'); 
             }
@@ -910,12 +801,12 @@
             if (checkbox.checked) {
                 const search = document.getElementById('searchNome').value.toLowerCase();
                 const cat = document.getElementById('filterCategoria').value;
-                const tipo = document.getElementById('filterTipo').value;
+                const gruppoVendita = document.getElementById('filterGruppoVendita').value;
                 const forn = document.getElementById('filterFornitore').value;
                 let filtered = allProdotti;
                 if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
-                if (cat) filtered = filtered.filter(p => getCategoriaEffettiva(p) === cat);
-                if (tipo) filtered = filtered.filter(p => p.tipo_prodotto?.id == tipo);
+                if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
+                if (gruppoVendita) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppoVendita);
                 if (forn) filtered = filtered.filter(p => p.fornitore === forn);
                 selectedIds = new Set(filtered.map(p => p.id));
             } else { 
@@ -930,12 +821,12 @@
             const selectAllCheckbox = document.getElementById('selectAllCheckbox');
             
             if (loadingProgress.isLoading) { 
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; 
+                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; 
                 return; 
             }
             
             if (!prodotti.length) { 
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; 
+                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; 
                 selectAllCheckbox.checked = false; 
                 return; 
             }
@@ -946,8 +837,12 @@
             tbody.innerHTML = prodotti.map(p => {
                 const hasSconto = p.prezzo_scontato && p.prezzo_scontato < p.prezzo;
                 const aggregante = p.tipo_prodotto?.aggregante_prodotto;
-                const categoriaDisplay = aggregante ? aggregante.nome : (p.categoria || 'Non categorizzato');
+                const categoriaDisplay = aggregante ? aggregante.nome : 'Non categorizzato';
                 const categoriaColor = aggregante ? aggregante.colore : '#6B7280';
+                
+                const gruppoVendita = p.gruppo_vendita;
+                const gruppoDisplay = gruppoVendita ? gruppoVendita.nome : '-';
+                const gruppoColor = gruppoVendita ? gruppoVendita.colore : '#9CA3AF';
                 
                 return `
                 <tr class="hover:bg-gray-50 border-b ${selectedIds.has(p.id) ? 'bg-blue-50' : ''}">
@@ -957,6 +852,14 @@
                         <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${categoriaColor}20; border: 1px solid ${categoriaColor}40; color: ${categoriaColor}">
                             ${categoriaDisplay}
                         </span>
+                    </td>
+                    <td class="col-gruppo text-center">
+                        ${gruppoVendita ? `
+                            <span class="inline-flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium" style="background-color: ${gruppoColor}15; color: ${gruppoColor}">
+                                <span class="w-2 h-2 rounded-full" style="background-color: ${gruppoColor}"></span>
+                                <span>${gruppoDisplay}</span>
+                            </span>
+                        ` : `<span class="text-gray-400 text-xs">-</span>`}
                     </td>
                     <td class="col-fornitore truncate-cell text-sm" title="${p.fornitore || '-'}">${p.fornitore || '-'}</td>
                     <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -977,34 +880,23 @@
             `}).join('');
         }
 
-        // ===== RESTO DEL CODICE (Gestione modali, salvataggio, eliminazione, ecc.) =====
-        // Il codice continua esattamente come nel file originale...
-        // [Il resto delle funzioni rimane invariato]
-        
+        // ===== ELIMINAZIONE =====
         function showDeleteModal(id) {
             const prodotto = allProdotti.find(p => p.id === id);
-            if (!prodotto) { 
-                console.error('Prodotto non trovato:', id); 
-                alert('Errore: prodotto non trovato'); 
-                return; 
-            }
-            const modal = document.getElementById('deleteModal');
-            const message = document.getElementById('deleteMessage');
-            message.textContent = `Vuoi eliminare il prodotto "${prodotto.nome}"?`;
+            if (!prodotto) return;
+            document.getElementById('deleteMessage').textContent = `Vuoi eliminare "${prodotto.nome}"?`;
             deleteAction = { type: 'single', ids: [id] };
-            modal.classList.remove('hidden');
+            document.getElementById('deleteModal').classList.remove('hidden');
         }
 
         window.deleteSelected = function() {
             if (selectedIds.size === 0) { 
-                alert('Seleziona almeno un prodotto da eliminare'); 
+                alert('Seleziona almeno un prodotto'); 
                 return; 
             }
-            const modal = document.getElementById('deleteModal');
-            const message = document.getElementById('deleteMessage');
-            message.textContent = `Vuoi eliminare ${selectedIds.size} prodotti selezionati?`;
+            document.getElementById('deleteMessage').textContent = `Vuoi eliminare ${selectedIds.size} prodotti?`;
             deleteAction = { type: 'multiple', ids: Array.from(selectedIds) };
-            modal.classList.remove('hidden');
+            document.getElementById('deleteModal').classList.remove('hidden');
         };
 
         function closeDeleteModal() { 
@@ -1021,9 +913,9 @@
             try {
                 let deletedCount = 0;
                 const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
-                const BATCH_DELETE_SIZE = 100;
+                tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-blue-600">🗑️ Eliminazione...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
                 
+                const BATCH_DELETE_SIZE = 100;
                 for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
                     const batch = idsToDelete.slice(i, i + BATCH_DELETE_SIZE);
                     const { error } = await supabaseClient.from('prodotti').delete().in('id', batch);
@@ -1037,41 +929,31 @@
                 selectedIds.clear();
                 updateSelectionBar();
                 await loadAllProdotti();
-                
-                if (deletedCount === total) alert(`✅ ${deletedCount} prodotti eliminati con successo!`);
-                else alert(`⚠️ Eliminati ${deletedCount} su ${total} prodotti`);
+                alert(`✅ ${deletedCount} prodotti eliminati!`);
             } catch (err) {
                 console.error('Errore eliminazione:', err);
-                alert(`❌ Errore durante l'eliminazione: ${err.message}`);
+                alert(`❌ Errore: ${err.message}`);
                 await loadAllProdotti();
             }
         }
 
-        // [Aggiungi qui tutte le altre funzioni dal file originale:
-        // - populateAggregantiSelect
-        // - onAggreganteChange
-        // - populateTipiSelect
-        // - editProdotto
-        // - saveProdotto
-        // - closeModal
-        // - checkAggreganteExists
-        // - checkTipoExists
-        // - editAggregante, saveEditAggregante, deleteAggregante, closeEditAggregante
-        // - editTipo, saveEditTipo, deleteTipo, closeEditTipo
-        // ecc.]
-
-        // Per brevità, includerò solo le funzioni principali essenziali
-        // Il resto del codice rimane identico al file originale
-
+        // ===== MODAL PRODOTTO =====
         function populateAggregantiSelect() {
             const select = document.getElementById('prodottoAggregante');
             select.innerHTML = '<option value="">Non categorizzato</option>';
-            
             allAggreganti.forEach(agg => {
                 select.innerHTML += `<option value="${agg.id}">${agg.nome}</option>`;
             });
-            
             select.innerHTML += '<option value="__nuovo__">➕ Crea nuova categoria</option>';
+        }
+
+        function populateGruppiVenditaSelect(selectedId = null) {
+            const select = document.getElementById('prodottoGruppoVendita');
+            select.innerHTML = '<option value="">Nessun gruppo</option>';
+            allGruppiVendita.forEach(g => {
+                const selected = selectedId && selectedId == g.id ? 'selected' : '';
+                select.innerHTML += `<option value="${g.id}" ${selected}>● ${g.nome}</option>`;
+            });
         }
 
         window.onAggreganteChange = function() {
@@ -1101,11 +983,9 @@
 
         function populateTipiSelect(aggreganteId) {
             const select = document.getElementById('prodottoTipo');
-            const tuttiITipi = allTipi;
-            
             let options = ['<option value="">Nessun tipo specifico</option>'];
             
-            const tipiOrdinati = [...tuttiITipi].sort((a, b) => {
+            const tipiOrdinati = [...allTipi].sort((a, b) => {
                 const aggA = allAggreganti.find(ag => ag.id == a.aggregante_id)?.nome || '';
                 const aggB = allAggreganti.find(ag => ag.id == b.aggregante_id)?.nome || '';
                 if (aggA !== aggB) return aggA.localeCompare(aggB);
@@ -1116,7 +996,7 @@
             tipiOrdinati.forEach(tipo => {
                 const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
                 if (aggNome !== currentAgg) {
-                    options.push(`<option value="" disabled class="font-bold">─── ${aggNome} ───</option>`);
+                    options.push(`<option value="" disabled class="font-bold">——— ${aggNome} ———</option>`);
                     currentAgg = aggNome;
                 }
                 options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
@@ -1161,6 +1041,8 @@
                 }
             }
             
+            populateGruppiVenditaSelect(p.gruppo_vendita_id);
+            
             document.getElementById('formNuovoAggregante').classList.add('hidden');
             document.getElementById('formNuovoTipo').classList.add('hidden');
             
@@ -1189,25 +1071,16 @@
                         .maybeSingle();
                     
                     if (esistente) {
-                        const conferma = confirm(
-                            `⚠️ ATTENZIONE\n\n` +
-                            `La categoria "${nomeAgg}" esiste già nel database.\n\n` +
-                            `Vuoi usare quella esistente invece di crearne una nuova?`
-                        );
-                        
-                        if (conferma) {
+                        if (confirm(`La categoria "${nomeAgg}" esiste già. Usare quella esistente?`)) {
                             aggreganteId = esistente.id;
-                            console.log('✅ Uso categoria esistente:', esistente);
                         } else {
-                            alert('Scegli un nome diverso per la nuova categoria');
                             return;
                         }
                     } else {
                         const nuovoAgg = {
                             nome: nomeAgg,
                             colore: document.getElementById('nuovoAggreganteColore').value,
-                            ordine: parseInt(document.getElementById('nuovoAggreganteOrdine').value) || 50,
-                            descrizione: null
+                            ordine: parseInt(document.getElementById('nuovoAggreganteOrdine').value) || 50
                         };
                         
                         const { data: aggData, error: aggError } = await supabaseClient
@@ -1218,7 +1091,6 @@
                         
                         if (aggError) throw aggError;
                         aggreganteId = aggData.id;
-                        console.log('✅ Creato nuovo aggregante:', aggData);
                     }
                 }
                 
@@ -1233,22 +1105,14 @@
                     
                     const { data: esistente } = await supabaseClient
                         .from('tipo_prodotto')
-                        .select('id, nome, aggregante_id')
+                        .select('id, nome')
                         .eq('nome', nomeTipo)
                         .maybeSingle();
                     
                     if (esistente) {
-                        const conferma = confirm(
-                            `⚠️ ATTENZIONE\n\n` +
-                            `Il tipo "${nomeTipo}" esiste già nel database.\n\n` +
-                            `Vuoi usare quello esistente invece di crearne uno nuovo?`
-                        );
-                        
-                        if (conferma) {
+                        if (confirm(`Il tipo "${nomeTipo}" esiste già. Usare quello esistente?`)) {
                             tipoId = esistente.id;
-                            console.log('✅ Uso tipo esistente:', esistente);
                         } else {
-                            alert('Scegli un nome diverso per il nuovo tipo');
                             return;
                         }
                     } else {
@@ -1258,8 +1122,7 @@
                         const nuovoTipo = {
                             nome: nomeTipo,
                             aggregante_id: aggreganteId,
-                            keywords: keywords,
-                            descrizione: null
+                            keywords: keywords
                         };
                         
                         const { data: tipoData, error: tipoError } = await supabaseClient
@@ -1270,11 +1133,12 @@
                         
                         if (tipoError) throw tipoError;
                         tipoId = tipoData.id;
-                        console.log('✅ Creato nuovo tipo:', tipoData);
                     }
                 } else if (tipoSelect && tipoSelect !== '') {
                     tipoId = tipoSelect;
                 }
+                
+                const gruppoVenditaId = document.getElementById('prodottoGruppoVendita').value;
                 
                 const prod = {
                     nome: document.getElementById('prodottoNome').value,
@@ -1285,26 +1149,25 @@
                     quantita: parseFloat(document.getElementById('prodottoQuantita').value) || 0,
                     unita_misura: document.getElementById('prodottoUnitaMisura').value || 'pz',
                     attivo: document.getElementById('prodottoAttivo').checked,
-                    tipo_id: tipoId
+                    tipo_id: tipoId ? parseInt(tipoId) : null,
+                    gruppo_vendita_id: gruppoVenditaId ? parseInt(gruppoVenditaId) : null
                 };
                 
                 if (id) {
                     const { error } = await supabaseClient.from('prodotti').update(prod).eq('id', id);
                     if (error) throw error;
-                    console.log('✅ Prodotto aggiornato');
                 } else {
                     const { error } = await supabaseClient.from('prodotti').insert([prod]);
                     if (error) throw error;
-                    console.log('✅ Prodotto creato');
                 }
                 
                 closeModal();
                 await loadAllProdotti();
-                alert('✅ Prodotto salvato con successo!');
+                alert('✅ Prodotto salvato!');
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                alert(`❌ Errore durante il salvataggio: ${err.message}`);
+                alert(`❌ Errore: ${err.message}`);
             }
         }
 
@@ -1315,40 +1178,154 @@
         window.checkAggreganteExists = function() {
             const nome = document.getElementById('nuovoAggreganteNome').value.trim();
             const warning = document.getElementById('aggreganteExistsWarning');
-            
-            if (!nome) {
-                warning.classList.add('hidden');
-                return;
-            }
-            
             const exists = allAggreganti.some(a => a.nome.toLowerCase() === nome.toLowerCase());
-            if (exists) {
-                warning.classList.remove('hidden');
-            } else {
-                warning.classList.add('hidden');
-            }
+            warning.classList.toggle('hidden', !exists || !nome);
         };
         
         window.checkTipoExists = function() {
             const nome = document.getElementById('nuovoTipoNome').value.trim();
             const warning = document.getElementById('tipoExistsWarning');
-            
-            if (!nome) {
-                warning.classList.add('hidden');
+            const exists = allTipi.some(t => t.nome.toLowerCase() === nome.toLowerCase());
+            warning.classList.toggle('hidden', !exists || !nome);
+        };
+
+        // ===== MODIFICA AGGREGANTE =====
+        window.editAggregante = function() {
+            const aggId = document.getElementById('prodottoAggregante').value;
+            if (!aggId || aggId === '' || aggId === '__nuovo__') {
+                alert('Seleziona una categoria da modificare');
                 return;
             }
             
-            const exists = allTipi.some(t => t.nome.toLowerCase() === nome.toLowerCase());
-            if (exists) {
-                warning.classList.remove('hidden');
-            } else {
-                warning.classList.add('hidden');
+            const agg = allAggreganti.find(a => a.id == aggId);
+            if (!agg) return;
+            
+            document.getElementById('editAggId').value = agg.id;
+            document.getElementById('editAggNome').value = agg.nome || '';
+            document.getElementById('editAggColore').value = agg.colore || '#3B82F6';
+            document.getElementById('editAggOrdine').value = agg.ordine || 50;
+            document.getElementById('editAggDescrizione').value = agg.descrizione || '';
+            
+            document.getElementById('modalEditAggregante').classList.remove('hidden');
+        };
+
+        window.saveEditAggregante = async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editAggId').value;
+            
+            try {
+                const data = {
+                    nome: document.getElementById('editAggNome').value,
+                    colore: document.getElementById('editAggColore').value,
+                    ordine: parseInt(document.getElementById('editAggOrdine').value) || 50,
+                    descrizione: document.getElementById('editAggDescrizione').value || null
+                };
+                
+                const { error } = await supabaseClient.from('aggregante_prodotto').update(data).eq('id', id);
+                if (error) throw error;
+                
+                closeEditAggregante();
+                await loadAllProdotti();
+                alert('✅ Categoria aggiornata!');
+            } catch (err) {
+                alert(`❌ Errore: ${err.message}`);
             }
+        };
+
+        window.deleteAggregante = async function() {
+            const id = document.getElementById('editAggId').value;
+            if (!confirm('Eliminare questa categoria?')) return;
+            
+            try {
+                const { error } = await supabaseClient.from('aggregante_prodotto').delete().eq('id', id);
+                if (error) throw error;
+                
+                closeEditAggregante();
+                await loadAllProdotti();
+                alert('✅ Categoria eliminata!');
+            } catch (err) {
+                alert(`❌ Errore: ${err.message}`);
+            }
+        };
+
+        window.closeEditAggregante = function() {
+            document.getElementById('modalEditAggregante').classList.add('hidden');
+        };
+
+        // ===== MODIFICA TIPO =====
+        window.editTipo = function() {
+            const tipoId = document.getElementById('prodottoTipo').value;
+            if (!tipoId || tipoId === '' || tipoId === '__nuovo__') {
+                alert('Seleziona un tipo da modificare');
+                return;
+            }
+            
+            const tipo = allTipi.find(t => t.id == tipoId);
+            if (!tipo) return;
+            
+            document.getElementById('editTipoId').value = tipo.id;
+            document.getElementById('editTipoNome').value = tipo.nome || '';
+            document.getElementById('editTipoKeywords').value = tipo.keywords ? tipo.keywords.join(', ') : '';
+            document.getElementById('editTipoDescrizione').value = tipo.descrizione || '';
+            
+            const aggSelect = document.getElementById('editTipoAggregante');
+            aggSelect.innerHTML = '';
+            allAggreganti.forEach(a => {
+                aggSelect.innerHTML += `<option value="${a.id}" ${a.id == tipo.aggregante_id ? 'selected' : ''}>${a.nome}</option>`;
+            });
+            
+            document.getElementById('modalEditTipo').classList.remove('hidden');
+        };
+
+        window.saveEditTipo = async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editTipoId').value;
+            
+            try {
+                const keywordsInput = document.getElementById('editTipoKeywords').value.trim();
+                const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim().toLowerCase()) : [];
+                
+                const data = {
+                    nome: document.getElementById('editTipoNome').value,
+                    aggregante_id: parseInt(document.getElementById('editTipoAggregante').value),
+                    keywords: keywords,
+                    descrizione: document.getElementById('editTipoDescrizione').value || null
+                };
+                
+                const { error } = await supabaseClient.from('tipo_prodotto').update(data).eq('id', id);
+                if (error) throw error;
+                
+                closeEditTipo();
+                await loadAllProdotti();
+                alert('✅ Tipo aggiornato!');
+            } catch (err) {
+                alert(`❌ Errore: ${err.message}`);
+            }
+        };
+
+        window.deleteTipo = async function() {
+            const id = document.getElementById('editTipoId').value;
+            if (!confirm('Eliminare questo tipo?')) return;
+            
+            try {
+                const { error } = await supabaseClient.from('tipo_prodotto').delete().eq('id', id);
+                if (error) throw error;
+                
+                closeEditTipo();
+                await loadAllProdotti();
+                alert('✅ Tipo eliminato!');
+            } catch (err) {
+                alert(`❌ Errore: ${err.message}`);
+            }
+        };
+
+        window.closeEditTipo = function() {
+            document.getElementById('modalEditTipo').classList.add('hidden');
         };
 
         // Inizializza
         loadAllProdotti();
-        console.log('✅ Prodotti v2.0 - Con modifica massiva categoria/tipo');
+        console.log('✅ Prodotti v3.0 - Con gruppo vendita integrato');
     </script>
 </body>
 </html>
