@@ -61,6 +61,8 @@
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Prodotti</a>
+                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
+                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
                         <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
@@ -77,7 +79,7 @@
     <div class="flex pt-16">
         <aside class="sidebar bg-gradient-to-b from-blue-600 via-indigo-600 to-purple-700 text-white p-4 overflow-y-auto">
             <div class="mb-6">
-                <h1 class="text-xl font-bold flex items-center">📦 Prodotti</h1>
+                <h1 class="text-xl font-bold flex items-center">ðŸ“¦ Prodotti</h1>
                 <p class="text-blue-200 text-xs mt-1">Gestione completa catalogo</p>
             </div>
 
@@ -122,7 +124,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (no IVA)</p>
-                            <p id="valoreTotale" class="text-xl font-bold text-purple-600">€0</p>
+                            <p id="valoreTotale" class="text-xl font-bold text-purple-600">â‚¬0</p>
                         </div>
                         <div class="bg-purple-100 p-2 rounded-lg">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -134,7 +136,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (con IVA)</p>
-                            <p id="valoreTotaleIvato" class="text-xl font-bold text-orange-600">€0</p>
+                            <p id="valoreTotaleIvato" class="text-xl font-bold text-orange-600">â‚¬0</p>
                         </div>
                         <div class="bg-orange-100 p-2 rounded-lg">
                             <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
@@ -149,11 +151,11 @@
                     Filtri
                 </h3>
                 <div class="space-y-2">
-                    <input type="text" id="searchNome" placeholder="🔍 Cerca prodotto..." class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onkeyup="applyFilters()">
+                    <input type="text" id="searchNome" placeholder="ðŸ” Cerca prodotto..." class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onkeyup="applyFilters()">
                     <select id="filterCategoria" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutte le categorie</option></select>
                     <select id="filterGruppoVendita" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutti i gruppi vendita</option></select>
                     <select id="filterFornitore" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutti i fornitori</option></select>
-                    <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">✕ Pulisci filtri</button>
+                    <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">âœ• Pulisci filtri</button>
                 </div>
             </div>
         </aside>
@@ -183,11 +185,11 @@
                                 <th class="col-categoria text-left text-sm">Categoria</th>
                                 <th class="col-categoria text-left text-sm">Gruppo Vendita</th>
                                 <th class="col-fornitore text-left text-sm">Fornitore</th>
-                                <th class="col-prezzo text-sm">€ base</th>
-                                <th class="col-prezzo text-sm">€ scontato</th>
+                                <th class="col-prezzo text-sm">â‚¬ base</th>
+                                <th class="col-prezzo text-sm">â‚¬ scontato</th>
                                 <th class="col-iva text-sm">IVA</th>
-                                <th class="col-prezzo-ivato text-sm">€ IVA</th>
-                                <th class="col-qta text-sm">Q.tà</th>
+                                <th class="col-prezzo-ivato text-sm">â‚¬ IVA</th>
+                                <th class="col-qta text-sm">Q.tÃ </th>
                                 <th class="col-stato text-sm">U.M.</th>
                                 <th class="col-azioni text-sm">Azioni</th>
                             </tr>
@@ -202,7 +204,7 @@
     <div id="modalBulkEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold">✏️ Modifica Massiva</h2>
+                <h2 class="text-2xl font-bold">âœï¸ Modifica Massiva</h2>
                 <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
@@ -210,14 +212,14 @@
             </div>
             <form onsubmit="saveBulkEdit(event)" class="space-y-6">
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Categorizzazione</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">ðŸ·ï¸ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Categoria</label><select id="bulkAggregate" class="w-full px-4 py-2 border rounded-lg" onchange="onBulkAggregateChange()"><option value="">Non modificare</option></select></div>
                         <div><label class="block text-sm font-medium mb-2">Tipo</label><select id="bulkType" class="w-full px-4 py-2 border rounded-lg" disabled><option value="">Seleziona categoria</option></select></div>
                     </div>
                 </div>
                 <div class="bg-green-50 rounded-lg p-4">
-                    <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
+                    <h3 class="font-bold text-green-900 mb-3">ðŸ›’ Gruppo Vendita</h3>
                     <select id="bulkGruppoVendita" class="w-full px-4 py-2 border rounded-lg"><option value="">Non modificare</option></select>
                 </div>
                 <div class="flex space-x-4 pt-4 border-t">
@@ -234,7 +236,7 @@
             <form onsubmit="saveProdotto(event)" class="space-y-6">
                 <input type="hidden" id="prodottoId">
                 <div class="bg-blue-50 rounded-lg p-4">
-                    <h3 class="font-bold text-blue-900 mb-3">📋 Dati Base</h3>
+                    <h3 class="font-bold text-blue-900 mb-3">ðŸ“‹ Dati Base</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Nome *</label><input type="text" id="prodottoNome" required class="w-full px-4 py-2 border rounded-lg"></div>
                         <div><label class="block text-sm font-medium mb-2">Fornitore</label><input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg"></div>
@@ -242,13 +244,13 @@
                     <div class="mt-4"><label class="block text-sm font-medium mb-2">Descrizione</label><textarea id="prodottoDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
                 </div>
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Categorizzazione</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">ðŸ·ï¸ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Categoria</label><select id="prodottoAggregante" class="w-full px-4 py-2 border rounded-lg" onchange="onAggreganteChange()"><option value="">Non categorizzato</option></select></div>
                         <div><label class="block text-sm font-medium mb-2">Tipo</label><select id="prodottoTipo" class="w-full px-4 py-2 border rounded-lg" disabled><option value="">Seleziona categoria</option></select></div>
                     </div>
                     <div id="formNuovoAggregante" class="hidden mt-4 bg-green-50 border-2 border-green-300 rounded-lg p-4">
-                        <h4 class="font-bold text-green-900 mb-3">✨ Nuova Categoria</h4>
+                        <h4 class="font-bold text-green-900 mb-3">âœ¨ Nuova Categoria</h4>
                         <div class="grid md:grid-cols-3 gap-3">
                             <div><label class="block text-xs font-medium mb-1">Nome *</label><input type="text" id="nuovoAggreganteNome" class="w-full px-3 py-2 border rounded text-sm"></div>
                             <div><label class="block text-xs font-medium mb-1">Colore</label><input type="color" id="nuovoAggreganteColore" value="#3B82F6" class="w-full h-10 border rounded"></div>
@@ -256,7 +258,7 @@
                         </div>
                     </div>
                     <div id="formNuovoTipo" class="hidden mt-4 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-                        <h4 class="font-bold text-purple-900 mb-3">✨ Nuovo Tipo</h4>
+                        <h4 class="font-bold text-purple-900 mb-3">âœ¨ Nuovo Tipo</h4>
                         <div class="grid md:grid-cols-2 gap-3">
                             <div><label class="block text-xs font-medium mb-1">Nome *</label><input type="text" id="nuovoTipoNome" class="w-full px-3 py-2 border rounded text-sm"></div>
                             <div><label class="block text-xs font-medium mb-1">Keywords</label><input type="text" id="nuovoTipoKeywords" placeholder="vino, rosso" class="w-full px-3 py-2 border rounded text-sm"></div>
@@ -264,21 +266,21 @@
                     </div>
                 </div>
                 <div class="bg-green-50 rounded-lg p-4">
-                    <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
+                    <h3 class="font-bold text-green-900 mb-3">ðŸ›’ Gruppo Vendita</h3>
                     <select id="prodottoGruppoVendita" class="w-full px-4 py-2 border rounded-lg"><option value="">Nessun gruppo</option></select>
                 </div>
                 <div class="bg-orange-50 rounded-lg p-4">
-                    <h3 class="font-bold text-orange-900 mb-3">💰 Prezzi</h3>
+                    <h3 class="font-bold text-orange-900 mb-3">ðŸ’° Prezzi</h3>
                     <div class="grid md:grid-cols-4 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Prezzo</label><input type="number" step="any" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg"></div>
                         <div><label class="block text-sm font-medium mb-2">IVA %</label><input type="number" step="any" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg"></div>
-                        <div><label class="block text-sm font-medium mb-2">Quantità</label><input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg"></div>
+                        <div><label class="block text-sm font-medium mb-2">QuantitÃ </label><input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg"></div>
                         <div><label class="block text-sm font-medium mb-2">U.M.</label><select id="prodottoUnitaMisura" class="w-full px-4 py-2 border rounded-lg"><option value="pz">Pezzi</option><option value="kg">Kg</option><option value="lt">Litri</option><option value="bt">Bottiglie</option><option value="ct">Cartoni</option></select></div>
                     </div>
                 </div>
                 <div class="flex items-center bg-gray-50 rounded-lg p-4"><input type="checkbox" id="prodottoAttivo" checked class="w-5 h-5 mr-3"><label class="text-sm font-medium">Prodotto attivo</label></div>
                 <div class="flex space-x-4 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Salva</button>
                     <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 </div>
             </form>
@@ -292,7 +294,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6"><p class="text-sm text-yellow-800"><strong>⚠️</strong> Azione irreversibile!</p></div>
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6"><p class="text-sm text-yellow-800"><strong>âš ï¸</strong> Azione irreversibile!</p></div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Elimina</button>
@@ -359,8 +361,8 @@
             document.getElementById('totalCategorie').textContent = cats.size;
             const valNoIva = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
             const valIva = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
-            document.getElementById('valoreTotale').textContent = `€${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `€${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotale').textContent = `â‚¬${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotaleIvato').textContent = `â‚¬${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
         
         function updateFilters() {
@@ -438,10 +440,10 @@
                     <td class="col-categoria"><span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${catColor}20; border: 1px solid ${catColor}40; color: ${catColor}">${catDisplay}</span></td>
                     <td class="col-categoria">${gv ? `<span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${gvColor}20; border: 1px solid ${gvColor}40; color: ${gvColor}">${gvDisplay}</span>` : '<span class="text-gray-400">-</span>'}</td>
                     <td class="col-fornitore truncate-cell text-sm">${p.fornitore || '-'}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toFixed(2)}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">€${(p.prezzo_scontato || p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">â‚¬${(p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">â‚¬${(p.prezzo_scontato || p.prezzo || 0).toFixed(2)}</td>
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
-                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toFixed(2)}</td>
+                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">â‚¬${(p.prezzo_ivato || 0).toFixed(2)}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
                     <td class="col-stato text-sm text-center">${p.unita_misura || 'pz'}</td>
                     <td class="col-azioni">
@@ -457,11 +459,11 @@
             document.getElementById('bulkEditCount').textContent = selectedIds.size;
             document.getElementById('bulkEditCountBtn').textContent = selectedIds.size;
             const sel = document.getElementById('bulkAggregate');
-            sel.innerHTML = '<option value="">Non modificare</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>';
+            sel.innerHTML = '<option value="">Non modificare</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__remove__">ðŸ—‘ï¸ Rimuovi</option>';
             document.getElementById('bulkType').innerHTML = '<option value="">Seleziona categoria</option>';
             document.getElementById('bulkType').disabled = true;
             const gvSel = document.getElementById('bulkGruppoVendita');
-            gvSel.innerHTML = '<option value="">Non modificare</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>';
+            gvSel.innerHTML = '<option value="">Non modificare</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('') + '<option value="__remove__">ðŸ—‘ï¸ Rimuovi</option>';
             document.getElementById('modalBulkEdit').classList.remove('hidden');
         };
         window.closeBulkEditModal = function() { document.getElementById('modalBulkEdit').classList.add('hidden'); };
@@ -470,7 +472,7 @@
             const aggId = document.getElementById('bulkAggregate').value;
             const tipoSel = document.getElementById('bulkType');
             if (!aggId || aggId === '__remove__') { tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Non modificabile</option>'; }
-            else { tipoSel.disabled = false; tipoSel.innerHTML = '<option value="">Non modificare</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>'; }
+            else { tipoSel.disabled = false; tipoSel.innerHTML = '<option value="">Non modificare</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__remove__">ðŸ—‘ï¸ Rimuovi</option>'; }
         };
 
         window.saveBulkEdit = async function(e) {
@@ -495,12 +497,12 @@
                 await supabaseClient.from('prodotti').update(updateData).in('id', ids.slice(i, i + 100));
             }
             selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
-            alert('✅ Prodotti aggiornati!');
+            alert('âœ… Prodotti aggiornati!');
         };
 
         function populateAggregantiSelect() {
             const sel = document.getElementById('prodottoAggregante');
-            sel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuova categoria</option>';
+            sel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__nuovo__">âž• Nuova categoria</option>';
         }
         function populateGruppiVenditaSelect() {
             const sel = document.getElementById('prodottoGruppoVendita');
@@ -517,7 +519,7 @@
                 tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Prima crea categoria</option>';
             } else if (aggId) {
                 tipoSel.disabled = false;
-                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuovo tipo</option>';
+                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__nuovo__">âž• Nuovo tipo</option>';
                 tipoSel.onchange = function() { document.getElementById('formNuovoTipo').classList.toggle('hidden', this.value !== '__nuovo__'); };
             } else {
                 tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Seleziona categoria</option>';
@@ -580,7 +582,7 @@
             };
             if (id) await supabaseClient.from('prodotti').update(prod).eq('id', id);
             else await supabaseClient.from('prodotti').insert([prod]);
-            closeModal(); await loadAllProdotti(); alert('✅ Salvato!');
+            closeModal(); await loadAllProdotti(); alert('âœ… Salvato!');
         }
 
         function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
@@ -607,11 +609,11 @@
                 await supabaseClient.from('prodotti').delete().in('id', ids.slice(i, i + 100));
             }
             selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
-            alert('✅ Eliminato!');
+            alert('âœ… Eliminato!');
         }
 
         loadAllProdotti();
-        console.log('✅ Prodotti con sidebar - Caricato');
+        console.log('âœ… Prodotti con sidebar - Caricato');
     </script>
 </body>
 </html>
