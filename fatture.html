@@ -38,11 +38,7 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
-                    </div>
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfqARwTDA4JySzxAAAHr0lEQVRYw+2Ye1BVxx3Hf7t7XvcBXBSuCEUqBCGAD4yPGp2IFUs1CEbFR6LVZiSN1WjH2jo6Jn0kHTPVaMdWO23TNGqnie0kTs00dsaqMQoGoijUVzUEUQjhcd/33PPc3f5xScZJEbDTGdMZ9q/f2bN79rP7+/5+u3uQq3AafJkKftAAQ0BDQENAQ0APGmAI6H8MxDn/ghG371Xfv91nr8ECxfsIhNiUMsYwxpxzyhgAYIwBAAEghOKNKWOcc0Iw55xSihDCCGGMbZsyxggh8TkghO427gMo3gcAwqGQJyFBlkRd1xFCTofCKNV1HRNi2bZpGBhjxpjToWCEYmoMY+x2uXRNsymNhsLJnkRZFNVwJD6HwRQieTP/sxYhhBDSNH3ruurvrqiqKC251txSXJC37ydbZ0wubr7ddvvjW7OmT50xeWL96ZqFlfP2bN88+9GpHT2+769ZuWbJguKiglO19dvWVz+zbNHS8rJOfyDdm1JRWnL6xPsFhfnrVy49drpGkaQ+l6hvcIxxNBypmFNSXJi/5Lktvzz4pi8QzMnKfP2toydr61cvroBQeHVV5XOrloMgjPSm/unosT2v/XHDquWKJK3a/DxC8OuXtntThi1et3njiz+vXrZwQmF+gssFAA5FTktNAcbhM3d/oQh91iIEYFnZWZk1tfW6PzB7+tSNq5+sb7q8eG6pKAgV1RunzimJxmLHTtdUVVW23G57afP6qzebXz18pHrZwkO7f1Z74ZKqaXdablttHTe6etraOzLSvG132qHHZ2g64yyui/twGXDOBaG9o3PLujWK20Uwtqnd2eNvuHI9FIm6nI7y2TMzRqQCoMnji0KRSGv7J+t/tKP1TnvV42XP797/xtvv3Grv3LrhWdGT8OTSJ1wu54mauiXlZabbleZNHZWe9s7J92VJ6lPXqM8jLOccY6xpWlZG+oonyjVd33/wcG72KEppW0dX+eyZ3f7gmQ8v6Ib52JRigQifdvdcb77lcChfmzD2g0tNls1syxibmzmvdK4vGDrwl7dThycvmjtHFsULl6/FdP180xVCSN/OudeZOs5kmqYZiQJCTk+SaVicgygLuhZ7OEP6qtdV85GtqpqAkWGYQIjDoVDL4kRM9wgl+XJUM967EqAM29gdMyjTosC4oCgII0lROOeoVxyD0FA80BhjkiQqqSkIIGbYRVlOgSCHCJLgIBi8iUgRbUtWLFOfNuWRlGGes/UNqm1jTDKSsWkzWZJmjk0TMPij9s0u2hkeJguIMQYAlDF0X6K+i4kDp5rF89OE0SnYZmAzGOYEw4awxhNk1B0yD+76aWXprGAkwjksWrvp/OXr3kTPJ0HqlNGlVmvGGGm4G49IwnXNVlvAJji+Luheg/aXr+Lp0bB51nCSORxjBDblls3DOtdM3hHmCoo9teDxFQvKd7168PjZulHpaTu3/WCkRwxr1KJcIiAKEIqx5i4bOEzOFu+NMTgghBBlPMmJRqcSt4xtBk4ZKSKyKXRH2fkWm2BW9uh4APAFQsmJCbfa2gvHPDQpN6WuWfer3K+y6Q9JDgkNc+NWH/VFWJID24z/90BxzdkUNJPHTB7WOOegGvxfn9oXWy2CQTWhs7MtpBqJbufLv/nDmQ8v+oPBYCiIELnVQzkHn8owAo8T53iFOwGqGpwMtEion5tr3GWMcUIwcC4JgDFyiKgrTGURWxSSneiR0cqOH+8clZXHOdiWtusXLx49WdsSkAlmpg0C5t5EgoAzDu1BJmJA6PN98v6BoDf4kWlYCAERJdu0GKWKS9E1nWBsmtQhWqJIZk6f5UlKOFVTq6v+sIpMSjHBQKnicmmqThQZATDbkCQZDUR0j0z9+WtCopHIonnfyMoYeeViY8lj00qmTaqrqVv79FOJCe4XNj5TVVFx806X26lUlpaMyc45fq5p0riHd27btHT+NzXT6vb5135r6bnzDS6HvOHbK5qu3zAsq/+dv7+wj+saTCs7MyMa00A30kekFuRmg2EW5ubIkuQPhff/6ncv/3BjKBp9/a2j4/Jyd2//Xkpy8r5Dhzu6e17ZtikpwZ0z6iscEMZ4YmG+QEg/R7NBAQFwQIgypqoqhCOUMl3TIRSyTVPT9aIxOVueffr8P696EhPWr1zW0dUdiERD3b73/voucP73d49PGl8UCIZoJKoJgk0pH2iwwQD1Ont8QV5h2ddVTRtXkDdt4fzRWZlnGxr9wfDeA280NjTu3fFCzYVLr/35iGXZR367Z3n1qm6/v7Jy3t4Db65aNH/mrBlqTEP95sPBaggBWBxEUSguyp8yruhvp850+QLfWb5436HDjdduRmOxE6fOEKcz0e36x9m69s4uzvm5hsbF8+ZMLMh/5feHPrjYNKEgb+qEIsu2r3708Y2WVtum/WMNHGUII8swzZgGAIrbZRoGMy1BlkVZtk1DcbkY50YsJkoSEQQAMA0j3liQJdnhUENh4JxIIgIkOZQBowwN+Actvu1jjAE4pQxjjBBwxhnnGCNKGQAQjDnnjHMAwBhjjAB62xCCARBnDBAwxgfIQoPQEMTnRCmNP8a368/s3q/HUeI25/xu+caJAXpPiAPK6P/tojgENAQ0BDQENAT0wMuXDujfE/f+I1sFyOsAAAAASUVORK5CYII=" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
                     <span class="text-lg font-bold">Grappoli & Luppoli</span>
                 </button>
                 
@@ -195,6 +191,145 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     <span>Salva Modifiche</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Scheda Fornitore (da Report Scadenze) -->
+    <div id="modalFornitoreReport" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
+                <h2 class="text-xl font-bold flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Scheda Fornitore
+                </h2>
+                <button onclick="closeFornitoreModalReport()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Nome Fornitore -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <h3 id="fornitoreReportNome" class="text-xl font-bold text-gray-900">Nome Fornitore</h3>
+                        <span id="fornitoreReportStatus" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">In anagrafica</span>
+                    </div>
+                    <p id="fornitoreReportFattura" class="text-sm text-gray-500 mt-1">Fattura: </p>
+                </div>
+                
+                <!-- Alert se non in anagrafica -->
+                <div id="alertNonInAnagrafica" class="hidden mb-4 bg-orange-50 border-l-4 border-orange-400 p-4 rounded">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-orange-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-medium text-orange-800">Fornitore non presente in anagrafica</p>
+                            <p class="text-xs text-orange-700 mt-1">Puoi crearlo ora compilando i campi sottostanti</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="formFornitoreReport" class="space-y-4">
+                    <input type="hidden" id="fornitoreReportId">
+                    <input type="hidden" id="fornitoreReportFatturaId">
+                    <input type="hidden" id="fornitoreReportNomeOriginale">
+                    
+                    <!-- Condizioni di Pagamento -->
+                    <div class="bg-indigo-50 rounded-xl p-4">
+                        <h4 class="font-bold text-indigo-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Condizioni di Pagamento
+                        </h4>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Termini Pagamento</label>
+                                <select id="fornitoreReportTermini" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">-- Non specificato --</option>
+                                    <option value="Anticipato Ordine">Anticipato all'Ordine</option>
+                                    <option value="Alla Consegna">Alla Consegna</option>
+                                    <option value="Data Fattura">Data Fattura</option>
+                                    <option value="30gg Data Fattura">30gg Data Fattura</option>
+                                    <option value="60gg Data Fattura">60gg Data Fattura</option>
+                                    <option value="90gg Data Fattura">90gg Data Fattura</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Pagamento</label>
+                                <select id="fornitoreReportTipoPagamento" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">-- Non specificato --</option>
+                                    <option value="Bonifico">Bonifico</option>
+                                    <option value="Carta di Credito">Carta di Credito</option>
+                                    <option value="Addebito Diretto">Addebito Diretto</option>
+                                    <option value="Contanti">Contanti</option>
+                                    <option value="Assegno">Assegno</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="fornitoreReportFineMese" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500">
+                                <span class="text-sm font-medium text-gray-700">Pagamento a Fine Mese (FM)</span>
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1 ml-8">Es: 30gg FM = pagamento a fine mese dopo 30 giorni</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview Calcolo Scadenza -->
+                    <div id="previewScadenza" class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Nuova scadenza calcolata:</span>
+                            <span id="previewScadenzaData" class="font-bold text-indigo-600">--</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Info aggiuntive (solo se in anagrafica) -->
+                    <div id="infoAggiuntive" class="hidden border-t pt-4 mt-4">
+                        <h4 class="font-medium text-gray-700 mb-2 text-sm">Altre informazioni</h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="text-gray-500">Telefono:</span>
+                                <span id="fornitoreReportTelefono" class="ml-1 text-gray-900">-</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Email:</span>
+                                <span id="fornitoreReportEmail" class="ml-1 text-gray-900">-</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-gray-500">IBAN:</span>
+                                <span id="fornitoreReportIban" class="ml-1 text-gray-900 font-mono text-xs">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Footer con pulsanti -->
+            <div class="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-between items-center border-t">
+                <a href="fornitori.html" class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    Apri anagrafica completa
+                </a>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="closeFornitoreModalReport()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                        Annulla
+                    </button>
+                    <button type="button" onclick="saveFornitoreFromReport()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Salva</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -429,7 +564,13 @@
             deleteAction: null,
             uploadMode: 'single',
             pagatoChanges: new Map(),
-            fattureManuali: []
+            fattureManuali: [],
+            // NUOVO: Per report scadenze
+            fornitori: [],
+            reportScadenze: {
+                anno: new Date().getFullYear(),
+                mese: new Date().getMonth() + 1 // 1-12
+            }
         };
 
         async function loadProdottiPerFatture() {
@@ -516,6 +657,691 @@
             } catch (err) {
                 console.error('❌ Errore caricamento prodotti:', err);
             }
+        }
+
+        // ===== GESTIONE REPORT SCADENZE =====
+        async function loadFornitori() {
+            try {
+                console.log('🏢 Caricamento fornitori per calcolo scadenze...');
+                
+                const { data, error } = await supabaseClient
+                    .from('fornitori')
+                    .select('id, ragione_sociale, partita_iva, termini_pagamento, fine_mese, tipo_pagamento');
+                
+                if (error) {
+                    console.warn('⚠️ Errore caricamento fornitori:', error);
+                    return;
+                }
+                
+                state.fornitori = data || [];
+                console.log(`✅ Caricati ${state.fornitori.length} fornitori`);
+                
+            } catch (err) {
+                console.error('❌ Errore caricamento fornitori:', err);
+            }
+        }
+
+        function calcolaDataScadenza(dataFattura, terminiPagamento, fineMese) {
+            if (!dataFattura) return null;
+            
+            // Se termini non specificati, ritorna oggetto errore
+            if (!terminiPagamento || terminiPagamento === '' || terminiPagamento === 'Non specificato') {
+                return { error: 'TERMINI_MANCANTI' };
+            }
+            
+            const data = new Date(dataFattura);
+            if (isNaN(data.getTime())) return null;
+            
+            // Logica calcolo scadenza:
+            // - Con Fine Mese (FM): vai all'ultimo giorno del mese target
+            //   - 30gg FM = fine mese +1 dalla data fattura
+            //   - 60gg FM = fine mese +2 dalla data fattura
+            //   - 90gg FM = fine mese +3 dalla data fattura
+            // - Senza Fine Mese: aggiungi semplicemente i giorni alla data fattura
+            
+            switch (terminiPagamento) {
+                case 'Anticipato Ordine':
+                case 'Alla Consegna':
+                case 'Data Fattura':
+                    // Scadenza immediata = data fattura
+                    return data;
+                    
+                case '30gg Data Fattura':
+                    if (fineMese) {
+                        // 30gg FM: ultimo giorno del mese successivo
+                        data.setMonth(data.getMonth() + 2); // Vai al mese +2
+                        data.setDate(0); // Torna all'ultimo giorno del mese precedente (= mese +1)
+                    } else {
+                        // 30gg semplice: +30 giorni
+                        data.setDate(data.getDate() + 30);
+                    }
+                    return data;
+                    
+                case '60gg Data Fattura':
+                    if (fineMese) {
+                        // 60gg FM: ultimo giorno del mese +2
+                        data.setMonth(data.getMonth() + 3); // Vai al mese +3
+                        data.setDate(0); // Torna all'ultimo giorno del mese precedente (= mese +2)
+                    } else {
+                        // 60gg semplice: +60 giorni
+                        data.setDate(data.getDate() + 60);
+                    }
+                    return data;
+                    
+                case '90gg Data Fattura':
+                    if (fineMese) {
+                        // 90gg FM: ultimo giorno del mese +3
+                        data.setMonth(data.getMonth() + 4);
+                        data.setDate(0);
+                    } else {
+                        data.setDate(data.getDate() + 90);
+                    }
+                    return data;
+                    
+                default:
+                    // Termini non riconosciuti
+                    return { error: 'TERMINI_MANCANTI' };
+            }
+        }
+
+        function getFornitoreByName(nomeCedente) {
+            if (!nomeCedente || !state.fornitori.length) return null;
+            
+            // Cerca corrispondenza esatta o parziale
+            const nomeNormalizzato = nomeCedente.toLowerCase().trim();
+            
+            // Prima cerca corrispondenza esatta
+            let fornitore = state.fornitori.find(f => 
+                f.ragione_sociale?.toLowerCase().trim() === nomeNormalizzato
+            );
+            
+            // Se non trovato, cerca corrispondenza parziale
+            if (!fornitore) {
+                fornitore = state.fornitori.find(f => 
+                    f.ragione_sociale?.toLowerCase().includes(nomeNormalizzato) ||
+                    nomeNormalizzato.includes(f.ragione_sociale?.toLowerCase() || '')
+                );
+            }
+            
+            return fornitore;
+        }
+
+        function getScadenzePerMese(anno, mese) {
+            const fattureDaPagare = state.fatture.filter(f => !f.pagato);
+            const scadenze = [];
+            
+            fattureDaPagare.forEach(fattura => {
+                // Trova il fornitore
+                const fornitore = getFornitoreByName(fattura.ced.nm);
+                
+                // Se pagamento con Carta di Credito o Addebito Diretto → già pagata, skip
+                const tipoPagamento = fornitore?.tipo_pagamento || '';
+                if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
+                    return; // Skip - già pagata automaticamente
+                }
+                
+                // Prendi i termini dal fornitore (senza default!)
+                const termini = fornitore?.termini_pagamento || null;
+                const fineMese = fornitore?.fine_mese || false;
+                
+                // Calcola la scadenza
+                const dataScadenza = calcolaDataScadenza(fattura.dt, termini, fineMese);
+                
+                // Se errore termini mancanti, aggiungi comunque alla lista con flag
+                if (dataScadenza && dataScadenza.error === 'TERMINI_MANCANTI') {
+                    // Aggiungi solo per il mese corrente per mostrare l'alert
+                    const oggi = new Date();
+                    if (anno === oggi.getFullYear() && mese === (oggi.getMonth() + 1)) {
+                        scadenze.push({
+                            ...fattura,
+                            dataScadenza: null,
+                            terminiPagamento: 'NON SPECIFICATI',
+                            fineMese: false,
+                            tipoPagamento: tipoPagamento || 'N/D',
+                            fornitoreMatch: !!fornitore,
+                            fornitoreId: fornitore?.id || null,
+                            fornitoreNome: fattura.ced.nm,
+                            terminiMancanti: true
+                        });
+                    }
+                    return;
+                }
+                
+                if (!dataScadenza) return;
+                
+                // Verifica se la scadenza è nel mese richiesto
+                const scadenzaAnno = dataScadenza.getFullYear();
+                const scadenzaMese = dataScadenza.getMonth() + 1;
+                
+                if (scadenzaAnno === anno && scadenzaMese === mese) {
+                    scadenze.push({
+                        ...fattura,
+                        dataScadenza: dataScadenza,
+                        terminiPagamento: termini,
+                        fineMese: fineMese,
+                        tipoPagamento: tipoPagamento || 'N/D',
+                        fornitoreMatch: !!fornitore,
+                        fornitoreId: fornitore?.id || null,
+                        fornitoreNome: fattura.ced.nm,
+                        terminiMancanti: false
+                    });
+                }
+            });
+            
+            // Ordina: prima quelli con termini mancanti (alert), poi per data scadenza
+            scadenze.sort((a, b) => {
+                if (a.terminiMancanti && !b.terminiMancanti) return -1;
+                if (!a.terminiMancanti && b.terminiMancanti) return 1;
+                if (!a.dataScadenza) return 1;
+                if (!b.dataScadenza) return -1;
+                return a.dataScadenza - b.dataScadenza;
+            });
+            
+            return scadenze;
+        }
+        
+        // Funzione per ottenere fornitori con termini mancanti
+        function getFornitoriSenzaTermini() {
+            const fattureDaPagare = state.fatture.filter(f => !f.pagato);
+            const fornitoriSenzaTermini = new Set();
+            
+            fattureDaPagare.forEach(fattura => {
+                const fornitore = getFornitoreByName(fattura.ced.nm);
+                
+                // Skip carta/addebito
+                const tipoPagamento = fornitore?.tipo_pagamento || '';
+                if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
+                    return;
+                }
+                
+                const termini = fornitore?.termini_pagamento;
+                if (!termini || termini === '' || termini === 'Non specificato') {
+                    fornitoriSenzaTermini.add(fattura.ced.nm);
+                }
+            });
+            
+            return Array.from(fornitoriSenzaTermini);
+        }
+
+        function getScadenzeStats() {
+            const oggi = new Date();
+            oggi.setHours(0, 0, 0, 0);
+            
+            const fattureDaPagare = state.fatture.filter(f => !f.pagato);
+            let totaleScaduto = 0;
+            let fattureScadute = 0;
+            let totaleInScadenza = 0;
+            let fattureInScadenza = 0;
+            
+            fattureDaPagare.forEach(fattura => {
+                const fornitore = getFornitoreByName(fattura.ced.nm);
+                
+                // Skip Carta di Credito e Addebito Diretto
+                const tipoPagamento = fornitore?.tipo_pagamento || '';
+                if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
+                    return;
+                }
+                
+                const termini = fornitore?.termini_pagamento;
+                const fineMese = fornitore?.fine_mese || false;
+                const dataScadenza = calcolaDataScadenza(fattura.dt, termini, fineMese);
+                
+                // Skip se termini mancanti o errore
+                if (!dataScadenza || dataScadenza.error) return;
+                
+                if (dataScadenza < oggi) {
+                    totaleScaduto += fattura.tot;
+                    fattureScadute++;
+                } else {
+                    // In scadenza nei prossimi 30 giorni
+                    const tra30gg = new Date(oggi);
+                    tra30gg.setDate(tra30gg.getDate() + 30);
+                    if (dataScadenza <= tra30gg) {
+                        totaleInScadenza += fattura.tot;
+                        fattureInScadenza++;
+                    }
+                }
+            });
+            
+            return { totaleScaduto, fattureScadute, totaleInScadenza, fattureInScadenza };
+        }
+
+        // Funzione per toggle pagato dal report scadenze
+        window.togglePagatoFromReport = function(id) {
+            const fattura = state.fatture.find(f => f.id === id);
+            if (!fattura) return;
+            
+            // Inverti lo stato
+            const nuovoStato = !fattura.pagato;
+            fattura.pagato = nuovoStato;
+            
+            // Traccia modifica
+            state.pagatoChanges.set(id, nuovoStato);
+            
+            render();
+        };
+
+        // Salva modifiche pagato dal report
+        window.savePagatoFromReport = async function() {
+            if (state.pagatoChanges.size === 0) return;
+            
+            try {
+                state.error = '💾 Salvataggio in corso...';
+                render();
+                
+                for (const [id, pagato] of state.pagatoChanges.entries()) {
+                    const { error } = await supabaseClient
+                        .from('fatture')
+                        .update({ pagato: pagato })
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                }
+                
+                state.pagatoChanges.clear();
+                state.error = '✅ Modifiche salvate con successo!';
+                
+                setTimeout(() => { state.error = ''; render(); }, 3000);
+                render();
+                
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                state.error = '❌ Errore durante il salvataggio';
+                render();
+            }
+        };
+
+        window.changeReportMese = function(direzione) {
+            if (direzione === 'prev') {
+                state.reportScadenze.mese--;
+                if (state.reportScadenze.mese < 1) {
+                    state.reportScadenze.mese = 12;
+                    state.reportScadenze.anno--;
+                }
+            } else if (direzione === 'next') {
+                state.reportScadenze.mese++;
+                if (state.reportScadenze.mese > 12) {
+                    state.reportScadenze.mese = 1;
+                    state.reportScadenze.anno++;
+                }
+            } else if (direzione === 'today') {
+                state.reportScadenze.anno = new Date().getFullYear();
+                state.reportScadenze.mese = new Date().getMonth() + 1;
+            }
+            render();
+        };
+
+        window.setReportMese = function(anno, mese) {
+            state.reportScadenze.anno = parseInt(anno);
+            state.reportScadenze.mese = parseInt(mese);
+            render();
+        };
+
+        // ===== FUNZIONI MODAL FORNITORE DA REPORT SCADENZE =====
+        let currentFornitoreReportData = null;
+
+        window.openFornitoreModalFromReport = async function(fornitoreId, fornitoreNome, fatturaId) {
+            const modal = document.getElementById('modalFornitoreReport');
+            
+            // Trova la fattura per avere i dettagli
+            const fattura = state.fatture.find(f => f.id === fatturaId);
+            
+            // Imposta i campi base
+            document.getElementById('fornitoreReportNome').textContent = fornitoreNome;
+            document.getElementById('fornitoreReportFattura').textContent = `Fattura: ${fattura?.num || 'N/D'} del ${fattura ? new Date(fattura.dt).toLocaleDateString('it-IT') : 'N/D'}`;
+            document.getElementById('fornitoreReportFatturaId').value = fatturaId;
+            document.getElementById('fornitoreReportNomeOriginale').value = fornitoreNome;
+            
+            if (fornitoreId && fornitoreId !== 'null') {
+                // Fornitore esistente - carica i dati
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('fornitori')
+                        .select('*')
+                        .eq('id', fornitoreId)
+                        .single();
+                    
+                    if (error) throw error;
+                    
+                    currentFornitoreReportData = data;
+                    
+                    // Popola i campi
+                    document.getElementById('fornitoreReportId').value = data.id;
+                    document.getElementById('fornitoreReportTermini').value = data.termini_pagamento || '';
+                    document.getElementById('fornitoreReportTipoPagamento').value = data.tipo_pagamento || '';
+                    document.getElementById('fornitoreReportFineMese').checked = data.fine_mese || false;
+                    
+                    // Info aggiuntive
+                    document.getElementById('fornitoreReportTelefono').textContent = data.telefono || '-';
+                    document.getElementById('fornitoreReportEmail').textContent = data.email || '-';
+                    document.getElementById('fornitoreReportIban').textContent = data.iban || '-';
+                    
+                    // Mostra/nascondi elementi
+                    document.getElementById('fornitoreReportStatus').textContent = 'In anagrafica';
+                    document.getElementById('fornitoreReportStatus').className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-800';
+                    document.getElementById('alertNonInAnagrafica').classList.add('hidden');
+                    document.getElementById('infoAggiuntive').classList.remove('hidden');
+                    
+                } catch (err) {
+                    console.error('Errore caricamento fornitore:', err);
+                    setupNuovoFornitore(fornitoreNome);
+                }
+            } else {
+                // Fornitore non in anagrafica
+                setupNuovoFornitore(fornitoreNome);
+            }
+            
+            // Aggiorna preview scadenza
+            updatePreviewScadenza(fattura?.dt);
+            
+            // Aggiungi listener per aggiornare preview
+            document.getElementById('fornitoreReportTermini').onchange = () => updatePreviewScadenza(fattura?.dt);
+            document.getElementById('fornitoreReportFineMese').onchange = () => updatePreviewScadenza(fattura?.dt);
+            
+            modal.classList.remove('hidden');
+        };
+
+        function setupNuovoFornitore(fornitoreNome) {
+            currentFornitoreReportData = null;
+            document.getElementById('fornitoreReportId').value = '';
+            document.getElementById('fornitoreReportTermini').value = '';
+            document.getElementById('fornitoreReportTipoPagamento').value = 'Bonifico';
+            document.getElementById('fornitoreReportFineMese').checked = false;
+            
+            document.getElementById('fornitoreReportStatus').textContent = 'Non in anagrafica';
+            document.getElementById('fornitoreReportStatus').className = 'text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-800';
+            document.getElementById('alertNonInAnagrafica').classList.remove('hidden');
+            document.getElementById('infoAggiuntive').classList.add('hidden');
+        }
+
+        function updatePreviewScadenza(dataFattura) {
+            if (!dataFattura) {
+                document.getElementById('previewScadenzaData').textContent = '--';
+                return;
+            }
+            
+            const termini = document.getElementById('fornitoreReportTermini').value;
+            const fineMese = document.getElementById('fornitoreReportFineMese').checked;
+            
+            if (!termini) {
+                document.getElementById('previewScadenzaData').textContent = 'Seleziona termini';
+                return;
+            }
+            
+            const scadenza = calcolaDataScadenza(dataFattura, termini, fineMese);
+            
+            if (scadenza && !scadenza.error) {
+                document.getElementById('previewScadenzaData').textContent = scadenza.toLocaleDateString('it-IT', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            } else {
+                document.getElementById('previewScadenzaData').textContent = '--';
+            }
+        }
+
+        window.closeFornitoreModalReport = function() {
+            document.getElementById('modalFornitoreReport').classList.add('hidden');
+            currentFornitoreReportData = null;
+        };
+
+        window.saveFornitoreFromReport = async function() {
+            const fornitoreId = document.getElementById('fornitoreReportId').value;
+            const fornitoreNome = document.getElementById('fornitoreReportNomeOriginale').value;
+            const termini = document.getElementById('fornitoreReportTermini').value;
+            const tipoPagamento = document.getElementById('fornitoreReportTipoPagamento').value;
+            const fineMese = document.getElementById('fornitoreReportFineMese').checked;
+            
+            if (!termini) {
+                alert('Seleziona i termini di pagamento');
+                return;
+            }
+            
+            try {
+                if (fornitoreId) {
+                    // Aggiorna fornitore esistente
+                    const { error } = await supabaseClient
+                        .from('fornitori')
+                        .update({
+                            termini_pagamento: termini,
+                            tipo_pagamento: tipoPagamento,
+                            fine_mese: fineMese
+                        })
+                        .eq('id', fornitoreId);
+                    
+                    if (error) throw error;
+                    
+                    console.log('✅ Fornitore aggiornato');
+                } else {
+                    // Crea nuovo fornitore
+                    const { data, error } = await supabaseClient
+                        .from('fornitori')
+                        .insert([{
+                            ragione_sociale: fornitoreNome,
+                            termini_pagamento: termini,
+                            tipo_pagamento: tipoPagamento,
+                            fine_mese: fineMese,
+                            attivo: true
+                        }])
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    
+                    console.log('✅ Nuovo fornitore creato:', data);
+                }
+                
+                // Chiudi modal
+                closeFornitoreModalReport();
+                
+                // Ricarica i fornitori per aggiornare la cache
+                await loadFornitori();
+                
+                // Re-render per aggiornare le scadenze
+                render();
+                
+                state.error = '✅ Termini di pagamento salvati!';
+                setTimeout(() => { state.error = ''; render(); }, 3000);
+                
+            } catch (err) {
+                console.error('Errore salvataggio fornitore:', err);
+                alert('❌ Errore durante il salvataggio: ' + err.message);
+            }
+        };
+
+        function renderReportScadenze() {
+            const { anno, mese } = state.reportScadenze;
+            const scadenze = getScadenzePerMese(anno, mese);
+            const stats = getScadenzeStats();
+            const fornitoriSenzaTermini = getFornitoriSenzaTermini();
+            
+            // Calcola totale solo delle scadenze con data valida
+            const scadenzeValide = scadenze.filter(s => !s.terminiMancanti);
+            const totaleDelMese = scadenzeValide.reduce((sum, s) => sum + s.tot, 0);
+            
+            const mesiNomi = ['', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                             'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            
+            const oggi = new Date();
+            const isCurrentMonth = anno === oggi.getFullYear() && mese === (oggi.getMonth() + 1);
+            
+            return `
+                <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg overflow-hidden">
+                    <!-- HEADER: Titolo + Selettore + Statistiche -->
+                    <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-red-200">
+                        <!-- Sinistra: Icona + Titolo -->
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
+                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <span class="font-bold text-gray-800">Report Scadenze Mensili</span>
+                        </div>
+                        
+                        <!-- Centro: Selettore Mese -->
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeReportMese('prev')" class="p-1 hover:bg-gray-100 rounded transition-colors">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            <select onchange="setReportMese(${anno}, this.value)" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium">
+                                ${mesiNomi.slice(1).map((m, i) => `<option value="${i + 1}" ${mese === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+                            </select>
+                            <select onchange="setReportMese(this.value, ${mese})" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium">
+                                ${[oggi.getFullYear() - 1, oggi.getFullYear(), oggi.getFullYear() + 1].map(a => `<option value="${a}" ${anno === a ? 'selected' : ''}>${a}</option>`).join('')}
+                            </select>
+                            <button onclick="changeReportMese('next')" class="p-1 hover:bg-gray-100 rounded transition-colors">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Destra: 3 Badge statistiche -->
+                        <div class="flex items-center space-x-2">
+                            <!-- Badge Scadenza del mese -->
+                            <div class="bg-green-100 border border-green-300 rounded-lg px-3 py-1.5">
+                                <p class="text-xs text-green-700 font-medium">Scadenza in ${mesiNomi[mese]} ${anno}</p>
+                                <p class="text-lg font-bold text-green-800">€ ${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            </div>
+                            <!-- Badge Scadute -->
+                            <div class="bg-red-100 border border-red-300 rounded-lg px-3 py-1.5">
+                                <p class="text-xs text-red-600 font-medium">Scadute</p>
+                                <p class="text-lg font-bold text-red-700">€${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
+                            </div>
+                            <!-- Badge Prossimi 30gg -->
+                            <div class="bg-orange-100 border border-orange-300 rounded-lg px-3 py-1.5">
+                                <p class="text-xs text-orange-600 font-medium">Prossimi 30gg</p>
+                                <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ALERT: Fornitori senza termini di pagamento -->
+                    ${fornitoriSenzaTermini.length > 0 ? `
+                        <div class="bg-yellow-100 border-b-2 border-yellow-400 px-4 py-3">
+                            <div class="flex items-start">
+                                <span class="text-lg mr-2">⚠️</span>
+                                <div class="flex-1">
+                                    <span class="font-bold text-yellow-800">Indicare termini di pagamento!</span>
+                                    <span class="text-sm text-yellow-700 ml-2">Fornitori senza termini:</span>
+                                    <span class="text-sm text-yellow-800 font-medium ml-1">${fornitoriSenzaTermini.join(', ')}</span>
+                                    <a href="fornitori.html" class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">→ Configura</a>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Barra Salvataggio Modifiche -->
+                    ${state.pagatoChanges.size > 0 ? `
+                        <div class="bg-orange-100 border-b-2 border-orange-300 px-4 py-2 flex justify-between items-center">
+                            <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
+                            <div class="flex space-x-2">
+                                <button onclick="cancelPagatoChanges()" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">Annulla</button>
+                                <button onclick="savePagatoFromReport()" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">Salva</button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- TABELLA SCADENZE -->
+                    ${scadenze.length === 0 ? `
+                        <div class="text-center py-8 bg-white">
+                            <svg class="w-12 h-12 text-green-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p class="text-gray-600 font-medium">Nessuna scadenza per ${mesiNomi[mese]} ${anno}</p>
+                            <p class="text-sm text-gray-500">Tutte le fatture sono state pagate! 🎉</p>
+                        </div>
+                    ` : `
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-red-400 text-white">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold">Scadenza</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold">Fornitore</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold">Fattura</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Data Fatt.</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Termini</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Tipo Pag.</th>
+                                        <th class="px-3 py-2 text-right text-xs font-semibold">Importo</th>
+                                        <th class="px-3 py-2 text-center text-xs font-semibold">Pagato</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    ${scadenze.map((s, idx) => {
+                                        const oggi = new Date();
+                                        oggi.setHours(0, 0, 0, 0);
+                                        const isScaduta = s.dataScadenza < oggi;
+                                        const isOggi = s.dataScadenza.toDateString() === oggi.toDateString();
+                                        const giorniRimanenti = Math.ceil((s.dataScadenza - oggi) / (1000 * 60 * 60 * 24));
+                                        const hasChange = state.pagatoChanges.has(s.id);
+                                        
+                                        return `
+                                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScaduta ? 'bg-red-50' : ''} ${hasChange ? 'bg-orange-50' : ''} hover:bg-red-100 transition-colors">
+                                                <td class="px-3 py-2">
+                                                    <div class="flex items-start space-x-1">
+                                                        ${isScaduta ? '<span class="text-red-600 text-xs">⚠️</span>' : ''}
+                                                        <div>
+                                                            <p class="text-sm font-semibold ${isScaduta ? 'text-red-700' : ''}">${s.dataScadenza.toLocaleDateString('it-IT')}</p>
+                                                            <p class="text-xs ${isScaduta ? 'text-red-600' : 'text-gray-500'}">
+                                                                ${isScaduta ? `Scaduta da ${Math.abs(giorniRimanenti)} gg` : isOggi ? 'Scade OGGI!' : `Tra ${giorniRimanenti} gg`}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    <p class="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer hover:underline" 
+                                                       onclick="openFornitoreModalFromReport('${s.fornitoreId}', '${s.fornitoreNome.replace(/'/g, "\\'")}', '${s.id}')"
+                                                       title="Clicca per vedere/modificare termini di pagamento">
+                                                        ${s.ced.nm}
+                                                    </p>
+                                                    ${!s.fornitoreMatch ? '<p class="text-xs text-orange-600">⚠️ Non in anagrafica</p>' : ''}
+                                                </td>
+                                                <td class="px-3 py-2 font-mono text-xs text-gray-700">${s.num}</td>
+                                                <td class="px-3 py-2 text-center text-xs text-gray-600">${new Date(s.dt).toLocaleDateString('it-IT')}</td>
+                                                <td class="px-3 py-2 text-center">
+                                                    <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+                                                        s.terminiPagamento === 'Alla Consegna' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                                                        s.fineMese ? 'bg-orange-100 text-orange-800 border border-orange-300' : 
+                                                        'bg-gray-100 text-gray-800 border border-gray-300'
+                                                    }">
+                                                        ${s.terminiPagamento === 'Alla Consegna' ? 'Alla Consegna' : s.terminiPagamento.replace(' Data Fattura', '')}${s.fineMese && s.terminiPagamento !== 'Alla Consegna' ? ' FM' : ''}
+                                                    </span>
+                                                </td>
+                                                <td class="px-3 py-2 text-center">
+                                                    <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 border border-gray-300">
+                                                        ${s.tipoPagamento}
+                                                    </span>
+                                                </td>
+                                                <td class="px-3 py-2 text-right">
+                                                    <p class="text-sm font-bold text-red-600">€${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                                </td>
+                                                <td class="px-3 py-2 text-center">
+                                                    <input type="checkbox" 
+                                                        ${s.pagato ? 'checked' : ''} 
+                                                        onchange="togglePagatoFromReport('${s.id}')" 
+                                                        class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer">
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                                <tfoot class="bg-red-600 text-white">
+                                    <tr>
+                                        <td colspan="6" class="px-3 py-2 text-right text-sm font-bold">TOTALE DA PAGARE:</td>
+                                        <td class="px-3 py-2 text-right text-lg font-bold">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `}
+                </div>
+            `;
         }
 
         function logout() {
@@ -1790,114 +2616,133 @@
             const hasActiveFilters = state.filters.invoiceYear !== 'all' || state.filters.invoiceMonth !== 'all' || state.filters.supplier !== 'all' || state.filters.minAmount !== '' || state.filters.maxAmount !== '';
             
             app.innerHTML = `
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
-                        <!-- Header con titolo e pulsanti -->
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="flex items-center space-x-3">
-                                <div class="bg-blue-600 p-3 rounded-xl">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-full px-4">
+                <div class="flex gap-4">
+                    <!-- SIDEBAR SINISTRA (STICKY) -->
+                    <div class="w-44 flex-shrink-0">
+                        <div class="sticky top-20">
+                        <!-- Header con titolo -->
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+                            <div class="flex items-center space-x-2 mb-4">
+                                <div class="bg-blue-600 p-2 rounded-lg">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h1 class="text-2xl font-bold">Gestione Fatture</h1>
-                                    <p class="text-sm text-gray-600">Con estrazione IVA e cancellazione</p>
+                                    <h1 class="text-base font-bold leading-tight">Gestione Fatture</h1>
+                                    <p class="text-xs text-gray-500">Con estrazione IVA e cancellazione</p>
                                 </div>
                             </div>
-                            
-                            <!-- Pulsanti Modalità Upload -->
-                            <div class="flex space-x-3">
-                                <button onclick="switchUploadMode('single')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 flex items-center space-x-2">
+
+                            <!-- Statistiche in verticale compatte -->
+                            <div class="space-y-2">
+                                <div class="bg-blue-50 px-3 py-2 rounded-lg border-l-3 border-blue-500">
+                                    <p class="text-xs text-gray-600">Fatture totali</p>
+                                    <p class="text-xl font-bold text-blue-600">${filteredFatture.length.toLocaleString('it-IT')}</p>
+                                </div>
+                                <div class="bg-green-50 px-3 py-2 rounded-lg border-l-3 border-green-500">
+                                    <p class="text-xs text-gray-600">Importo totale</p>
+                                    <p class="text-xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                </div>
+                                <div class="bg-purple-50 px-3 py-2 rounded-lg border-l-3 border-purple-500">
+                                    <p class="text-xs text-gray-600">Fornitori</p>
+                                    <p class="text-xl font-bold text-purple-600">${state.stats.fornitori}</p>
+                                </div>
+                            </div>
+
+                            ${state.error ? `<div class="mt-3 text-xs ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-2 py-1 rounded">${state.error}</div>` : ''}
+                        </div>
+                        
+                        <!-- Pulsanti Upload -->
+                        <div class="bg-white rounded-xl shadow-lg p-4">
+                            <p class="text-xs font-semibold text-gray-600 mb-3">Carica Fatture</p>
+                            <div class="space-y-2">
+                                <button onclick="switchUploadMode('single')" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2 text-xs">
                                     <span>📄</span>
                                     <span>Upload Singolo</span>
                                 </button>
-                                <button onclick="switchUploadMode('folder')" class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 flex items-center space-x-2">
+                                <button onclick="switchUploadMode('folder')" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 flex items-center space-x-2 text-xs">
                                     <span>📁</span>
                                     <span>Upload Cartella</span>
                                 </button>
-                                <button onclick="openModalFatturaManuale()" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-md">
+                                <button onclick="openModalFatturaManuale()" class="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-sm text-xs">
                                     <span>✏️</span>
                                     <span>Inserimento Manuale</span>
                                 </button>
                             </div>
                         </div>
+                        </div>
+                    </div>
 
-                        ${state.loadingProgress.isLoading ? `
-                            <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div class="flex justify-between mb-2"><span class="text-sm font-medium text-blue-900">Caricamento...</span><span class="text-sm text-blue-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span></div>
-                                <div class="w-full bg-blue-200 rounded-full h-3"><div class="bg-blue-600 h-3 rounded-full" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div></div>
+                    <!-- AREA PRINCIPALE -->
+                    <div class="flex-1 min-w-0">
+                        <!-- Contenitore flex: contenuto a sinistra, pulsanti a destra -->
+                        <div class="flex gap-3">
+                            <!-- CONTENUTO PRINCIPALE (tutto allineato) -->
+                            <div class="flex-1 min-w-0" style="overflow: visible;">
+                                <!-- Report Scadenze -->
+                                ${renderReportScadenze()}
+
+                                ${state.loadingProgress.isLoading ? `
+                                    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div class="flex justify-between mb-2"><span class="text-sm font-medium text-blue-900">Caricamento...</span><span class="text-sm text-blue-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span></div>
+                                        <div class="w-full bg-blue-200 rounded-full h-3"><div class="bg-blue-600 h-3 rounded-full" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div></div>
+                                    </div>
+                                ` : ''}
+
+                        <!-- SEZIONE FATTURE MANUALI -->
+                        ${state.fattureManuali.length > 0 ? `
+                        <div class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl shadow-lg p-5 mb-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-base font-bold text-orange-800 flex items-center">
+                                    <span class="mr-2">✏️</span>
+                                    Fatture Inserite Manualmente (${state.fattureManuali.length})
+                                </h3>
+                                <span class="text-sm text-orange-600">Totale: €${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
+                            <p class="text-xs text-orange-700 mb-3">Fatture pagate ma non ancora importate come XML. Eliminale quando importi la fattura corrispondente.</p>
+                            <div class="grid gap-2">
+                                ${state.fattureManuali.map(fm => `
+                                    <div class="bg-white rounded-lg p-3 flex items-center justify-between shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="bg-orange-100 p-2 rounded-lg">
+                                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-900 text-sm">${fm.ragione_sociale}</p>
+                                                <p class="text-xs text-gray-500">Pagata il ${new Date(fm.data_pagamento).toLocaleDateString('it-IT')}${fm.note ? ` • ${fm.note}` : ''}</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <span class="text-lg font-bold text-orange-600">€${parseFloat(fm.importo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            <button onclick="deleteFatturaManuale('${fm.id}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Elimina fattura manuale">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
                         ` : ''}
 
-                        <!-- Statistiche con formato numerico senza decimali -->
-                        <div class="grid md:grid-cols-3 gap-6 mb-6">
-                            <div class="bg-blue-50 px-6 py-4 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Fatture ${hasActiveFilters ? 'filtrate' : 'totali'}</p>
-                                <p class="text-3xl font-bold text-blue-600">${filteredFatture.length.toLocaleString('it-IT')}${state.stats.total !== filteredFatture.length ? ` / ${state.stats.total.toLocaleString('it-IT')}` : ''}</p>
-                            </div>
-                            <div class="bg-green-50 px-6 py-4 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Importo ${hasActiveFilters ? 'filtrato' : 'totale'}</p>
-                                <p class="text-3xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-                            </div>
-                            <div class="bg-purple-50 px-6 py-4 rounded-xl">
-                                <p class="text-xs text-gray-600 mb-1">Fornitori</p>
-                                <p class="text-3xl font-bold text-purple-600">${state.stats.fornitori}</p>
+                        <!-- Filtri -->
+                        <div class="bg-white rounded-lg shadow p-4 mb-4 relative z-10" style="overflow: visible;">
+                            <h3 class="font-bold mb-2 text-sm">Filtri</h3>
+                            <div class="grid grid-cols-4 gap-2">
+                                <select onchange="applyFilter('invoiceYear', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
+                                <select onchange="applyFilter('invoiceMonth', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
+                                <select onchange="applyFilter('supplier', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
+                                <button onclick="clearFilters()" class="px-3 py-1.5 bg-gray-200 rounded hover:bg-gray-300 text-sm">Pulisci</button>
                             </div>
                         </div>
-                        ${state.error ? `<div class="mt-4 ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-4 py-3 rounded">${state.error}</div>` : ''}
-                    </div>
 
-                    <!-- SEZIONE FATTURE MANUALI -->
-                    ${state.fattureManuali.length > 0 ? `
-                    <div class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl shadow-lg p-6 mb-8">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-bold text-orange-800 flex items-center">
-                                <span class="mr-2">✏️</span>
-                                Fatture Inserite Manualmente (${state.fattureManuali.length})
-                            </h3>
-                            <span class="text-sm text-orange-600">Totale: €${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <p class="text-sm text-orange-700 mb-4">Queste sono fatture pagate ma non ancora importate come XML. Eliminale quando importi la fattura corrispondente.</p>
-                        <div class="grid gap-3">
-                            ${state.fattureManuali.map(fm => `
-                                <div class="bg-white rounded-lg p-4 flex items-center justify-between shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
-                                    <div class="flex items-center space-x-6">
-                                        <div class="bg-orange-100 p-2 rounded-lg">
-                                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-gray-900">${fm.ragione_sociale}</p>
-                                            <p class="text-sm text-gray-500">Pagata il ${new Date(fm.data_pagamento).toLocaleDateString('it-IT')}${fm.note ? ` • ${fm.note}` : ''}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center space-x-4">
-                                        <span class="text-xl font-bold text-orange-600">€${parseFloat(fm.importo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        <button onclick="deleteFatturaManuale('${fm.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Elimina fattura manuale">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                        <h3 class="font-bold mb-4">Filtri</h3>
-                        <div class="grid md:grid-cols-4 gap-4">
-                            <select onchange="applyFilter('invoiceYear', this.value)" class="px-3 py-2 border rounded"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
-                            <select onchange="applyFilter('invoiceMonth', this.value)" class="px-3 py-2 border rounded"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
-                            <select onchange="applyFilter('supplier', this.value)" class="px-3 py-2 border rounded"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
-                            <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Pulisci</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                        <!-- Tabella Fatture -->
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         ${state.selectedIds.size > 0 ? `
                             <div class="bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
                                 <span class="text-sm font-medium text-blue-900">${state.selectedIds.size} fatture selezionate</span>
@@ -1924,39 +2769,39 @@
                         <table class="w-full">
                             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                                 <tr>
-                                    <th class="px-3 py-2.5"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''} class="w-4 h-4"></th>
-                                    <th class="px-4 py-2.5 text-left">
-                                        <div class="text-sm font-semibold mb-1">Data</div>
+                                    <th class="w-8 px-2 py-2"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''} class="w-4 h-4"></th>
+                                    <th class="px-2 py-2 text-left">
+                                        <div class="text-xs font-semibold mb-1">Data</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.dataFattura}" onkeyup="applyColumnFilter('dataFattura', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-4 py-2.5 text-left">
-                                        <div class="text-sm font-semibold mb-1">Numero</div>
+                                    <th class="px-2 py-2 text-left">
+                                        <div class="text-xs font-semibold mb-1">Numero</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.numeroFattura}" onkeyup="applyColumnFilter('numeroFattura', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-4 py-2.5 text-left">
-                                        <div class="text-sm font-semibold mb-1">Fornitore</div>
+                                    <th class="px-2 py-2 text-left">
+                                        <div class="text-xs font-semibold mb-1">Fornitore</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.fornitore}" onkeyup="applyColumnFilter('fornitore', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-4 py-2.5 text-right">
-                                        <div class="text-sm font-semibold mb-1">Importo</div>
+                                    <th class="px-2 py-2 text-right">
+                                        <div class="text-xs font-semibold mb-1">Importo</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.importo}" onkeyup="applyColumnFilter('importo', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-4 py-2.5 text-right">
-                                        <div class="text-sm font-semibold mb-1">Δ Delta</div>
+                                    <th class="px-2 py-2 text-right">
+                                        <div class="text-xs font-semibold mb-1">Δ Delta</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.delta}" onkeyup="applyColumnFilter('delta', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
-                                    <th class="px-4 py-2.5 text-center">
-                                        <div class="flex items-center justify-center space-x-2 mb-1">
-                                            <span class="text-sm font-semibold">Pagato</span>
-                                            <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-4 h-4 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''}>
+                                    <th class="px-2 py-2 text-center">
+                                        <div class="flex items-center justify-center space-x-1 mb-1">
+                                            <span class="text-xs font-semibold">Pagato</span>
+                                            <input type="checkbox" id="selectAllPagato" onchange="togglePagatoAll()" class="w-3 h-3 cursor-pointer" ${filteredFatture.length > 0 && filteredFatture.every(f => f.pagato) ? 'checked' : ''}>
                                         </div>
-                                        <select onchange="applyColumnFilter('pagato', this.value)" class="filter-input text-center" style="padding: 0.2rem 0.3rem;">
+                                        <select onchange="applyColumnFilter('pagato', this.value)" class="filter-input text-center text-xs" style="padding: 0.15rem 0.2rem;">
                                             <option value="all" ${state.filters.pagato === 'all' ? 'selected' : ''}>Tutte</option>
                                             <option value="da_pagare" ${state.filters.pagato === 'da_pagare' ? 'selected' : ''}>Da pagare</option>
                                             <option value="pagato" ${state.filters.pagato === 'pagato' ? 'selected' : ''}>Pagate</option>
                                         </select>
                                     </th>
-                                    <th class="px-4 py-2.5 text-center text-sm font-semibold">Azioni</th>
+                                    <th class="px-2 py-2 text-center text-xs font-semibold">Azioni</th>
                                 </tr>
                             </thead>
                             <tbody>${!filteredFatture.length ? `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">${state.loadingProgress.isLoading ? 'Caricamento...' : 'Nessuna fattura'}</td></tr>` : filteredFatture.map(f => {
@@ -1965,23 +2810,23 @@
                                 const deltaClass = Math.abs(delta) < 1 ? 'text-green-600' : Math.abs(delta) < 50 ? 'text-orange-600' : 'text-red-600';
                                 return `
                                 <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
-                                    <td class="px-3 py-2.5"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')" class="w-4 h-4"></td>
-                                    <td class="px-4 py-2.5 text-sm">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
-                                    <td class="px-4 py-2.5 text-sm font-medium">${f.num}</td>
-                                    <td class="px-4 py-2.5 text-sm">${f.ced.nm}</td>
-                                    <td class="px-4 py-2.5 text-sm font-bold text-right">€${f.tot.toFixed(2)}</td>
-                                    <td class="px-4 py-2.5 text-sm font-bold text-right ${deltaClass}" title="Totale Fattura - Σ(Prezzo × Qtà × (1+IVA%))">
+                                    <td class="px-2 py-2"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')" class="w-4 h-4"></td>
+                                    <td class="px-2 py-2 text-xs">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
+                                    <td class="px-2 py-2 text-xs font-medium truncate" title="${f.num}">${f.num}</td>
+                                    <td class="px-2 py-2 text-xs truncate" title="${f.ced.nm}">${f.ced.nm}</td>
+                                    <td class="px-2 py-2 text-xs font-bold text-right">€${f.tot.toFixed(2)}</td>
+                                    <td class="px-2 py-2 text-xs font-bold text-right ${deltaClass}" title="Totale Fattura - Σ(Prezzo × Qtà × (1+IVA%))">
                                         €${delta.toFixed(2)}
                                     </td>
-                                    <td class="px-4 py-2.5 text-center">
+                                    <td class="px-2 py-2 text-center">
                                         <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-4 h-4 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
                                     </td>
-                                    <td class="px-4 py-2.5">
-                                        <div class="flex items-center justify-center space-x-1">
-                                            <button onclick="showDettagliFattura('${f.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 hover:bg-blue-50 rounded transition-colors" title="Visualizza dettagli">
+                                    <td class="px-2 py-2">
+                                        <div class="flex items-center justify-center space-x-0.5">
+                                            <button onclick="showDettagliFattura('${f.id}')" class="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded transition-colors" title="Visualizza dettagli">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             </button>
-                                            <button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 rounded transition-colors" title="Elimina fattura">
+                                            <button onclick="deleteFattura('${f.id}')" class="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded transition-colors" title="Elimina fattura">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                             </button>
                                         </div>
@@ -1991,14 +2836,19 @@
                             }).join('')}</tbody>
                         </table>
                     </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 </div>
             `;
         }
 
         loadTipiProdottoPerCategorizzazione(); // Carica tipi per categorizzazione intelligente
+        loadFornitori(); // Carica fornitori per calcolo scadenze
         loadAllFatture();
         loadFattureManuali();
-        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali + Categorizzazione Intelligente)');
+        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali + Categorizzazione Intelligente + Report Scadenze)');
     </script>
 </body>
 </html>
