@@ -61,8 +61,6 @@
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Prodotti</a>
-                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
-                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
                         <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
@@ -124,7 +122,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (no IVA)</p>
-                            <p id="valoreTotale" class="text-xl font-bold text-purple-600">â‚¬0</p>
+                            <p id="valoreTotale" class="text-xl font-bold text-purple-600">€0</p>
                         </div>
                         <div class="bg-purple-100 p-2 rounded-lg">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -136,7 +134,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (con IVA)</p>
-                            <p id="valoreTotaleIvato" class="text-xl font-bold text-orange-600">â‚¬0</p>
+                            <p id="valoreTotaleIvato" class="text-xl font-bold text-orange-600">€0</p>
                         </div>
                         <div class="bg-orange-100 p-2 rounded-lg">
                             <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
@@ -185,10 +183,10 @@
                                 <th class="col-categoria text-left text-sm">Categoria</th>
                                 <th class="col-categoria text-left text-sm">Gruppo Vendita</th>
                                 <th class="col-fornitore text-left text-sm">Fornitore</th>
-                                <th class="col-prezzo text-sm">â‚¬ base</th>
-                                <th class="col-prezzo text-sm">â‚¬ scontato</th>
+                                <th class="col-prezzo text-sm">€ base</th>
+                                <th class="col-prezzo text-sm">€ scontato</th>
                                 <th class="col-iva text-sm">IVA</th>
-                                <th class="col-prezzo-ivato text-sm">â‚¬ IVA</th>
+                                <th class="col-prezzo-ivato text-sm">€ IVA</th>
                                 <th class="col-qta text-sm">Q.tÃ </th>
                                 <th class="col-stato text-sm">U.M.</th>
                                 <th class="col-azioni text-sm">Azioni</th>
@@ -361,8 +359,8 @@
             document.getElementById('totalCategorie').textContent = cats.size;
             const valNoIva = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
             const valIva = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
-            document.getElementById('valoreTotale').textContent = `â‚¬${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `â‚¬${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotale').textContent = `€${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotaleIvato').textContent = `€${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
         
         function updateFilters() {
@@ -440,10 +438,10 @@
                     <td class="col-categoria"><span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${catColor}20; border: 1px solid ${catColor}40; color: ${catColor}">${catDisplay}</span></td>
                     <td class="col-categoria">${gv ? `<span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${gvColor}20; border: 1px solid ${gvColor}40; color: ${gvColor}">${gvDisplay}</span>` : '<span class="text-gray-400">-</span>'}</td>
                     <td class="col-fornitore truncate-cell text-sm">${p.fornitore || '-'}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">â‚¬${(p.prezzo || 0).toFixed(2)}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">â‚¬${(p.prezzo_scontato || p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">€${(p.prezzo_scontato || p.prezzo || 0).toFixed(2)}</td>
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
-                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">â‚¬${(p.prezzo_ivato || 0).toFixed(2)}</td>
+                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toFixed(2)}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
                     <td class="col-stato text-sm text-center">${p.unita_misura || 'pz'}</td>
                     <td class="col-azioni">
@@ -497,12 +495,12 @@
                 await supabaseClient.from('prodotti').update(updateData).in('id', ids.slice(i, i + 100));
             }
             selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
-            alert('âœ… Prodotti aggiornati!');
+            alert('✅ Prodotti aggiornati!');
         };
 
         function populateAggregantiSelect() {
             const sel = document.getElementById('prodottoAggregante');
-            sel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__nuovo__">âž• Nuova categoria</option>';
+            sel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuova categoria</option>';
         }
         function populateGruppiVenditaSelect() {
             const sel = document.getElementById('prodottoGruppoVendita');
@@ -519,7 +517,7 @@
                 tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Prima crea categoria</option>';
             } else if (aggId) {
                 tipoSel.disabled = false;
-                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__nuovo__">âž• Nuovo tipo</option>';
+                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuovo tipo</option>';
                 tipoSel.onchange = function() { document.getElementById('formNuovoTipo').classList.toggle('hidden', this.value !== '__nuovo__'); };
             } else {
                 tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Seleziona categoria</option>';
@@ -582,7 +580,7 @@
             };
             if (id) await supabaseClient.from('prodotti').update(prod).eq('id', id);
             else await supabaseClient.from('prodotti').insert([prod]);
-            closeModal(); await loadAllProdotti(); alert('âœ… Salvato!');
+            closeModal(); await loadAllProdotti(); alert('✅ Salvato!');
         }
 
         function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
@@ -609,11 +607,11 @@
                 await supabaseClient.from('prodotti').delete().in('id', ids.slice(i, i + 100));
             }
             selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
-            alert('âœ… Eliminato!');
+            alert('✅ Eliminato!');
         }
 
         loadAllProdotti();
-        console.log('âœ… Prodotti con sidebar - Caricato');
+        console.log('✅ Prodotti con sidebar - Caricato');
     </script>
 </body>
 </html>

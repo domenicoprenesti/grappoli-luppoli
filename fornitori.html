@@ -54,33 +54,91 @@
     </script>
 
     <!-- Navbar -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Fornitori - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Animazioni smooth per editing inline */
+        .editable-field {
+            transition: all 0.2s ease;
+        }
+        .editable-field:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .editable-field:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toasts per feedback salvataggio */
+        .toast {
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <script>
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+    </script>
+
+    <!-- Navbar -->
     <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                            </svg>
-                        </div>
-                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                        <img src="data:image/png;base64,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" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
+                        <span class="text-lg font-bold text-gray-800">Grappoli & Luppoli</span>
                     </button>
-                    
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
-                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
-                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
-                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Fornitori</a>
+                        <a class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
                 </div>
-                
                 <div class="flex items-center space-x-3">
-                    <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
-                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Dashboard</span>
+                    </button>
+                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Esci</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -132,7 +190,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Fatturato Totale</p>
-                        <p id="fatturatoTotale" class="text-3xl font-bold text-green-600">â‚¬0</p>
+                        <p id="fatturatoTotale" class="text-3xl font-bold text-green-600">€0</p>
                     </div>
                     <div class="bg-green-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +204,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Da Pagare</p>
-                        <p id="daPagareTotale" class="text-3xl font-bold text-orange-600">â‚¬0</p>
+                        <p id="daPagareTotale" class="text-3xl font-bold text-orange-600">€0</p>
                     </div>
                     <div class="bg-orange-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +218,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Importo Scaduto</p>
-                        <p id="scadutoTotale" class="text-3xl font-bold text-red-600">â‚¬0</p>
+                        <p id="scadutoTotale" class="text-3xl font-bold text-red-600">€0</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,7 +425,7 @@
                                 <input type="checkbox" id="fineMese" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
                                 <span class="text-sm font-semibold text-gray-700">Pagamento a Fine Mese</span>
                             </label>
-                            <p class="text-xs text-gray-500 mt-2 ml-8">Se attivo, la scadenza Ã¨ alla fine del mese (es: 30gg FM invece di 30gg)</p>
+                            <p class="text-xs text-gray-500 mt-2 ml-8">Se attivo, la scadenza è alla fine del mese (es: 30gg FM invece di 30gg)</p>
                         </div>
                     </div>
                 </div>
@@ -414,7 +472,7 @@
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800"><strong>âš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!</p>
+                <p class="text-sm text-yellow-800"><strong>âš ï¸ Attenzione:</strong> Questa azione è irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -446,15 +504,15 @@
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-gray-500">Da Pagare</p>
-                    <p id="riepilogoDaPagare" class="text-lg font-bold text-orange-600">â‚¬0</p>
+                    <p id="riepilogoDaPagare" class="text-lg font-bold text-orange-600">€0</p>
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-gray-500">Scadute</p>
-                    <p id="riepilogoScadute" class="text-lg font-bold text-red-600">â‚¬0</p>
+                    <p id="riepilogoScadute" class="text-lg font-bold text-red-600">€0</p>
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-gray-500">Pagate</p>
-                    <p id="riepilogoPagate" class="text-lg font-bold text-green-600">â‚¬0</p>
+                    <p id="riepilogoPagate" class="text-lg font-bold text-green-600">€0</p>
                 </div>
             </div>
             
@@ -560,9 +618,9 @@
 
         function updateStats() {
             document.getElementById('totalFornitori').textContent = fornitori.length;
-            document.getElementById('fatturatoTotale').textContent = 'â‚¬' + fornitori.reduce((s, f) => s + (f.fatturato_totale || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('daPagareTotale').textContent = 'â‚¬' + fornitori.reduce((s, f) => s + (f.fatture_da_pagare || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('scadutoTotale').textContent = 'â‚¬' + fornitori.reduce((s, f) => s + (f.importo_scaduto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('fatturatoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatturato_totale || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('daPagareTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatture_da_pagare || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('scadutoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.importo_scaduto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         }
 
         // ===== FILTRI =====
@@ -660,8 +718,8 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div>
-                            <p class="font-bold text-gray-900">â‚¬${(f.fatturato_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-                            ${f.fatture_da_pagare > 0 ? `<p class="text-xs text-orange-600">â‚¬${(f.fatture_da_pagare || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} da pagare</p>` : ''}
+                            <p class="font-bold text-gray-900">€${(f.fatturato_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                            ${f.fatture_da_pagare > 0 ? `<p class="text-xs text-orange-600">€${(f.fatture_da_pagare || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} da pagare</p>` : ''}
                         </div>
                     </td>
                     <td class="px-6 py-4 text-center">
@@ -1039,9 +1097,9 @@
             const importoPagato = pagate.reduce((sum, f) => sum + (f.importo_totale || 0), 0);
             
             document.getElementById('riepilogoTotale').textContent = totale;
-            document.getElementById('riepilogoDaPagare').textContent = `â‚¬${importoDaPagare.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('riepilogoScadute').textContent = `â‚¬${importoScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('riepilogoPagate').textContent = `â‚¬${importoPagato.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('riepilogoDaPagare').textContent = `€${importoDaPagare.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('riepilogoScadute').textContent = `€${importoScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('riepilogoPagate').textContent = `€${importoPagato.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
 
         function renderFattureFornitore() {
@@ -1073,7 +1131,7 @@
                 
                 if (isPagato) {
                     statoClass = 'bg-green-100 text-green-800';
-                    statoText = 'âœ… Pagato';
+                    statoText = '✅ Pagato';
                 } else if (f.isScaduta) {
                     statoClass = 'bg-red-100 text-red-800';
                     statoText = 'âš ï¸ Scaduta';
@@ -1085,7 +1143,7 @@
                     <tr class="hover:bg-gray-50 ${rowClass}">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900">${f.numero_fattura || '-'}</td>
                         <td class="px-4 py-3 text-sm text-gray-600">${dataFattura}</td>
-                        <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">â‚¬${(f.importo_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="px-4 py-3 text-sm font-bold text-gray-900 text-right">€${(f.importo_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="px-4 py-3 text-sm text-gray-600 text-center">${f.termini}</td>
                         <td class="px-4 py-3 text-sm text-center ${f.isScaduta && !isPagato ? 'text-red-600 font-semibold' : 'text-gray-600'}">${scadenza}</td>
                         <td class="px-4 py-3 text-center">
@@ -1107,7 +1165,7 @@
             const fattura = fattureFornitoreCorrente.find(f => f.id === fatturaId);
             if (!fattura) return;
             
-            // Se il valore Ã¨ uguale all'originale, rimuovi dalla mappa modifiche
+            // Se il valore è uguale all'originale, rimuovi dalla mappa modifiche
             if (fattura.pagato === nuovoValore) {
                 fattureModifiche.delete(fatturaId);
             } else {
@@ -1169,7 +1227,7 @@
 
         // Inizializzazione
         loadFornitori();
-        console.log('âœ… Gestione Fornitori caricata');
+        console.log('✅ Gestione Fornitori caricata');
     </script>
 </body>
 </html>
@@ -1220,7 +1278,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Fatturato Totale</p>
-                        <p id="fatturatoTotale" class="text-3xl font-bold text-green-600">â‚¬0</p>
+                        <p id="fatturatoTotale" class="text-3xl font-bold text-green-600">€0</p>
                     </div>
                     <div class="bg-green-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1234,7 +1292,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Da Pagare</p>
-                        <p id="daPagareTotale" class="text-3xl font-bold text-orange-600">â‚¬0</p>
+                        <p id="daPagareTotale" class="text-3xl font-bold text-orange-600">€0</p>
                     </div>
                     <div class="bg-orange-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1248,7 +1306,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Importo Scaduto</p>
-                        <p id="scadutoTotale" class="text-3xl font-bold text-red-600">â‚¬0</p>
+                        <p id="scadutoTotale" class="text-3xl font-bold text-red-600">€0</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1455,7 +1513,7 @@
                                 <input type="checkbox" id="fineMese" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
                                 <span class="text-sm font-semibold text-gray-700">Pagamento a Fine Mese</span>
                             </label>
-                            <p class="text-xs text-gray-500 mt-2 ml-8">Se attivo, la scadenza Ã¨ alla fine del mese (es: 30gg FM invece di 30gg)</p>
+                            <p class="text-xs text-gray-500 mt-2 ml-8">Se attivo, la scadenza è alla fine del mese (es: 30gg FM invece di 30gg)</p>
                         </div>
                     </div>
                 </div>
@@ -1502,7 +1560,7 @@
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800"><strong>âš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!</p>
+                <p class="text-sm text-yellow-800"><strong>âš ï¸ Attenzione:</strong> Questa azione è irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -1558,9 +1616,9 @@
 
         function updateStats() {
             document.getElementById('totalFornitori').textContent = fornitori.length;
-            document.getElementById('fatturatoTotale').textContent = 'â‚¬' + fornitori.reduce((s, f) => s + (f.fatturato_totale || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('daPagareTotale').textContent = 'â‚¬' + fornitori.reduce((s, f) => s + (f.fatture_da_pagare || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('scadutoTotale').textContent = 'â‚¬' + fornitori.reduce((s, f) => s + (f.importo_scaduto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('fatturatoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatturato_totale || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('daPagareTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatture_da_pagare || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('scadutoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.importo_scaduto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         }
 
         // ===== FILTRI =====
@@ -1658,8 +1716,8 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div>
-                            <p class="font-bold text-gray-900">â‚¬${(f.fatturato_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-                            ${f.fatture_da_pagare > 0 ? `<p class="text-xs text-orange-600">â‚¬${(f.fatture_da_pagare || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} da pagare</p>` : ''}
+                            <p class="font-bold text-gray-900">€${(f.fatturato_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                            ${f.fatture_da_pagare > 0 ? `<p class="text-xs text-orange-600">€${(f.fatture_da_pagare || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} da pagare</p>` : ''}
                         </div>
                     </td>
                     <td class="px-6 py-4 text-center">
@@ -1900,7 +1958,7 @@
 
         // Inizializzazione
         loadFornitori();
-        console.log('âœ… Gestione Fornitori caricata');
+        console.log('✅ Gestione Fornitori caricata');
     </script>
 </body>
 </html>

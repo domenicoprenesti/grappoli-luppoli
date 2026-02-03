@@ -38,28 +38,38 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                        </svg>
-                    </div>
+                    <img src="data:image/png;base64,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" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
                     <span class="text-lg font-bold">Grappoli & Luppoli</span>
                 </button>
                 
+                <!-- MENU PRINCIPALE -->
                 <div class="hidden md:ml-10 md:flex md:space-x-4">
-                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Fatture</a>
-                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
-                    <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
-                    <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
-                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
+                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Dashboard
+                    </a>
+                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Fatture
+                    </a>
+                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Prodotti
+                    </a>
+                    <!-- NUOVO LINK FORNITORI -->
+                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Fornitori
+                    </a>
+                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Utenti
+                    </a>
                 </div>
             </div>
             
             <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
-                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
+                    Dashboard
+                </button>
+                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                    Esci
+                </button>
             </div>
         </div>
     </div>
@@ -81,7 +91,7 @@
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                 <p class="text-sm text-yellow-800">
-                    <strongâš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!
+                    <strongâš ï¸ Attenzione:</strong> Questa azione è irreversibile!
                 </p>
             </div>
             <div class="flex space-x-4">
@@ -118,7 +128,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                     <p class="text-xl font-bold mb-2">Carica Fatture XML</p>
-                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o piÃ¹ file (anche drag & drop)</p>
+                    <p class="text-sm text-gray-600 mb-3">Seleziona uno o più file (anche drag & drop)</p>
                     <p class="text-xs text-blue-600 font-medium">âœ“ Controllo duplicati automatico</p>
                 </div>
             </div>
@@ -339,7 +349,7 @@
             <form id="formFatturaManuale" onsubmit="saveFatturaManuale(event)" class="p-8">
                 <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded">
                     <p class="text-sm text-amber-800">
-                        <strong>â„¹ï¸ Info:</strong> Usa questo form per registrare pagamenti di fatture non ancora importate come XML. Potrai eliminarle quando importerai la fattura corrispondente.
+                        <strong>ℹï¸ Info:</strong> Usa questo form per registrare pagamenti di fatture non ancora importate come XML. Potrai eliminarle quando importerai la fattura corrispondente.
                     </p>
                 </div>
                 
@@ -348,7 +358,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Ragione Sociale / Fornitore *</label>
                         <select id="manuale_fornitore_select" onchange="toggleNuovoFornitore()" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                             <option value="">-- Seleziona fornitore --</option>
-                            <option value="__nuovo__">âž• Nuovo fornitore...</option>
+                            <option value="__nuovo__">➕ Nuovo fornitore...</option>
                         </select>
                         <div id="nuovoFornitoreContainer" class="hidden mt-2">
                             <input type="text" id="manuale_nuovo_fornitore" class="w-full px-4 py-3 border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-orange-50" placeholder="Inserisci nome nuovo fornitore...">
@@ -356,7 +366,7 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Importo Totale (â‚¬) *</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Importo Totale (€) *</label>
                         <input type="number" step="0.01" id="manuale_importo" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Es: 1250.50">
                     </div>
                     
@@ -413,7 +423,7 @@
                     return false;
                 }
                 aggregantiCache = aggreganti || [];
-                console.log(`âœ… Caricati ${aggregantiCache.length} aggreganti`);
+                console.log(`✅ Caricati ${aggregantiCache.length} aggreganti`);
                 
                 // Carica tipi con relazione all'aggregante
                 const { data: tipi, error: tipiError } = await supabaseClient
@@ -426,7 +436,7 @@
                     return false;
                 }
                 tipiProdottoCache = tipi || [];
-                console.log(`âœ… Caricati ${tipiProdottoCache.length} tipi prodotto`);
+                console.log(`✅ Caricati ${tipiProdottoCache.length} tipi prodotto`);
                 
                 // Log delle keyword disponibili
                 const tipiConKeywords = tipiProdottoCache.filter(t => t.keywords && t.keywords.length > 0);
@@ -510,7 +520,7 @@
                     }
                 }
                 
-                console.log('âœ… Campi database verificati correttamente');
+                console.log('✅ Campi database verificati correttamente');
                 return true;
                 
             } catch (err) {
@@ -587,7 +597,7 @@
                 console.log(`ðŸ“¦ Totale prodotti con fattura: ${prodottiCount || 0}`);
                 
                 if (!prodottiCount || prodottiCount === 0) {
-                    console.log('â„¹ï¸ Nessun prodotto con fattura_id');
+                    console.log('ℹï¸ Nessun prodotto con fattura_id');
                     return;
                 }
                 
@@ -609,10 +619,10 @@
                     if (data) allProdotti = [...allProdotti, ...data];
                 }
                 
-                console.log(`âœ… Caricati ${allProdotti.length} prodotti totali`);
+                console.log(`✅ Caricati ${allProdotti.length} prodotti totali`);
                 
                 if (allProdotti.length === 0) {
-                    console.log('â„¹ï¸ Nessun prodotto caricato');
+                    console.log('ℹï¸ Nessun prodotto caricato');
                     return;
                 }
                 
@@ -642,7 +652,7 @@
                     });
                 }
                 
-                console.log(`âœ… Aggregati dati per ${state.fattureConProdotti.size} fatture`);
+                console.log(`✅ Aggregati dati per ${state.fattureConProdotti.size} fatture`);
                 
             } catch (err) {
                 console.error('âŒ Errore caricamento prodotti:', err);
@@ -664,7 +674,7 @@
                 }
                 
                 state.fornitori = data || [];
-                console.log(`âœ… Caricati ${state.fornitori.length} fornitori`);
+                console.log(`✅ Caricati ${state.fornitori.length} fornitori`);
                 
             } catch (err) {
                 console.error('âŒ Errore caricamento fornitori:', err);
@@ -799,7 +809,7 @@
                 
                 if (!dataScadenza) return;
                 
-                // Verifica se la scadenza Ã¨ nel mese richiesto
+                // Verifica se la scadenza è nel mese richiesto
                 const scadenzaAnno = dataScadenza.getFullYear();
                 const scadenzaMese = dataScadenza.getMonth() + 1;
                 
@@ -929,7 +939,7 @@
                 }
                 
                 state.pagatoChanges.clear();
-                state.error = 'âœ… Modifiche salvate con successo!';
+                state.error = '✅ Modifiche salvate con successo!';
                 
                 setTimeout(() => { state.error = ''; render(); }, 3000);
                 render();
@@ -1103,7 +1113,7 @@
                     
                     if (error) throw error;
                     
-                    console.log('âœ… Fornitore aggiornato');
+                    console.log('✅ Fornitore aggiornato');
                 } else {
                     // Crea nuovo fornitore
                     const { data, error } = await supabaseClient
@@ -1120,7 +1130,7 @@
                     
                     if (error) throw error;
                     
-                    console.log('âœ… Nuovo fornitore creato:', data);
+                    console.log('✅ Nuovo fornitore creato:', data);
                 }
                 
                 // Chiudi modal
@@ -1132,7 +1142,7 @@
                 // Re-render per aggiornare le scadenze
                 render();
                 
-                state.error = 'âœ… Termini di pagamento salvati!';
+                state.error = '✅ Termini di pagamento salvati!';
                 setTimeout(() => { state.error = ''; render(); }, 3000);
                 
             } catch (err) {
@@ -1196,17 +1206,17 @@
                             <!-- Badge Scadenza del mese -->
                             <div class="bg-green-100 border border-green-300 rounded-lg px-3 py-1.5">
                                 <p class="text-xs text-green-700 font-medium">Scadenza in ${mesiNomi[mese]} ${anno}</p>
-                                <p class="text-lg font-bold text-green-800">â‚¬ ${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                <p class="text-lg font-bold text-green-800">€ ${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
                             <!-- Badge Scadute -->
                             <div class="bg-red-100 border border-red-300 rounded-lg px-3 py-1.5">
                                 <p class="text-xs text-red-600 font-medium">Scadute</p>
-                                <p class="text-lg font-bold text-red-700">â‚¬${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
+                                <p class="text-lg font-bold text-red-700">€${stats.totaleScaduto.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureScadute})</span></p>
                             </div>
                             <!-- Badge Prossimi 30gg -->
                             <div class="bg-orange-100 border border-orange-300 rounded-lg px-3 py-1.5">
                                 <p class="text-xs text-orange-600 font-medium">Prossimi 30gg</p>
-                                <p class="text-lg font-bold text-orange-700">â‚¬${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
+                                <p class="text-lg font-bold text-orange-700">€${stats.totaleInScadenza.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span class="text-sm font-normal">(${stats.fattureInScadenza})</span></p>
                             </div>
                         </div>
                     </div>
@@ -1308,7 +1318,7 @@
                                                     </span>
                                                 </td>
                                                 <td class="px-3 py-2 text-right">
-                                                    <p class="text-sm font-bold text-red-600">â‚¬${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                                    <p class="text-sm font-bold text-red-600">€${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                                 </td>
                                                 <td class="px-3 py-2 text-center">
                                                     <input type="checkbox" 
@@ -1323,7 +1333,7 @@
                                 <tfoot class="bg-red-600 text-white">
                                     <tr>
                                         <td colspan="6" class="px-3 py-2 text-right text-sm font-bold">TOTALE DA PAGARE:</td>
-                                        <td class="px-3 py-2 text-right text-lg font-bold">â‚¬${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td class="px-3 py-2 text-right text-lg font-bold">€${totaleDelMese.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -1352,7 +1362,7 @@
             fornitoriUnici.forEach(f => {
                 select.innerHTML += `<option value="${f}">${f}</option>`;
             });
-            select.innerHTML += '<option value="__nuovo__">âž• Nuovo fornitore...</option>';
+            select.innerHTML += '<option value="__nuovo__">➕ Nuovo fornitore...</option>';
             
             // Nascondi il campo nuovo fornitore
             document.getElementById('nuovoFornitoreContainer').classList.add('hidden');
@@ -1416,7 +1426,7 @@
                 
                 if (error) throw error;
                 
-                console.log('âœ… Fattura manuale salvata:', data);
+                console.log('✅ Fattura manuale salvata:', data);
                 closeModalFatturaManuale();
                 await loadFattureManuali();
                 render();
@@ -1456,7 +1466,7 @@
                 
                 if (error) throw error;
                 
-                console.log('âœ… Fattura manuale eliminata');
+                console.log('✅ Fattura manuale eliminata');
                 await loadFattureManuali();
                 render();
                 
@@ -1466,7 +1476,7 @@
             }
         };
 
-        // ===== SWITCH MODALITÃ€ UPLOAD =====
+        // ===== SWITCH MODALITÀ UPLOAD =====
         window.switchUploadMode = function(mode) {
             state.uploadMode = mode;
             
@@ -1545,7 +1555,7 @@
                 }
                 
                 state.pagatoChanges.clear();
-                state.error = 'âœ… Modifiche salvate con successo!';
+                state.error = '✅ Modifiche salvate con successo!';
                 
                 setTimeout(() => { state.error = ''; render(); }, 3000);
                 render();
@@ -1622,7 +1632,7 @@
                 desc.includes('vermentino') || desc.includes('trebbiano') || desc.includes('primitivo') ||
                 desc.includes('barbera') || desc.includes('montepulciano') || desc.includes('nero d\'avola') ||
                 desc.includes('sauvignon') || desc.includes('riesling') || desc.includes('gewurztraminer')) {
-                console.log(`âšª FALLBACK: "${description.substring(0, 40)}..." â†’ Vino`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Vino`);
                 return { categoria: 'Vino', tipo_id: null, source: 'fallback' };
             }
             
@@ -1632,7 +1642,7 @@
                 desc.includes('stout') || desc.includes('porter') || desc.includes('weiss') ||
                 desc.includes('bock') || desc.includes('helles') || desc.includes('pils') ||
                 desc.includes('craft') || desc.includes('artigianale')) {
-                console.log(`âšª FALLBACK: "${description.substring(0, 40)}..." â†’ Birra`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Birra`);
                 return { categoria: 'Birra', tipo_id: null, source: 'fallback' };
             }
             
@@ -1644,7 +1654,7 @@
                 desc.includes('liquore') || desc.includes('aperol') || desc.includes('campari') ||
                 desc.includes('vermouth') || desc.includes('martini') || desc.includes('scotch') ||
                 desc.includes('bourbon') || desc.includes('mezcal') || desc.includes('calvados')) {
-                console.log(`âšª FALLBACK: "${description.substring(0, 40)}..." â†’ Spirits`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Spirits`);
                 return { categoria: 'Spirits', tipo_id: null, source: 'fallback' };
             }
             
@@ -1653,9 +1663,9 @@
                 desc.includes('aranciata') || desc.includes('limonata') || desc.includes('tonica') ||
                 desc.includes('ginger') || desc.includes('energy') || desc.includes('redbull') ||
                 desc.includes('schweppes') || desc.includes('sprite') || desc.includes('fanta') ||
-                desc.includes('the ') || desc.includes(' te ') || desc.includes('caffÃ¨') ||
+                desc.includes('the ') || desc.includes(' te ') || desc.includes('caffè') ||
                 desc.includes('latte') || desc.includes('soda')) {
-                console.log(`âšª FALLBACK: "${description.substring(0, 40)}..." â†’ Bevande`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Bevande`);
                 return { categoria: 'Bevande', tipo_id: null, source: 'fallback' };
             }
             
@@ -1663,21 +1673,21 @@
             if (desc.includes('patatine') || desc.includes('chips') || desc.includes('noccioline') ||
                 desc.includes('arachidi') || desc.includes('olive') || desc.includes('taralli') ||
                 desc.includes('grissini') || desc.includes('crackers') || desc.includes('snack')) {
-                console.log(`âšª FALLBACK: "${description.substring(0, 40)}..." â†’ Snacks`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Snacks`);
                 return { categoria: 'Snacks', tipo_id: null, source: 'fallback' };
             }
             
             // CAPEX (spese in conto capitale)
             if (desc.includes('attrezzatura') || desc.includes('macchinario') || desc.includes('frigorifero') ||
                 desc.includes('bancone') || desc.includes('scaffale') || desc.includes('arredamento')) {
-                console.log(`âšª FALLBACK: "${description.substring(0, 40)}..." â†’ Capex`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Capex`);
                 return { categoria: 'Capex', tipo_id: null, source: 'fallback' };
             }
             
             // RICORRENTI (spese ricorrenti)
             if (desc.includes('affitto') || desc.includes('utenze') || desc.includes('energia') ||
                 desc.includes('telefono') || desc.includes('internet') || desc.includes('assicurazione')) {
-                console.log(`âšª FALLBACK: "${description.substring(0, 40)}..." â†’ Ricorrenti`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Ricorrenti`);
                 return { categoria: 'Ricorrenti', tipo_id: null, source: 'fallback' };
             }
             
@@ -1866,7 +1876,7 @@
                                     Prodotti (${prodottiList.length})
                                 </div>
                                 <div class="text-sm font-medium text-teal-700">
-                                    Totale: â‚¬${totaleProdotti.toFixed(2)}
+                                    Totale: €${totaleProdotti.toFixed(2)}
                                 </div>
                             </h3>
                             
@@ -1886,10 +1896,10 @@
                                                 <th class="px-3 py-2 text-left text-xs font-semibold">Prodotto</th>
                                                 <th class="px-3 py-2 text-left text-xs font-semibold">Cat.</th>
                                                 <th class="px-3 py-2 text-right text-xs font-semibold">QtÃ </th>
-                                                <th class="px-3 py-2 text-right text-xs font-semibold">â‚¬ Base</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">€ Base</th>
                                                 <th class="px-3 py-2 text-center text-xs font-semibold">Sc1%</th>
                                                 <th class="px-3 py-2 text-center text-xs font-semibold">Sc2%</th>
-                                                <th class="px-3 py-2 text-right text-xs font-semibold">â‚¬ Finale</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold">€ Finale</th>
                                                 <th class="px-3 py-2 text-center text-xs font-semibold">IVA</th>
                                                 <th class="px-3 py-2 text-right text-xs font-semibold">Totale</th>
                                             </tr>
@@ -1923,7 +1933,7 @@
                                                             ${(p.quantita || 0).toLocaleString('it-IT')} ${p.unita_misura || 'pz'}
                                                         </td>
                                                         <td class="px-3 py-2 text-right ${hasSconti ? 'line-through text-gray-400' : 'font-semibold'}">
-                                                            â‚¬${prezzoBase.toFixed(2)}
+                                                            €${prezzoBase.toFixed(2)}
                                                         </td>
                                                         <td class="px-3 py-2 text-center">
                                                             ${p.sconto1 ? `<span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded bg-orange-100 text-orange-800">${p.sconto1.toFixed(1)}%</span>` : '<span class="text-gray-300">-</span>'}
@@ -1932,7 +1942,7 @@
                                                             ${p.sconto2 ? `<span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded bg-orange-100 text-orange-800">${p.sconto2.toFixed(1)}%</span>` : '<span class="text-gray-300">-</span>'}
                                                         </td>
                                                         <td class="px-3 py-2 text-right font-bold text-green-600">
-                                                            â‚¬${prezzoScontato.toFixed(2)}
+                                                            €${prezzoScontato.toFixed(2)}
                                                         </td>
                                                         <td class="px-3 py-2 text-center">
                                                             <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-800">
@@ -1940,7 +1950,7 @@
                                                             </span>
                                                         </td>
                                                         <td class="px-3 py-2 text-right font-bold text-teal-700">
-                                                            â‚¬${totaleRiga.toFixed(2)}
+                                                            €${totaleRiga.toFixed(2)}
                                                         </td>
                                                     </tr>
                                                 `;
@@ -1949,7 +1959,7 @@
                                         <tfoot class="bg-teal-700 text-white">
                                             <tr>
                                                 <td colspan="8" class="px-3 py-2 text-right font-bold">TOTALE PRODOTTI:</td>
-                                                <td class="px-3 py-2 text-right font-bold text-lg">â‚¬${totaleProdotti.toFixed(2)}</td>
+                                                <td class="px-3 py-2 text-right font-bold text-lg">€${totaleProdotti.toFixed(2)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -1964,11 +1974,11 @@
                                             <div class="flex-1">
                                                 <p class="text-sm font-medium text-yellow-800">Attenzione: Discrepanza importi</p>
                                                 <p class="text-sm text-yellow-700 mt-1">
-                                                    Il totale prodotti (â‚¬${totaleProdotti.toFixed(2)}) non corrisponde all'importo fattura (â‚¬${data.importo_totale.toFixed(2)})
+                                                    Il totale prodotti (€${totaleProdotti.toFixed(2)}) non corrisponde all'importo fattura (€${data.importo_totale.toFixed(2)})
                                                 </p>
                                                 <p class="text-xs text-yellow-600 mt-1">
-                                                    Differenza: â‚¬${Math.abs(totaleProdotti - data.importo_totale).toFixed(2)} 
-                                                    ${totaleProdotti > data.importo_totale ? '(prodotti in piÃ¹)' : '(spese/bolli/trasporti)'}
+                                                    Differenza: €${Math.abs(totaleProdotti - data.importo_totale).toFixed(2)} 
+                                                    ${totaleProdotti > data.importo_totale ? '(prodotti in più)' : '(spese/bolli/trasporti)'}
                                                 </p>
                                             </div>
                                         </div>
@@ -2034,7 +2044,7 @@
                 // Ricarica i dati
                 await loadAllFatture();
                 
-                alert('âœ… Modifiche salvate con successo!');
+                alert('✅ Modifiche salvate con successo!');
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
@@ -2104,11 +2114,11 @@
                         deltaCalcolati++;
                         
                         if (deltaCalcolati <= 5) {
-                            console.log(`Delta ${f.num}: â‚¬${f.tot.toFixed(2)} - â‚¬${datiProdotti.valoreProdotti.toFixed(2)} = â‚¬${delta.toFixed(2)}`);
+                            console.log(`Delta ${f.num}: €${f.tot.toFixed(2)} - €${datiProdotti.valoreProdotti.toFixed(2)} = €${delta.toFixed(2)}`);
                         }
                     }
                 });
-                console.log(`âœ… Calcolati ${deltaCalcolati} delta su ${state.fatture.length} fatture`);
+                console.log(`✅ Calcolati ${deltaCalcolati} delta su ${state.fatture.length} fatture`);
                 
                 state.loadingProgress.isLoading = false;
                 render();
@@ -2261,12 +2271,12 @@
                 throw new Error('Errore: fattura inserita ma ID non recuperato');
             }
             
-            console.log('âœ… Fattura inserita con ID:', insertedFattura.id);
+            console.log('✅ Fattura inserita con ID:', insertedFattura.id);
 
             // Passa l'ID della fattura e la data alla funzione di estrazione prodotti
             console.log('ðŸ“¦ Avvio estrazione prodotti...');
             await extractAndSaveProducts(xmlDoc, cedenteNome, insertedFattura.id, dataFattura);
-            console.log('âœ… Estrazione prodotti completata!');
+            console.log('✅ Estrazione prodotti completata!');
         }
 
         // ===== PARSER CON GESTIONE IVA COMPLETA E COLLEGAMENTO FATTURA =====
@@ -2321,7 +2331,7 @@
                     const scontoEl = scontiMaggiorazioni[s];
                     const tipo = getTextContent(scontoEl, 'Tipo'); // SC = sconto, MG = maggiorazione
                     
-                    // Controlla se Ã¨ percentuale o importo
+                    // Controlla se è percentuale o importo
                     let percentualeText = getTextContent(scontoEl, 'Percentuale');
                     let importoText = getTextContent(scontoEl, 'Importo');
                     
@@ -2338,7 +2348,7 @@
                             const importo = parseFloat(importoText);
                             const percentuale = (importo / prezzoUnitario) * 100;
                             sconti.push(parseFloat(percentuale.toFixed(3)));
-                            console.log(`  ðŸ’° Sconto ${s + 1}: â‚¬${importo} â†’ ${percentuale.toFixed(2)}%`);
+                            console.log(`  ðŸ’° Sconto ${s + 1}: €${importo} â†’ ${percentuale.toFixed(2)}%`);
                         }
                     }
                 }
@@ -2346,7 +2356,7 @@
                 // ===== CALCOLO PREZZO BASE =====
                 let prezzoBase = prezzoUnitario;
                 
-                // Se PrezzoUnitario Ã¨ 0, prova a ricavare dal PrezzoTotale
+                // Se PrezzoUnitario è 0, prova a ricavare dal PrezzoTotale
                 if (prezzoUnitario === 0 && quantita > 0) {
                     let totaleText = getTextContent(linea, 'PrezzoTotale') || '0';
                     totaleText = totaleText.replace(',', '.');
@@ -2365,7 +2375,7 @@
                     prezzoScontato = prezzoScontato * (1 - sconto / 100);
                 }
                 
-                console.log(`ðŸ’µ Prezzo base: â‚¬${prezzoBase.toFixed(2)} â†’ Prezzo scontato: â‚¬${prezzoScontato.toFixed(2)}`);
+                console.log(`ðŸ’µ Prezzo base: €${prezzoBase.toFixed(2)} â†’ Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
                     console.log(`âš ï¸ SALTATO: QuantitÃ =0 E Prezzo=0 per "${descrizione}"`);
@@ -2377,7 +2387,7 @@
                 const categorizzazione = categorizzaProdotto(descrizione);
 
                 try {
-                    // IMPORTANTE: Ora ogni prodotto Ã¨ collegato ad una fattura specifica
+                    // IMPORTANTE: Ora ogni prodotto è collegato ad una fattura specifica
                     const prodottoData = {
                         nome: descrizione,
                         descrizione: descrizione,
@@ -2398,7 +2408,7 @@
                         sconto3: sconti[2] || null,
                         sconto4: sconti[3] || null,
                         sconto5: sconti[4] || null,
-                        sconto_fattura: null,  // VerrÃ  popolato dopo se c'Ã¨ uno sconto generale
+                        sconto_fattura: null,  // VerrÃ  popolato dopo se c'è uno sconto generale
                         attivo: true
                     };
                     
@@ -2423,7 +2433,7 @@
                         console.error(`âŒ Dettaglio errore:`, JSON.stringify(error));
                         errori++;
                         
-                        // Se Ã¨ un errore di colonna mancante, mostra un alert
+                        // Se è un errore di colonna mancante, mostra un alert
                         if (error.message && error.message.includes('column')) {
                             alert(`âš ï¸ ERRORE DATABASE: La colonna non esiste!\n\n${error.message}\n\nDevi eseguire le query SQL per aggiungere i campi fattura_id e data_fattura alla tabella prodotti!`);
                             throw error; // Ferma il caricamento
@@ -2431,13 +2441,13 @@
                     } else {
                         prodottiCreati++;
                         const scontiStr = sconti.length > 0 ? ` sconti: [${sconti.join('%, ')}%]` : '';
-                        console.log(`âœ… Creato prodotto ${prodottiCreati}: ${descrizione} (qtÃ : ${quantita}, base: â‚¬${prezzoBase.toFixed(2)}, finale: â‚¬${prezzoScontato.toFixed(2)}${scontiStr}, IVA: ${aliquotaIVA}%)`);
+                        console.log(`✅ Creato prodotto ${prodottiCreati}: ${descrizione} (qtÃ : ${quantita}, base: €${prezzoBase.toFixed(2)}, finale: €${prezzoScontato.toFixed(2)}${scontiStr}, IVA: ${aliquotaIVA}%)`);
                     }
                 } catch (err) {
                     console.error(`âŒ ECCEZIONE prodotto "${descrizione}":`, err);
                     errori++;
                     
-                    // Se Ã¨ il primo errore, mostra un alert dettagliato
+                    // Se è il primo errore, mostra un alert dettagliato
                     if (errori === 1) {
                         alert(`âš ï¸ ERRORE nel salvataggio prodotti!\n\nErrore: ${err.message}\n\nVerifica:\n1. Che i campi fattura_id e data_fattura esistano nella tabella prodotti\n2. Che hai eseguito le query SQL di aggiornamento\n3. La console del browser per dettagli`);
                     }
@@ -2445,7 +2455,7 @@
             }
             
             console.log(`\nðŸ“Š RIEPILOGO ESTRAZIONE PRODOTTI:`);
-            console.log(`âœ… Prodotti creati: ${prodottiCreati}`);
+            console.log(`✅ Prodotti creati: ${prodottiCreati}`);
             console.log(`âš ï¸ Prodotti saltati: ${prodottiSaltati}`);
             console.log(`âŒ Errori: ${errori}`);
             console.log(`ðŸ“¦ Totale righe elaborate: ${dettaglioLinee.length}\n`);
@@ -2503,7 +2513,7 @@
                     
                     if (!prodError && count) {
                         deletedProdotti += count;
-                        console.log(`âœ… Eliminati ${count} prodotti della fattura ID: ${id}`);
+                        console.log(`✅ Eliminati ${count} prodotti della fattura ID: ${id}`);
                     }
                     
                     // 2. Elimina la fattura
@@ -2518,7 +2528,7 @@
                 }
                 
                 state.selectedIds.clear();
-                state.error = `âœ… ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
+                state.error = `✅ ${deletedFatture} fatture e ${deletedProdotti} prodotti eliminati!`;
                 
                 await loadAllFatture();
                 
@@ -2633,7 +2643,7 @@
                                 </div>
                                 <div class="bg-green-50 px-3 py-2 rounded-lg border-l-3 border-green-500">
                                     <p class="text-xs text-gray-600">Importo totale</p>
-                                    <p class="text-xl font-bold text-green-600">â‚¬${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                    <p class="text-xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                                 </div>
                                 <div class="bg-purple-50 px-3 py-2 rounded-lg border-l-3 border-purple-500">
                                     <p class="text-xs text-gray-600">Fornitori</p>
@@ -2689,7 +2699,7 @@
                                     <span class="mr-2">âœï¸</span>
                                     Fatture Inserite Manualmente (${state.fattureManuali.length})
                                 </h3>
-                                <span class="text-sm text-orange-600">Totale: â‚¬${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span class="text-sm text-orange-600">Totale: €${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
                             <p class="text-xs text-orange-700 mb-3">Fatture pagate ma non ancora importate come XML. Eliminale quando importi la fattura corrispondente.</p>
                             <div class="grid gap-2">
@@ -2703,11 +2713,11 @@
                                             </div>
                                             <div>
                                                 <p class="font-semibold text-gray-900 text-sm">${fm.ragione_sociale}</p>
-                                                <p class="text-xs text-gray-500">Pagata il ${new Date(fm.data_pagamento).toLocaleDateString('it-IT')}${fm.note ? ` â€¢ ${fm.note}` : ''}</p>
+                                                <p class="text-xs text-gray-500">Pagata il ${new Date(fm.data_pagamento).toLocaleDateString('it-IT')}${fm.note ? ` • ${fm.note}` : ''}</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center space-x-3">
-                                            <span class="text-lg font-bold text-orange-600">â‚¬${parseFloat(fm.importo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            <span class="text-lg font-bold text-orange-600">€${parseFloat(fm.importo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             <button onclick="deleteFatturaManuale('${fm.id}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Elimina fattura manuale">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -2804,9 +2814,9 @@
                                     <td class="px-2 py-2 text-xs">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
                                     <td class="px-2 py-2 text-xs font-medium truncate" title="${f.num}">${f.num}</td>
                                     <td class="px-2 py-2 text-xs truncate" title="${f.ced.nm}">${f.ced.nm}</td>
-                                    <td class="px-2 py-2 text-xs font-bold text-right">â‚¬${f.tot.toFixed(2)}</td>
+                                    <td class="px-2 py-2 text-xs font-bold text-right">€${f.tot.toFixed(2)}</td>
                                     <td class="px-2 py-2 text-xs font-bold text-right ${deltaClass}" title="Totale Fattura - Î£(Prezzo Ã— QtÃ  Ã— (1+IVA%))">
-                                        â‚¬${delta.toFixed(2)}
+                                        €${delta.toFixed(2)}
                                     </td>
                                     <td class="px-2 py-2 text-center">
                                         <input type="checkbox" ${f.pagato ? 'checked' : ''} onchange="togglePagato('${f.id}')" class="w-4 h-4 cursor-pointer" title="${f.pagato ? 'Fattura pagata' : 'Fattura non pagata'}">
@@ -2838,7 +2848,7 @@
         loadFornitori(); // Carica fornitori per calcolo scadenze
         loadAllFatture();
         loadFattureManuali();
-        console.log('âœ… Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali + Categorizzazione Intelligente + Report Scadenze)');
+        console.log('✅ Gestione Fatture (Con IVA + Eliminazione + Fatture Manuali + Categorizzazione Intelligente + Report Scadenze)');
     </script>
 </body>
 </html>

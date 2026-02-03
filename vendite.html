@@ -73,7 +73,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Gestione Vendite</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ“Š Gestione Vendite</h1>
                 <p class="text-gray-600">Import Excel, categorizzazione e Gruppi Vendita</p>
             </div>
             <div class="flex space-x-3">
@@ -131,7 +131,7 @@
         <!-- Filtri -->
         <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
             <div class="grid md:grid-cols-6 gap-3">
-                <input type="text" id="filterNome" placeholder="🔍 Cerca nome..." class="px-3 py-2 border rounded-lg text-sm" onkeyup="applyFilters()">
+                <input type="text" id="filterNome" placeholder="ðŸ” Cerca nome..." class="px-3 py-2 border rounded-lg text-sm" onkeyup="applyFilters()">
                 <select id="filterCategoria" class="px-3 py-2 border rounded-lg text-sm" onchange="applyFilters()">
                     <option value="">Tutte le categorie</option>
                 </select>
@@ -199,7 +199,7 @@
     <div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">📥 Import Vendite da Excel</h2>
+                <h2 class="text-2xl font-bold">ðŸ“¥ Import Vendite da Excel</h2>
                 <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -235,7 +235,7 @@
     <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">✏️ Modifica Vendita</h2>
+                <h2 class="text-2xl font-bold">âœï¸ Modifica Vendita</h2>
                 <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -290,7 +290,7 @@
                 </div>
                 
                 <div class="flex space-x-3">
-                    <button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">💾 Salva</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">ðŸ’¾ Salva</button>
                     <button type="button" onclick="closeEditModal()" class="px-4 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
                 </div>
             </form>
@@ -301,7 +301,7 @@
     <div id="bulkEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">✏️ Modifica Massiva</h2>
+                <h2 class="text-2xl font-bold">âœï¸ Modifica Massiva</h2>
                 <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -327,7 +327,7 @@
                 </div>
                 
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Applica</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Applica</button>
                     <button type="button" onclick="closeBulkEditModal()" class="px-4 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
                 </div>
             </form>
@@ -338,7 +338,7 @@
     <div id="gruppiVenditaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">🏷️ Gestione Gruppi Vendita</h2>
+                <h2 class="text-2xl font-bold">ðŸ·ï¸ Gestione Gruppi Vendita</h2>
                 <button onclick="closeGruppiVenditaModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -412,7 +412,7 @@
             { nome: 'Miscellaneo', colore: '#6B7280', ordine: 6 }
         ];
 
-        // Mappatura automatica Categoria → Gruppo Vendita
+        // Mappatura automatica Categoria â†’ Gruppo Vendita
         const MAPPING_CATEGORIA_GRUPPO = {
             'Birra': 'Birra',
             'Menu cibo': 'Cibo',
@@ -426,7 +426,7 @@
             'Vetrina': 'Miscellaneo'
         };
 
-        // ===== ALGORITMO NOME → GRUPPO VENDITA =====
+        // ===== ALGORITMO NOME â†’ GRUPPO VENDITA =====
         // Keywords per identificare il gruppo dal nome del prodotto
         const KEYWORDS_GRUPPO = {
             'Vino': [
@@ -502,14 +502,14 @@
             const venditeWithoutGruppo = allVendite.filter(v => !v.gruppo_vendita_id);
             
             if (venditeWithoutGruppo.length === 0) {
-                alert('✅ Tutte le vendite hanno già un Gruppo Vendita assegnato!');
+                alert('✅ Tutte le vendite hanno giÃ  un Gruppo Vendita assegnato!');
                 return;
             }
             
             const conferma = confirm(
-                `🤖 Auto-Assegnazione Gruppi Vendita\n\n` +
+                `ðŸ¤– Auto-Assegnazione Gruppi Vendita\n\n` +
                 `Trovate ${venditeWithoutGruppo.length} vendite senza gruppo.\n\n` +
-                `L'algoritmo analizzerà il NOME di ogni prodotto e assegnerà automaticamente il gruppo in base a parole chiave.\n\n` +
+                `L'algoritmo analizzerÃ  il NOME di ogni prodotto e assegnerÃ  automaticamente il gruppo in base a parole chiave.\n\n` +
                 `Vuoi procedere?`
             );
             
@@ -539,7 +539,7 @@
             
             if (updates.length === 0) {
                 showLoading(false);
-                alert(`⚠️ Nessun gruppo identificabile automaticamente.\n\nProdotti analizzati: ${venditeWithoutGruppo.length}\nNon identificabili: ${notIdentified}`);
+                alert(`âš ï¸ Nessun gruppo identificabile automaticamente.\n\nProdotti analizzati: ${venditeWithoutGruppo.length}\nNon identificabili: ${notIdentified}`);
                 return;
             }
             
@@ -626,7 +626,7 @@
             } catch (err) {
                 console.error('Errore caricamento:', err);
                 showLoading(false);
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -638,7 +638,7 @@
                     .order('ordine', { ascending: true });
                 
                 if (error) {
-                    console.log('Tabella gruppo_vendita non trovata, verrà creata al primo setup');
+                    console.log('Tabella gruppo_vendita non trovata, verrÃ  creata al primo setup');
                     allGruppiVendita = [];
                     return;
                 }
@@ -683,7 +683,7 @@
             
             // Gruppi
             const grpOptions = '<option value="">Tutti i gruppi</option>' +
-                '<option value="__null__">⚠️ Senza gruppo</option>' +
+                '<option value="__null__">âš ï¸ Senza gruppo</option>' +
                 allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
             document.getElementById('filterGruppo').innerHTML = grpOptions;
             
@@ -947,7 +947,7 @@
                 await loadData();
                 
             } catch (err) {
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1001,7 +1001,7 @@
                 
             } catch (err) {
                 showLoading(false);
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1064,7 +1064,7 @@
                 populateFilters();
                 
             } catch (err) {
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1084,7 +1084,7 @@
                 populateFilters();
                 
             } catch (err) {
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1126,7 +1126,7 @@
                 
             } catch (err) {
                 showLoading(false);
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1237,7 +1237,7 @@
                 
             } catch (err) {
                 console.error('Errore import:', err);
-                alert('❌ Errore import: ' + err.message);
+                alert('âŒ Errore import: ' + err.message);
                 document.getElementById('importProgress').classList.add('hidden');
             }
         }
