@@ -122,7 +122,9 @@
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
-                        <a class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Fornitori</a>
+                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
+                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
+                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
                 </div>
@@ -472,7 +474,7 @@
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800"><strong>âš ï¸ Attenzione:</strong> Questa azione è irreversibile!</p>
+                <p class="text-sm text-yellow-800"><strong>⚠️ Attenzione:</strong> Questa azione è irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -679,7 +681,7 @@
                     <td class="px-6 py-4">
                         <div class="text-sm">
                             ${f.telefono ? `<p class="text-gray-700">📞 ${f.telefono}</p>` : ''}
-                            ${f.email ? `<p class="text-gray-600">âœ‰ï¸ ${f.email}</p>` : ''}
+                            ${f.email ? `<p class="text-gray-600">✨ ${f.email}</p>` : ''}
                             ${!f.telefono && !f.email ? '<p class="text-gray-400">N/D</p>' : ''}
                         </div>
                     </td>
@@ -1134,7 +1136,7 @@
                     statoText = '✅ Pagato';
                 } else if (f.isScaduta) {
                     statoClass = 'bg-red-100 text-red-800';
-                    statoText = 'âš ï¸ Scaduta';
+                    statoText = '⚠️ Scaduta';
                 }
                 
                 const rowClass = isModificata ? 'bg-orange-50' : (f.isScaduta && !isPagato ? 'bg-red-50' : (isPagato ? 'bg-green-50' : ''));
@@ -1560,7 +1562,7 @@
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800"><strong>âš ï¸ Attenzione:</strong> Questa azione è irreversibile!</p>
+                <p class="text-sm text-yellow-800"><strong>⚠️ Attenzione:</strong> Questa azione è irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -1677,7 +1679,7 @@
                     <td class="px-6 py-4">
                         <div class="text-sm">
                             ${f.telefono ? `<p class="text-gray-700">📞 ${f.telefono}</p>` : ''}
-                            ${f.email ? `<p class="text-gray-600">âœ‰ï¸ ${f.email}</p>` : ''}
+                            ${f.email ? `<p class="text-gray-600">✨ ${f.email}</p>` : ''}
                             ${!f.telefono && !f.email ? '<p class="text-gray-400">N/D</p>' : ''}
                         </div>
                     </td>

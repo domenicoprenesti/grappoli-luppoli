@@ -129,7 +129,7 @@
                 }
                 
                 if (data.password !== enteredPassword) {
-                    console.log('âŒ Password errata');
+                    console.log('❌ Password errata');
                     errorText.textContent = 'Password errata.';
                     errorMessage.classList.remove('hidden');
                     passwordInput.value = '';
@@ -152,7 +152,7 @@
                 localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
                 window.location.href = 'dashboard.html';
             } catch (err) {
-                console.error('âŒ Errore:', err);
+                console.error('❌ Errore:', err);
                 errorText.textContent = 'Errore di sistema.';
                 errorMessage.classList.remove('hidden');
                 loginButton.disabled = false;

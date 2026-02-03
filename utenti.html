@@ -53,11 +53,16 @@
                     <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Prodotti
                     </a>
-                    <!-- NUOVO LINK FORNITORI -->
+                    <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Vendite
+                    </a>
+                    <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Margini
+                    </a>
                     <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Fornitori
                     </a>
-                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">
                         Utenti
                     </a>
                 </div>
@@ -238,7 +243,7 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <button onclick="toggleUserStatus('${user.id}', ${user.attivo})" class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                ${user.attivo ? '✅ Attivo' : 'âŒ Disattivo'}
+                                ${user.attivo ? '✅ Attivo' : '❌ Disattivo'}
                             </button>
                         </td>
                         <td class="px-6 py-4 text-center text-sm text-gray-600">

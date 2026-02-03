@@ -604,7 +604,7 @@
                 renderDashboard();
 
             } catch (err) {
-                console.error('âŒ Errore caricamento dashboard:', err);
+                console.error('❌ Errore caricamento dashboard:', err);
                 document.getElementById('loadingDiv').innerHTML = `
                     <div class="text-center text-red-600">
                         <p class="font-bold">Errore nel caricamento</p>
@@ -869,10 +869,10 @@
                     delta = ((m.costoConIva - prev.costoConIva) / prev.costoConIva * 100);
                     if (delta > 0) {
                         deltaClass = 'text-red-600';
-                        deltaIcon = 'â†‘';
+                        deltaIcon = '↑';
                     } else if (delta < 0) {
                         deltaClass = 'text-green-600';
-                        deltaIcon = 'â†“';
+                        deltaIcon = '↓';
                     }
                 }
 

@@ -47,13 +47,18 @@
                     <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Dashboard
                     </a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">
                         Fatture
                     </a>
                     <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Prodotti
                     </a>
-                    <!-- NUOVO LINK FORNITORI -->
+                    <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Vendite
+                    </a>
+                    <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Margini
+                    </a>
                     <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Fornitori
                     </a>
@@ -91,7 +96,7 @@
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                 <p class="text-sm text-yellow-800">
-                    <strongâš ï¸ Attenzione:</strong> Questa azione è irreversibile!
+                    <strong⚠️ Attenzione:</strong> Questa azione è irreversibile!
                 </p>
             </div>
             <div class="flex space-x-4">
@@ -129,7 +134,7 @@
                     </svg>
                     <p class="text-xl font-bold mb-2">Carica Fatture XML</p>
                     <p class="text-sm text-gray-600 mb-3">Seleziona uno o più file (anche drag & drop)</p>
-                    <p class="text-xs text-blue-600 font-medium">âœ“ Controllo duplicati automatico</p>
+                    <p class="text-xs text-blue-600 font-medium">✔ Controllo duplicati automatico</p>
                 </div>
             </div>
 
@@ -143,8 +148,8 @@
                     <p class="text-xl font-bold mb-2 text-purple-700">📝 Carica Cartella Completa</p>
                     <p class="text-sm text-gray-600 mb-3">Seleziona una cartella con tutte le fatture XML</p>
                     <div class="space-y-1">
-                        <p class="text-xs text-purple-600 font-medium">âœ“ Elaborazione automatica in batch</p>
-                        <p class="text-xs text-purple-600 font-medium">âœ“ Skip automatico duplicati</p>
+                        <p class="text-xs text-purple-600 font-medium">✔ Elaborazione automatica in batch</p>
+                        <p class="text-xs text-purple-600 font-medium">✔ Skip automatico duplicati</p>
                         <p class="text-xs text-gray-500 mt-2">Perfetto per importare centinaia di fatture</p>
                     </div>
                 </div>
@@ -159,7 +164,7 @@
                 <div class="w-full bg-blue-200 rounded-full h-3">
                     <div id="modalProgressBar" class="bg-blue-600 h-3 rounded-full transition-all" style="width: 0%"></div>
                 </div>
-                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">âš ï¸ 0 duplicati saltati</p>
+                <p id="modalDuplicatesText" class="text-xs text-yellow-600 mt-2 hidden">⚠️ 0 duplicati saltati</p>
             </div>
         </div>
     </div>
@@ -338,7 +343,7 @@
     <div id="modalFatturaManuale" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
             <div class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-6 rounded-t-2xl flex justify-between items-center">
-                <h2 class="text-2xl font-bold">âœï¸ Inserimento Manuale</h2>
+                <h2 class="text-2xl font-bold">✏️ Inserimento Manuale</h2>
                 <button onclick="closeModalFatturaManuale()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -419,7 +424,7 @@
                     .order('ordine', { ascending: true });
                 
                 if (aggError) {
-                    console.error('âŒ Errore caricamento aggreganti:', aggError);
+                    console.error('❌ Errore caricamento aggreganti:', aggError);
                     return false;
                 }
                 aggregantiCache = aggreganti || [];
@@ -432,7 +437,7 @@
                     .order('nome', { ascending: true });
                 
                 if (tipiError) {
-                    console.error('âŒ Errore caricamento tipi:', tipiError);
+                    console.error('❌ Errore caricamento tipi:', tipiError);
                     return false;
                 }
                 tipiProdottoCache = tipi || [];
@@ -446,7 +451,7 @@
                 return true;
                 
             } catch (err) {
-                console.error('âŒ Errore caricamento categorizzazione:', err);
+                console.error('❌ Errore caricamento categorizzazione:', err);
                 return false;
             }
         }
@@ -496,10 +501,10 @@
                 if (error) {
                     // Se l'errore menziona una colonna mancante, avvisa l'utente
                     if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
-                        console.error('âŒ CAMPI MANCANTI NEL DATABASE!', error);
+                        console.error('❌ CAMPI MANCANTI NEL DATABASE!', error);
                         
                         const conferma = confirm(
-                            'âš ï¸ ATTENZIONE: DATABASE NON AGGIORNATO!\n\n' +
+                            '⚠️ ATTENZIONE: DATABASE NON AGGIORNATO!\n\n' +
                             'I campi "fattura_id" e "data_fattura" non esistono nella tabella prodotti.\n\n' +
                             'DEVI eseguire le query SQL di aggiornamento prima di poter caricare fatture.\n\n' +
                             'Vuoi vedere le istruzioni?'
@@ -524,7 +529,7 @@
                 return true;
                 
             } catch (err) {
-                console.error('âŒ Errore verifica database:', err);
+                console.error('❌ Errore verifica database:', err);
                 return false;
             }
         }
@@ -534,7 +539,7 @@
         verificaCampiDatabase().then(ok => {
             databaseOK = ok;
             if (!ok) {
-                console.warn('âš ï¸ Database non pronto. Il caricamento fatture potrebbe fallire.');
+                console.warn('⚠️ Database non pronto. Il caricamento fatture potrebbe fallire.');
             }
         });
         
@@ -577,7 +582,7 @@
             console.log('📦 Caricamento prodotti per calcolare delta...');
             
             if (!state.fattureConProdotti) {
-                console.error('âŒ state.fattureConProdotti non inizializzato!');
+                console.error('❌ state.fattureConProdotti non inizializzato!');
                 return;
             }
             
@@ -590,7 +595,7 @@
                     .not('fattura_id', 'is', null);
                 
                 if (countError) {
-                    console.warn('âš ï¸ Errore count prodotti:', countError);
+                    console.warn('⚠️ Errore count prodotti:', countError);
                     return;
                 }
                 
@@ -612,7 +617,7 @@
                         .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                     
                     if (error) {
-                        console.error('âŒ Errore batch prodotti:', error);
+                        console.error('❌ Errore batch prodotti:', error);
                         continue;
                     }
                     
@@ -655,7 +660,7 @@
                 console.log(`✅ Aggregati dati per ${state.fattureConProdotti.size} fatture`);
                 
             } catch (err) {
-                console.error('âŒ Errore caricamento prodotti:', err);
+                console.error('❌ Errore caricamento prodotti:', err);
             }
         }
 
@@ -669,7 +674,7 @@
                     .select('id, ragione_sociale, partita_iva, termini_pagamento, fine_mese, tipo_pagamento');
                 
                 if (error) {
-                    console.warn('âš ï¸ Errore caricamento fornitori:', error);
+                    console.warn('⚠️ Errore caricamento fornitori:', error);
                     return;
                 }
                 
@@ -677,7 +682,7 @@
                 console.log(`✅ Caricati ${state.fornitori.length} fornitori`);
                 
             } catch (err) {
-                console.error('âŒ Errore caricamento fornitori:', err);
+                console.error('❌ Errore caricamento fornitori:', err);
             }
         }
 
@@ -774,7 +779,7 @@
                 // Trova il fornitore
                 const fornitore = getFornitoreByName(fattura.ced.nm);
                 
-                // Se pagamento con Carta di Credito o Addebito Diretto â†’ giÃ  pagata, skip
+                // Se pagamento con Carta di Credito o Addebito Diretto ↑ giÃ  pagata, skip
                 const tipoPagamento = fornitore?.tipo_pagamento || '';
                 if (tipoPagamento === 'Carta di Credito' || tipoPagamento === 'Addebito Diretto') {
                     return; // Skip - giÃ  pagata automaticamente
@@ -946,7 +951,7 @@
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                state.error = 'âŒ Errore durante il salvataggio';
+                state.error = '❌ Errore durante il salvataggio';
                 render();
             }
         };
@@ -1147,7 +1152,7 @@
                 
             } catch (err) {
                 console.error('Errore salvataggio fornitore:', err);
-                alert('âŒ Errore durante il salvataggio: ' + err.message);
+                alert('❌ Errore durante il salvataggio: ' + err.message);
             }
         };
 
@@ -1225,12 +1230,12 @@
                     ${fornitoriSenzaTermini.length > 0 ? `
                         <div class="bg-yellow-100 border-b-2 border-yellow-400 px-4 py-3">
                             <div class="flex items-start">
-                                <span class="text-lg mr-2">âš ï¸</span>
+                                <span class="text-lg mr-2">⚠️</span>
                                 <div class="flex-1">
                                     <span class="font-bold text-yellow-800">Indicare termini di pagamento!</span>
                                     <span class="text-sm text-yellow-700 ml-2">Fornitori senza termini:</span>
                                     <span class="text-sm text-yellow-800 font-medium ml-1">${fornitoriSenzaTermini.join(', ')}</span>
-                                    <a href="fornitori.html" class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">â†’ Configura</a>
+                                    <a href="fornitori.html" class="ml-2 text-xs text-blue-600 hover:text-blue-800 underline">↑ Configura</a>
                                 </div>
                             </div>
                         </div>
@@ -1284,7 +1289,7 @@
                                             <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScaduta ? 'bg-red-50' : ''} ${hasChange ? 'bg-orange-50' : ''} hover:bg-red-100 transition-colors">
                                                 <td class="px-3 py-2">
                                                     <div class="flex items-start space-x-1">
-                                                        ${isScaduta ? '<span class="text-red-600 text-xs">âš ï¸</span>' : ''}
+                                                        ${isScaduta ? '<span class="text-red-600 text-xs">⚠️</span>' : ''}
                                                         <div>
                                                             <p class="text-sm font-semibold ${isScaduta ? 'text-red-700' : ''}">${s.dataScadenza.toLocaleDateString('it-IT')}</p>
                                                             <p class="text-xs ${isScaduta ? 'text-red-600' : 'text-gray-500'}">
@@ -1299,7 +1304,7 @@
                                                        title="Clicca per vedere/modificare termini di pagamento">
                                                         ${s.ced.nm}
                                                     </p>
-                                                    ${!s.fornitoreMatch ? '<p class="text-xs text-orange-600">âš ï¸ Non in anagrafica</p>' : ''}
+                                                    ${!s.fornitoreMatch ? '<p class="text-xs text-orange-600">⚠️ Non in anagrafica</p>' : ''}
                                                 </td>
                                                 <td class="px-3 py-2 font-mono text-xs text-gray-700">${s.num}</td>
                                                 <td class="px-3 py-2 text-center text-xs text-gray-600">${new Date(s.dt).toLocaleDateString('it-IT')}</td>
@@ -1409,7 +1414,7 @@
             const note = document.getElementById('manuale_note').value.trim();
             
             if (!ragioneSociale || !importo || !dataPagamento) {
-                alert('âš ï¸ Compila tutti i campi obbligatori');
+                alert('⚠️ Compila tutti i campi obbligatori');
                 return;
             }
             
@@ -1432,8 +1437,8 @@
                 render();
                 
             } catch (err) {
-                console.error('âŒ Errore salvataggio fattura manuale:', err);
-                alert('âŒ Errore durante il salvataggio: ' + err.message);
+                console.error('❌ Errore salvataggio fattura manuale:', err);
+                alert('❌ Errore durante il salvataggio: ' + err.message);
             }
         };
 
@@ -1450,7 +1455,7 @@
                 console.log(`📋 Caricate ${state.fattureManuali.length} fatture manuali`);
                 
             } catch (err) {
-                console.error('âŒ Errore caricamento fatture manuali:', err);
+                console.error('❌ Errore caricamento fatture manuali:', err);
                 state.fattureManuali = [];
             }
         }
@@ -1471,8 +1476,8 @@
                 render();
                 
             } catch (err) {
-                console.error('âŒ Errore eliminazione fattura manuale:', err);
-                alert('âŒ Errore durante l\'eliminazione: ' + err.message);
+                console.error('❌ Errore eliminazione fattura manuale:', err);
+                alert('❌ Errore durante l\'eliminazione: ' + err.message);
             }
         };
 
@@ -1562,7 +1567,7 @@
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                state.error = 'âŒ Errore durante il salvataggio';
+                state.error = '❌ Errore durante il salvataggio';
                 render();
             }
         };
@@ -1588,7 +1593,7 @@
             );
             
             if (files.length === 0) {
-                alert('âš ï¸ Nessun file XML trovato nella cartella selezionata');
+                alert('⚠️ Nessun file XML trovato nella cartella selezionata');
                 return;
             }
             
@@ -1611,7 +1616,7 @@
             // 1. Prima prova con il sistema database (keywords)
             const matchDB = findTipoByKeywords(description);
             if (matchDB) {
-                console.log(`🏷️ MATCH DB: "${description.substring(0, 40)}..." â†’ ${matchDB.tipo_nome} (${matchDB.aggregante_nome}) [keyword: "${matchDB.matched_keyword}"]`);
+                console.log(`🏷️ MATCH DB: "${description.substring(0, 40)}..." ↑ ${matchDB.tipo_nome} (${matchDB.aggregante_nome}) [keyword: "${matchDB.matched_keyword}"]`);
                 return {
                     categoria: matchDB.aggregante_nome,
                     tipo_id: matchDB.tipo_id,
@@ -1632,7 +1637,7 @@
                 desc.includes('vermentino') || desc.includes('trebbiano') || desc.includes('primitivo') ||
                 desc.includes('barbera') || desc.includes('montepulciano') || desc.includes('nero d\'avola') ||
                 desc.includes('sauvignon') || desc.includes('riesling') || desc.includes('gewurztraminer')) {
-                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Vino`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." ↑ Vino`);
                 return { categoria: 'Vino', tipo_id: null, source: 'fallback' };
             }
             
@@ -1642,7 +1647,7 @@
                 desc.includes('stout') || desc.includes('porter') || desc.includes('weiss') ||
                 desc.includes('bock') || desc.includes('helles') || desc.includes('pils') ||
                 desc.includes('craft') || desc.includes('artigianale')) {
-                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Birra`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." ↑ Birra`);
                 return { categoria: 'Birra', tipo_id: null, source: 'fallback' };
             }
             
@@ -1654,7 +1659,7 @@
                 desc.includes('liquore') || desc.includes('aperol') || desc.includes('campari') ||
                 desc.includes('vermouth') || desc.includes('martini') || desc.includes('scotch') ||
                 desc.includes('bourbon') || desc.includes('mezcal') || desc.includes('calvados')) {
-                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Spirits`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." ↑ Spirits`);
                 return { categoria: 'Spirits', tipo_id: null, source: 'fallback' };
             }
             
@@ -1665,7 +1670,7 @@
                 desc.includes('schweppes') || desc.includes('sprite') || desc.includes('fanta') ||
                 desc.includes('the ') || desc.includes(' te ') || desc.includes('caffè') ||
                 desc.includes('latte') || desc.includes('soda')) {
-                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Bevande`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." ↑ Bevande`);
                 return { categoria: 'Bevande', tipo_id: null, source: 'fallback' };
             }
             
@@ -1673,25 +1678,25 @@
             if (desc.includes('patatine') || desc.includes('chips') || desc.includes('noccioline') ||
                 desc.includes('arachidi') || desc.includes('olive') || desc.includes('taralli') ||
                 desc.includes('grissini') || desc.includes('crackers') || desc.includes('snack')) {
-                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Snacks`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." ↑ Snacks`);
                 return { categoria: 'Snacks', tipo_id: null, source: 'fallback' };
             }
             
             // CAPEX (spese in conto capitale)
             if (desc.includes('attrezzatura') || desc.includes('macchinario') || desc.includes('frigorifero') ||
                 desc.includes('bancone') || desc.includes('scaffale') || desc.includes('arredamento')) {
-                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Capex`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." ↑ Capex`);
                 return { categoria: 'Capex', tipo_id: null, source: 'fallback' };
             }
             
             // RICORRENTI (spese ricorrenti)
             if (desc.includes('affitto') || desc.includes('utenze') || desc.includes('energia') ||
                 desc.includes('telefono') || desc.includes('internet') || desc.includes('assicurazione')) {
-                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." â†’ Ricorrenti`);
+                console.log(`⚪ FALLBACK: "${description.substring(0, 40)}..." ↑ Ricorrenti`);
                 return { categoria: 'Ricorrenti', tipo_id: null, source: 'fallback' };
             }
             
-            console.log(`âš« NON CATEGORIZZATO: "${description.substring(0, 40)}..." â†’ Altro`);
+            console.log(`⚠ NON CATEGORIZZATO: "${description.substring(0, 40)}..." ↑ Altro`);
             return { categoria: 'Altro', tipo_id: null, source: 'none' };
         }
         
@@ -2048,7 +2053,7 @@
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                alert('âŒ Errore durante il salvataggio: ' + err.message);
+                alert('❌ Errore durante il salvataggio: ' + err.message);
             }
         };
 
@@ -2136,7 +2141,7 @@
             if (!databaseOK) {
                 const riprova = await verificaCampiDatabase();
                 if (!riprova) {
-                    alert('âŒ Database non pronto. Impossibile caricare fatture.\n\nEsegui prima le query SQL di aggiornamento!');
+                    alert('❌ Database non pronto. Impossibile caricare fatture.\n\nEsegui prima le query SQL di aggiornamento!');
                     return;
                 }
                 databaseOK = true;
@@ -2180,7 +2185,7 @@
                         
                         // Mostra contatore duplicati
                         if (state.uploadProgress.duplicates.length > 0) {
-                            modalDuplicatesText.textContent = `âš ï¸ ${state.uploadProgress.duplicates.length} duplicati saltati`;
+                            modalDuplicatesText.textContent = `⚠️ ${state.uploadProgress.duplicates.length} duplicati saltati`;
                             modalDuplicatesText.classList.remove('hidden');
                         }
                     } else {
@@ -2190,9 +2195,9 @@
             }
 
             state.uploading = false;
-            state.error = `âœ“ ${successCount} fatture caricate!`;
-            if (state.uploadProgress.duplicates.length > 0) state.error += ` | âš ï¸ ${state.uploadProgress.duplicates.length} duplicati`;
-            if (state.uploadProgress.errors.length > 0) state.error += ` | âŒ ${state.uploadProgress.errors.length} errori`;
+            state.error = `✔ ${successCount} fatture caricate!`;
+            if (state.uploadProgress.duplicates.length > 0) state.error += ` | ⚠️ ${state.uploadProgress.duplicates.length} duplicati`;
+            if (state.uploadProgress.errors.length > 0) state.error += ` | ❌ ${state.uploadProgress.errors.length} errori`;
             
             // Chiudi modal dopo 2 secondi
             setTimeout(() => {
@@ -2262,12 +2267,12 @@
             const { data: insertedFattura, error } = await supabaseClient.from('fatture').insert([fatturaData]).select().single();
             
             if (error) {
-                console.error('âŒ ERRORE inserimento fattura:', error);
+                console.error('❌ ERRORE inserimento fattura:', error);
                 throw new Error(`Errore database fattura: ${error.message}`);
             }
             
             if (!insertedFattura) {
-                console.error('âŒ Fattura inserita ma nessun dato restituito!');
+                console.error('❌ Fattura inserita ma nessun dato restituito!');
                 throw new Error('Errore: fattura inserita ma ID non recuperato');
             }
             
@@ -2299,7 +2304,7 @@
                 console.log(`📝 Descrizione: ${descrizione}`);
                 
                 if (!descrizione || descrizione.trim() === '') {
-                    console.log(`âš ï¸ SALTATO: Descrizione vuota`);
+                    console.log(`⚠️ SALTATO: Descrizione vuota`);
                     prodottiSaltati++;
                     continue;
                 }
@@ -2348,7 +2353,7 @@
                             const importo = parseFloat(importoText);
                             const percentuale = (importo / prezzoUnitario) * 100;
                             sconti.push(parseFloat(percentuale.toFixed(3)));
-                            console.log(`  💰 Sconto ${s + 1}: €${importo} â†’ ${percentuale.toFixed(2)}%`);
+                            console.log(`  💰 Sconto ${s + 1}: €${importo} ↑ ${percentuale.toFixed(2)}%`);
                         }
                     }
                 }
@@ -2375,10 +2380,10 @@
                     prezzoScontato = prezzoScontato * (1 - sconto / 100);
                 }
                 
-                console.log(`💵 Prezzo base: €${prezzoBase.toFixed(2)} â†’ Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
+                console.log(`💵 Prezzo base: €${prezzoBase.toFixed(2)} ↑ Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
-                    console.log(`âš ï¸ SALTATO: QuantitÃ =0 E Prezzo=0 per "${descrizione}"`);
+                    console.log(`⚠️ SALTATO: QuantitÃ =0 E Prezzo=0 per "${descrizione}"`);
                     prodottiSaltati++;
                     continue;
                 }
@@ -2415,7 +2420,7 @@
                     console.log(`💾 INSERIMENTO #${prodottiCreati + 1}:`, {
                         nome: descrizione.substring(0, 40),
                         categoria: categorizzazione.categoria,
-                        tipo_id: categorizzazione.tipo_id ? 'âœ“' : 'âœ—',
+                        tipo_id: categorizzazione.tipo_id ? '✔' : '✗',
                         prezzo_base: prezzoBase,
                         prezzo_scontato: prezzoScontato,
                         sconti: sconti.length > 0 ? sconti : 'nessuno',
@@ -2429,13 +2434,13 @@
                         .insert([prodottoData]);
                     
                     if (error) {
-                        console.error(`âŒ ERRORE INSERT prodotto "${descrizione}":`, error);
-                        console.error(`âŒ Dettaglio errore:`, JSON.stringify(error));
+                        console.error(`❌ ERRORE INSERT prodotto "${descrizione}":`, error);
+                        console.error(`❌ Dettaglio errore:`, JSON.stringify(error));
                         errori++;
                         
                         // Se è un errore di colonna mancante, mostra un alert
                         if (error.message && error.message.includes('column')) {
-                            alert(`âš ï¸ ERRORE DATABASE: La colonna non esiste!\n\n${error.message}\n\nDevi eseguire le query SQL per aggiungere i campi fattura_id e data_fattura alla tabella prodotti!`);
+                            alert(`⚠️ ERRORE DATABASE: La colonna non esiste!\n\n${error.message}\n\nDevi eseguire le query SQL per aggiungere i campi fattura_id e data_fattura alla tabella prodotti!`);
                             throw error; // Ferma il caricamento
                         }
                     } else {
@@ -2444,20 +2449,20 @@
                         console.log(`✅ Creato prodotto ${prodottiCreati}: ${descrizione} (qtÃ : ${quantita}, base: €${prezzoBase.toFixed(2)}, finale: €${prezzoScontato.toFixed(2)}${scontiStr}, IVA: ${aliquotaIVA}%)`);
                     }
                 } catch (err) {
-                    console.error(`âŒ ECCEZIONE prodotto "${descrizione}":`, err);
+                    console.error(`❌ ECCEZIONE prodotto "${descrizione}":`, err);
                     errori++;
                     
                     // Se è il primo errore, mostra un alert dettagliato
                     if (errori === 1) {
-                        alert(`âš ï¸ ERRORE nel salvataggio prodotti!\n\nErrore: ${err.message}\n\nVerifica:\n1. Che i campi fattura_id e data_fattura esistano nella tabella prodotti\n2. Che hai eseguito le query SQL di aggiornamento\n3. La console del browser per dettagli`);
+                        alert(`⚠️ ERRORE nel salvataggio prodotti!\n\nErrore: ${err.message}\n\nVerifica:\n1. Che i campi fattura_id e data_fattura esistano nella tabella prodotti\n2. Che hai eseguito le query SQL di aggiornamento\n3. La console del browser per dettagli`);
                     }
                 }
             }
             
             console.log(`\n📊 RIEPILOGO ESTRAZIONE PRODOTTI:`);
             console.log(`✅ Prodotti creati: ${prodottiCreati}`);
-            console.log(`âš ï¸ Prodotti saltati: ${prodottiSaltati}`);
-            console.log(`âŒ Errori: ${errori}`);
+            console.log(`⚠️ Prodotti saltati: ${prodottiSaltati}`);
+            console.log(`❌ Errori: ${errori}`);
             console.log(`📦 Totale righe elaborate: ${dettaglioLinee.length}\n`);
             
             if (errori > 0) {
@@ -2536,7 +2541,7 @@
                 
             } catch (err) {
                 console.error('Errore eliminazione:', err);
-                state.error = 'âŒ Errore durante l\'eliminazione';
+                state.error = '❌ Errore durante l\'eliminazione';
                 render();
             }
         };
@@ -2651,7 +2656,7 @@
                                 </div>
                             </div>
 
-                            ${state.error ? `<div class="mt-3 text-xs ${state.error.includes('âŒ') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-2 py-1 rounded">${state.error}</div>` : ''}
+                            ${state.error ? `<div class="mt-3 text-xs ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-2 py-1 rounded">${state.error}</div>` : ''}
                         </div>
                         
                         <!-- Pulsanti Upload -->
@@ -2667,7 +2672,7 @@
                                     <span>Upload Cartella</span>
                                 </button>
                                 <button onclick="openModalFatturaManuale()" class="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-sm text-xs">
-                                    <span>âœï¸</span>
+                                    <span>✏️</span>
                                     <span>Inserimento Manuale</span>
                                 </button>
                             </div>
@@ -2696,7 +2701,7 @@
                         <div class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl shadow-lg p-5 mb-6">
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="text-base font-bold text-orange-800 flex items-center">
-                                    <span class="mr-2">âœï¸</span>
+                                    <span class="mr-2">✏️</span>
                                     Fatture Inserite Manualmente (${state.fattureManuali.length})
                                 </h3>
                                 <span class="text-sm text-orange-600">Totale: €${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
