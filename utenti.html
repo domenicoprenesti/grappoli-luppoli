@@ -69,9 +69,7 @@
             </div>
             
             <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                    Dashboard
-                </button>
+                <span id="userName" class="text-sm text-gray-600"></span>
                 <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
                     Esci
                 </button>
@@ -168,6 +166,12 @@
             localStorage.removeItem('app_authenticated');
             window.location.href = 'index.html';
         }
+
+        // Popola userName
+        (function() {
+            const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
+            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
+        })();
 
         async function deleteUser(userId) {
             if (!confirm('Sei sicuro di voler eliminare questo utente?')) return;

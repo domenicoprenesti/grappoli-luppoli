@@ -69,9 +69,7 @@
             </div>
             
             <div class="flex items-center space-x-3">
-                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                    Dashboard
-                </button>
+                <span id="userName" class="text-sm text-gray-600"></span>
                 <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
                     Esci
                 </button>
@@ -1353,6 +1351,12 @@
             localStorage.removeItem(SESSION_KEY);
             window.location.href = 'index.html';
         }
+
+        // Popola userName
+        (function() {
+            const auth = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}');
+            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
+        })();
 
         // ===== GESTIONE FATTURE MANUALI =====
         window.openModalFatturaManuale = function() {

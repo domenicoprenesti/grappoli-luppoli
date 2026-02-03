@@ -129,18 +129,8 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        <span class="text-sm font-medium">Dashboard</span>
-                    </button>
-                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
-                        <span class="text-sm font-medium">Esci</span>
-                    </button>
+                    <span id="userName" class="text-sm text-gray-600"></span>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
                 </div>
             </div>
         </div>
@@ -586,6 +576,12 @@
             localStorage.removeItem('app_authenticated');
             window.location.href = 'index.html';
         }
+
+        // Popola userName
+        (function() {
+            const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
+            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
+        })();
 
         // ===== CARICAMENTO DATI =====
         async function loadFornitori() {
