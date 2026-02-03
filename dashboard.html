@@ -51,6 +51,8 @@
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
+                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
+                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
                         <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
@@ -68,7 +70,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">ðŸ“Š Dashboard Analitica</h1>
+            <h1 class="text-3xl font-bold text-gray-900">📊 Dashboard Analitica</h1>
             <p class="mt-2 text-gray-600">Panoramica e storico dei costi basato sui dati reali</p>
         </div>
 
@@ -102,7 +104,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Filtro Anno -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ðŸ“… Anno</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">📅 Anno</label>
                     <select id="filterAnno" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Tutti gli anni</option>
                     </select>
@@ -110,7 +112,7 @@
                 
                 <!-- Filtro Mese -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ðŸ—“ï¸ Mese</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🗓️ Mese</label>
                     <select id="filterMese" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Tutti i mesi</option>
                         <option value="1">Gennaio</option>
@@ -130,7 +132,7 @@
                 
                 <!-- Filtro Categoria -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ðŸ·ï¸ Categoria</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Categoria</label>
                     <select id="filterCategoria" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Tutte le categorie</option>
                     </select>
@@ -222,7 +224,7 @@
         <div id="chartsRow" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Grafico Storico Mensile -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">ðŸ“ˆ Storico Costi Mensili</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">📈 Storico Costi Mensili</h2>
                 <div class="h-80">
                     <canvas id="chartMensile"></canvas>
                 </div>
@@ -230,7 +232,7 @@
 
             <!-- Grafico per Categoria / Tipo -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 id="chartCategorieTitle" class="text-xl font-bold text-gray-900 mb-4">ðŸ·ï¸ Distribuzione per Categoria</h2>
+                <h2 id="chartCategorieTitle" class="text-xl font-bold text-gray-900 mb-4">🏷️ Distribuzione per Categoria</h2>
                 <div class="h-80">
                     <canvas id="chartCategorie"></canvas>
                 </div>
@@ -239,7 +241,7 @@
 
         <!-- Dettaglio Mensile -->
         <div id="dettaglioMensile" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">ðŸ“… Dettaglio per Mese</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">📅 Dettaglio per Mese</h2>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
@@ -259,7 +261,7 @@
 
         <!-- Top Categorie -->
         <div id="topCategorie" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">ðŸ† Top Categorie per Spesa</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">🏆 Top Categorie per Spesa</h2>
             <div id="categorieCards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
         </div>
 
@@ -532,7 +534,7 @@
         // ========== CARICAMENTO DATI ==========
         async function loadDashboardData() {
             try {
-                console.log('ðŸ“Š Caricamento dati dashboard...');
+                console.log('📊 Caricamento dati dashboard...');
 
                 // 1. Conta e carica fatture
                 const { count: fattureCount } = await supabaseClient
@@ -790,9 +792,9 @@
             // Aggiorna titolo del grafico
             if (titleElement) {
                 if (useTipi) {
-                    titleElement.textContent = `ðŸ“¦ Distribuzione per Tipo (${filterCategoria})`;
+                    titleElement.textContent = `📦 Distribuzione per Tipo (${filterCategoria})`;
                 } else {
-                    titleElement.textContent = 'ðŸ·ï¸ Distribuzione per Categoria';
+                    titleElement.textContent = '🏷️ Distribuzione per Categoria';
                 }
             }
             

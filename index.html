@@ -104,7 +104,7 @@
             loginButton.textContent = 'Accesso in corso...';
             
             try {
-                console.log('ðŸ” Ricerca utente:', enteredEmail);
+                console.log('🔍 Ricerca utente:', enteredEmail);
                 const { data, error } = await supabaseClient.from('utenti').select('*').eq('email', enteredEmail).single();
                 
                 if (error) {
@@ -166,7 +166,7 @@
         }
 
         checkExistingSession();
-        console.log('ðŸ“± Pagina login caricata');
+        console.log('📱 Pagina login caricata');
     </script>
 </body>
 </html>

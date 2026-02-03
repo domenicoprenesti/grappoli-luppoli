@@ -140,7 +140,7 @@
                     <svg class="w-20 h-20 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                     </svg>
-                    <p class="text-xl font-bold mb-2 text-purple-700">ðŸ“ Carica Cartella Completa</p>
+                    <p class="text-xl font-bold mb-2 text-purple-700">📝 Carica Cartella Completa</p>
                     <p class="text-sm text-gray-600 mb-3">Seleziona una cartella con tutte le fatture XML</p>
                     <div class="space-y-1">
                         <p class="text-xs text-purple-600 font-medium">âœ“ Elaborazione automatica in batch</p>
@@ -168,7 +168,7 @@
     <div id="dettagliModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6 flex justify-between items-center">
-                <h2 class="text-2xl font-bold">ðŸ“„ Dettagli Fattura</h2>
+                <h2 class="text-2xl font-bold">📄 Dettagli Fattura</h2>
                 <button onclick="closeDettagliModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -410,7 +410,7 @@
         // ===== CARICAMENTO TIPI PRODOTTO DAL DATABASE =====
         async function loadTipiProdottoPerCategorizzazione() {
             try {
-                console.log('ðŸ·ï¸ Caricamento tipi prodotto per categorizzazione...');
+                console.log('🏷️ Caricamento tipi prodotto per categorizzazione...');
                 
                 // Carica aggreganti
                 const { data: aggreganti, error: aggError } = await supabaseClient
@@ -440,7 +440,7 @@
                 
                 // Log delle keyword disponibili
                 const tipiConKeywords = tipiProdottoCache.filter(t => t.keywords && t.keywords.length > 0);
-                console.log(`ðŸ“‹ ${tipiConKeywords.length} tipi hanno keywords definite`);
+                console.log(`📋 ${tipiConKeywords.length} tipi hanno keywords definite`);
                 
                 categorizzazioneCaricata = true;
                 return true;
@@ -484,7 +484,7 @@
         
         // ===== VERIFICA CAMPI DATABASE ALL'AVVIO =====
         async function verificaCampiDatabase() {
-            console.log('ðŸ” Verifica campi database...');
+            console.log('🔍 Verifica campi database...');
             
             try {
                 // Prova a fare una query di test con i campi fattura_id e data_fattura
@@ -574,7 +574,7 @@
         };
 
         async function loadProdottiPerFatture() {
-            console.log('ðŸ“¦ Caricamento prodotti per calcolare delta...');
+            console.log('📦 Caricamento prodotti per calcolare delta...');
             
             if (!state.fattureConProdotti) {
                 console.error('âŒ state.fattureConProdotti non inizializzato!');
@@ -594,7 +594,7 @@
                     return;
                 }
                 
-                console.log(`ðŸ“¦ Totale prodotti con fattura: ${prodottiCount || 0}`);
+                console.log(`📦 Totale prodotti con fattura: ${prodottiCount || 0}`);
                 
                 if (!prodottiCount || prodottiCount === 0) {
                     console.log('ℹï¸ Nessun prodotto con fattura_id');
@@ -662,7 +662,7 @@
         // ===== GESTIONE REPORT SCADENZE =====
         async function loadFornitori() {
             try {
-                console.log('ðŸ¢ Caricamento fornitori per calcolo scadenze...');
+                console.log('🏢 Caricamento fornitori per calcolo scadenze...');
                 
                 const { data, error } = await supabaseClient
                     .from('fornitori')
@@ -926,7 +926,7 @@
             if (state.pagatoChanges.size === 0) return;
             
             try {
-                state.error = 'ðŸ’¾ Salvataggio in corso...';
+                state.error = '💾 Salvataggio in corso...';
                 render();
                 
                 for (const [id, pagato] of state.pagatoChanges.entries()) {
@@ -1239,7 +1239,7 @@
                     <!-- Barra Salvataggio Modifiche -->
                     ${state.pagatoChanges.size > 0 ? `
                         <div class="bg-orange-100 border-b-2 border-orange-300 px-4 py-2 flex justify-between items-center">
-                            <span class="text-sm font-medium text-orange-900">ðŸ’¾ ${state.pagatoChanges.size} modifiche non salvate</span>
+                            <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
                             <div class="flex space-x-2">
                                 <button onclick="cancelPagatoChanges()" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">Annulla</button>
                                 <button onclick="savePagatoFromReport()" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">Salva</button>
@@ -1254,7 +1254,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <p class="text-gray-600 font-medium">Nessuna scadenza per ${mesiNomi[mese]} ${anno}</p>
-                            <p class="text-sm text-gray-500">Tutte le fatture sono state pagate! ðŸŽ‰</p>
+                            <p class="text-sm text-gray-500">Tutte le fatture sono state pagate! 🎉</p>
                         </div>
                     ` : `
                         <div class="overflow-x-auto">
@@ -1447,7 +1447,7 @@
                 if (error) throw error;
                 
                 state.fattureManuali = data || [];
-                console.log(`ðŸ“‹ Caricate ${state.fattureManuali.length} fatture manuali`);
+                console.log(`📋 Caricate ${state.fattureManuali.length} fatture manuali`);
                 
             } catch (err) {
                 console.error('âŒ Errore caricamento fatture manuali:', err);
@@ -1491,7 +1491,7 @@
                 modalSingle.classList.remove('hidden');
                 modalFolder.classList.add('hidden');
             } else {
-                modalTitle.textContent = 'ðŸ“ Carica Cartella Completa';
+                modalTitle.textContent = '📝 Carica Cartella Completa';
                 modalSingle.classList.add('hidden');
                 modalFolder.classList.remove('hidden');
             }
@@ -1541,7 +1541,7 @@
             if (state.pagatoChanges.size === 0) return;
             
             try {
-                state.error = 'ðŸ’¾ Salvataggio in corso...';
+                state.error = '💾 Salvataggio in corso...';
                 render();
                 
                 // Salva tutte le modifiche
@@ -1592,7 +1592,7 @@
                 return;
             }
             
-            console.log(`ðŸ“ Upload cartella: ${files.length} file XML trovati`);
+            console.log(`📝 Upload cartella: ${files.length} file XML trovati`);
             await processFiles(files);
         };
 
@@ -1611,7 +1611,7 @@
             // 1. Prima prova con il sistema database (keywords)
             const matchDB = findTipoByKeywords(description);
             if (matchDB) {
-                console.log(`ðŸ·ï¸ MATCH DB: "${description.substring(0, 40)}..." â†’ ${matchDB.tipo_nome} (${matchDB.aggregante_nome}) [keyword: "${matchDB.matched_keyword}"]`);
+                console.log(`🏷️ MATCH DB: "${description.substring(0, 40)}..." â†’ ${matchDB.tipo_nome} (${matchDB.aggregante_nome}) [keyword: "${matchDB.matched_keyword}"]`);
                 return {
                     categoria: matchDB.aggregante_nome,
                     tipo_id: matchDB.tipo_id,
@@ -1916,7 +1916,7 @@
                                                     <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-teal-50 transition-colors">
                                                         <td class="px-3 py-2">
                                                             <div class="font-medium text-gray-900">${p.nome || 'N/D'}</div>
-                                                            ${p.tipo_cessione === 'SC' ? '<div class="text-xs text-orange-600 font-semibold">ðŸŽ OMAGGIO/SCONTO</div>' : ''}
+                                                            ${p.tipo_cessione === 'SC' ? '<div class="text-xs text-orange-600 font-semibold">🎀 OMAGGIO/SCONTO</div>' : ''}
                                                         </td>
                                                         <td class="px-3 py-2">
                                                             <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded ${
@@ -2257,7 +2257,7 @@
                 user_id: null
             };
 
-            console.log('ðŸ“„ Inserimento fattura in database...', fatturaData);
+            console.log('📄 Inserimento fattura in database...', fatturaData);
             
             const { data: insertedFattura, error } = await supabaseClient.from('fatture').insert([fatturaData]).select().single();
             
@@ -2274,7 +2274,7 @@
             console.log('✅ Fattura inserita con ID:', insertedFattura.id);
 
             // Passa l'ID della fattura e la data alla funzione di estrazione prodotti
-            console.log('ðŸ“¦ Avvio estrazione prodotti...');
+            console.log('📦 Avvio estrazione prodotti...');
             await extractAndSaveProducts(xmlDoc, cedenteNome, insertedFattura.id, dataFattura);
             console.log('✅ Estrazione prodotti completata!');
         }
@@ -2283,8 +2283,8 @@
         async function extractAndSaveProducts(xmlDoc, fornitore, fatturaId, dataFattura) {
             const dettaglioLinee = xmlDoc.getElementsByTagName('DettaglioLinee');
             
-            console.log(`ðŸ“¦ Inizio estrazione prodotti per fattura ID: ${fatturaId}`);
-            console.log(`ðŸ“¦ Trovate ${dettaglioLinee.length} righe di dettaglio`);
+            console.log(`📦 Inizio estrazione prodotti per fattura ID: ${fatturaId}`);
+            console.log(`📦 Trovate ${dettaglioLinee.length} righe di dettaglio`);
             
             let prodottiCreati = 0;
             let prodottiSaltati = 0;
@@ -2293,10 +2293,10 @@
             for (let i = 0; i < dettaglioLinee.length; i++) {
                 const linea = dettaglioLinee[i];
                 
-                console.log(`\nðŸ” === RIGA ${i + 1} ===`);
+                console.log(`\n🔍 === RIGA ${i + 1} ===`);
                 
                 const descrizione = getTextContent(linea, 'Descrizione');
-                console.log(`ðŸ“ Descrizione: ${descrizione}`);
+                console.log(`📝 Descrizione: ${descrizione}`);
                 
                 if (!descrizione || descrizione.trim() === '') {
                     console.log(`âš ï¸ SALTATO: Descrizione vuota`);
@@ -2321,7 +2321,7 @@
                 
                 // ===== ESTRAZIONE TIPO CESSIONE/PRESTAZIONE =====
                 const tipoCessione = getTextContent(linea, 'TipoCessione') || getTextContent(linea, 'TipoCessionePrestazione') || null;
-                console.log(`ðŸ·ï¸ Tipo cessione: ${tipoCessione || 'Standard'}`);
+                console.log(`🏷️ Tipo cessione: ${tipoCessione || 'Standard'}`);
                 
                 // ===== ESTRAZIONE SCONTI/MAGGIORAZIONI =====
                 const scontiMaggiorazioni = linea.getElementsByTagName('ScontoMaggiorazione');
@@ -2341,14 +2341,14 @@
                             percentualeText = percentualeText.replace(',', '.');
                             const percentuale = parseFloat(percentualeText);
                             sconti.push(percentuale);
-                            console.log(`  ðŸ’° Sconto ${s + 1}: ${percentuale}%`);
+                            console.log(`  💰 Sconto ${s + 1}: ${percentuale}%`);
                         } else if (importoText && prezzoUnitario > 0) {
                             // Sconto in importo - converti in percentuale
                             importoText = importoText.replace(',', '.');
                             const importo = parseFloat(importoText);
                             const percentuale = (importo / prezzoUnitario) * 100;
                             sconti.push(parseFloat(percentuale.toFixed(3)));
-                            console.log(`  ðŸ’° Sconto ${s + 1}: €${importo} â†’ ${percentuale.toFixed(2)}%`);
+                            console.log(`  💰 Sconto ${s + 1}: €${importo} â†’ ${percentuale.toFixed(2)}%`);
                         }
                     }
                 }
@@ -2375,7 +2375,7 @@
                     prezzoScontato = prezzoScontato * (1 - sconto / 100);
                 }
                 
-                console.log(`ðŸ’µ Prezzo base: €${prezzoBase.toFixed(2)} â†’ Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
+                console.log(`💵 Prezzo base: €${prezzoBase.toFixed(2)} â†’ Prezzo scontato: €${prezzoScontato.toFixed(2)}`);
                 
                 if (quantita === 0 && prezzoUnitario === 0) {
                     console.log(`âš ï¸ SALTATO: QuantitÃ =0 E Prezzo=0 per "${descrizione}"`);
@@ -2412,7 +2412,7 @@
                         attivo: true
                     };
                     
-                    console.log(`ðŸ’¾ INSERIMENTO #${prodottiCreati + 1}:`, {
+                    console.log(`💾 INSERIMENTO #${prodottiCreati + 1}:`, {
                         nome: descrizione.substring(0, 40),
                         categoria: categorizzazione.categoria,
                         tipo_id: categorizzazione.tipo_id ? 'âœ“' : 'âœ—',
@@ -2454,11 +2454,11 @@
                 }
             }
             
-            console.log(`\nðŸ“Š RIEPILOGO ESTRAZIONE PRODOTTI:`);
+            console.log(`\n📊 RIEPILOGO ESTRAZIONE PRODOTTI:`);
             console.log(`✅ Prodotti creati: ${prodottiCreati}`);
             console.log(`âš ï¸ Prodotti saltati: ${prodottiSaltati}`);
             console.log(`âŒ Errori: ${errori}`);
-            console.log(`ðŸ“¦ Totale righe elaborate: ${dettaglioLinee.length}\n`);
+            console.log(`📦 Totale righe elaborate: ${dettaglioLinee.length}\n`);
             
             if (errori > 0) {
                 throw new Error(`Errore nel salvataggio di ${errori} prodotti. Controlla la console per i dettagli.`);
@@ -2497,7 +2497,7 @@
             closeDeleteModal();
             
             try {
-                state.error = 'ðŸ—‘ï¸ Eliminazione in corso...';
+                state.error = '🗑️ Eliminazione in corso...';
                 render();
                 
                 const idsToDelete = actionToExecute.ids;
@@ -2659,11 +2659,11 @@
                             <p class="text-xs font-semibold text-gray-600 mb-3">Carica Fatture</p>
                             <div class="space-y-2">
                                 <button onclick="switchUploadMode('single')" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2 text-xs">
-                                    <span>ðŸ“„</span>
+                                    <span>📄</span>
                                     <span>Upload Singolo</span>
                                 </button>
                                 <button onclick="switchUploadMode('folder')" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 flex items-center space-x-2 text-xs">
-                                    <span>ðŸ“</span>
+                                    <span>📝</span>
                                     <span>Upload Cartella</span>
                                 </button>
                                 <button onclick="openModalFatturaManuale()" class="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-sm text-xs">
@@ -2755,7 +2755,7 @@
                         
                         ${state.pagatoChanges.size > 0 ? `
                             <div class="bg-orange-50 border-b px-6 py-4 flex justify-between items-center">
-                                <span class="text-sm font-medium text-orange-900">ðŸ’¾ ${state.pagatoChanges.size} modifiche non salvate</span>
+                                <span class="text-sm font-medium text-orange-900">💾 ${state.pagatoChanges.size} modifiche non salvate</span>
                                 <div class="flex space-x-2">
                                     <button onclick="cancelPagatoChanges()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                                     <button onclick="savePagatoChanges()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center space-x-2">

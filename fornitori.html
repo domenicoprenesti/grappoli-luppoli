@@ -148,7 +148,7 @@
         <!-- Header -->
         <div class="mb-8 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ¢ Gestione Fornitori</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">🏢 Gestione Fornitori</h1>
                 <p class="text-gray-600">Anagrafica fornitori con condizioni di pagamento</p>
             </div>
             <button onclick="openNewFornitoreModal()" class="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg">
@@ -231,7 +231,7 @@
 
         <!-- Filtri Ricerca -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="font-bold mb-4">ðŸ” Filtri</h3>
+            <h3 class="font-bold mb-4">🔍 Filtri</h3>
             <div class="grid md:grid-cols-3 gap-4">
                 <input type="text" id="searchRagioneSociale" placeholder="Cerca ragione sociale..." class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onkeyup="applyFilters()">
                 <select id="filterTipoPagamento" class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="applyFilters()">
@@ -486,7 +486,7 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6 flex justify-between items-center">
                 <div>
-                    <h2 class="text-2xl font-bold">ðŸ“„ Fatture Fornitore</h2>
+                    <h2 class="text-2xl font-bold">📄 Fatture Fornitore</h2>
                     <p id="fattureFornitoreNome" class="text-blue-100 text-sm mt-1"></p>
                 </div>
                 <button onclick="closeFattureModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
@@ -678,7 +678,7 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-sm">
-                            ${f.telefono ? `<p class="text-gray-700">ðŸ“ž ${f.telefono}</p>` : ''}
+                            ${f.telefono ? `<p class="text-gray-700">📞 ${f.telefono}</p>` : ''}
                             ${f.email ? `<p class="text-gray-600">âœ‰ï¸ ${f.email}</p>` : ''}
                             ${!f.telefono && !f.email ? '<p class="text-gray-400">N/D</p>' : ''}
                         </div>
@@ -1236,7 +1236,7 @@
         <!-- Header -->
         <div class="mb-8 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ¢ Gestione Fornitori</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">🏢 Gestione Fornitori</h1>
                 <p class="text-gray-600">Anagrafica fornitori con condizioni di pagamento</p>
             </div>
             <button onclick="openNewFornitoreModal()" class="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg">
@@ -1319,7 +1319,7 @@
 
         <!-- Filtri Ricerca -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="font-bold mb-4">ðŸ” Filtri</h3>
+            <h3 class="font-bold mb-4">🔍 Filtri</h3>
             <div class="grid md:grid-cols-3 gap-4">
                 <input type="text" id="searchRagioneSociale" placeholder="Cerca ragione sociale..." class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onkeyup="applyFilters()">
                 <select id="filterTipoPagamento" class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="applyFilters()">
@@ -1676,7 +1676,7 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-sm">
-                            ${f.telefono ? `<p class="text-gray-700">ðŸ“ž ${f.telefono}</p>` : ''}
+                            ${f.telefono ? `<p class="text-gray-700">📞 ${f.telefono}</p>` : ''}
                             ${f.email ? `<p class="text-gray-600">âœ‰ï¸ ${f.email}</p>` : ''}
                             ${!f.telefono && !f.email ? '<p class="text-gray-400">N/D</p>' : ''}
                         </div>
