@@ -73,7 +73,7 @@
         <!-- Filtri -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h3 class="font-bold mb-4">🔍 Filtri Periodo</h3>
-            <div class="grid md:grid-cols-5 gap-4">
+            <div class="grid md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-2">Anno</label>
                     <select id="filterAnno" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
@@ -102,13 +102,6 @@
                     <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
                     <select id="filterGruppo" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
                         <option value="">Tutti i gruppi</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Visualizzazione</label>
-                    <select id="viewMode" class="w-full px-4 py-2 border rounded-lg" onchange="changeViewMode()">
-                        <option value="gruppo">Per Gruppo Vendita</option>
-                        <option value="mese">Per Mese</option>
                     </select>
                 </div>
                 <div class="flex items-end">
@@ -183,14 +176,14 @@
         <!-- Grafici Row 1 -->
         <div class="grid md:grid-cols-2 gap-8 mb-8">
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">📊 <span id="chartMainTitle">Vendite vs Acquisti per Gruppo</span></h3>
+                <h3 class="text-lg font-bold mb-4">📊 Vendite vs Acquisti per Gruppo</h3>
                 <div class="h-80">
                     <canvas id="chartMain"></canvas>
                 </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">💰 <span id="chartMarginiTitle">Margine per Gruppo</span></h3>
+                <h3 class="text-lg font-bold mb-4">💰 Margine per Mese</h3>
                 <div class="h-80">
                     <canvas id="chartMargini"></canvas>
                 </div>
@@ -217,13 +210,13 @@
         <!-- Tabella Dettaglio -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600">
-                <h3 class="text-lg font-bold text-white">📋 <span id="tableTitle">Dettaglio per Gruppo Vendita</span></h3>
+                <h3 class="text-lg font-bold text-white">📋 Dettaglio per Gruppo Vendita</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th id="colHeader" class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Gruppo Vendita</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Gruppo Vendita</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite €</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti €</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine €</th>
@@ -436,8 +429,6 @@
             applyFilters();
         }
 
-        function changeViewMode() { calculateAndRender(); }
-
         function getGruppoNome(id) { return id ? (gruppiMap[id]?.nome || 'Gruppo ' + id) : 'Non assegnato'; }
         function getGruppoColore(id) { return id ? (gruppiMap[id]?.colore || '#6B7280') : '#9CA3AF'; }
         
@@ -449,8 +440,6 @@
         }
 
         function calculateAndRender() {
-            const viewMode = document.getElementById('viewMode').value;
-            
             const totVendite = filteredData.vendite.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0);
             const totAcquisti = filteredData.prodotti.reduce((s, p) => {
                 const pr = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
@@ -470,28 +459,19 @@
 
             const dataGruppo = calcByGruppo();
             const dataMese = calcByMese();
-            const dataGruppoAnno = calcByGruppoAnno(); // Nuovo: dati per gruppo e anno
+            const dataGruppoAnno = calcByGruppoAnno();
             
             const gruppiAttivi = Object.values(dataGruppo).filter(d => d.vendite > 0 || d.acquisti > 0).length;
             document.getElementById('kpiGruppi').textContent = gruppiAttivi;
 
-            if (viewMode === 'gruppo') {
-                document.getElementById('chartMainTitle').textContent = 'Vendite vs Acquisti per Gruppo';
-                document.getElementById('chartMarginiTitle').textContent = 'Margine per Gruppo';
-                document.getElementById('tableTitle').textContent = 'Dettaglio per Gruppo Vendita';
-                document.getElementById('colHeader').textContent = 'Gruppo Vendita';
-                updateChartMain(dataGruppo, 'gruppo', dataGruppoAnno); // Passa anche dati per anno
-                updateChartMargini(dataGruppo, 'gruppo');
-                updateTabella(dataGruppo, 'gruppo');
-            } else {
-                document.getElementById('chartMainTitle').textContent = 'Vendite vs Acquisti per Mese';
-                document.getElementById('chartMarginiTitle').textContent = 'Margine per Mese';
-                document.getElementById('tableTitle').textContent = 'Dettaglio per Mese';
-                document.getElementById('colHeader').textContent = 'Mese';
-                updateChartMain(dataMese, 'mese', null);
-                updateChartMargini(dataMese, 'mese');
-                updateTabella(dataMese, 'mese');
-            }
+            // Grafico 1: Vendite vs Acquisti per Gruppo (con divisione per anno)
+            updateChartMain(dataGruppo, 'gruppo', dataGruppoAnno);
+            
+            // Grafico 2: Margine per Mese
+            updateChartMargini(dataMese, 'mese');
+            
+            // Tabella: Dettaglio per Gruppo
+            updateTabella(dataGruppo, 'gruppo');
 
             updateChartTrend(dataMese);
             updateChartDistribuzione(dataGruppo);
@@ -849,27 +829,39 @@
             const ctx = document.getElementById('chartMargini').getContext('2d');
             if (charts.margini) charts.margini.destroy();
             
-            let entries = tipo === 'gruppo' 
-                ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].margine - a[1].margine)
-                : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
+            // Sempre per mese, ordinato cronologicamente
+            const entries = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
             
-            const labels = entries.map(([k, d]) => {
-                if (tipo === 'gruppo') return d.nome;
+            const labels = entries.map(([k]) => {
                 if (k === 'N/D' || !k || k.indexOf('-') === -1) return k || 'N/D';
                 const parts = k.split('-');
                 if (parts.length >= 2 && parts[1]) {
                     const meseIdx = parseInt(parts[1]) - 1;
-                    return (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
+                    return (MONTH_NAMES[meseIdx] || parts[1]).substring(0, 3) + ' ' + parts[0];
                 }
                 return k;
             });
+            
             const margini = entries.map(([_, d]) => d.margine);
             const colors = margini.map(m => m >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)');
             
             charts.margini = new Chart(ctx, {
                 type: 'bar',
                 data: { labels, datasets: [{ label: 'Margine', data: margini, backgroundColor: colors, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: { ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } 
+                    } 
+                }
             });
         }
 
@@ -928,31 +920,17 @@
         function updateTabella(data, tipo) {
             const tbody = document.getElementById('tabellaDettaglio');
             
-            let entries = tipo === 'gruppo' 
-                ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].vendite - a[1].vendite)
-                : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
+            // Sempre per gruppo
+            const entries = Object.entries(data)
+                .filter(([_, d]) => d.vendite > 0 || d.acquisti > 0)
+                .sort((a, b) => b[1].vendite - a[1].vendite);
 
             tbody.innerHTML = entries.map(([k, r]) => {
                 const pos = r.margine >= 0;
                 const bw = Math.min(100, Math.abs(r.marginePerc));
                 const bc = pos ? 'bg-green-500' : 'bg-red-500';
-                
-                let label;
-                if (tipo === 'gruppo') {
-                    label = r.nome;
-                } else if (k === 'N/D' || !k || k.indexOf('-') === -1) {
-                    label = k || 'N/D';
-                } else {
-                    const parts = k.split('-');
-                    if (parts.length >= 2 && parts[1]) {
-                        const meseIdx = parseInt(parts[1]) - 1;
-                        label = (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
-                    } else {
-                        label = k;
-                    }
-                }
-                
-                const col = tipo === 'gruppo' ? r.colore : null;
+                const label = r.nome;
+                const col = r.colore;
                 
                 return `<tr class="hover:bg-gray-50">
                     <td class="px-6 py-4"><div class="flex items-center">${col ? `<div class="w-3 h-3 rounded-full mr-3" style="background-color:${col}"></div>` : ''}<span class="font-medium">${label}</span></div></td>
