@@ -75,7 +75,7 @@
     <div class="flex pt-16">
         <aside class="sidebar bg-gradient-to-b from-blue-600 via-indigo-600 to-purple-700 text-white p-4 overflow-y-auto">
             <div class="mb-6">
-                <h1 class="text-xl font-bold flex items-center">📦 Prodotti</h1>
+                <h1 class="text-xl font-bold flex items-center">ðŸ“¦ Prodotti</h1>
                 <p class="text-blue-200 text-xs mt-1">Gestione completa catalogo</p>
             </div>
 
@@ -120,7 +120,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (no IVA)</p>
-                            <p id="valoreTotale" class="text-xl font-bold text-purple-600">€0</p>
+                            <p id="valoreTotale" class="text-xl font-bold text-purple-600">â‚¬0</p>
                         </div>
                         <div class="bg-purple-100 p-2 rounded-lg">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -132,11 +132,31 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase tracking-wide">Valore (con IVA)</p>
-                            <p id="valoreTotaleIvato" class="text-xl font-bold text-orange-600">€0</p>
+                            <p id="valoreTotaleIvato" class="text-xl font-bold text-orange-600">â‚¬0</p>
                         </div>
                         <div class="bg-orange-100 p-2 rounded-lg">
                             <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Card Gestione Anagrafica -->
+                <div onclick="openAnagraficaModal()" class="stat-card rounded-xl p-4 shadow-lg cursor-pointer hover:scale-105 transition-transform border-2 border-transparent hover:border-teal-400">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Anagrafica</p>
+                            <p id="totalAnagrafica" class="text-xl font-bold text-teal-600">0</p>
+                            <p class="text-xs text-gray-400 mt-1">prodotti univoci</p>
+                        </div>
+                        <div class="bg-teal-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center text-xs text-teal-600 font-medium">
+                        <span>Gestisci anagrafica</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </div>
                 </div>
             </div>
@@ -147,11 +167,11 @@
                     Filtri
                 </h3>
                 <div class="space-y-2">
-                    <input type="text" id="searchNome" placeholder="🔍 Cerca prodotto..." class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onkeyup="applyFilters()">
+                    <input type="text" id="searchNome" placeholder="ðŸ” Cerca prodotto..." class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onkeyup="applyFilters()">
                     <select id="filterCategoria" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutte le categorie</option></select>
                     <select id="filterGruppoVendita" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutti i gruppi vendita</option></select>
                     <select id="filterFornitore" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white" onchange="applyFilters()"><option value="">Tutti i fornitori</option></select>
-                    <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">↺ Pulisci filtri</button>
+                    <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">â†º Pulisci filtri</button>
                 </div>
             </div>
         </aside>
@@ -181,11 +201,11 @@
                                 <th class="col-categoria text-left text-sm">Categoria</th>
                                 <th class="col-categoria text-left text-sm">Gruppo Vendita</th>
                                 <th class="col-fornitore text-left text-sm">Fornitore</th>
-                                <th class="col-prezzo text-sm">€ base</th>
-                                <th class="col-prezzo text-sm">€ scontato</th>
+                                <th class="col-prezzo text-sm">â‚¬ base</th>
+                                <th class="col-prezzo text-sm">â‚¬ scontato</th>
                                 <th class="col-iva text-sm">IVA</th>
-                                <th class="col-prezzo-ivato text-sm">€ IVA</th>
-                                <th class="col-qta text-sm">Q.tÃ </th>
+                                <th class="col-prezzo-ivato text-sm">â‚¬ IVA</th>
+                                <th class="col-qta text-sm">Q.tÃƒÂ </th>
                                 <th class="col-stato text-sm">U.M.</th>
                                 <th class="col-azioni text-sm">Azioni</th>
                             </tr>
@@ -200,7 +220,7 @@
     <div id="modalBulkEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold">✏️ Modifica Massiva</h2>
+                <h2 class="text-2xl font-bold">âœï¸ Modifica Massiva</h2>
                 <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
@@ -208,14 +228,14 @@
             </div>
             <form onsubmit="saveBulkEdit(event)" class="space-y-6">
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Categorizzazione</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">ðŸ·ï¸ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Categoria</label><select id="bulkAggregate" class="w-full px-4 py-2 border rounded-lg" onchange="onBulkAggregateChange()"><option value="">Non modificare</option></select></div>
                         <div><label class="block text-sm font-medium mb-2">Tipo</label><select id="bulkType" class="w-full px-4 py-2 border rounded-lg" disabled><option value="">Seleziona categoria</option></select></div>
                     </div>
                 </div>
                 <div class="bg-green-50 rounded-lg p-4">
-                    <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
+                    <h3 class="font-bold text-green-900 mb-3">ðŸ›’ Gruppo Vendita</h3>
                     <select id="bulkGruppoVendita" class="w-full px-4 py-2 border rounded-lg"><option value="">Non modificare</option></select>
                 </div>
                 <div class="flex space-x-4 pt-4 border-t">
@@ -232,7 +252,7 @@
             <form onsubmit="saveProdotto(event)" class="space-y-6">
                 <input type="hidden" id="prodottoId">
                 <div class="bg-blue-50 rounded-lg p-4">
-                    <h3 class="font-bold text-blue-900 mb-3">📋 Dati Base</h3>
+                    <h3 class="font-bold text-blue-900 mb-3">ðŸ“‹ Dati Base</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Nome *</label><input type="text" id="prodottoNome" required class="w-full px-4 py-2 border rounded-lg"></div>
                         <div><label class="block text-sm font-medium mb-2">Fornitore</label><input type="text" id="prodottoFornitore" class="w-full px-4 py-2 border rounded-lg"></div>
@@ -240,13 +260,13 @@
                     <div class="mt-4"><label class="block text-sm font-medium mb-2">Descrizione</label><textarea id="prodottoDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
                 </div>
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">🏷️ Categorizzazione</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">ðŸ·ï¸ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Categoria</label><select id="prodottoAggregante" class="w-full px-4 py-2 border rounded-lg" onchange="onAggreganteChange()"><option value="">Non categorizzato</option></select></div>
                         <div><label class="block text-sm font-medium mb-2">Tipo</label><select id="prodottoTipo" class="w-full px-4 py-2 border rounded-lg" disabled><option value="">Seleziona categoria</option></select></div>
                     </div>
                     <div id="formNuovoAggregante" class="hidden mt-4 bg-green-50 border-2 border-green-300 rounded-lg p-4">
-                        <h4 class="font-bold text-green-900 mb-3">✨ Nuova Categoria</h4>
+                        <h4 class="font-bold text-green-900 mb-3">âœ¨ Nuova Categoria</h4>
                         <div class="grid md:grid-cols-3 gap-3">
                             <div><label class="block text-xs font-medium mb-1">Nome *</label><input type="text" id="nuovoAggreganteNome" class="w-full px-3 py-2 border rounded text-sm"></div>
                             <div><label class="block text-xs font-medium mb-1">Colore</label><input type="color" id="nuovoAggreganteColore" value="#3B82F6" class="w-full h-10 border rounded"></div>
@@ -254,7 +274,7 @@
                         </div>
                     </div>
                     <div id="formNuovoTipo" class="hidden mt-4 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-                        <h4 class="font-bold text-purple-900 mb-3">✨ Nuovo Tipo</h4>
+                        <h4 class="font-bold text-purple-900 mb-3">âœ¨ Nuovo Tipo</h4>
                         <div class="grid md:grid-cols-2 gap-3">
                             <div><label class="block text-xs font-medium mb-1">Nome *</label><input type="text" id="nuovoTipoNome" class="w-full px-3 py-2 border rounded text-sm"></div>
                             <div><label class="block text-xs font-medium mb-1">Keywords</label><input type="text" id="nuovoTipoKeywords" placeholder="vino, rosso" class="w-full px-3 py-2 border rounded text-sm"></div>
@@ -262,21 +282,21 @@
                     </div>
                 </div>
                 <div class="bg-green-50 rounded-lg p-4">
-                    <h3 class="font-bold text-green-900 mb-3">🛒 Gruppo Vendita</h3>
+                    <h3 class="font-bold text-green-900 mb-3">ðŸ›’ Gruppo Vendita</h3>
                     <select id="prodottoGruppoVendita" class="w-full px-4 py-2 border rounded-lg"><option value="">Nessun gruppo</option></select>
                 </div>
                 <div class="bg-orange-50 rounded-lg p-4">
-                    <h3 class="font-bold text-orange-900 mb-3">💰 Prezzi</h3>
+                    <h3 class="font-bold text-orange-900 mb-3">ðŸ’° Prezzi</h3>
                     <div class="grid md:grid-cols-4 gap-4">
                         <div><label class="block text-sm font-medium mb-2">Prezzo</label><input type="number" step="any" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg"></div>
                         <div><label class="block text-sm font-medium mb-2">IVA %</label><input type="number" step="any" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg"></div>
-                        <div><label class="block text-sm font-medium mb-2">QuantitÃ </label><input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg"></div>
+                        <div><label class="block text-sm font-medium mb-2">QuantitÃƒÂ </label><input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg"></div>
                         <div><label class="block text-sm font-medium mb-2">U.M.</label><select id="prodottoUnitaMisura" class="w-full px-4 py-2 border rounded-lg"><option value="pz">Pezzi</option><option value="kg">Kg</option><option value="lt">Litri</option><option value="bt">Bottiglie</option><option value="ct">Cartoni</option></select></div>
                     </div>
                 </div>
                 <div class="flex items-center bg-gray-50 rounded-lg p-4"><input type="checkbox" id="prodottoAttivo" checked class="w-5 h-5 mr-3"><label class="text-sm font-medium">Prodotto attivo</label></div>
                 <div class="flex space-x-4 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Salva</button>
                     <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 </div>
             </form>
@@ -290,10 +310,189 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Conferma Eliminazione</h2>
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6"><p class="text-sm text-yellow-800"><strong>⚠️</strong> Azione irreversibile!</p></div>
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6"><p class="text-sm text-yellow-800"><strong>âš ï¸</strong> Azione irreversibile!</p></div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 <button onclick="confirmDelete()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE ANAGRAFICA PRODOTTI -->
+    <div id="modalAnagrafica" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-teal-600 to-cyan-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <svg class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        </svg>
+                        Anagrafica Prodotti
+                    </h2>
+                    <p class="text-teal-100 text-sm mt-1">Gestione prodotti univoci con unità di misura vendita</p>
+                </div>
+                <button onclick="closeAnagraficaModal()" class="p-2 hover:bg-white/20 rounded-lg transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="bg-gray-50 border-b px-6 py-3 flex items-center justify-between">
+                <div class="flex space-x-6">
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 uppercase">Totale Prodotti</p>
+                        <p id="anagraficaStatTotale" class="text-xl font-bold text-teal-600">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 uppercase">Configurati</p>
+                        <p id="anagraficaStatConfigurati" class="text-xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 uppercase">Da Configurare</p>
+                        <p id="anagraficaStatDaConfigurare" class="text-xl font-bold text-orange-600">0</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <input type="text" id="anagraficaSearch" placeholder="🔍 Cerca prodotto..." 
+                           class="px-4 py-2 border rounded-lg text-sm w-64" onkeyup="filterAnagrafica()">
+                    <select id="anagraficaFilterStato" class="px-4 py-2 border rounded-lg text-sm" onchange="filterAnagrafica()">
+                        <option value="">Tutti</option>
+                        <option value="configurato">Configurati</option>
+                        <option value="da_configurare">Da configurare</option>
+                    </select>
+                    <button onclick="refreshAnagrafica()" class="px-4 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 text-sm font-medium">
+                        ↻ Aggiorna
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="flex-1 overflow-auto p-4">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-1/4">Descrizione</th>
+                            <th class="px-3 py-3 text-right font-semibold text-gray-700 w-20">€ Medio</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700 w-20">UDF</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700 w-24">UDV</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700 w-20">Rapporto</th>
+                            <th class="px-3 py-3 text-right font-semibold text-gray-700 w-20">Qtà UDF</th>
+                            <th class="px-3 py-3 text-right font-semibold text-gray-700 w-20">Qtà UDV</th>
+                            <th class="px-3 py-3 text-right font-semibold text-gray-700 w-24">Costo UDV</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-32">Fornitore</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700 w-24">Stato</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-700 w-20">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="anagraficaTableBody" class="divide-y divide-gray-200">
+                        <!-- Righe dinamiche -->
+                    </tbody>
+                </table>
+                
+                <!-- Loading State -->
+                <div id="anagraficaLoading" class="hidden text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Caricamento anagrafica...</p>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="anagraficaEmpty" class="hidden text-center py-12">
+                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <p class="text-gray-500">Nessun prodotto in anagrafica</p>
+                    <p class="text-gray-400 text-sm mt-1">Esegui prima lo script SQL per creare la tabella</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 border-t px-6 py-4 rounded-b-2xl flex items-center justify-between">
+                <p class="text-sm text-gray-500">
+                    💡 Modifica il rapporto UDV/UDF per calcolare automaticamente quantità e costi per unità di vendita
+                </p>
+                <button onclick="closeAnagraficaModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE MODIFICA ANAGRAFICA SINGOLO PRODOTTO -->
+    <div id="modalEditAnagrafica" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">✏️ Modifica Unità Vendita</h3>
+                <button onclick="closeEditAnagraficaModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="bg-teal-50 rounded-lg p-4 mb-4">
+                <p class="text-sm text-teal-800 font-medium" id="editAnagraficaDescrizione">-</p>
+                <p class="text-xs text-teal-600 mt-1">Prezzo medio: <span id="editAnagraficaPrezzo">€0.00</span></p>
+            </div>
+            
+            <input type="hidden" id="editAnagraficaId">
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Unità Fattura (UDF)</label>
+                        <input type="text" id="editAnagraficaUDF" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quantità UDF</label>
+                        <input type="text" id="editAnagraficaQtaUDF" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-4">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">🎯 Configura Unità di Vendita</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unità Vendita (UDV) *</label>
+                            <select id="editAnagraficaUDV" class="w-full px-4 py-2 border rounded-lg" onchange="onUDVChange()">
+                                <option value="">Seleziona...</option>
+                                <option value="bottiglia">Bottiglia</option>
+                                <option value="bicchiere">Bicchiere</option>
+                                <option value="litro">Litro</option>
+                                <option value="pezzo">Pezzo</option>
+                                <option value="porzione">Porzione</option>
+                                <option value="calice">Calice</option>
+                                <option value="__custom__">✏️ Personalizzato...</option>
+                            </select>
+                            <input type="text" id="editAnagraficaUDVCustom" class="hidden w-full px-4 py-2 border rounded-lg mt-2" placeholder="Inserisci unità...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rapporto (1 UDF = X UDV) *</label>
+                            <input type="number" step="0.01" min="0.01" id="editAnagraficaRapporto" class="w-full px-4 py-2 border rounded-lg" value="1" oninput="calcolaPreviewUDV()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">📊 Anteprima Calcoli</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Quantità UDV:</span>
+                            <span id="previewQtaUDV" class="font-bold text-teal-600 ml-2">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Costo per UDV:</span>
+                            <span id="previewCostoUDV" class="font-bold text-teal-600 ml-2">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3 mt-6">
+                <button onclick="saveAnagraficaEdit()" class="flex-1 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium">
+                    💾 Salva Modifiche
+                </button>
+                <button onclick="closeEditAnagraficaModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">
+                    Annulla
+                </button>
             </div>
         </div>
     </div>
@@ -363,8 +562,8 @@
             document.getElementById('totalCategorie').textContent = cats.size;
             const valNoIva = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
             const valIva = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
-            document.getElementById('valoreTotale').textContent = `€${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `€${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotale').textContent = `â‚¬${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotaleIvato').textContent = `â‚¬${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
         
         function updateFilters() {
@@ -442,10 +641,10 @@
                     <td class="col-categoria"><span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${catColor}20; border: 1px solid ${catColor}40; color: ${catColor}">${catDisplay}</span></td>
                     <td class="col-categoria">${gv ? `<span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${gvColor}20; border: 1px solid ${gvColor}40; color: ${gvColor}">${gvDisplay}</span>` : '<span class="text-gray-400">-</span>'}</td>
                     <td class="col-fornitore truncate-cell text-sm">${p.fornitore || '-'}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toFixed(2)}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">€${(p.prezzo_scontato || p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">â‚¬${(p.prezzo || 0).toFixed(2)}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">â‚¬${(p.prezzo_scontato || p.prezzo || 0).toFixed(2)}</td>
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
-                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">€${(p.prezzo_ivato || 0).toFixed(2)}</td>
+                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">â‚¬${(p.prezzo_ivato || 0).toFixed(2)}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
                     <td class="col-stato text-sm text-center">${p.unita_misura || 'pz'}</td>
                     <td class="col-azioni">
@@ -461,11 +660,11 @@
             document.getElementById('bulkEditCount').textContent = selectedIds.size;
             document.getElementById('bulkEditCountBtn').textContent = selectedIds.size;
             const sel = document.getElementById('bulkAggregate');
-            sel.innerHTML = '<option value="">Non modificare</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>';
+            sel.innerHTML = '<option value="">Non modificare</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__remove__">ðŸ—‘ï¸ Rimuovi</option>';
             document.getElementById('bulkType').innerHTML = '<option value="">Seleziona categoria</option>';
             document.getElementById('bulkType').disabled = true;
             const gvSel = document.getElementById('bulkGruppoVendita');
-            gvSel.innerHTML = '<option value="">Non modificare</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>';
+            gvSel.innerHTML = '<option value="">Non modificare</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('') + '<option value="__remove__">ðŸ—‘ï¸ Rimuovi</option>';
             document.getElementById('modalBulkEdit').classList.remove('hidden');
         };
         window.closeBulkEditModal = function() { document.getElementById('modalBulkEdit').classList.add('hidden'); };
@@ -474,7 +673,7 @@
             const aggId = document.getElementById('bulkAggregate').value;
             const tipoSel = document.getElementById('bulkType');
             if (!aggId || aggId === '__remove__') { tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Non modificabile</option>'; }
-            else { tipoSel.disabled = false; tipoSel.innerHTML = '<option value="">Non modificare</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__remove__">🗑️ Rimuovi</option>'; }
+            else { tipoSel.disabled = false; tipoSel.innerHTML = '<option value="">Non modificare</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__remove__">ðŸ—‘ï¸ Rimuovi</option>'; }
         };
 
         window.saveBulkEdit = async function(e) {
@@ -499,12 +698,12 @@
                 await supabaseClient.from('prodotti').update(updateData).in('id', ids.slice(i, i + 100));
             }
             selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
-            alert('✅ Prodotti aggiornati!');
+            alert('âœ… Prodotti aggiornati!');
         };
 
         function populateAggregantiSelect() {
             const sel = document.getElementById('prodottoAggregante');
-            sel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuova categoria</option>';
+            sel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('') + '<option value="__nuovo__">âž• Nuova categoria</option>';
         }
         function populateGruppiVenditaSelect() {
             const sel = document.getElementById('prodottoGruppoVendita');
@@ -521,7 +720,7 @@
                 tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Prima crea categoria</option>';
             } else if (aggId) {
                 tipoSel.disabled = false;
-                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__nuovo__">➕ Nuovo tipo</option>';
+                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.map(t => `<option value="${t.id}">${t.nome}</option>`).join('') + '<option value="__nuovo__">âž• Nuovo tipo</option>';
                 tipoSel.onchange = function() { document.getElementById('formNuovoTipo').classList.toggle('hidden', this.value !== '__nuovo__'); };
             } else {
                 tipoSel.disabled = true; tipoSel.innerHTML = '<option value="">Seleziona categoria</option>';
@@ -584,7 +783,7 @@
             };
             if (id) await supabaseClient.from('prodotti').update(prod).eq('id', id);
             else await supabaseClient.from('prodotti').insert([prod]);
-            closeModal(); await loadAllProdotti(); alert('✅ Salvato!');
+            closeModal(); await loadAllProdotti(); alert('âœ… Salvato!');
         }
 
         function closeModal() { document.getElementById('modalProdotto').classList.add('hidden'); }
@@ -611,11 +810,314 @@
                 await supabaseClient.from('prodotti').delete().in('id', ids.slice(i, i + 100));
             }
             selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
-            alert('✅ Eliminato!');
+            alert('âœ… Eliminato!');
         }
 
         loadAllProdotti();
         console.log('✅ Prodotti con sidebar - Caricato');
+
+        // ===== GESTIONE ANAGRAFICA PRODOTTI =====
+        let anagraficaData = [];
+        let anagraficaFiltered = [];
+        let editingAnagraficaItem = null;
+
+        async function loadAnagraficaCount() {
+            try {
+                const { count, error } = await supabaseClient
+                    .from('anagrafica_prodotti')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (!error) {
+                    document.getElementById('totalAnagrafica').textContent = count || 0;
+                }
+            } catch (err) {
+                console.log('Tabella anagrafica non ancora creata');
+                document.getElementById('totalAnagrafica').textContent = '-';
+            }
+        }
+
+        // Carica conteggio anagrafica all'avvio
+        loadAnagraficaCount();
+
+        function openAnagraficaModal() {
+            document.getElementById('modalAnagrafica').classList.remove('hidden');
+            loadAnagraficaData();
+        }
+
+        function closeAnagraficaModal() {
+            document.getElementById('modalAnagrafica').classList.add('hidden');
+        }
+
+        async function loadAnagraficaData() {
+            const loading = document.getElementById('anagraficaLoading');
+            const empty = document.getElementById('anagraficaEmpty');
+            const tbody = document.getElementById('anagraficaTableBody');
+            
+            loading.classList.remove('hidden');
+            empty.classList.add('hidden');
+            tbody.innerHTML = '';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('anagrafica_prodotti')
+                    .select('*')
+                    .order('descrizione');
+
+                loading.classList.add('hidden');
+
+                if (error) {
+                    console.error('Errore caricamento anagrafica:', error);
+                    empty.classList.remove('hidden');
+                    empty.querySelector('p').textContent = 'Errore: ' + error.message;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    empty.classList.remove('hidden');
+                    return;
+                }
+
+                anagraficaData = data;
+                anagraficaFiltered = [...data];
+                
+                updateAnagraficaStats();
+                renderAnagraficaTable();
+                
+                // Aggiorna anche il contatore nella sidebar
+                document.getElementById('totalAnagrafica').textContent = data.length;
+
+            } catch (err) {
+                loading.classList.add('hidden');
+                empty.classList.remove('hidden');
+                console.error('Errore:', err);
+            }
+        }
+
+        function updateAnagraficaStats() {
+            const totale = anagraficaData.length;
+            const configurati = anagraficaData.filter(p => p.unita_misura_vendita).length;
+            const daConfigurare = totale - configurati;
+
+            document.getElementById('anagraficaStatTotale').textContent = totale;
+            document.getElementById('anagraficaStatConfigurati').textContent = configurati;
+            document.getElementById('anagraficaStatDaConfigurare').textContent = daConfigurare;
+        }
+
+        function filterAnagrafica() {
+            const search = document.getElementById('anagraficaSearch').value.toLowerCase();
+            const stato = document.getElementById('anagraficaFilterStato').value;
+
+            anagraficaFiltered = anagraficaData.filter(p => {
+                const matchSearch = !search || 
+                    p.descrizione?.toLowerCase().includes(search) ||
+                    p.fornitore_principale?.toLowerCase().includes(search);
+                
+                let matchStato = true;
+                if (stato === 'configurato') {
+                    matchStato = p.unita_misura_vendita != null;
+                } else if (stato === 'da_configurare') {
+                    matchStato = p.unita_misura_vendita == null;
+                }
+
+                return matchSearch && matchStato;
+            });
+
+            renderAnagraficaTable();
+        }
+
+        function renderAnagraficaTable() {
+            const tbody = document.getElementById('anagraficaTableBody');
+            
+            if (anagraficaFiltered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="px-6 py-8 text-center text-gray-500">
+                            Nessun prodotto trovato con i filtri selezionati
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = anagraficaFiltered.map(p => {
+                const isConfigurato = p.unita_misura_vendita != null;
+                const statoClass = isConfigurato ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800';
+                const statoText = isConfigurato ? 'Configurato' : 'Da configurare';
+
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-3 py-2">
+                            <div class="font-medium text-gray-900 truncate max-w-xs" title="${escapeHtml(p.descrizione || '')}">
+                                ${escapeHtml(p.descrizione || '-')}
+                            </div>
+                            <div class="text-xs text-gray-400">${p.numero_acquisti || 0} acquisti</div>
+                        </td>
+                        <td class="px-3 py-2 text-right font-medium">€${(p.prezzo_medio_ivato || 0).toFixed(2)}</td>
+                        <td class="px-3 py-2 text-center">
+                            <span class="px-2 py-1 bg-gray-100 rounded text-xs">${escapeHtml(p.unita_misura_fattura || 'pz')}</span>
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                            ${p.unita_misura_vendita 
+                                ? `<span class="px-2 py-1 bg-teal-100 text-teal-800 rounded text-xs">${escapeHtml(p.unita_misura_vendita)}</span>`
+                                : '<span class="text-gray-400">-</span>'}
+                        </td>
+                        <td class="px-3 py-2 text-center font-medium">${p.rapporto_udv_udf || 1}</td>
+                        <td class="px-3 py-2 text-right">${(p.quantita_acquistate_udf || 0).toFixed(0)}</td>
+                        <td class="px-3 py-2 text-right font-medium text-teal-600">${(p.quantita_acquistate_udv || 0).toFixed(0)}</td>
+                        <td class="px-3 py-2 text-right font-medium">€${(p.costo_medio_udv || 0).toFixed(4)}</td>
+                        <td class="px-3 py-2 text-sm text-gray-600 truncate max-w-[120px]" title="${escapeHtml(p.fornitore_principale || '')}">
+                            ${escapeHtml(p.fornitore_principale || '-')}
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statoClass}">${statoText}</span>
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                            <button onclick="editAnagraficaItem(${p.id})" 
+                                    class="p-2 text-teal-600 hover:bg-teal-100 rounded-lg transition-colors"
+                                    title="Modifica">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function refreshAnagrafica() {
+            document.getElementById('anagraficaSearch').value = '';
+            document.getElementById('anagraficaFilterStato').value = '';
+            loadAnagraficaData();
+        }
+
+        // ===== MODIFICA SINGOLO PRODOTTO ANAGRAFICA =====
+        function editAnagraficaItem(id) {
+            const item = anagraficaData.find(p => p.id === id);
+            if (!item) return;
+
+            editingAnagraficaItem = item;
+
+            document.getElementById('editAnagraficaId').value = item.id;
+            document.getElementById('editAnagraficaDescrizione').textContent = item.descrizione || '-';
+            document.getElementById('editAnagraficaPrezzo').textContent = '€' + (item.prezzo_medio_ivato || 0).toFixed(2);
+            document.getElementById('editAnagraficaUDF').value = item.unita_misura_fattura || 'pz';
+            document.getElementById('editAnagraficaQtaUDF').value = (item.quantita_acquistate_udf || 0).toFixed(2);
+
+            // Reset select UDV
+            const udvSelect = document.getElementById('editAnagraficaUDV');
+            const udvCustom = document.getElementById('editAnagraficaUDVCustom');
+            udvCustom.classList.add('hidden');
+
+            if (item.unita_misura_vendita) {
+                // Verifica se è una delle opzioni predefinite
+                const options = ['bottiglia', 'bicchiere', 'litro', 'pezzo', 'porzione', 'calice'];
+                if (options.includes(item.unita_misura_vendita.toLowerCase())) {
+                    udvSelect.value = item.unita_misura_vendita.toLowerCase();
+                } else {
+                    udvSelect.value = '__custom__';
+                    udvCustom.classList.remove('hidden');
+                    udvCustom.value = item.unita_misura_vendita;
+                }
+            } else {
+                udvSelect.value = '';
+            }
+
+            document.getElementById('editAnagraficaRapporto').value = item.rapporto_udv_udf || 1;
+
+            calcolaPreviewUDV();
+
+            document.getElementById('modalEditAnagrafica').classList.remove('hidden');
+        }
+
+        function closeEditAnagraficaModal() {
+            document.getElementById('modalEditAnagrafica').classList.add('hidden');
+            editingAnagraficaItem = null;
+        }
+
+        function onUDVChange() {
+            const select = document.getElementById('editAnagraficaUDV');
+            const custom = document.getElementById('editAnagraficaUDVCustom');
+            
+            if (select.value === '__custom__') {
+                custom.classList.remove('hidden');
+                custom.focus();
+            } else {
+                custom.classList.add('hidden');
+            }
+        }
+
+        function calcolaPreviewUDV() {
+            if (!editingAnagraficaItem) return;
+
+            const rapporto = parseFloat(document.getElementById('editAnagraficaRapporto').value) || 1;
+            const qtaUDF = editingAnagraficaItem.quantita_acquistate_udf || 0;
+            const prezzoMedio = editingAnagraficaItem.prezzo_medio_ivato || 0;
+
+            const qtaUDV = qtaUDF * rapporto;
+            const costoUDV = rapporto > 0 ? prezzoMedio / rapporto : prezzoMedio;
+
+            document.getElementById('previewQtaUDV').textContent = qtaUDV.toFixed(0);
+            document.getElementById('previewCostoUDV').textContent = '€' + costoUDV.toFixed(4);
+        }
+
+        async function saveAnagraficaEdit() {
+            const id = document.getElementById('editAnagraficaId').value;
+            const udvSelect = document.getElementById('editAnagraficaUDV');
+            const udvCustom = document.getElementById('editAnagraficaUDVCustom');
+            const rapporto = parseFloat(document.getElementById('editAnagraficaRapporto').value) || 1;
+
+            let udv = udvSelect.value;
+            if (udv === '__custom__') {
+                udv = udvCustom.value.trim();
+            }
+
+            if (!udv) {
+                alert('Seleziona o inserisci l\'unità di vendita');
+                return;
+            }
+
+            if (rapporto <= 0) {
+                alert('Il rapporto deve essere maggiore di 0');
+                return;
+            }
+
+            // Calcola i valori derivati
+            const qtaUDF = editingAnagraficaItem.quantita_acquistate_udf || 0;
+            const prezzoMedio = editingAnagraficaItem.prezzo_medio_ivato || 0;
+            const qtaUDV = qtaUDF * rapporto;
+            const costoUDV = rapporto > 0 ? prezzoMedio / rapporto : prezzoMedio;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('anagrafica_prodotti')
+                    .update({
+                        unita_misura_vendita: udv,
+                        rapporto_udv_udf: rapporto,
+                        quantita_acquistate_udv: qtaUDV,
+                        costo_medio_udv: costoUDV,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                closeEditAnagraficaModal();
+                await loadAnagraficaData();
+                alert('✅ Anagrafica aggiornata!');
+
+            } catch (err) {
+                console.error('Errore salvataggio:', err);
+                alert('❌ Errore: ' + err.message);
+            }
+        }
     </script>
 </body>
 </html>
