@@ -51,38 +51,26 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 pt-24 pb-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Analisi Margini</h1>
-            <p class="text-gray-600">Confronto Acquisti vs Vendite per Gruppo Vendita e Mese</p>
-        </div>
-
-        <!-- Loading -->
-        <div id="loadingProgress" class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-purple-900">Caricamento dati...</span>
-                <span id="progressText" class="text-sm text-purple-700">0%</span>
+    <div class="max-w-full mx-auto px-4 pt-20 pb-8">
+        <!-- Header con Titolo e Filtri in linea -->
+        <div class="flex flex-wrap items-start justify-between mb-6 gap-4">
+            <!-- Titolo a sinistra -->
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">📊 Analisi Margini</h1>
+                <p class="text-sm text-gray-600">Confronto Acquisti vs Vendite per Gruppo Vendita e Mese</p>
             </div>
-            <div class="w-full bg-purple-200 rounded-full h-3">
-                <div id="progressBar" class="bg-purple-600 h-3 rounded-full transition-all" style="width: 0%"></div>
-            </div>
-            <p id="progressDetail" class="text-xs text-gray-500 mt-2"></p>
-        </div>
-
-        <!-- Filtri -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="font-bold mb-4">🔍 Filtri Periodo</h3>
-            <div class="grid md:grid-cols-4 gap-4">
+            
+            <!-- Filtri a destra in linea -->
+            <div class="flex flex-wrap items-end gap-3">
                 <div>
-                    <label class="block text-sm font-medium mb-2">Anno</label>
-                    <select id="filterAnno" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Anno</label>
+                    <select id="filterAnno" class="px-3 py-2 border rounded-lg text-sm min-w-[140px]" onchange="applyFilters()">
                         <option value="">Tutti gli anni</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-2">Mese</label>
-                    <select id="filterMese" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Mese</label>
+                    <select id="filterMese" class="px-3 py-2 border rounded-lg text-sm min-w-[140px]" onchange="applyFilters()">
                         <option value="">Tutti i mesi</option>
                         <option value="01">Gennaio</option>
                         <option value="02">Febbraio</option>
@@ -99,116 +87,136 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
-                    <select id="filterGruppo" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Gruppo Vendita</label>
+                    <select id="filterGruppo" class="px-3 py-2 border rounded-lg text-sm min-w-[160px]" onchange="applyFilters()">
                         <option value="">Tutti i gruppi</option>
                     </select>
                 </div>
-                <div class="flex items-end">
-                    <button onclick="clearFilters()" class="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">↺ Pulisci</button>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm">↺ Pulisci</button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingProgress" class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-purple-900">Caricamento dati...</span>
+                <span id="progressText" class="text-sm text-purple-700">0%</span>
+            </div>
+            <div class="w-full bg-purple-200 rounded-full h-3">
+                <div id="progressBar" class="bg-purple-600 h-3 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+            <p id="progressDetail" class="text-xs text-gray-500 mt-2"></p>
+        </div>
+
+        <!-- Layout principale: KPI a sinistra, Grafici a destra -->
+        <div class="flex gap-6">
+            <!-- KPI Cards - Colonna sinistra -->
+            <div class="w-56 flex-shrink-0 space-y-4">
+                <!-- Vendite Totali -->
+                <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Vendite Totali</p>
+                            <p id="kpiVendite" class="text-xl font-bold text-green-600">€0</p>
+                            <p id="kpiVenditeCount" class="text-xs text-gray-400">0 transazioni</p>
+                        </div>
+                        <div class="bg-green-100 p-2 rounded-full">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acquisti Totali -->
+                <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-red-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Acquisti Totali</p>
+                            <p id="kpiAcquisti" class="text-xl font-bold text-red-600">€0</p>
+                            <p id="kpiAcquistiCount" class="text-xs text-gray-400">0 prodotti</p>
+                        </div>
+                        <div class="bg-red-100 p-2 rounded-full">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Margine Lordo -->
+                <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Margine Lordo</p>
+                            <p id="kpiMargine" class="text-xl font-bold text-green-600">€0</p>
+                            <p id="kpiMarginePerc" class="text-xs text-gray-500">0%</p>
+                        </div>
+                        <div class="bg-purple-100 p-2 rounded-full">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gruppi Attivi -->
+                <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Gruppi Attivi</p>
+                            <p id="kpiGruppi" class="text-xl font-bold text-blue-600">0</p>
+                            <p class="text-xs text-gray-400">con movimenti</p>
+                        </div>
+                        <div class="bg-blue-100 p-2 rounded-full">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grafici - Area destra -->
+            <div class="flex-1 grid grid-cols-2 gap-6">
+                <!-- Grafico 1: Vendite vs Acquisti per Gruppo -->
+                <div class="bg-white rounded-xl shadow-lg p-4">
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">📊 Vendite vs Acquisti per Gruppo</h3>
+                    <div class="h-64">
+                        <canvas id="chartMain"></canvas>
+                    </div>
+                </div>
+
+                <!-- Grafico 2: Margine per Mese -->
+                <div class="bg-white rounded-xl shadow-lg p-4">
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">💰 Margine per Mese</h3>
+                    <div class="h-64">
+                        <canvas id="chartMargini"></canvas>
+                    </div>
+                </div>
+
+                <!-- Grafico 3: Trend Mensile -->
+                <div class="bg-white rounded-xl shadow-lg p-4">
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">📈 Trend Mensile</h3>
+                    <div class="h-64">
+                        <canvas id="chartTrend"></canvas>
+                    </div>
+                </div>
+
+                <!-- Grafico 4: Distribuzione Vendite -->
+                <div class="bg-white rounded-xl shadow-lg p-4">
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">🎯 Distribuzione Vendite per Gruppo</h3>
+                    <div class="h-64">
+                        <canvas id="chartDistribuzione"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- KPI Cards -->
-        <div class="grid md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Vendite Totali</p>
-                        <p id="kpiVendite" class="text-2xl font-bold text-green-600">€0</p>
-                        <p id="kpiVenditeCount" class="text-xs text-gray-400">0 transazioni</p>
-                    </div>
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Acquisti Totali</p>
-                        <p id="kpiAcquisti" class="text-2xl font-bold text-red-600">€0</p>
-                        <p id="kpiAcquistiCount" class="text-xs text-gray-400">0 prodotti</p>
-                    </div>
-                    <div class="bg-red-100 p-3 rounded-full">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Margine Lordo</p>
-                        <p id="kpiMargine" class="text-2xl font-bold text-purple-600">€0</p>
-                        <p id="kpiMarginePerc" class="text-xs text-gray-500">0%</p>
-                    </div>
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Gruppi Attivi</p>
-                        <p id="kpiGruppi" class="text-2xl font-bold text-blue-600">0</p>
-                        <p class="text-xs text-gray-500">con movimenti</p>
-                    </div>
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grafici Row 1 -->
-        <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">📊 Vendite vs Acquisti per Gruppo</h3>
-                <div class="h-80">
-                    <canvas id="chartMain"></canvas>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">💰 Margine per Mese</h3>
-                <div class="h-80">
-                    <canvas id="chartMargini"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grafici Row 2 -->
-        <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">📈 Trend Mensile</h3>
-                <div class="h-80">
-                    <canvas id="chartTrend"></canvas>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">🎯 Distribuzione Vendite per Gruppo</h3>
-                <div class="h-80">
-                    <canvas id="chartDistribuzione"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabella Dettaglio -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <!-- Tabelle sotto il layout principale -->
+        <div class="mt-8">
+            <!-- Tabella Dettaglio -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600">
                 <h3 class="text-lg font-bold text-white">📋 Dettaglio per Gruppo Vendita</h3>
             </div>
@@ -259,6 +267,7 @@
                     <tbody id="tabellaMensile" class="divide-y divide-gray-200"></tbody>
                 </table>
             </div>
+        </div>
         </div>
     </div>
 
