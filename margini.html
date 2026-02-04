@@ -14,11 +14,6 @@
         }
         .positive { color: #10b981; }
         .negative { color: #ef4444; }
-        .tab-active { 
-            border-bottom: 3px solid #6366f1; 
-            color: #4f46e5;
-            font-weight: 600;
-        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -60,7 +55,7 @@
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Analisi Margini</h1>
-            <p class="text-gray-600">Confronto Acquisti vs Vendite per Categoria e Mese</p>
+            <p class="text-gray-600">Confronto Acquisti vs Vendite per Gruppo Vendita e Mese</p>
         </div>
 
         <!-- Loading -->
@@ -104,15 +99,15 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-2">Categoria Vendita</label>
-                    <select id="filterCategoria" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
-                        <option value="">Tutte le categorie</option>
+                    <label class="block text-sm font-medium mb-2">Gruppo Vendita</label>
+                    <select id="filterGruppo" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                        <option value="">Tutti i gruppi</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Visualizzazione</label>
                     <select id="viewMode" class="w-full px-4 py-2 border rounded-lg" onchange="changeViewMode()">
-                        <option value="categoria">Per Categoria</option>
+                        <option value="gruppo">Per Gruppo Vendita</option>
                         <option value="mese">Per Mese</option>
                     </select>
                 </div>
@@ -129,6 +124,7 @@
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Vendite Totali</p>
                         <p id="kpiVendite" class="text-2xl font-bold text-green-600">€0</p>
+                        <p id="kpiVenditeCount" class="text-xs text-gray-400">0 transazioni</p>
                     </div>
                     <div class="bg-green-100 p-3 rounded-full">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,6 +139,7 @@
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Acquisti Totali</p>
                         <p id="kpiAcquisti" class="text-2xl font-bold text-red-600">€0</p>
+                        <p id="kpiAcquistiCount" class="text-xs text-gray-400">0 prodotti</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-full">
                         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,13 +167,13 @@
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">N. Transazioni</p>
-                        <p id="kpiTransazioni" class="text-2xl font-bold text-blue-600">0</p>
-                        <p class="text-xs text-gray-500">vendite + acquisti</p>
+                        <p class="text-sm text-gray-600 mb-1">Gruppi Attivi</p>
+                        <p id="kpiGruppi" class="text-2xl font-bold text-blue-600">0</p>
+                        <p class="text-xs text-gray-500">con movimenti</p>
                     </div>
                     <div class="bg-blue-100 p-3 rounded-full">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                         </svg>
                     </div>
                 </div>
@@ -185,17 +182,15 @@
 
         <!-- Grafici Row 1 -->
         <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <!-- Grafico Principale -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">📊 <span id="chartMainTitle">Vendite vs Acquisti per Categoria</span></h3>
+                <h3 class="text-lg font-bold mb-4">📊 <span id="chartMainTitle">Vendite vs Acquisti per Gruppo</span></h3>
                 <div class="h-80">
                     <canvas id="chartMain"></canvas>
                 </div>
             </div>
 
-            <!-- Grafico Margini -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">💰 <span id="chartMarginiTitle">Margine per Categoria</span></h3>
+                <h3 class="text-lg font-bold mb-4">💰 <span id="chartMarginiTitle">Margine per Gruppo</span></h3>
                 <div class="h-80">
                     <canvas id="chartMargini"></canvas>
                 </div>
@@ -204,7 +199,6 @@
 
         <!-- Grafici Row 2 -->
         <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <!-- Trend Mensile -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h3 class="text-lg font-bold mb-4">📈 Trend Mensile</h3>
                 <div class="h-80">
@@ -212,9 +206,8 @@
                 </div>
             </div>
 
-            <!-- Distribuzione Vendite -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">🎯 Distribuzione Vendite per Categoria</h3>
+                <h3 class="text-lg font-bold mb-4">🎯 Distribuzione Vendite per Gruppo</h3>
                 <div class="h-80">
                     <canvas id="chartDistribuzione"></canvas>
                 </div>
@@ -224,13 +217,13 @@
         <!-- Tabella Dettaglio -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600">
-                <h3 class="text-lg font-bold text-white">📋 <span id="tableTitle">Dettaglio per Categoria di Vendita</span></h3>
+                <h3 class="text-lg font-bold text-white">📋 <span id="tableTitle">Dettaglio per Gruppo Vendita</span></h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th id="colHeader" class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Categoria</th>
+                            <th id="colHeader" class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Gruppo Vendita</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite €</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti €</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine €</th>
@@ -253,7 +246,7 @@
             </div>
         </div>
 
-        <!-- Tabella Mensile Dettagliata -->
+        <!-- Tabella Mensile -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-600">
                 <h3 class="text-lg font-bold text-white">📅 Riepilogo Mensile</h3>
@@ -280,140 +273,107 @@
         const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const BATCH_SIZE = 500;
+        const BATCH_SIZE = 1000;
 
         function logout() {
             localStorage.removeItem('app_authenticated');
             window.location.href = 'index.html';
         }
 
-        // Popola userName
         (function() {
             const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
             document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
         })();
 
-        // ===== COLORI PER CATEGORIE =====
-        const CATEGORY_COLORS = {
-            'Birra': '#F59E0B',
-            'Vino bottiglia mescita': '#7C3AED',
-            'Vino al calice': '#8B5CF6',
-            'Vino bottiglia asporto': '#A78BFA',
-            'Menu cibo': '#EF4444',
-            'Menu fisso': '#F87171',
-            'Drink': '#3B82F6',
-            'Bibite': '#10B981',
-            'Vetrina': '#6B7280',
-            'Altro': '#9CA3AF'
-        };
-
         const MONTH_NAMES = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
                             'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
-        // Dati globali
         let allVendite = [];
         let allProdotti = [];
+        let allGruppiVendita = [];
+        let gruppiMap = {};
         let filteredData = { vendite: [], prodotti: [] };
         let charts = {};
 
-        // ===== CARICAMENTO DATI =====
         async function loadData() {
             try {
                 updateProgress(0, 'Inizializzazione...');
 
-                // 1. Carica vendite
-                updateProgress(10, 'Caricamento vendite...');
-                const { count: countVendite, error: errCount } = await supabaseClient
-                    .from('vendite')
-                    .select('*', { count: 'exact', head: true });
+                // 1. Carica gruppi vendita
+                updateProgress(5, 'Caricamento gruppi vendita...');
+                const { data: gruppi } = await supabaseClient
+                    .from('gruppo_vendita')
+                    .select('*')
+                    .order('ordine');
                 
-                console.log('Count vendite:', countVendite, 'Error:', errCount);
+                if (gruppi) {
+                    allGruppiVendita = gruppi;
+                    gruppi.forEach(g => {
+                        gruppiMap[g.id] = { nome: g.nome, colore: g.colore || '#6B7280' };
+                    });
+                }
+                console.log('Gruppi vendita:', allGruppiVendita.length);
 
-                if (countVendite && countVendite > 0) {
-                    const numBatchesV = Math.ceil(countVendite / BATCH_SIZE);
-                    allVendite = [];
-                    
-                    for (let i = 0; i < numBatchesV; i++) {
-                        const { data, error } = await supabaseClient
-                            .from('vendite')
-                            .select('*')
-                            .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
-                        
-                        if (error) console.error('Errore caricamento vendite batch', i, error);
-                        if (data) allVendite = [...allVendite, ...data];
-                        updateProgress(10 + (i / numBatchesV * 30), `Vendite: ${allVendite.length}/${countVendite}`);
-                    }
-                } else {
-                    // Prova a caricare direttamente senza conteggio
-                    console.log('Tentativo caricamento diretto vendite...');
+                // 2. Carica vendite
+                updateProgress(10, 'Caricamento vendite...');
+                let offset = 0;
+                let hasMore = true;
+                allVendite = [];
+                
+                while (hasMore) {
                     const { data, error } = await supabaseClient
                         .from('vendite')
                         .select('*')
-                        .limit(10000);
+                        .range(offset, offset + BATCH_SIZE - 1);
                     
-                    if (error) console.error('Errore caricamento diretto vendite:', error);
-                    if (data) {
-                        allVendite = data;
-                        console.log('Vendite caricate direttamente:', allVendite.length);
+                    if (error) { console.error('Errore vendite:', error); break; }
+                    if (data && data.length > 0) {
+                        allVendite = [...allVendite, ...data];
+                        offset += BATCH_SIZE;
+                        updateProgress(10 + Math.min(30, offset / 500), `Vendite: ${allVendite.length}`);
                     }
+                    if (!data || data.length < BATCH_SIZE) hasMore = false;
                 }
+                console.log('Vendite caricate:', allVendite.length);
 
-                // 2. Carica prodotti (acquisti)
-                updateProgress(50, 'Caricamento prodotti/acquisti...');
-                const { count: countProdotti } = await supabaseClient
-                    .from('prodotti')
-                    .select('*', { count: 'exact', head: true });
-
-                if (countProdotti > 0) {
-                    const numBatchesP = Math.ceil(countProdotti / BATCH_SIZE);
-                    allProdotti = [];
+                // 3. Carica prodotti
+                updateProgress(50, 'Caricamento prodotti...');
+                offset = 0;
+                hasMore = true;
+                allProdotti = [];
+                
+                while (hasMore) {
+                    const { data, error } = await supabaseClient
+                        .from('prodotti')
+                        .select('*')
+                        .range(offset, offset + BATCH_SIZE - 1);
                     
-                    for (let i = 0; i < numBatchesP; i++) {
-                        const { data } = await supabaseClient
-                            .from('prodotti')
-                            .select('*')
-                            .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
-                        
-                        if (data) allProdotti = [...allProdotti, ...data];
-                        updateProgress(50 + (i / numBatchesP * 40), `Prodotti: ${allProdotti.length}/${countProdotti}`);
+                    if (error) { console.error('Errore prodotti:', error); break; }
+                    if (data && data.length > 0) {
+                        allProdotti = [...allProdotti, ...data];
+                        offset += BATCH_SIZE;
+                        updateProgress(50 + Math.min(40, offset / 500), `Prodotti: ${allProdotti.length}`);
                     }
+                    if (!data || data.length < BATCH_SIZE) hasMore = false;
                 }
+                console.log('Prodotti caricati:', allProdotti.length);
 
                 updateProgress(95, 'Elaborazione...');
                 
-                // DEBUG - Log per vedere i dati caricati
-                console.log('=== DEBUG MARGINI ===');
-                console.log('Vendite caricate:', allVendite.length);
-                console.log('Prodotti caricati:', allProdotti.length);
                 if (allVendite.length > 0) {
-                    console.log('Prima vendita:', allVendite[0]);
-                    console.log('Campi vendita:', Object.keys(allVendite[0]));
-                    // Calcola totale fatturato per debug
-                    const totFatt = allVendite.reduce((sum, v) => sum + (parseFloat(v.fatturato) || 0), 0);
-                    console.log('Totale fatturato calcolato:', totFatt);
-                } else {
-                    console.warn('⚠️ NESSUNA VENDITA CARICATA!');
+                    console.log('Esempio vendita:', allVendite[0]);
+                    console.log('Tot fatturato:', allVendite.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0));
                 }
-                
-                // Mostra alert se non ci sono vendite
-                if (allVendite.length === 0) {
-                    alert('⚠️ Attenzione: Nessuna vendita caricata dalla tabella "vendite". Verifica che la tabella contenga dati.');
-                }
-                
-                // Popola filtri
+
                 populateFilters();
-                
-                // Applica filtri iniziali
                 applyFilters();
                 
                 updateProgress(100, 'Completato!');
-                setTimeout(() => {
-                    document.getElementById('loadingProgress').classList.add('hidden');
-                }, 500);
+                setTimeout(() => document.getElementById('loadingProgress').classList.add('hidden'), 500);
 
             } catch (err) {
-                console.error('Errore caricamento:', err);
-                document.getElementById('progressDetail').textContent = '❌ Errore: ' + err.message;
+                console.error('Errore:', err);
+                document.getElementById('progressDetail').textContent = '❌ ' + err.message;
             }
         }
 
@@ -423,548 +383,313 @@
             if (detail) document.getElementById('progressDetail').textContent = detail;
         }
 
-        // ===== FILTRI =====
         function populateFilters() {
-            // Anni dalle vendite e dai prodotti
-            // Vendite hanno campo 'mese' nel formato 'YYYY-MM'
-            const yearsVendite = allVendite.map(v => v.mese ? v.mese.substring(0, 4) : null).filter(Boolean);
-            const yearsProdotti = allProdotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 4) : null).filter(Boolean);
-            const years = [...new Set([...yearsVendite, ...yearsProdotti])].sort().reverse();
+            const yearsV = allVendite.map(v => v.mese ? v.mese.substring(0, 4) : null).filter(Boolean);
+            const yearsP = allProdotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 4) : null).filter(Boolean);
+            const years = [...new Set([...yearsV, ...yearsP])].sort().reverse();
             
-            const selectAnno = document.getElementById('filterAnno');
-            selectAnno.innerHTML = '<option value="">Tutti gli anni</option>' +
+            document.getElementById('filterAnno').innerHTML = '<option value="">Tutti gli anni</option>' +
                 years.map(y => `<option value="${y}">${y}</option>`).join('');
             
-            // Categorie vendita
-            const categorie = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))].sort();
-            const selectCategoria = document.getElementById('filterCategoria');
-            selectCategoria.innerHTML = '<option value="">Tutte le categorie</option>' +
-                categorie.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('filterGruppo').innerHTML = '<option value="">Tutti i gruppi</option>' +
+                allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
         }
 
         function applyFilters() {
             const anno = document.getElementById('filterAnno').value;
             const mese = document.getElementById('filterMese').value;
-            const categoria = document.getElementById('filterCategoria').value;
+            const gruppoId = document.getElementById('filterGruppo').value;
 
-            // Filtra vendite - il campo data è 'mese' nel formato 'YYYY-MM'
             filteredData.vendite = allVendite.filter(v => {
-                // Se non ci sono filtri temporali, includi tutto
-                if (!anno && !mese) {
-                    if (categoria && v.categoria !== categoria) return false;
-                    return true;
+                if (anno || mese) {
+                    if (!v.mese) return false;
+                    if (anno && v.mese.substring(0, 4) !== anno) return false;
+                    if (mese && v.mese.substring(5, 7) !== mese) return false;
                 }
-                
-                // Se ci sono filtri temporali, richiedi il campo mese
-                if (!v.mese) return false;
-                const vAnno = v.mese.substring(0, 4);
-                const vMese = v.mese.substring(5, 7);
-                
-                if (anno && vAnno !== anno) return false;
-                if (mese && vMese !== mese) return false;
-                if (categoria && v.categoria !== categoria) return false;
-                
+                if (gruppoId && v.gruppo_vendita_id != gruppoId) return false;
                 return true;
             });
 
-            // Filtra prodotti (acquisti)
             filteredData.prodotti = allProdotti.filter(p => {
-                // Se non ci sono filtri temporali, includi tutto
-                if (!anno && !mese) return true;
-                
-                if (!p.data_fattura) return false;
-                const pAnno = p.data_fattura.substring(0, 4);
-                const pMese = p.data_fattura.substring(5, 7);
-                
-                if (anno && pAnno !== anno) return false;
-                if (mese && pMese !== mese) return false;
-                
+                if (anno || mese) {
+                    if (!p.data_fattura) return false;
+                    if (anno && p.data_fattura.substring(0, 4) !== anno) return false;
+                    if (mese && p.data_fattura.substring(5, 7) !== mese) return false;
+                }
+                if (gruppoId && p.gruppo_vendita_id != gruppoId) return false;
                 return true;
             });
 
+            console.log('Filtrati:', filteredData.vendite.length, 'vendite,', filteredData.prodotti.length, 'prodotti');
             calculateAndRender();
         }
 
         function clearFilters() {
             document.getElementById('filterAnno').value = '';
             document.getElementById('filterMese').value = '';
-            document.getElementById('filterCategoria').value = '';
+            document.getElementById('filterGruppo').value = '';
             applyFilters();
         }
 
-        function changeViewMode() {
-            calculateAndRender();
-        }
+        function changeViewMode() { calculateAndRender(); }
 
-        // ===== CALCOLI E RENDERING =====
+        function getGruppoNome(id) { return id ? (gruppiMap[id]?.nome || 'Gruppo ' + id) : 'Non assegnato'; }
+        function getGruppoColore(id) { return id ? (gruppiMap[id]?.colore || '#6B7280') : '#9CA3AF'; }
+
         function calculateAndRender() {
             const viewMode = document.getElementById('viewMode').value;
             
-            // Calcola totali
-            const totaleVendite = filteredData.vendite.reduce((sum, v) => sum + (parseFloat(v.fatturato) || 0), 0);
-            const totaleAcquisti = filteredData.prodotti.reduce((sum, p) => {
-                const prezzo = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
-                const qta = parseFloat(p.quantita) || 0;
-                return sum + (prezzo * qta);
+            const totVendite = filteredData.vendite.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0);
+            const totAcquisti = filteredData.prodotti.reduce((s, p) => {
+                const pr = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
+                const qt = parseFloat(p.quantita) || 1;
+                return s + (pr * qt);
             }, 0);
-            const margine = totaleVendite - totaleAcquisti;
-            const marginePerc = totaleVendite > 0 ? (margine / totaleVendite * 100) : 0;
+            const margine = totVendite - totAcquisti;
+            const marginePerc = totVendite > 0 ? (margine / totVendite * 100) : 0;
 
-            // Aggiorna KPI
-            document.getElementById('kpiVendite').textContent = '€' + totaleVendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('kpiAcquisti').textContent = '€' + totaleAcquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('kpiMargine').textContent = '€' + margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiVendite').textContent = '€' + totVendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('kpiVenditeCount').textContent = filteredData.vendite.length.toLocaleString('it-IT') + ' transazioni';
+            document.getElementById('kpiAcquisti').textContent = '€' + totAcquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('kpiAcquistiCount').textContent = filteredData.prodotti.length.toLocaleString('it-IT') + ' prodotti';
+            document.getElementById('kpiMargine').textContent = '€' + margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('kpiMargine').className = `text-2xl font-bold ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
             document.getElementById('kpiMarginePerc').textContent = marginePerc.toFixed(1) + '%';
-            document.getElementById('kpiTransazioni').textContent = (filteredData.vendite.length + filteredData.prodotti.length).toLocaleString('it-IT');
 
-            // Calcola dati per categoria
-            const dataPerCategoria = calculateDataByCategory();
+            const dataGruppo = calcByGruppo();
+            const dataMese = calcByMese();
             
-            // Calcola dati per mese
-            const dataPerMese = calculateDataByMonth();
+            const gruppiAttivi = Object.values(dataGruppo).filter(d => d.vendite > 0 || d.acquisti > 0).length;
+            document.getElementById('kpiGruppi').textContent = gruppiAttivi;
 
-            // Aggiorna grafici e tabelle
-            if (viewMode === 'categoria') {
-                document.getElementById('chartMainTitle').textContent = 'Vendite vs Acquisti per Categoria';
-                document.getElementById('chartMarginiTitle').textContent = 'Margine per Categoria';
-                document.getElementById('tableTitle').textContent = 'Dettaglio per Categoria di Vendita';
-                document.getElementById('colHeader').textContent = 'Categoria';
-                
-                updateChartMain(dataPerCategoria, 'categoria');
-                updateChartMargini(dataPerCategoria, 'categoria');
-                updateTabella(dataPerCategoria, 'categoria');
+            if (viewMode === 'gruppo') {
+                document.getElementById('chartMainTitle').textContent = 'Vendite vs Acquisti per Gruppo';
+                document.getElementById('chartMarginiTitle').textContent = 'Margine per Gruppo';
+                document.getElementById('tableTitle').textContent = 'Dettaglio per Gruppo Vendita';
+                document.getElementById('colHeader').textContent = 'Gruppo Vendita';
+                updateChartMain(dataGruppo, 'gruppo');
+                updateChartMargini(dataGruppo, 'gruppo');
+                updateTabella(dataGruppo, 'gruppo');
             } else {
                 document.getElementById('chartMainTitle').textContent = 'Vendite vs Acquisti per Mese';
                 document.getElementById('chartMarginiTitle').textContent = 'Margine per Mese';
                 document.getElementById('tableTitle').textContent = 'Dettaglio per Mese';
                 document.getElementById('colHeader').textContent = 'Mese';
-                
-                updateChartMain(dataPerMese, 'mese');
-                updateChartMargini(dataPerMese, 'mese');
-                updateTabella(dataPerMese, 'mese');
+                updateChartMain(dataMese, 'mese');
+                updateChartMargini(dataMese, 'mese');
+                updateTabella(dataMese, 'mese');
             }
 
-            updateChartTrend(dataPerMese);
-            updateChartDistribuzione(dataPerCategoria);
-            updateTabellaMensile(dataPerMese);
+            updateChartTrend(dataMese);
+            updateChartDistribuzione(dataGruppo);
+            updateTabellaMensile(dataMese);
 
-            // Aggiorna footer tabella principale
-            document.getElementById('footerVendite').textContent = '€' + totaleVendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('footerAcquisti').textContent = '€' + totaleAcquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('footerMargine').textContent = '€' + margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('footerVendite').textContent = '€' + totVendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('footerAcquisti').textContent = '€' + totAcquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('footerMargine').textContent = '€' + margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('footerMargine').className = `px-6 py-3 text-right ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
             document.getElementById('footerMarginePerc').textContent = marginePerc.toFixed(1) + '%';
             document.getElementById('footerMarginePerc').className = `px-6 py-3 text-right ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
         }
 
-        function calculateDataByCategory() {
+        function calcByGruppo() {
             const data = {};
-            
-            // Inizializza categorie dalle vendite
-            const categorie = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))];
-            categorie.forEach(cat => {
-                data[cat] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+            allGruppiVendita.forEach(g => {
+                data[g.id] = { nome: g.nome, colore: g.colore || '#6B7280', vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
             });
+            data['null'] = { nome: 'Non assegnato', colore: '#9CA3AF', vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
             
-            // Somma vendite
             filteredData.vendite.forEach(v => {
-                const cat = v.categoria || 'Altro';
-                if (!data[cat]) data[cat] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
-                data[cat].vendite += parseFloat(v.fatturato) || 0;
+                const gid = v.gruppo_vendita_id || 'null';
+                if (!data[gid]) data[gid] = { nome: getGruppoNome(gid), colore: getGruppoColore(gid), vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+                data[gid].vendite += parseFloat(v.fatturato) || 0;
             });
             
-            // Somma acquisti (distribuiti proporzionalmente o per categoria prodotto)
-            // Per semplicità, distribuiamo gli acquisti totali in proporzione alle vendite
-            const totaleVendite = Object.values(data).reduce((sum, d) => sum + d.vendite, 0);
-            const totaleAcquisti = filteredData.prodotti.reduce((sum, p) => {
-                const prezzo = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
-                const qta = parseFloat(p.quantita) || 0;
-                return sum + (prezzo * qta);
-            }, 0);
-            
-            // Distribuisci acquisti proporzionalmente
-            Object.keys(data).forEach(cat => {
-                const proporzione = totaleVendite > 0 ? data[cat].vendite / totaleVendite : 0;
-                data[cat].acquisti = totaleAcquisti * proporzione;
-                data[cat].margine = data[cat].vendite - data[cat].acquisti;
-                data[cat].marginePerc = data[cat].vendite > 0 ? (data[cat].margine / data[cat].vendite * 100) : 0;
-            });
-            
-            return data;
-        }
-
-        function calculateDataByMonth() {
-            const data = {};
-            
-            // Raccogli tutti i mesi dalle vendite e dai prodotti
-            // Vendite usano campo 'mese' nel formato 'YYYY-MM'
-            const mesiVendite = filteredData.vendite.map(v => v.mese).filter(Boolean);
-            const mesiProdotti = filteredData.prodotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 7) : null).filter(Boolean);
-            const mesi = [...new Set([...mesiVendite, ...mesiProdotti])].sort();
-            
-            // Se non ci sono mesi, crea un placeholder
-            if (mesi.length === 0) {
-                data['N/D'] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
-            }
-            
-            mesi.forEach(mese => {
-                data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
-            });
-            
-            // Somma vendite per mese
-            filteredData.vendite.forEach(v => {
-                const mese = v.mese || 'N/D'; // usa N/D se mancante
-                if (!data[mese]) data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
-                data[mese].vendite += parseFloat(v.fatturato) || 0;
-            });
-            
-            // Somma acquisti per mese
             filteredData.prodotti.forEach(p => {
-                const mese = p.data_fattura ? p.data_fattura.substring(0, 7) : 'N/D';
-                if (!data[mese]) data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
-                const prezzo = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
-                const qta = parseFloat(p.quantita) || 0;
-                data[mese].acquisti += prezzo * qta;
+                const gid = p.gruppo_vendita_id || 'null';
+                if (!data[gid]) data[gid] = { nome: getGruppoNome(gid), colore: getGruppoColore(gid), vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+                const pr = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
+                const qt = parseFloat(p.quantita) || 1;
+                data[gid].acquisti += pr * qt;
             });
             
-            // Calcola margini
-            Object.keys(data).forEach(mese => {
-                data[mese].margine = data[mese].vendite - data[mese].acquisti;
-                data[mese].marginePerc = data[mese].vendite > 0 ? (data[mese].margine / data[mese].vendite * 100) : 0;
+            Object.keys(data).forEach(k => {
+                data[k].margine = data[k].vendite - data[k].acquisti;
+                data[k].marginePerc = data[k].vendite > 0 ? (data[k].margine / data[k].vendite * 100) : (data[k].acquisti > 0 ? -100 : 0);
             });
             
             return data;
         }
 
-        // ===== GRAFICI =====
+        function calcByMese() {
+            const data = {};
+            const mesiV = filteredData.vendite.map(v => v.mese).filter(Boolean);
+            const mesiP = filteredData.prodotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 7) : null).filter(Boolean);
+            const mesi = [...new Set([...mesiV, ...mesiP])].sort();
+            
+            if (mesi.length === 0) { data['N/D'] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 }; return data; }
+            
+            mesi.forEach(m => { data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 }; });
+            
+            filteredData.vendite.forEach(v => {
+                const m = v.mese || 'N/D';
+                if (!data[m]) data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+                data[m].vendite += parseFloat(v.fatturato) || 0;
+            });
+            
+            filteredData.prodotti.forEach(p => {
+                const m = p.data_fattura ? p.data_fattura.substring(0, 7) : 'N/D';
+                if (!data[m]) data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+                const pr = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
+                const qt = parseFloat(p.quantita) || 1;
+                data[m].acquisti += pr * qt;
+            });
+            
+            Object.keys(data).forEach(k => {
+                data[k].margine = data[k].vendite - data[k].acquisti;
+                data[k].marginePerc = data[k].vendite > 0 ? (data[k].margine / data[k].vendite * 100) : (data[k].acquisti > 0 ? -100 : 0);
+            });
+            
+            return data;
+        }
+
         function updateChartMain(data, tipo) {
             const ctx = document.getElementById('chartMain').getContext('2d');
-            
             if (charts.main) charts.main.destroy();
             
-            const labels = Object.keys(data).sort((a, b) => {
-                if (tipo === 'mese') return a.localeCompare(b);
-                return (data[b].vendite || 0) - (data[a].vendite || 0);
-            });
+            let entries = tipo === 'gruppo' 
+                ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].vendite - a[1].vendite)
+                : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
             
-            const displayLabels = labels.map(l => {
-                if (tipo === 'mese') {
-                    const [anno, mese] = l.split('-');
-                    return MONTH_NAMES[parseInt(mese) - 1] + ' ' + anno;
-                }
-                return l;
-            });
+            const labels = entries.map(([k, d]) => tipo === 'gruppo' ? d.nome : (k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0]));
             
             charts.main = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: displayLabels,
+                    labels,
                     datasets: [
-                        {
-                            label: 'Vendite',
-                            data: labels.map(l => data[l].vendite),
-                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                            borderColor: '#10B981',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Acquisti',
-                            data: labels.map(l => data[l].acquisti),
-                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                            borderColor: '#EF4444',
-                            borderWidth: 1
-                        }
+                        { label: 'Vendite', data: entries.map(([_, d]) => d.vendite), backgroundColor: 'rgba(16, 185, 129, 0.8)', borderColor: '#10B981', borderWidth: 1 },
+                        { label: 'Acquisti', data: entries.map(([_, d]) => d.acquisti), backgroundColor: 'rgba(239, 68, 68, 0.8)', borderColor: '#EF4444', borderWidth: 1 }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: value => '€' + value.toLocaleString('it-IT')
-                            }
-                        }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } } }
             });
         }
 
         function updateChartMargini(data, tipo) {
             const ctx = document.getElementById('chartMargini').getContext('2d');
-            
             if (charts.margini) charts.margini.destroy();
             
-            const labels = Object.keys(data).sort((a, b) => {
-                if (tipo === 'mese') return a.localeCompare(b);
-                return (data[b].margine || 0) - (data[a].margine || 0);
-            });
+            let entries = tipo === 'gruppo' 
+                ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].margine - a[1].margine)
+                : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
             
-            const displayLabels = labels.map(l => {
-                if (tipo === 'mese') {
-                    const [anno, mese] = l.split('-');
-                    return MONTH_NAMES[parseInt(mese) - 1] + ' ' + anno;
-                }
-                return l;
-            });
-            
-            const margini = labels.map(l => data[l].margine);
+            const labels = entries.map(([k, d]) => tipo === 'gruppo' ? d.nome : (k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0]));
+            const margini = entries.map(([_, d]) => d.margine);
             const colors = margini.map(m => m >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)');
-            const borderColors = margini.map(m => m >= 0 ? '#10B981' : '#EF4444');
             
             charts.margini = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: displayLabels,
-                    datasets: [{
-                        label: 'Margine',
-                        data: margini,
-                        backgroundColor: colors,
-                        borderColor: borderColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            ticks: {
-                                callback: value => '€' + value.toLocaleString('it-IT')
-                            }
-                        }
-                    }
-                }
+                data: { labels, datasets: [{ label: 'Margine', data: margini, backgroundColor: colors, borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } } }
             });
         }
 
         function updateChartTrend(data) {
             const ctx = document.getElementById('chartTrend').getContext('2d');
-            
             if (charts.trend) charts.trend.destroy();
             
-            const labels = Object.keys(data).sort();
-            const displayLabels = labels.map(l => {
-                if (l === 'N/D') return 'N/D';
-                const parts = l.split('-');
-                if (parts.length === 2) {
-                    const [anno, mese] = parts;
-                    return MONTH_NAMES[parseInt(mese) - 1].substring(0, 3) + ' ' + anno.substring(2);
-                }
-                return l;
-            });
+            const entries = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
+            const labels = entries.map(([k]) => k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1].substring(0, 3) + ' ' + k.split('-')[0].substring(2));
             
             charts.trend = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: displayLabels,
+                    labels,
                     datasets: [
-                        {
-                            label: 'Vendite',
-                            data: labels.map(l => data[l].vendite),
-                            borderColor: '#10B981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Acquisti',
-                            data: labels.map(l => data[l].acquisti),
-                            borderColor: '#EF4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Margine',
-                            data: labels.map(l => data[l].margine),
-                            borderColor: '#8B5CF6',
-                            borderDash: [5, 5],
-                            fill: false,
-                            tension: 0.4
-                        }
+                        { label: 'Vendite', data: entries.map(([_, d]) => d.vendite), borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 },
+                        { label: 'Acquisti', data: entries.map(([_, d]) => d.acquisti), borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 },
+                        { label: 'Margine', data: entries.map(([_, d]) => d.margine), borderColor: '#8B5CF6', borderDash: [5, 5], fill: false, tension: 0.4 }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: {
-                            ticks: {
-                                callback: value => '€' + value.toLocaleString('it-IT')
-                            }
-                        }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } } }
             });
         }
 
         function updateChartDistribuzione(data) {
             const ctx = document.getElementById('chartDistribuzione').getContext('2d');
-            
             if (charts.distribuzione) charts.distribuzione.destroy();
             
-            const sorted = Object.entries(data)
-                .filter(([_, d]) => d.vendite > 0)
-                .sort((a, b) => b[1].vendite - a[1].vendite);
-            
-            const labels = sorted.map(([cat]) => cat);
-            const values = sorted.map(([_, d]) => d.vendite);
-            const colors = labels.map(l => CATEGORY_COLORS[l] || '#6B7280');
+            const entries = Object.entries(data).filter(([_, d]) => d.vendite > 0).sort((a, b) => b[1].vendite - a[1].vendite);
+            const labels = entries.map(([_, d]) => d.nome);
+            const values = entries.map(([_, d]) => d.vendite);
+            const colors = entries.map(([_, d]) => d.colore);
             
             charts.distribuzione = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: colors.map(c => c + 'CC'),
-                        borderColor: colors,
-                        borderWidth: 2
-                    }]
-                },
+                data: { labels, datasets: [{ data: values, backgroundColor: colors.map(c => c + 'CC'), borderColor: colors, borderWidth: 2 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        legend: { 
-                            position: 'right',
-                            labels: { boxWidth: 12, font: { size: 11 } }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const perc = ((value / total) * 100).toFixed(1);
-                                    return `€${value.toLocaleString('it-IT')} (${perc}%)`;
-                                }
-                            }
-                        }
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                        tooltip: { callbacks: { label: ctx => { const v = ctx.raw; const t = ctx.dataset.data.reduce((a, b) => a + b, 0); return `€${v.toLocaleString('it-IT')} (${((v / t) * 100).toFixed(1)}%)`; } } }
                     }
                 }
             });
         }
 
-        // ===== TABELLE =====
         function updateTabella(data, tipo) {
             const tbody = document.getElementById('tabellaDettaglio');
             
-            const sorted = Object.entries(data).sort((a, b) => {
-                if (tipo === 'mese') return a[0].localeCompare(b[0]);
-                return b[1].vendite - a[1].vendite;
-            });
+            let entries = tipo === 'gruppo' 
+                ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].vendite - a[1].vendite)
+                : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
 
-            tbody.innerHTML = sorted.map(([key, row]) => {
-                const isPositive = row.margine >= 0;
-                const barWidth = Math.min(100, Math.abs(row.marginePerc));
-                const barColor = isPositive ? 'bg-green-500' : 'bg-red-500';
+            tbody.innerHTML = entries.map(([k, r]) => {
+                const pos = r.margine >= 0;
+                const bw = Math.min(100, Math.abs(r.marginePerc));
+                const bc = pos ? 'bg-green-500' : 'bg-red-500';
+                const label = tipo === 'gruppo' ? r.nome : (k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0]);
+                const col = tipo === 'gruppo' ? r.colore : null;
                 
-                let displayKey = key;
-                if (tipo === 'mese') {
-                    const [anno, mese] = key.split('-');
-                    displayKey = MONTH_NAMES[parseInt(mese) - 1] + ' ' + anno;
-                }
-                
-                const color = CATEGORY_COLORS[key] || '#6B7280';
-                
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center">
-                                ${tipo === 'categoria' ? `<div class="w-3 h-3 rounded-full mr-3" style="background-color: ${color}"></div>` : ''}
-                                <span class="font-medium">${displayKey}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-right font-medium text-green-600">
-                            €${row.vendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </td>
-                        <td class="px-6 py-4 text-right font-medium text-red-600">
-                            €${row.acquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </td>
-                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
-                            ${isPositive ? '+' : ''}€${row.margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </td>
-                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
-                            ${row.marginePerc.toFixed(1)}%
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="w-full bg-gray-200 rounded-full h-4">
-                                <div class="${barColor} h-4 rounded-full transition-all" style="width: ${barWidth}%"></div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                return `<tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4"><div class="flex items-center">${col ? `<div class="w-3 h-3 rounded-full mr-3" style="background-color:${col}"></div>` : ''}<span class="font-medium">${label}</span></div></td>
+                    <td class="px-6 py-4 text-right font-medium text-green-600">€${r.vendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-medium text-red-600">€${r.acquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${pos ? '+' : ''}€${r.margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${r.marginePerc.toFixed(1)}%</td>
+                    <td class="px-6 py-4"><div class="w-full bg-gray-200 rounded-full h-4"><div class="${bc} h-4 rounded-full" style="width:${bw}%"></div></div></td>
+                </tr>`;
             }).join('');
         }
 
         function updateTabellaMensile(data) {
             const tbody = document.getElementById('tabellaMensile');
+            const entries = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
             
-            const sorted = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
-            
-            // Calcola trend (confronto con mese precedente)
-            const dataArray = sorted.map(([mese, d]) => ({ mese, ...d }));
-
-            tbody.innerHTML = dataArray.map((row, idx) => {
-                const isPositive = row.margine >= 0;
-                const [anno, meseNum] = row.mese.split('-');
-                const displayMese = MONTH_NAMES[parseInt(meseNum) - 1] + ' ' + anno;
-                
-                // Calcola trend
-                let trendIcon = '';
-                let trendClass = 'text-gray-400';
-                if (idx > 0) {
-                    const prevMargine = dataArray[idx - 1].margine;
-                    const diff = row.margine - prevMargine;
-                    if (diff > 0) {
-                        trendIcon = '↑';
-                        trendClass = 'text-green-600';
-                    } else if (diff < 0) {
-                        trendIcon = '↓';
-                        trendClass = 'text-red-600';
-                    } else {
-                        trendIcon = '→';
-                    }
+            tbody.innerHTML = entries.map(([k, r], i) => {
+                const pos = r.margine >= 0;
+                const label = k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0];
+                let trend = '', tc = 'text-gray-400';
+                if (i > 0) {
+                    const diff = r.margine - entries[i - 1][1].margine;
+                    if (diff > 0) { trend = '↑'; tc = 'text-green-600'; }
+                    else if (diff < 0) { trend = '↓'; tc = 'text-red-600'; }
+                    else { trend = '→'; }
                 }
-                
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium">${displayMese}</td>
-                        <td class="px-6 py-4 text-right font-medium text-green-600">
-                            €${row.vendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </td>
-                        <td class="px-6 py-4 text-right font-medium text-red-600">
-                            €${row.acquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </td>
-                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
-                            ${isPositive ? '+' : ''}€${row.margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </td>
-                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
-                            ${row.marginePerc.toFixed(1)}%
-                        </td>
-                        <td class="px-6 py-4 text-center text-2xl ${trendClass}">
-                            ${trendIcon}
-                        </td>
-                    </tr>
-                `;
+                return `<tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium">${label}</td>
+                    <td class="px-6 py-4 text-right font-medium text-green-600">€${r.vendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-medium text-red-600">€${r.acquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${pos ? '+' : ''}€${r.margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${r.marginePerc.toFixed(1)}%</td>
+                    <td class="px-6 py-4 text-center text-2xl ${tc}">${trend}</td>
+                </tr>`;
             }).join('');
         }
 
-        // ===== INIT =====
         loadData();
-        console.log('✅ Pagina Margini caricata');
+        console.log('✅ Margini caricata');
     </script>
 </body>
 </html>
