@@ -384,8 +384,12 @@
         }
 
         function populateFilters() {
-            const yearsV = allVendite.map(v => v.mese ? v.mese.substring(0, 4) : null).filter(Boolean);
-            const yearsP = allProdotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 4) : null).filter(Boolean);
+            const yearsV = allVendite
+                .filter(v => v && v.mese && typeof v.mese === 'string' && v.mese.length >= 4)
+                .map(v => v.mese.substring(0, 4));
+            const yearsP = allProdotti
+                .filter(p => p && p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 4)
+                .map(p => p.data_fattura.substring(0, 4));
             const years = [...new Set([...yearsV, ...yearsP])].sort().reverse();
             
             document.getElementById('filterAnno').innerHTML = '<option value="">Tutti gli anni</option>' +
@@ -402,7 +406,7 @@
 
             filteredData.vendite = allVendite.filter(v => {
                 if (anno || mese) {
-                    if (!v.mese) return false;
+                    if (!v || !v.mese || typeof v.mese !== 'string' || v.mese.length < 7) return false;
                     if (anno && v.mese.substring(0, 4) !== anno) return false;
                     if (mese && v.mese.substring(5, 7) !== mese) return false;
                 }
@@ -412,7 +416,7 @@
 
             filteredData.prodotti = allProdotti.filter(p => {
                 if (anno || mese) {
-                    if (!p.data_fattura) return false;
+                    if (!p || !p.data_fattura || typeof p.data_fattura !== 'string' || p.data_fattura.length < 7) return false;
                     if (anno && p.data_fattura.substring(0, 4) !== anno) return false;
                     if (mese && p.data_fattura.substring(5, 7) !== mese) return false;
                 }
@@ -523,8 +527,12 @@
 
         function calcByMese() {
             const data = {};
-            const mesiV = filteredData.vendite.map(v => v.mese).filter(Boolean);
-            const mesiP = filteredData.prodotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 7) : null).filter(Boolean);
+            const mesiV = filteredData.vendite
+                .filter(v => v && v.mese && typeof v.mese === 'string' && v.mese.length >= 7)
+                .map(v => v.mese.substring(0, 7));
+            const mesiP = filteredData.prodotti
+                .filter(p => p && p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 7)
+                .map(p => p.data_fattura.substring(0, 7));
             const mesi = [...new Set([...mesiV, ...mesiP])].sort();
             
             if (mesi.length === 0) { data['N/D'] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 }; return data; }
@@ -532,13 +540,19 @@
             mesi.forEach(m => { data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 }; });
             
             filteredData.vendite.forEach(v => {
-                const m = v.mese || 'N/D';
+                let m = 'N/D';
+                if (v && v.mese && typeof v.mese === 'string' && v.mese.length >= 7) {
+                    m = v.mese.substring(0, 7);
+                }
                 if (!data[m]) data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
                 data[m].vendite += parseFloat(v.fatturato) || 0;
             });
             
             filteredData.prodotti.forEach(p => {
-                const m = p.data_fattura ? p.data_fattura.substring(0, 7) : 'N/D';
+                let m = 'N/D';
+                if (p && p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 7) {
+                    m = p.data_fattura.substring(0, 7);
+                }
                 if (!data[m]) data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
                 const pr = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
                 const qt = parseFloat(p.quantita) || 1;
@@ -561,7 +575,16 @@
                 ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].vendite - a[1].vendite)
                 : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
             
-            const labels = entries.map(([k, d]) => tipo === 'gruppo' ? d.nome : (k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0]));
+            const labels = entries.map(([k, d]) => {
+                if (tipo === 'gruppo') return d.nome;
+                if (k === 'N/D' || !k || k.indexOf('-') === -1) return k || 'N/D';
+                const parts = k.split('-');
+                if (parts.length >= 2 && parts[1]) {
+                    const meseIdx = parseInt(parts[1]) - 1;
+                    return (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
+                }
+                return k;
+            });
             
             charts.main = new Chart(ctx, {
                 type: 'bar',
@@ -584,7 +607,16 @@
                 ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].margine - a[1].margine)
                 : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
             
-            const labels = entries.map(([k, d]) => tipo === 'gruppo' ? d.nome : (k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0]));
+            const labels = entries.map(([k, d]) => {
+                if (tipo === 'gruppo') return d.nome;
+                if (k === 'N/D' || !k || k.indexOf('-') === -1) return k || 'N/D';
+                const parts = k.split('-');
+                if (parts.length >= 2 && parts[1]) {
+                    const meseIdx = parseInt(parts[1]) - 1;
+                    return (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
+                }
+                return k;
+            });
             const margini = entries.map(([_, d]) => d.margine);
             const colors = margini.map(m => m >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)');
             
@@ -600,7 +632,16 @@
             if (charts.trend) charts.trend.destroy();
             
             const entries = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
-            const labels = entries.map(([k]) => k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1].substring(0, 3) + ' ' + k.split('-')[0].substring(2));
+            const labels = entries.map(([k]) => {
+                if (k === 'N/D' || !k || k.indexOf('-') === -1) return k || 'N/D';
+                const parts = k.split('-');
+                if (parts.length >= 2 && parts[1]) {
+                    const meseIdx = parseInt(parts[1]) - 1;
+                    const nomeMese = MONTH_NAMES[meseIdx] || parts[1];
+                    return nomeMese.substring(0, 3) + ' ' + parts[0].substring(2);
+                }
+                return k;
+            });
             
             charts.trend = new Chart(ctx, {
                 type: 'line',
@@ -649,7 +690,22 @@
                 const pos = r.margine >= 0;
                 const bw = Math.min(100, Math.abs(r.marginePerc));
                 const bc = pos ? 'bg-green-500' : 'bg-red-500';
-                const label = tipo === 'gruppo' ? r.nome : (k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0]);
+                
+                let label;
+                if (tipo === 'gruppo') {
+                    label = r.nome;
+                } else if (k === 'N/D' || !k || k.indexOf('-') === -1) {
+                    label = k || 'N/D';
+                } else {
+                    const parts = k.split('-');
+                    if (parts.length >= 2 && parts[1]) {
+                        const meseIdx = parseInt(parts[1]) - 1;
+                        label = (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
+                    } else {
+                        label = k;
+                    }
+                }
+                
                 const col = tipo === 'gruppo' ? r.colore : null;
                 
                 return `<tr class="hover:bg-gray-50">
@@ -669,7 +725,20 @@
             
             tbody.innerHTML = entries.map(([k, r], i) => {
                 const pos = r.margine >= 0;
-                const label = k === 'N/D' ? 'N/D' : MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0];
+                
+                let label;
+                if (k === 'N/D' || !k || k.indexOf('-') === -1) {
+                    label = k || 'N/D';
+                } else {
+                    const parts = k.split('-');
+                    if (parts.length >= 2 && parts[1]) {
+                        const meseIdx = parseInt(parts[1]) - 1;
+                        label = (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
+                    } else {
+                        label = k;
+                    }
+                }
+                
                 let trend = '', tc = 'text-gray-400';
                 if (i > 0) {
                     const diff = r.margine - entries[i - 1][1].margine;
