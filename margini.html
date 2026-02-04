@@ -386,7 +386,7 @@
         function populateFilters() {
             const yearsV = allVendite
                 .filter(v => v && v.mese && typeof v.mese === 'string' && v.mese.length >= 4)
-                .map(v => v.mese.substring(0, 4));
+                .map(v => normalizeMese(v.mese).substring(0, 4));
             const yearsP = allProdotti
                 .filter(p => p && p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 4)
                 .map(p => p.data_fattura.substring(0, 4));
@@ -407,8 +407,9 @@
             filteredData.vendite = allVendite.filter(v => {
                 if (anno || mese) {
                     if (!v || !v.mese || typeof v.mese !== 'string' || v.mese.length < 7) return false;
-                    if (anno && v.mese.substring(0, 4) !== anno) return false;
-                    if (mese && v.mese.substring(5, 7) !== mese) return false;
+                    const meseNorm = normalizeMese(v.mese);
+                    if (anno && meseNorm.substring(0, 4) !== anno) return false;
+                    if (mese && meseNorm.substring(5, 7) !== mese) return false;
                 }
                 if (gruppoId && v.gruppo_vendita_id != gruppoId) return false;
                 return true;
@@ -439,6 +440,13 @@
 
         function getGruppoNome(id) { return id ? (gruppiMap[id]?.nome || 'Gruppo ' + id) : 'Non assegnato'; }
         function getGruppoColore(id) { return id ? (gruppiMap[id]?.colore || '#6B7280') : '#9CA3AF'; }
+        
+        // Normalizza formato mese: converte "2023_04" o "2023-04" in "2023-04"
+        function normalizeMese(mese) {
+            if (!mese || typeof mese !== 'string') return null;
+            // Sostituisce underscore con trattino
+            return mese.replace('_', '-').substring(0, 7);
+        }
 
         function calculateAndRender() {
             const viewMode = document.getElementById('viewMode').value;
@@ -527,27 +535,34 @@
 
         function calcByMese() {
             const data = {};
+            
+            // Normalizza i mesi delle vendite (2023_04 -> 2023-04)
             const mesiV = filteredData.vendite
                 .filter(v => v && v.mese && typeof v.mese === 'string' && v.mese.length >= 7)
-                .map(v => v.mese.substring(0, 7));
+                .map(v => normalizeMese(v.mese));
+            
+            // I prodotti hanno già il formato corretto (2023-04-15 -> 2023-04)
             const mesiP = filteredData.prodotti
                 .filter(p => p && p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 7)
                 .map(p => p.data_fattura.substring(0, 7));
+            
             const mesi = [...new Set([...mesiV, ...mesiP])].sort();
             
             if (mesi.length === 0) { data['N/D'] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 }; return data; }
             
             mesi.forEach(m => { data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 }; });
             
+            // Somma vendite per mese (normalizzando il formato)
             filteredData.vendite.forEach(v => {
                 let m = 'N/D';
                 if (v && v.mese && typeof v.mese === 'string' && v.mese.length >= 7) {
-                    m = v.mese.substring(0, 7);
+                    m = normalizeMese(v.mese);
                 }
                 if (!data[m]) data[m] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
                 data[m].vendite += parseFloat(v.fatturato) || 0;
             });
             
+            // Somma acquisti per mese
             filteredData.prodotti.forEach(p => {
                 let m = 'N/D';
                 if (p && p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 7) {
