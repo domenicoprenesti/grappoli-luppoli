@@ -14,6 +14,11 @@
         }
         .positive { color: #10b981; }
         .negative { color: #ef4444; }
+        .tab-active { 
+            border-bottom: 3px solid #6366f1; 
+            color: #4f46e5;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -28,7 +33,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <img src="data:image/png;base64,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" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
+                        <img src="logo.png" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
                         <span class="text-lg font-bold">Grappoli & Luppoli</span>
                     </button>
                     
@@ -54,8 +59,8 @@
     <div class="max-w-7xl mx-auto px-4 pt-24 pb-8">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Analisi Margini per Aggregante</h1>
-            <p class="text-gray-600">Confronto Ricavi vs Costi per macro-categoria</p>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Analisi Margini</h1>
+            <p class="text-gray-600">Confronto Acquisti vs Vendite per Categoria e Mese</p>
         </div>
 
         <!-- Loading -->
@@ -73,7 +78,7 @@
         <!-- Filtri -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h3 class="font-bold mb-4">🔍 Filtri Periodo</h3>
-            <div class="grid md:grid-cols-4 gap-4">
+            <div class="grid md:grid-cols-5 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-2">Anno</label>
                     <select id="filterAnno" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
@@ -99,13 +104,20 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-2">Aggregante</label>
-                    <select id="filterAggregante" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
-                        <option value="">Tutti</option>
+                    <label class="block text-sm font-medium mb-2">Categoria Vendita</label>
+                    <select id="filterCategoria" class="w-full px-4 py-2 border rounded-lg" onchange="applyFilters()">
+                        <option value="">Tutte le categorie</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Visualizzazione</label>
+                    <select id="viewMode" class="w-full px-4 py-2 border rounded-lg" onchange="changeViewMode()">
+                        <option value="categoria">Per Categoria</option>
+                        <option value="mese">Per Mese</option>
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button onclick="clearFilters()" class="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Pulisci</button>
+                    <button onclick="clearFilters()" class="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">↺ Pulisci</button>
                 </div>
             </div>
         </div>
@@ -115,8 +127,8 @@
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Ricavi Totali</p>
-                        <p id="kpiRicavi" class="text-2xl font-bold text-green-600">€0</p>
+                        <p class="text-sm text-gray-600 mb-1">Vendite Totali</p>
+                        <p id="kpiVendite" class="text-2xl font-bold text-green-600">€0</p>
                     </div>
                     <div class="bg-green-100 p-3 rounded-full">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,8 +141,8 @@
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Costi Totali</p>
-                        <p id="kpiCosti" class="text-2xl font-bold text-red-600">€0</p>
+                        <p class="text-sm text-gray-600 mb-1">Acquisti Totali</p>
+                        <p id="kpiAcquisti" class="text-2xl font-bold text-red-600">€0</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-full">
                         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,13 +170,13 @@
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Margine Medio</p>
-                        <p id="kpiMargineMedio" class="text-2xl font-bold text-blue-600">0%</p>
-                        <p class="text-xs text-gray-500">su ricavi</p>
+                        <p class="text-sm text-gray-600 mb-1">N. Transazioni</p>
+                        <p id="kpiTransazioni" class="text-2xl font-bold text-blue-600">0</p>
+                        <p class="text-xs text-gray-500">vendite + acquisti</p>
                     </div>
                     <div class="bg-blue-100 p-3 rounded-full">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                         </svg>
                     </div>
                 </div>
@@ -173,110 +185,94 @@
 
         <!-- Grafici Row 1 -->
         <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <!-- Grafico Margini per Aggregante -->
+            <!-- Grafico Principale -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">📊 Margini per Aggregante</h3>
+                <h3 class="text-lg font-bold mb-4">📊 <span id="chartMainTitle">Vendite vs Acquisti per Categoria</span></h3>
                 <div class="h-80">
-                    <canvas id="chartMargini"></canvas>
+                    <canvas id="chartMain"></canvas>
                 </div>
             </div>
 
-            <!-- Grafico Ricavi vs Costi -->
+            <!-- Grafico Margini -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">⚖️ Ricavi vs Costi per Aggregante</h3>
+                <h3 class="text-lg font-bold mb-4">💰 <span id="chartMarginiTitle">Margine per Categoria</span></h3>
                 <div class="h-80">
-                    <canvas id="chartConfrontoRC"></canvas>
+                    <canvas id="chartMargini"></canvas>
                 </div>
             </div>
         </div>
 
         <!-- Grafici Row 2 -->
         <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <!-- Trend Mensile Margine -->
+            <!-- Trend Mensile -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">📈 Trend Margine Mensile</h3>
+                <h3 class="text-lg font-bold mb-4">📈 Trend Mensile</h3>
                 <div class="h-80">
-                    <canvas id="chartTrendMargine"></canvas>
+                    <canvas id="chartTrend"></canvas>
                 </div>
             </div>
 
-            <!-- Distribuzione % Margine -->
+            <!-- Distribuzione Vendite -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold mb-4">🎯 Distribuzione % Margine</h3>
+                <h3 class="text-lg font-bold mb-4">🎯 Distribuzione Vendite per Categoria</h3>
                 <div class="h-80">
                     <canvas id="chartDistribuzione"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Tabella Dettaglio Aggreganti -->
+        <!-- Tabella Dettaglio -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600">
-                <h3 class="text-lg font-bold text-white">📋 Dettaglio per Aggregante</h3>
+                <h3 class="text-lg font-bold text-white">📋 <span id="tableTitle">Dettaglio per Categoria di Vendita</span></h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Aggregante</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Ricavi</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Costi</th>
+                            <th id="colHeader" class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Categoria</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite €</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti €</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine €</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine %</th>
                             <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Performance</th>
                         </tr>
                     </thead>
-                    <tbody id="tabellaAggreganti" class="divide-y divide-gray-200"></tbody>
+                    <tbody id="tabellaDettaglio" class="divide-y divide-gray-200"></tbody>
+                    <tfoot class="bg-gray-100 font-bold">
+                        <tr>
+                            <td class="px-6 py-3 text-left">TOTALE</td>
+                            <td id="footerVendite" class="px-6 py-3 text-right text-green-600">€0</td>
+                            <td id="footerAcquisti" class="px-6 py-3 text-right text-red-600">€0</td>
+                            <td id="footerMargine" class="px-6 py-3 text-right">€0</td>
+                            <td id="footerMarginePerc" class="px-6 py-3 text-right">0%</td>
+                            <td class="px-6 py-3"></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
 
-        <!-- Mappatura Categorie -->
-        <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <!-- Mappatura Vendite -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600">
-                    <h3 class="text-lg font-bold text-white">🏷️ Mappatura Categorie Vendite → Aggregante</h3>
-                </div>
-                <div class="p-4">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left">Categoria Vendita</th>
-                                <th class="px-4 py-2 text-left">Aggregante</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mappingVendite" class="divide-y"></tbody>
-                    </table>
-                </div>
+        <!-- Tabella Mensile Dettagliata -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-600">
+                <h3 class="text-lg font-bold text-white">📅 Riepilogo Mensile</h3>
             </div>
-
-            <!-- Mappatura Prodotti -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="px-6 py-4 bg-gradient-to-r from-red-500 to-orange-600">
-                    <h3 class="text-lg font-bold text-white">🏷️ Mappatura Categorie Prodotti → Aggregante</h3>
-                </div>
-                <div class="p-4">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left">Categoria Prodotto</th>
-                                <th class="px-4 py-2 text-left">Aggregante</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mappingProdotti" class="divide-y"></tbody>
-                    </table>
-                </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Mese</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite €</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti €</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine €</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine %</th>
+                            <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabellaMensile" class="divide-y divide-gray-200"></tbody>
+                </table>
             </div>
-        </div>
-
-        <!-- Info Setup -->
-        <div id="setupInfo" class="hidden bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 mb-8">
-            <h3 class="text-lg font-bold text-yellow-800 mb-4">⚙️ Setup Aggreganti</h3>
-            <p class="text-yellow-700 mb-4">Gli aggreganti non sono ancora stati configurati nel database. Clicca il pulsante per crearli automaticamente.</p>
-            <button onclick="setupAggreganti()" class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium">
-                🔧 Crea Aggreganti nel Database
-            </button>
         </div>
     </div>
 
@@ -297,50 +293,22 @@
             document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
         })();
 
-        // ===== DEFINIZIONE AGGREGANTI E MAPPATURE =====
-        const AGGREGANTI = [
-            { nome: 'Vino', colore: '#7C3AED', ordine: 1 },
-            { nome: 'Birra', colore: '#F59E0B', ordine: 2 },
-            { nome: 'Cibo', colore: '#EF4444', ordine: 3 },
-            { nome: 'Alcolici', colore: '#3B82F6', ordine: 4 },
-            { nome: 'Bevande', colore: '#10B981', ordine: 5 },
-            { nome: 'Miscellaneo', colore: '#6B7280', ordine: 6 }
-        ];
-
-        // Mappatura categorie VENDITE → Aggregante
-        const MAPPING_VENDITE = {
-            'Birra': 'Birra',
-            'Menu cibo': 'Cibo',
-            'Vino bottiglia mescita': 'Vino',
-            'Vino al calice': 'Vino',
-            'Drink': 'Alcolici',
-            'Menu fisso': 'Cibo',
-            'Vino  bottiglia asporto': 'Vino',
-            'Vino bottiglia asporto': 'Vino',
-            'Bibite': 'Bevande',
-            'Vetrina': 'Miscellaneo'
+        // ===== COLORI PER CATEGORIE =====
+        const CATEGORY_COLORS = {
+            'Birra': '#F59E0B',
+            'Vino bottiglia mescita': '#7C3AED',
+            'Vino al calice': '#8B5CF6',
+            'Vino bottiglia asporto': '#A78BFA',
+            'Menu cibo': '#EF4444',
+            'Menu fisso': '#F87171',
+            'Drink': '#3B82F6',
+            'Bibite': '#10B981',
+            'Vetrina': '#6B7280',
+            'Altro': '#9CA3AF'
         };
 
-        // Mappatura categorie PRODOTTI (fatture) → Aggregante
-        const MAPPING_PRODOTTI = {
-            'Vini': 'Vino',
-            'Birre': 'Birra',
-            'Spirits': 'Alcolici',
-            'Bevande': 'Bevande',
-            'Snacks': 'Cibo',
-            'Altro': 'Miscellaneo',
-            // Aggiungi altre mappature se necessario
-            'Liquori': 'Alcolici',
-            'Distillati': 'Alcolici',
-            'Amari': 'Alcolici',
-            'Cocktail': 'Alcolici',
-            'Acqua': 'Bevande',
-            'Succhi': 'Bevande',
-            'Soft Drink': 'Bevande',
-            'Alimentari': 'Cibo',
-            'Salumi': 'Cibo',
-            'Formaggi': 'Cibo'
-        };
+        const MONTH_NAMES = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                            'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
         // Dati globali
         let allVendite = [];
@@ -374,8 +342,8 @@
                     }
                 }
 
-                // 2. Carica prodotti (costi da fatture)
-                updateProgress(45, 'Caricamento prodotti...');
+                // 2. Carica prodotti (acquisti)
+                updateProgress(50, 'Caricamento prodotti/acquisti...');
                 const { count: countProdotti } = await supabaseClient
                     .from('prodotti')
                     .select('*', { count: 'exact', head: true });
@@ -387,27 +355,22 @@
                     for (let i = 0; i < numBatchesP; i++) {
                         const { data } = await supabaseClient
                             .from('prodotti')
-                            .select('id, nome, categoria, prezzo, prezzo_ivato, quantita, data_fattura')
+                            .select('*')
                             .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                         
                         if (data) allProdotti = [...allProdotti, ...data];
-                        updateProgress(45 + (i / numBatchesP * 30), `Prodotti: ${allProdotti.length}/${countProdotti}`);
+                        updateProgress(50 + (i / numBatchesP * 40), `Prodotti: ${allProdotti.length}/${countProdotti}`);
                     }
                 }
 
-                updateProgress(80, 'Elaborazione dati...');
+                updateProgress(95, 'Elaborazione...');
                 
                 // Popola filtri
                 populateFilters();
                 
-                // Mostra mappature
-                renderMappature();
-
-                updateProgress(90, 'Generazione grafici...');
-                
-                // Applica filtri e calcola
+                // Applica filtri iniziali
                 applyFilters();
-
+                
                 updateProgress(100, 'Completato!');
                 setTimeout(() => {
                     document.getElementById('loadingProgress').classList.add('hidden');
@@ -422,324 +385,395 @@
         function updateProgress(percent, detail) {
             document.getElementById('progressBar').style.width = percent + '%';
             document.getElementById('progressText').textContent = Math.round(percent) + '%';
-            document.getElementById('progressDetail').textContent = detail;
+            if (detail) document.getElementById('progressDetail').textContent = detail;
         }
 
         // ===== FILTRI =====
         function populateFilters() {
-            // Estrai anni dalle vendite
-            const anniVendite = new Set();
-            allVendite.forEach(v => {
-                if (v.mese) {
-                    const year = v.mese.split('_')[0];
-                    if (year) anniVendite.add(year);
-                }
-            });
+            // Anni dalle vendite e dai prodotti
+            const yearsVendite = allVendite.map(v => v.data ? v.data.substring(0, 4) : null).filter(Boolean);
+            const yearsProdotti = allProdotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 4) : null).filter(Boolean);
+            const years = [...new Set([...yearsVendite, ...yearsProdotti])].sort().reverse();
             
-            // Estrai anni dai prodotti
-            allProdotti.forEach(p => {
-                if (p.data_fattura) {
-                    const year = p.data_fattura.substring(0, 4);
-                    if (year) anniVendite.add(year);
-                }
-            });
-
             const selectAnno = document.getElementById('filterAnno');
-            selectAnno.innerHTML = '<option value="">Tutti gli anni</option>';
-            [...anniVendite].sort().reverse().forEach(anno => {
-                selectAnno.innerHTML += `<option value="${anno}">${anno}</option>`;
-            });
-
-            // Popola aggreganti
-            const selectAgg = document.getElementById('filterAggregante');
-            selectAgg.innerHTML = '<option value="">Tutti</option>';
-            AGGREGANTI.forEach(a => {
-                selectAgg.innerHTML += `<option value="${a.nome}">${a.nome}</option>`;
-            });
+            selectAnno.innerHTML = '<option value="">Tutti gli anni</option>' +
+                years.map(y => `<option value="${y}">${y}</option>`).join('');
+            
+            // Categorie vendita
+            const categorie = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))].sort();
+            const selectCategoria = document.getElementById('filterCategoria');
+            selectCategoria.innerHTML = '<option value="">Tutte le categorie</option>' +
+                categorie.map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
         function applyFilters() {
-            const annoFilter = document.getElementById('filterAnno').value;
-            const meseFilter = document.getElementById('filterMese').value;
-            const aggFilter = document.getElementById('filterAggregante').value;
+            const anno = document.getElementById('filterAnno').value;
+            const mese = document.getElementById('filterMese').value;
+            const categoria = document.getElementById('filterCategoria').value;
 
             // Filtra vendite
             filteredData.vendite = allVendite.filter(v => {
-                if (!v.mese) return false;
-                const [anno, mese] = v.mese.split('_');
+                if (!v.data) return false;
+                const vAnno = v.data.substring(0, 4);
+                const vMese = v.data.substring(5, 7);
                 
-                if (annoFilter && anno !== annoFilter) return false;
-                if (meseFilter && mese !== meseFilter) return false;
-                
-                const aggregante = getAggreganteVendita(v.categoria);
-                if (aggFilter && aggregante !== aggFilter) return false;
+                if (anno && vAnno !== anno) return false;
+                if (mese && vMese !== mese) return false;
+                if (categoria && v.categoria !== categoria) return false;
                 
                 return true;
             });
 
-            // Filtra prodotti
+            // Filtra prodotti (acquisti)
             filteredData.prodotti = allProdotti.filter(p => {
-                if (annoFilter || meseFilter) {
-                    if (!p.data_fattura) return false;
-                    const anno = p.data_fattura.substring(0, 4);
-                    const mese = p.data_fattura.substring(5, 7);
-                    
-                    if (annoFilter && anno !== annoFilter) return false;
-                    if (meseFilter && mese !== meseFilter) return false;
-                }
+                if (!p.data_fattura) return false;
+                const pAnno = p.data_fattura.substring(0, 4);
+                const pMese = p.data_fattura.substring(5, 7);
                 
-                const aggregante = getAggreganteProdotto(p.categoria);
-                if (aggFilter && aggregante !== aggFilter) return false;
+                if (anno && pAnno !== anno) return false;
+                if (mese && pMese !== mese) return false;
                 
                 return true;
             });
 
-            // Calcola e visualizza
             calculateAndRender();
         }
 
         function clearFilters() {
             document.getElementById('filterAnno').value = '';
             document.getElementById('filterMese').value = '';
-            document.getElementById('filterAggregante').value = '';
+            document.getElementById('filterCategoria').value = '';
             applyFilters();
         }
 
-        // ===== FUNZIONI HELPER =====
-        function getAggreganteVendita(categoria) {
-            if (!categoria) return 'Miscellaneo';
-            return MAPPING_VENDITE[categoria] || 'Miscellaneo';
-        }
-
-        function getAggreganteProdotto(categoria) {
-            if (!categoria) return 'Miscellaneo';
-            return MAPPING_PRODOTTI[categoria] || 'Miscellaneo';
-        }
-
-        function getAggreganteColor(nome) {
-            const agg = AGGREGANTI.find(a => a.nome === nome);
-            return agg ? agg.colore : '#6B7280';
+        function changeViewMode() {
+            calculateAndRender();
         }
 
         // ===== CALCOLI E RENDERING =====
         function calculateAndRender() {
-            // Calcola totali per aggregante
-            const dataPerAggregante = {};
+            const viewMode = document.getElementById('viewMode').value;
             
-            AGGREGANTI.forEach(a => {
-                dataPerAggregante[a.nome] = {
-                    ricavi: 0,
-                    costi: 0,
-                    margine: 0,
-                    marginePerc: 0
-                };
-            });
-
-            // Somma ricavi (vendite)
-            filteredData.vendite.forEach(v => {
-                const agg = getAggreganteVendita(v.categoria);
-                const fatturato = parseFloat(v.fatturato) || 0;
-                if (dataPerAggregante[agg]) {
-                    dataPerAggregante[agg].ricavi += fatturato;
-                }
-            });
-
-            // Somma costi (prodotti)
-            filteredData.prodotti.forEach(p => {
-                const agg = getAggreganteProdotto(p.categoria);
-                const costo = (parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0) * (parseFloat(p.quantita) || 0);
-                if (dataPerAggregante[agg]) {
-                    dataPerAggregante[agg].costi += costo;
-                }
-            });
-
-            // Calcola margini
-            let totaleRicavi = 0;
-            let totaleCosti = 0;
-            
-            Object.keys(dataPerAggregante).forEach(agg => {
-                const d = dataPerAggregante[agg];
-                d.margine = d.ricavi - d.costi;
-                d.marginePerc = d.ricavi > 0 ? (d.margine / d.ricavi * 100) : 0;
-                totaleRicavi += d.ricavi;
-                totaleCosti += d.costi;
-            });
-
-            const totaleMargine = totaleRicavi - totaleCosti;
-            const marginePercTotale = totaleRicavi > 0 ? (totaleMargine / totaleRicavi * 100) : 0;
+            // Calcola totali
+            const totaleVendite = filteredData.vendite.reduce((sum, v) => sum + (parseFloat(v.fatturato) || 0), 0);
+            const totaleAcquisti = filteredData.prodotti.reduce((sum, p) => {
+                const prezzo = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
+                const qta = parseFloat(p.quantita) || 0;
+                return sum + (prezzo * qta);
+            }, 0);
+            const margine = totaleVendite - totaleAcquisti;
+            const marginePerc = totaleVendite > 0 ? (margine / totaleVendite * 100) : 0;
 
             // Aggiorna KPI
-            document.getElementById('kpiRicavi').textContent = '€' + totaleRicavi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('kpiCosti').textContent = '€' + totaleCosti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('kpiMargine').textContent = '€' + totaleMargine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('kpiMargine').className = `text-2xl font-bold ${totaleMargine >= 0 ? 'text-purple-600' : 'text-red-600'}`;
-            document.getElementById('kpiMarginePerc').textContent = marginePercTotale.toFixed(1) + '% su ricavi';
-            document.getElementById('kpiMargineMedio').textContent = marginePercTotale.toFixed(1) + '%';
+            document.getElementById('kpiVendite').textContent = '€' + totaleVendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiAcquisti').textContent = '€' + totaleAcquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiMargine').textContent = '€' + margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('kpiMargine').className = `text-2xl font-bold ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('kpiMarginePerc').textContent = marginePerc.toFixed(1) + '%';
+            document.getElementById('kpiTransazioni').textContent = (filteredData.vendite.length + filteredData.prodotti.length).toLocaleString('it-IT');
 
-            // Aggiorna grafici
-            updateCharts(dataPerAggregante);
+            // Calcola dati per categoria
+            const dataPerCategoria = calculateDataByCategory();
             
-            // Aggiorna tabella
-            updateTabella(dataPerAggregante);
+            // Calcola dati per mese
+            const dataPerMese = calculateDataByMonth();
+
+            // Aggiorna grafici e tabelle
+            if (viewMode === 'categoria') {
+                document.getElementById('chartMainTitle').textContent = 'Vendite vs Acquisti per Categoria';
+                document.getElementById('chartMarginiTitle').textContent = 'Margine per Categoria';
+                document.getElementById('tableTitle').textContent = 'Dettaglio per Categoria di Vendita';
+                document.getElementById('colHeader').textContent = 'Categoria';
+                
+                updateChartMain(dataPerCategoria, 'categoria');
+                updateChartMargini(dataPerCategoria, 'categoria');
+                updateTabella(dataPerCategoria, 'categoria');
+            } else {
+                document.getElementById('chartMainTitle').textContent = 'Vendite vs Acquisti per Mese';
+                document.getElementById('chartMarginiTitle').textContent = 'Margine per Mese';
+                document.getElementById('tableTitle').textContent = 'Dettaglio per Mese';
+                document.getElementById('colHeader').textContent = 'Mese';
+                
+                updateChartMain(dataPerMese, 'mese');
+                updateChartMargini(dataPerMese, 'mese');
+                updateTabella(dataPerMese, 'mese');
+            }
+
+            updateChartTrend(dataPerMese);
+            updateChartDistribuzione(dataPerCategoria);
+            updateTabellaMensile(dataPerMese);
+
+            // Aggiorna footer tabella principale
+            document.getElementById('footerVendite').textContent = '€' + totaleVendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('footerAcquisti').textContent = '€' + totaleAcquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('footerMargine').textContent = '€' + margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('footerMargine').className = `px-6 py-3 text-right ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('footerMarginePerc').textContent = marginePerc.toFixed(1) + '%';
+            document.getElementById('footerMarginePerc').className = `px-6 py-3 text-right ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        }
+
+        function calculateDataByCategory() {
+            const data = {};
+            
+            // Inizializza categorie dalle vendite
+            const categorie = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))];
+            categorie.forEach(cat => {
+                data[cat] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+            });
+            
+            // Somma vendite
+            filteredData.vendite.forEach(v => {
+                const cat = v.categoria || 'Altro';
+                if (!data[cat]) data[cat] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+                data[cat].vendite += parseFloat(v.fatturato) || 0;
+            });
+            
+            // Somma acquisti (distribuiti proporzionalmente o per categoria prodotto)
+            // Per semplicità, distribuiamo gli acquisti totali in proporzione alle vendite
+            const totaleVendite = Object.values(data).reduce((sum, d) => sum + d.vendite, 0);
+            const totaleAcquisti = filteredData.prodotti.reduce((sum, p) => {
+                const prezzo = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
+                const qta = parseFloat(p.quantita) || 0;
+                return sum + (prezzo * qta);
+            }, 0);
+            
+            // Distribuisci acquisti proporzionalmente
+            Object.keys(data).forEach(cat => {
+                const proporzione = totaleVendite > 0 ? data[cat].vendite / totaleVendite : 0;
+                data[cat].acquisti = totaleAcquisti * proporzione;
+                data[cat].margine = data[cat].vendite - data[cat].acquisti;
+                data[cat].marginePerc = data[cat].vendite > 0 ? (data[cat].margine / data[cat].vendite * 100) : 0;
+            });
+            
+            return data;
+        }
+
+        function calculateDataByMonth() {
+            const data = {};
+            
+            // Raccogli tutti i mesi dalle vendite e dai prodotti
+            const mesiVendite = filteredData.vendite.map(v => v.data ? v.data.substring(0, 7) : null).filter(Boolean);
+            const mesiProdotti = filteredData.prodotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 7) : null).filter(Boolean);
+            const mesi = [...new Set([...mesiVendite, ...mesiProdotti])].sort();
+            
+            mesi.forEach(mese => {
+                data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+            });
+            
+            // Somma vendite per mese
+            filteredData.vendite.forEach(v => {
+                if (!v.data) return;
+                const mese = v.data.substring(0, 7);
+                if (!data[mese]) data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+                data[mese].vendite += parseFloat(v.fatturato) || 0;
+            });
+            
+            // Somma acquisti per mese
+            filteredData.prodotti.forEach(p => {
+                if (!p.data_fattura) return;
+                const mese = p.data_fattura.substring(0, 7);
+                if (!data[mese]) data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+                const prezzo = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
+                const qta = parseFloat(p.quantita) || 0;
+                data[mese].acquisti += prezzo * qta;
+            });
+            
+            // Calcola margini
+            Object.keys(data).forEach(mese => {
+                data[mese].margine = data[mese].vendite - data[mese].acquisti;
+                data[mese].marginePerc = data[mese].vendite > 0 ? (data[mese].margine / data[mese].vendite * 100) : 0;
+            });
+            
+            return data;
         }
 
         // ===== GRAFICI =====
-        function updateCharts(data) {
-            const labels = AGGREGANTI.map(a => a.nome);
-            const colors = AGGREGANTI.map(a => a.colore);
+        function updateChartMain(data, tipo) {
+            const ctx = document.getElementById('chartMain').getContext('2d');
             
-            const ricavi = labels.map(l => data[l]?.ricavi || 0);
-            const costi = labels.map(l => data[l]?.costi || 0);
-            const margini = labels.map(l => data[l]?.margine || 0);
-            const marginiPerc = labels.map(l => data[l]?.marginePerc || 0);
-
-            // Distruggi grafici esistenti
-            Object.values(charts).forEach(c => c?.destroy());
-
-            // 1. Grafico Margini per Aggregante (bar orizzontale)
-            const ctx1 = document.getElementById('chartMargini').getContext('2d');
-            charts.margini = new Chart(ctx1, {
+            if (charts.main) charts.main.destroy();
+            
+            const labels = Object.keys(data).sort((a, b) => {
+                if (tipo === 'mese') return a.localeCompare(b);
+                return (data[b].vendite || 0) - (data[a].vendite || 0);
+            });
+            
+            const displayLabels = labels.map(l => {
+                if (tipo === 'mese') {
+                    const [anno, mese] = l.split('-');
+                    return MONTH_NAMES[parseInt(mese) - 1] + ' ' + anno;
+                }
+                return l;
+            });
+            
+            charts.main = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: displayLabels,
+                    datasets: [
+                        {
+                            label: 'Vendite',
+                            data: labels.map(l => data[l].vendite),
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: '#10B981',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Acquisti',
+                            data: labels.map(l => data[l].acquisti),
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            borderColor: '#EF4444',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => '€' + value.toLocaleString('it-IT')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartMargini(data, tipo) {
+            const ctx = document.getElementById('chartMargini').getContext('2d');
+            
+            if (charts.margini) charts.margini.destroy();
+            
+            const labels = Object.keys(data).sort((a, b) => {
+                if (tipo === 'mese') return a.localeCompare(b);
+                return (data[b].margine || 0) - (data[a].margine || 0);
+            });
+            
+            const displayLabels = labels.map(l => {
+                if (tipo === 'mese') {
+                    const [anno, mese] = l.split('-');
+                    return MONTH_NAMES[parseInt(mese) - 1] + ' ' + anno;
+                }
+                return l;
+            });
+            
+            const margini = labels.map(l => data[l].margine);
+            const colors = margini.map(m => m >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)');
+            const borderColors = margini.map(m => m >= 0 ? '#10B981' : '#EF4444');
+            
+            charts.margini = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: displayLabels,
                     datasets: [{
-                        label: 'Margine €',
+                        label: 'Margine',
                         data: margini,
-                        backgroundColor: margini.map(m => m >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
-                        borderColor: margini.map(m => m >= 0 ? '#10B981' : '#EF4444'),
-                        borderWidth: 2
+                        backgroundColor: colors,
+                        borderColor: borderColors,
+                        borderWidth: 1
                     }]
                 },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => '€' + ctx.raw.toLocaleString('it-IT', { minimumFractionDigits: 0 })
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: {
-                                callback: v => '€' + (v/1000).toFixed(0) + 'K'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 2. Grafico Confronto Ricavi vs Costi
-            const ctx2 = document.getElementById('chartConfrontoRC').getContext('2d');
-            charts.confronto = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Ricavi',
-                            data: ricavi,
-                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                            borderColor: '#10B981',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Costi',
-                            data: costi,
-                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                            borderColor: '#EF4444',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ctx.dataset.label + ': €' + ctx.raw.toLocaleString('it-IT', { minimumFractionDigits: 0 })
-                            }
-                        }
+                        legend: { display: false }
                     },
                     scales: {
                         y: {
                             ticks: {
-                                callback: v => '€' + (v/1000).toFixed(0) + 'K'
+                                callback: value => '€' + value.toLocaleString('it-IT')
                             }
                         }
                     }
                 }
             });
+        }
 
-            // 3. Trend Mensile Margine
-            const trendData = calculateTrendMensile();
-            const ctx3 = document.getElementById('chartTrendMargine').getContext('2d');
-            charts.trend = new Chart(ctx3, {
+        function updateChartTrend(data) {
+            const ctx = document.getElementById('chartTrend').getContext('2d');
+            
+            if (charts.trend) charts.trend.destroy();
+            
+            const labels = Object.keys(data).sort();
+            const displayLabels = labels.map(l => {
+                const [anno, mese] = l.split('-');
+                return MONTH_NAMES[parseInt(mese) - 1].substring(0, 3) + ' ' + anno.substring(2);
+            });
+            
+            charts.trend = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: trendData.labels,
+                    labels: displayLabels,
                     datasets: [
                         {
-                            label: 'Ricavi',
-                            data: trendData.ricavi,
+                            label: 'Vendite',
+                            data: labels.map(l => data[l].vendite),
                             borderColor: '#10B981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             fill: true,
-                            tension: 0.3
+                            tension: 0.4
                         },
                         {
-                            label: 'Costi',
-                            data: trendData.costi,
+                            label: 'Acquisti',
+                            data: labels.map(l => data[l].acquisti),
                             borderColor: '#EF4444',
                             backgroundColor: 'rgba(239, 68, 68, 0.1)',
                             fill: true,
-                            tension: 0.3
+                            tension: 0.4
                         },
                         {
                             label: 'Margine',
-                            data: trendData.margini,
-                            borderColor: '#7C3AED',
-                            backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                            fill: true,
-                            tension: 0.3,
-                            borderWidth: 3
+                            data: labels.map(l => data[l].margine),
+                            borderColor: '#8B5CF6',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.4
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: { intersect: false, mode: 'index' },
                     plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ctx.dataset.label + ': €' + ctx.raw.toLocaleString('it-IT', { minimumFractionDigits: 0 })
-                            }
-                        }
+                        legend: { position: 'top' }
                     },
                     scales: {
                         y: {
                             ticks: {
-                                callback: v => '€' + (v/1000).toFixed(0) + 'K'
+                                callback: value => '€' + value.toLocaleString('it-IT')
                             }
                         }
                     }
                 }
             });
+        }
 
-            // 4. Distribuzione % Margine (doughnut)
-            const ctx4 = document.getElementById('chartDistribuzione').getContext('2d');
-            charts.distribuzione = new Chart(ctx4, {
+        function updateChartDistribuzione(data) {
+            const ctx = document.getElementById('chartDistribuzione').getContext('2d');
+            
+            if (charts.distribuzione) charts.distribuzione.destroy();
+            
+            const sorted = Object.entries(data)
+                .filter(([_, d]) => d.vendite > 0)
+                .sort((a, b) => b[1].vendite - a[1].vendite);
+            
+            const labels = sorted.map(([cat]) => cat);
+            const values = sorted.map(([_, d]) => d.vendite);
+            const colors = labels.map(l => CATEGORY_COLORS[l] || '#6B7280');
+            
+            charts.distribuzione = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
-                        data: marginiPerc.map(m => Math.max(0, m)),
+                        data: values,
                         backgroundColor: colors.map(c => c + 'CC'),
                         borderColor: colors,
                         borderWidth: 2
@@ -749,10 +783,18 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right' },
+                        legend: { 
+                            position: 'right',
+                            labels: { boxWidth: 12, font: { size: 11 } }
+                        },
                         tooltip: {
                             callbacks: {
-                                label: ctx => ctx.label + ': ' + ctx.raw.toFixed(1) + '%'
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const perc = ((value / total) * 100).toFixed(1);
+                                    return `€${value.toLocaleString('it-IT')} (${perc}%)`;
+                                }
                             }
                         }
                     }
@@ -760,71 +802,41 @@
             });
         }
 
-        function calculateTrendMensile() {
-            const mesiMap = {};
-
-            // Aggrega vendite per mese
-            filteredData.vendite.forEach(v => {
-                if (!v.mese) return;
-                const mese = v.mese; // formato: 2024_01
-                if (!mesiMap[mese]) mesiMap[mese] = { ricavi: 0, costi: 0 };
-                mesiMap[mese].ricavi += parseFloat(v.fatturato) || 0;
-            });
-
-            // Aggrega costi per mese
-            filteredData.prodotti.forEach(p => {
-                if (!p.data_fattura) return;
-                const mese = p.data_fattura.substring(0, 4) + '_' + p.data_fattura.substring(5, 7);
-                if (!mesiMap[mese]) mesiMap[mese] = { ricavi: 0, costi: 0 };
-                const costo = (parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0) * (parseFloat(p.quantita) || 0);
-                mesiMap[mese].costi += costo;
-            });
-
-            // Ordina e prepara dati
-            const mesiOrdinati = Object.keys(mesiMap).sort();
-            const labels = mesiOrdinati.map(m => {
-                const [anno, mese] = m.split('_');
-                const mesiNomi = ['', 'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-                return mesiNomi[parseInt(mese)] + ' ' + anno.substring(2);
-            });
-
-            return {
-                labels: labels.slice(-12), // Ultimi 12 mesi
-                ricavi: mesiOrdinati.slice(-12).map(m => mesiMap[m].ricavi),
-                costi: mesiOrdinati.slice(-12).map(m => mesiMap[m].costi),
-                margini: mesiOrdinati.slice(-12).map(m => mesiMap[m].ricavi - mesiMap[m].costi)
-            };
-        }
-
-        // ===== TABELLA =====
-        function updateTabella(data) {
-            const tbody = document.getElementById('tabellaAggreganti');
+        // ===== TABELLE =====
+        function updateTabella(data, tipo) {
+            const tbody = document.getElementById('tabellaDettaglio');
             
-            // Ordina per margine decrescente
-            const sorted = AGGREGANTI.map(a => ({
-                nome: a.nome,
-                colore: a.colore,
-                ...data[a.nome]
-            })).sort((a, b) => b.margine - a.margine);
+            const sorted = Object.entries(data).sort((a, b) => {
+                if (tipo === 'mese') return a[0].localeCompare(b[0]);
+                return b[1].vendite - a[1].vendite;
+            });
 
-            tbody.innerHTML = sorted.map(row => {
+            tbody.innerHTML = sorted.map(([key, row]) => {
                 const isPositive = row.margine >= 0;
                 const barWidth = Math.min(100, Math.abs(row.marginePerc));
                 const barColor = isPositive ? 'bg-green-500' : 'bg-red-500';
+                
+                let displayKey = key;
+                if (tipo === 'mese') {
+                    const [anno, mese] = key.split('-');
+                    displayKey = MONTH_NAMES[parseInt(mese) - 1] + ' ' + anno;
+                }
+                
+                const color = CATEGORY_COLORS[key] || '#6B7280';
                 
                 return `
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
                             <div class="flex items-center">
-                                <div class="w-3 h-3 rounded-full mr-3" style="background-color: ${row.colore}"></div>
-                                <span class="font-medium">${row.nome}</span>
+                                ${tipo === 'categoria' ? `<div class="w-3 h-3 rounded-full mr-3" style="background-color: ${color}"></div>` : ''}
+                                <span class="font-medium">${displayKey}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-right font-medium text-green-600">
-                            €${row.ricavi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            €${row.vendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </td>
                         <td class="px-6 py-4 text-right font-medium text-red-600">
-                            €${row.costi.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            €${row.acquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </td>
                         <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
                             ${isPositive ? '+' : ''}€${row.margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -842,78 +854,57 @@
             }).join('');
         }
 
-        // ===== MAPPATURE =====
-        function renderMappature() {
-            // Mappatura Vendite
-            const tbodyVendite = document.getElementById('mappingVendite');
-            const categorieVendite = [...new Set(allVendite.map(v => v.categoria).filter(Boolean))].sort();
+        function updateTabellaMensile(data) {
+            const tbody = document.getElementById('tabellaMensile');
             
-            tbodyVendite.innerHTML = categorieVendite.map(cat => {
-                const agg = getAggreganteVendita(cat);
-                const color = getAggreganteColor(agg);
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2">${cat}</td>
-                        <td class="px-4 py-2">
-                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${color}20; color: ${color}">
-                                ${agg}
-                            </span>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Mappatura Prodotti
-            const tbodyProdotti = document.getElementById('mappingProdotti');
-            const categorieProdotti = [...new Set(allProdotti.map(p => p.categoria).filter(Boolean))].sort();
+            const sorted = Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
             
-            tbodyProdotti.innerHTML = categorieProdotti.map(cat => {
-                const agg = getAggreganteProdotto(cat);
-                const color = getAggreganteColor(agg);
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2">${cat}</td>
-                        <td class="px-4 py-2">
-                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${color}20; color: ${color}">
-                                ${agg}
-                            </span>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
+            // Calcola trend (confronto con mese precedente)
+            const dataArray = sorted.map(([mese, d]) => ({ mese, ...d }));
 
-        // ===== SETUP AGGREGANTI NEL DATABASE =====
-        async function setupAggreganti() {
-            try {
-                // Verifica se esistono già
-                const { data: existing } = await supabaseClient
-                    .from('aggregante_prodotto')
-                    .select('nome');
+            tbody.innerHTML = dataArray.map((row, idx) => {
+                const isPositive = row.margine >= 0;
+                const [anno, meseNum] = row.mese.split('-');
+                const displayMese = MONTH_NAMES[parseInt(meseNum) - 1] + ' ' + anno;
                 
-                const existingNames = existing ? existing.map(e => e.nome) : [];
-                
-                // Inserisci solo quelli mancanti
-                const toInsert = AGGREGANTI.filter(a => !existingNames.includes(a.nome));
-                
-                if (toInsert.length === 0) {
-                    alert('✅ Tutti gli aggreganti sono già presenti nel database!');
-                    return;
+                // Calcola trend
+                let trendIcon = '';
+                let trendClass = 'text-gray-400';
+                if (idx > 0) {
+                    const prevMargine = dataArray[idx - 1].margine;
+                    const diff = row.margine - prevMargine;
+                    if (diff > 0) {
+                        trendIcon = '↑';
+                        trendClass = 'text-green-600';
+                    } else if (diff < 0) {
+                        trendIcon = '↓';
+                        trendClass = 'text-red-600';
+                    } else {
+                        trendIcon = '→';
+                    }
                 }
                 
-                const { error } = await supabaseClient
-                    .from('aggregante_prodotto')
-                    .insert(toInsert);
-                
-                if (error) throw error;
-                
-                alert(`✅ Creati ${toInsert.length} aggreganti: ${toInsert.map(a => a.nome).join(', ')}`);
-                document.getElementById('setupInfo').classList.add('hidden');
-                
-            } catch (err) {
-                console.error('Errore setup:', err);
-                alert('❌ Errore: ' + err.message);
-            }
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium">${displayMese}</td>
+                        <td class="px-6 py-4 text-right font-medium text-green-600">
+                            €${row.vendite.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </td>
+                        <td class="px-6 py-4 text-right font-medium text-red-600">
+                            €${row.acquisti.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </td>
+                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
+                            ${isPositive ? '+' : ''}€${row.margine.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </td>
+                        <td class="px-6 py-4 text-right font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
+                            ${row.marginePerc.toFixed(1)}%
+                        </td>
+                        <td class="px-6 py-4 text-center text-2xl ${trendClass}">
+                            ${trendIcon}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // ===== INIT =====
