@@ -601,16 +601,85 @@
                 return k;
             });
             
+            // Calcola Markup (Vendite - Acquisti) e percentuale
+            const acquisti = entries.map(([_, d]) => d.acquisti);
+            const markup = entries.map(([_, d]) => Math.max(0, d.vendite - d.acquisti)); // Solo markup positivo
+            const markupPerc = entries.map(([_, d]) => {
+                if (d.acquisti > 0) {
+                    return ((d.vendite - d.acquisti) / d.acquisti * 100).toFixed(0);
+                }
+                return d.vendite > 0 ? '∞' : '0';
+            });
+            
             charts.main = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels,
                     datasets: [
-                        { label: 'Vendite', data: entries.map(([_, d]) => d.vendite), backgroundColor: 'rgba(16, 185, 129, 0.8)', borderColor: '#10B981', borderWidth: 1 },
-                        { label: 'Acquisti', data: entries.map(([_, d]) => d.acquisti), backgroundColor: 'rgba(239, 68, 68, 0.8)', borderColor: '#EF4444', borderWidth: 1 }
+                        { 
+                            label: 'Acquisti', 
+                            data: acquisti, 
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)', 
+                            borderColor: '#EF4444', 
+                            borderWidth: 1 
+                        },
+                        { 
+                            label: 'Markup', 
+                            data: markup, 
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)', 
+                            borderColor: '#10B981', 
+                            borderWidth: 1 
+                        }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                afterBody: function(context) {
+                                    const idx = context[0].dataIndex;
+                                    const entry = entries[idx][1];
+                                    return [
+                                        '',
+                                        'Vendite Totali: €' + entry.vendite.toLocaleString('it-IT'),
+                                        'Markup %: ' + markupPerc[idx] + '%'
+                                    ];
+                                }
+                            }
+                        }
+                    }, 
+                    scales: { 
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            beginAtZero: true, 
+                            ticks: { callback: v => '€' + v.toLocaleString('it-IT') } 
+                        } 
+                    },
+                    // Plugin per mostrare percentuale sopra le barre
+                    animation: {
+                        onComplete: function() {
+                            const chart = this;
+                            const ctx = chart.ctx;
+                            ctx.font = 'bold 11px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillStyle = '#374151';
+                            
+                            chart.data.datasets[1].data.forEach((value, index) => {
+                                const meta = chart.getDatasetMeta(1);
+                                const bar = meta.data[index];
+                                if (bar) {
+                                    const perc = markupPerc[index];
+                                    const label = perc === '∞' ? '∞' : perc + '%';
+                                    ctx.fillText(label, bar.x, bar.y - 5);
+                                }
+                            });
+                        }
+                    }
+                }
             });
         }
 
