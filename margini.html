@@ -470,6 +470,7 @@
 
             const dataGruppo = calcByGruppo();
             const dataMese = calcByMese();
+            const dataGruppoAnno = calcByGruppoAnno(); // Nuovo: dati per gruppo e anno
             
             const gruppiAttivi = Object.values(dataGruppo).filter(d => d.vendite > 0 || d.acquisti > 0).length;
             document.getElementById('kpiGruppi').textContent = gruppiAttivi;
@@ -479,7 +480,7 @@
                 document.getElementById('chartMarginiTitle').textContent = 'Margine per Gruppo';
                 document.getElementById('tableTitle').textContent = 'Dettaglio per Gruppo Vendita';
                 document.getElementById('colHeader').textContent = 'Gruppo Vendita';
-                updateChartMain(dataGruppo, 'gruppo');
+                updateChartMain(dataGruppo, 'gruppo', dataGruppoAnno); // Passa anche dati per anno
                 updateChartMargini(dataGruppo, 'gruppo');
                 updateTabella(dataGruppo, 'gruppo');
             } else {
@@ -487,7 +488,7 @@
                 document.getElementById('chartMarginiTitle').textContent = 'Margine per Mese';
                 document.getElementById('tableTitle').textContent = 'Dettaglio per Mese';
                 document.getElementById('colHeader').textContent = 'Mese';
-                updateChartMain(dataMese, 'mese');
+                updateChartMain(dataMese, 'mese', null);
                 updateChartMargini(dataMese, 'mese');
                 updateTabella(dataMese, 'mese');
             }
@@ -531,6 +532,55 @@
             });
             
             return data;
+        }
+
+        // Calcola dati per gruppo E per anno
+        function calcByGruppoAnno() {
+            const data = {}; // { gruppoId: { nome, colore, anni: { 2023: {vendite, acquisti}, 2024: {...} } } }
+            const anniSet = new Set();
+            
+            // Inizializza struttura per tutti i gruppi
+            allGruppiVendita.forEach(g => {
+                data[g.id] = { nome: g.nome, colore: g.colore || '#6B7280', anni: {} };
+            });
+            data['null'] = { nome: 'Non assegnato', colore: '#9CA3AF', anni: {} };
+            
+            // Raccogli vendite per gruppo e anno
+            filteredData.vendite.forEach(v => {
+                const gid = v.gruppo_vendita_id || 'null';
+                if (!data[gid]) data[gid] = { nome: getGruppoNome(gid), colore: getGruppoColore(gid), anni: {} };
+                
+                let anno = 'N/D';
+                if (v.mese && typeof v.mese === 'string' && v.mese.length >= 4) {
+                    anno = normalizeMese(v.mese).substring(0, 4);
+                }
+                anniSet.add(anno);
+                
+                if (!data[gid].anni[anno]) data[gid].anni[anno] = { vendite: 0, acquisti: 0 };
+                data[gid].anni[anno].vendite += parseFloat(v.fatturato) || 0;
+            });
+            
+            // Raccogli acquisti per gruppo e anno
+            filteredData.prodotti.forEach(p => {
+                const gid = p.gruppo_vendita_id || 'null';
+                if (!data[gid]) data[gid] = { nome: getGruppoNome(gid), colore: getGruppoColore(gid), anni: {} };
+                
+                let anno = 'N/D';
+                if (p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 4) {
+                    anno = p.data_fattura.substring(0, 4);
+                }
+                anniSet.add(anno);
+                
+                if (!data[gid].anni[anno]) data[gid].anni[anno] = { vendite: 0, acquisti: 0 };
+                const pr = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
+                const qt = parseFloat(p.quantita) || 1;
+                data[gid].anni[anno].acquisti += pr * qt;
+            });
+            
+            // Ordina anni
+            const anni = [...anniSet].sort();
+            
+            return { data, anni };
         }
 
         function calcByMese() {
@@ -582,105 +632,217 @@
             return data;
         }
 
-        function updateChartMain(data, tipo) {
+        function updateChartMain(data, tipo, dataGruppoAnno = null) {
             const ctx = document.getElementById('chartMain').getContext('2d');
             if (charts.main) charts.main.destroy();
             
-            let entries = tipo === 'gruppo' 
-                ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].vendite - a[1].vendite)
-                : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
-            
-            const labels = entries.map(([k, d]) => {
-                if (tipo === 'gruppo') return d.nome;
-                if (k === 'N/D' || !k || k.indexOf('-') === -1) return k || 'N/D';
-                const parts = k.split('-');
-                if (parts.length >= 2 && parts[1]) {
-                    const meseIdx = parseInt(parts[1]) - 1;
-                    return (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
-                }
-                return k;
-            });
-            
-            // Calcola Markup (Vendite - Acquisti) e percentuale
-            const acquisti = entries.map(([_, d]) => d.acquisti);
-            const markup = entries.map(([_, d]) => Math.max(0, d.vendite - d.acquisti)); // Solo markup positivo
-            const markupPerc = entries.map(([_, d]) => {
-                if (d.acquisti > 0) {
-                    return ((d.vendite - d.acquisti) / d.acquisti * 100).toFixed(0);
-                }
-                return d.vendite > 0 ? '∞' : '0';
-            });
-            
-            charts.main = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        { 
-                            label: 'Acquisti', 
-                            data: acquisti, 
-                            backgroundColor: 'rgba(239, 68, 68, 0.8)', 
-                            borderColor: '#EF4444', 
-                            borderWidth: 1 
-                        },
-                        { 
-                            label: 'Markup', 
-                            data: markup, 
-                            backgroundColor: 'rgba(16, 185, 129, 0.8)', 
-                            borderColor: '#10B981', 
-                            borderWidth: 1 
-                        }
-                    ]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                afterBody: function(context) {
-                                    const idx = context[0].dataIndex;
-                                    const entry = entries[idx][1];
-                                    return [
-                                        '',
-                                        'Vendite Totali: €' + entry.vendite.toLocaleString('it-IT'),
-                                        'Markup %: ' + markupPerc[idx] + '%'
-                                    ];
+            // Se tipo è 'gruppo' e abbiamo dati per anno, mostra barre raggruppate per anno
+            if (tipo === 'gruppo' && dataGruppoAnno && dataGruppoAnno.anni.length > 1) {
+                const { data: gruppoData, anni } = dataGruppoAnno;
+                
+                // Filtra gruppi con movimenti e ordina per vendite totali
+                const gruppiConDati = Object.entries(gruppoData)
+                    .filter(([_, g]) => {
+                        const totVendite = Object.values(g.anni).reduce((s, a) => s + (a.vendite || 0), 0);
+                        const totAcquisti = Object.values(g.anni).reduce((s, a) => s + (a.acquisti || 0), 0);
+                        return totVendite > 0 || totAcquisti > 0;
+                    })
+                    .sort((a, b) => {
+                        const totA = Object.values(a[1].anni).reduce((s, x) => s + (x.vendite || 0), 0);
+                        const totB = Object.values(b[1].anni).reduce((s, x) => s + (x.vendite || 0), 0);
+                        return totB - totA;
+                    });
+                
+                const labels = gruppiConDati.map(([_, g]) => g.nome);
+                
+                // Colori per ogni anno
+                const coloriAnni = {
+                    acquisti: ['rgba(239, 68, 68, 0.9)', 'rgba(239, 68, 68, 0.6)', 'rgba(239, 68, 68, 0.4)', 'rgba(239, 68, 68, 0.25)'],
+                    markup: ['rgba(16, 185, 129, 0.9)', 'rgba(16, 185, 129, 0.6)', 'rgba(16, 185, 129, 0.4)', 'rgba(16, 185, 129, 0.25)']
+                };
+                
+                const datasets = [];
+                const markupPercData = {}; // Per mostrare percentuali
+                
+                anni.forEach((anno, idx) => {
+                    const acquisti = gruppiConDati.map(([_, g]) => g.anni[anno]?.acquisti || 0);
+                    const markup = gruppiConDati.map(([_, g]) => {
+                        const v = g.anni[anno]?.vendite || 0;
+                        const a = g.anni[anno]?.acquisti || 0;
+                        return Math.max(0, v - a);
+                    });
+                    
+                    // Calcola percentuali markup
+                    markupPercData[anno] = gruppiConDati.map(([_, g]) => {
+                        const v = g.anni[anno]?.vendite || 0;
+                        const a = g.anni[anno]?.acquisti || 0;
+                        if (a > 0) return ((v - a) / a * 100).toFixed(0);
+                        return v > 0 ? '∞' : '';
+                    });
+                    
+                    datasets.push({
+                        label: `Acquisti ${anno}`,
+                        data: acquisti,
+                        backgroundColor: coloriAnni.acquisti[idx % coloriAnni.acquisti.length],
+                        stack: `stack${anno}`,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9
+                    });
+                    
+                    datasets.push({
+                        label: `Markup ${anno}`,
+                        data: markup,
+                        backgroundColor: coloriAnni.markup[idx % coloriAnni.markup.length],
+                        stack: `stack${anno}`,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9
+                    });
+                });
+                
+                charts.main = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                position: 'top',
+                                labels: { 
+                                    filter: (item) => item.text.includes('Markup'), // Mostra solo Markup nella legenda
+                                    generateLabels: (chart) => {
+                                        return anni.map((anno, idx) => ({
+                                            text: anno,
+                                            fillStyle: coloriAnni.markup[idx % coloriAnni.markup.length],
+                                            strokeStyle: coloriAnni.markup[idx % coloriAnni.markup.length],
+                                            hidden: false,
+                                            index: idx
+                                        }));
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => {
+                                        const item = items[0];
+                                        const anno = item.dataset.stack.replace('stack', '');
+                                        return `${item.label} - ${anno}`;
+                                    },
+                                    afterBody: (context) => {
+                                        const item = context[0];
+                                        const anno = item.dataset.stack.replace('stack', '');
+                                        const gruppoIdx = item.dataIndex;
+                                        const perc = markupPercData[anno]?.[gruppoIdx] || '0';
+                                        return [`Markup: ${perc}%`];
+                                    }
                                 }
                             }
-                        }
-                    }, 
-                    scales: { 
-                        x: { stacked: true },
-                        y: { 
-                            stacked: true,
-                            beginAtZero: true, 
-                            ticks: { callback: v => '€' + v.toLocaleString('it-IT') } 
-                        } 
-                    },
-                    // Plugin per mostrare percentuale sopra le barre
-                    animation: {
-                        onComplete: function() {
-                            const chart = this;
-                            const ctx = chart.ctx;
-                            ctx.font = 'bold 11px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.fillStyle = '#374151';
-                            
-                            chart.data.datasets[1].data.forEach((value, index) => {
-                                const meta = chart.getDatasetMeta(1);
-                                const bar = meta.data[index];
-                                if (bar) {
-                                    const perc = markupPerc[index];
-                                    const label = perc === '∞' ? '∞' : perc + '%';
-                                    ctx.fillText(label, bar.x, bar.y - 5);
-                                }
-                            });
+                        },
+                        scales: {
+                            x: { stacked: true },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                ticks: { callback: v => '€' + v.toLocaleString('it-IT') }
+                            }
                         }
                     }
-                }
-            });
+                });
+                
+            } else {
+                // Visualizzazione standard (singolo anno o per mese)
+                let entries = tipo === 'gruppo' 
+                    ? Object.entries(data).filter(([_, d]) => d.vendite > 0 || d.acquisti > 0).sort((a, b) => b[1].vendite - a[1].vendite)
+                    : Object.entries(data).sort((a, b) => a[0].localeCompare(b[0]));
+                
+                const labels = entries.map(([k, d]) => {
+                    if (tipo === 'gruppo') return d.nome;
+                    if (k === 'N/D' || !k || k.indexOf('-') === -1) return k || 'N/D';
+                    const parts = k.split('-');
+                    if (parts.length >= 2 && parts[1]) {
+                        const meseIdx = parseInt(parts[1]) - 1;
+                        return (MONTH_NAMES[meseIdx] || parts[1]) + ' ' + parts[0];
+                    }
+                    return k;
+                });
+                
+                const acquisti = entries.map(([_, d]) => d.acquisti);
+                const markup = entries.map(([_, d]) => Math.max(0, d.vendite - d.acquisti));
+                const markupPerc = entries.map(([_, d]) => {
+                    if (d.acquisti > 0) return ((d.vendite - d.acquisti) / d.acquisti * 100).toFixed(0);
+                    return d.vendite > 0 ? '∞' : '0';
+                });
+                
+                charts.main = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            { 
+                                label: 'Acquisti', 
+                                data: acquisti, 
+                                backgroundColor: 'rgba(239, 68, 68, 0.8)', 
+                                borderColor: '#EF4444', 
+                                borderWidth: 1 
+                            },
+                            { 
+                                label: 'Markup', 
+                                data: markup, 
+                                backgroundColor: 'rgba(16, 185, 129, 0.8)', 
+                                borderColor: '#10B981', 
+                                borderWidth: 1 
+                            }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { position: 'top' },
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: function(context) {
+                                        const idx = context[0].dataIndex;
+                                        const entry = entries[idx][1];
+                                        return [
+                                            '',
+                                            'Vendite Totali: €' + entry.vendite.toLocaleString('it-IT'),
+                                            'Markup %: ' + markupPerc[idx] + '%'
+                                        ];
+                                    }
+                                }
+                            }
+                        }, 
+                        scales: { 
+                            x: { stacked: true },
+                            y: { 
+                                stacked: true,
+                                beginAtZero: true, 
+                                ticks: { callback: v => '€' + v.toLocaleString('it-IT') } 
+                            } 
+                        },
+                        animation: {
+                            onComplete: function() {
+                                const chart = this;
+                                const ctx = chart.ctx;
+                                ctx.font = 'bold 11px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.fillStyle = '#374151';
+                                
+                                chart.data.datasets[1].data.forEach((value, index) => {
+                                    const meta = chart.getDatasetMeta(1);
+                                    const bar = meta.data[index];
+                                    if (bar && markupPerc[index] !== '0') {
+                                        const perc = markupPerc[index];
+                                        const label = perc === '∞' ? '∞' : perc + '%';
+                                        ctx.fillText(label, bar.x, bar.y - 5);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         function updateChartMargini(data, tipo) {
