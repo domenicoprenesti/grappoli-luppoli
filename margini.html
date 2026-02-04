@@ -323,22 +323,38 @@
 
                 // 1. Carica vendite
                 updateProgress(10, 'Caricamento vendite...');
-                const { count: countVendite } = await supabaseClient
+                const { count: countVendite, error: errCount } = await supabaseClient
                     .from('vendite')
                     .select('*', { count: 'exact', head: true });
+                
+                console.log('Count vendite:', countVendite, 'Error:', errCount);
 
-                if (countVendite > 0) {
+                if (countVendite && countVendite > 0) {
                     const numBatchesV = Math.ceil(countVendite / BATCH_SIZE);
                     allVendite = [];
                     
                     for (let i = 0; i < numBatchesV; i++) {
-                        const { data } = await supabaseClient
+                        const { data, error } = await supabaseClient
                             .from('vendite')
                             .select('*')
                             .range(i * BATCH_SIZE, (i + 1) * BATCH_SIZE - 1);
                         
+                        if (error) console.error('Errore caricamento vendite batch', i, error);
                         if (data) allVendite = [...allVendite, ...data];
                         updateProgress(10 + (i / numBatchesV * 30), `Vendite: ${allVendite.length}/${countVendite}`);
+                    }
+                } else {
+                    // Prova a caricare direttamente senza conteggio
+                    console.log('Tentativo caricamento diretto vendite...');
+                    const { data, error } = await supabaseClient
+                        .from('vendite')
+                        .select('*')
+                        .limit(10000);
+                    
+                    if (error) console.error('Errore caricamento diretto vendite:', error);
+                    if (data) {
+                        allVendite = data;
+                        console.log('Vendite caricate direttamente:', allVendite.length);
                     }
                 }
 
@@ -364,6 +380,25 @@
                 }
 
                 updateProgress(95, 'Elaborazione...');
+                
+                // DEBUG - Log per vedere i dati caricati
+                console.log('=== DEBUG MARGINI ===');
+                console.log('Vendite caricate:', allVendite.length);
+                console.log('Prodotti caricati:', allProdotti.length);
+                if (allVendite.length > 0) {
+                    console.log('Prima vendita:', allVendite[0]);
+                    console.log('Campi vendita:', Object.keys(allVendite[0]));
+                    // Calcola totale fatturato per debug
+                    const totFatt = allVendite.reduce((sum, v) => sum + (parseFloat(v.fatturato) || 0), 0);
+                    console.log('Totale fatturato calcolato:', totFatt);
+                } else {
+                    console.warn('⚠️ NESSUNA VENDITA CARICATA!');
+                }
+                
+                // Mostra alert se non ci sono vendite
+                if (allVendite.length === 0) {
+                    alert('⚠️ Attenzione: Nessuna vendita caricata dalla tabella "vendite". Verifica che la tabella contenga dati.');
+                }
                 
                 // Popola filtri
                 populateFilters();
@@ -391,7 +426,8 @@
         // ===== FILTRI =====
         function populateFilters() {
             // Anni dalle vendite e dai prodotti
-            const yearsVendite = allVendite.map(v => v.data ? v.data.substring(0, 4) : null).filter(Boolean);
+            // Vendite hanno campo 'mese' nel formato 'YYYY-MM'
+            const yearsVendite = allVendite.map(v => v.mese ? v.mese.substring(0, 4) : null).filter(Boolean);
             const yearsProdotti = allProdotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 4) : null).filter(Boolean);
             const years = [...new Set([...yearsVendite, ...yearsProdotti])].sort().reverse();
             
@@ -411,11 +447,18 @@
             const mese = document.getElementById('filterMese').value;
             const categoria = document.getElementById('filterCategoria').value;
 
-            // Filtra vendite
+            // Filtra vendite - il campo data è 'mese' nel formato 'YYYY-MM'
             filteredData.vendite = allVendite.filter(v => {
-                if (!v.data) return false;
-                const vAnno = v.data.substring(0, 4);
-                const vMese = v.data.substring(5, 7);
+                // Se non ci sono filtri temporali, includi tutto
+                if (!anno && !mese) {
+                    if (categoria && v.categoria !== categoria) return false;
+                    return true;
+                }
+                
+                // Se ci sono filtri temporali, richiedi il campo mese
+                if (!v.mese) return false;
+                const vAnno = v.mese.substring(0, 4);
+                const vMese = v.mese.substring(5, 7);
                 
                 if (anno && vAnno !== anno) return false;
                 if (mese && vMese !== mese) return false;
@@ -426,6 +469,9 @@
 
             // Filtra prodotti (acquisti)
             filteredData.prodotti = allProdotti.filter(p => {
+                // Se non ci sono filtri temporali, includi tutto
+                if (!anno && !mese) return true;
+                
                 if (!p.data_fattura) return false;
                 const pAnno = p.data_fattura.substring(0, 4);
                 const pMese = p.data_fattura.substring(5, 7);
@@ -552,9 +598,15 @@
             const data = {};
             
             // Raccogli tutti i mesi dalle vendite e dai prodotti
-            const mesiVendite = filteredData.vendite.map(v => v.data ? v.data.substring(0, 7) : null).filter(Boolean);
+            // Vendite usano campo 'mese' nel formato 'YYYY-MM'
+            const mesiVendite = filteredData.vendite.map(v => v.mese).filter(Boolean);
             const mesiProdotti = filteredData.prodotti.map(p => p.data_fattura ? p.data_fattura.substring(0, 7) : null).filter(Boolean);
             const mesi = [...new Set([...mesiVendite, ...mesiProdotti])].sort();
+            
+            // Se non ci sono mesi, crea un placeholder
+            if (mesi.length === 0) {
+                data['N/D'] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
+            }
             
             mesi.forEach(mese => {
                 data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
@@ -562,16 +614,14 @@
             
             // Somma vendite per mese
             filteredData.vendite.forEach(v => {
-                if (!v.data) return;
-                const mese = v.data.substring(0, 7);
+                const mese = v.mese || 'N/D'; // usa N/D se mancante
                 if (!data[mese]) data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
                 data[mese].vendite += parseFloat(v.fatturato) || 0;
             });
             
             // Somma acquisti per mese
             filteredData.prodotti.forEach(p => {
-                if (!p.data_fattura) return;
-                const mese = p.data_fattura.substring(0, 7);
+                const mese = p.data_fattura ? p.data_fattura.substring(0, 7) : 'N/D';
                 if (!data[mese]) data[mese] = { vendite: 0, acquisti: 0, margine: 0, marginePerc: 0 };
                 const prezzo = parseFloat(p.prezzo_ivato) || parseFloat(p.prezzo) || 0;
                 const qta = parseFloat(p.quantita) || 0;
@@ -703,8 +753,13 @@
             
             const labels = Object.keys(data).sort();
             const displayLabels = labels.map(l => {
-                const [anno, mese] = l.split('-');
-                return MONTH_NAMES[parseInt(mese) - 1].substring(0, 3) + ' ' + anno.substring(2);
+                if (l === 'N/D') return 'N/D';
+                const parts = l.split('-');
+                if (parts.length === 2) {
+                    const [anno, mese] = parts;
+                    return MONTH_NAMES[parseInt(mese) - 1].substring(0, 3) + ' ' + anno.substring(2);
+                }
+                return l;
             });
             
             charts.trend = new Chart(ctx, {
