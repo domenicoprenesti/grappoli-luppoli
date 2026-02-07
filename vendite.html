@@ -725,6 +725,20 @@
         /**
          * Carica prodotti esistenti per gestione SKU automatica
          */
+        /**
+         * Normalizza nome prodotto per match robusto
+         */
+        function normalizeProductName(nome) {
+            if (!nome) return '';
+            return nome
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, ' ')  // Doppi spazi -> singolo
+                .replace(/['']/g, "'") // Apostrofi diversi -> standard
+                .replace(/[""]/g, '"') // Virgolette diverse -> standard
+                .normalize('NFD').replace(/[̀-ͯ]/g, ''); // Rimuove accenti
+        }
+
         async function loadExistingProducts() {
             try {
                 const { data, error } = await supabaseClient
@@ -739,12 +753,29 @@
                 maxSkuOrigine = 0;
                 maxSkuConversione = 0;
 
+                const normalizedMap = new Map(); // mappa temporanea nome normalizzato -> dati
+
                 (data || []).forEach(v => {
-                    existingProducts.set(v.nome, {
+                    const nomeOriginale = v.nome;
+                    const nomeNormalized = normalizeProductName(nomeOriginale);
+                    
+                    // Map con nome originale (match esatto)
+                    existingProducts.set(nomeOriginale, {
                         sku_origine: v.sku_origine,
                         sku_conversione: v.sku_conversione,
-                        id_settore: v.id_settore
+                        id_settore: v.id_settore,
+                        nome_originale: nomeOriginale
                     });
+
+                    // Map con nome normalizzato (match flessibile)
+                    if (!normalizedMap.has(nomeNormalized)) {
+                        normalizedMap.set(nomeNormalized, {
+                            sku_origine: v.sku_origine,
+                            sku_conversione: v.sku_conversione,
+                            id_settore: v.id_settore,
+                            nome_originale: nomeOriginale
+                        });
+                    }
 
                     // Trova max SKU per progressivi
                     if (v.sku_origine) {
@@ -763,8 +794,12 @@
                     }
                 });
 
+                // Salva anche la map normalizzata globalmente
+                window.normalizedProductMap = normalizedMap;
+
                 console.log(`✅ Caricati ${existingProducts.size} prodotti esistenti`);
                 console.log(`📊 Max SKU: Origine=${maxSkuOrigine}, Conversione=${maxSkuConversione}`);
+                console.log(`🔍 Match flessibile: ${normalizedMap.size} nomi normalizzati`);
 
             } catch (err) {
                 console.error('Errore caricamento prodotti esistenti:', err);
@@ -1298,9 +1333,11 @@
                     throw new Error(`Colonne mancanti: ${missing.join(', ')}`);
                 }
                 
-                // Processa dati
+                // Processa dati con tracking match
                 let newCount = 0;
                 let existingCount = 0;
+                let exactMatchCount = 0;
+                let fuzzyMatchCount = 0;
                 
                 parsedImportData = dataRows.map(row => {
                     const nome = row[colMap.nome]?.toString().trim() || '';
@@ -1308,17 +1345,44 @@
                     
                     if (!nome) return null; // Salta righe senza nome
                     
-                    // Recupera SKU esistenti o genera nuovi
+                    // Recupera SKU esistenti o genera nuovi (con match intelligente)
                     let sku_origine, sku_conversione, id_settore;
                     let isNew = false;
+                    let matchType = '';
                     
+                    // Tentativo 1: Match esatto
                     if (existingProducts.has(nome)) {
                         const existing = existingProducts.get(nome);
                         sku_origine = existing.sku_origine;
                         sku_conversione = existing.sku_conversione;
                         id_settore = existing.id_settore;
                         existingCount++;
+                        matchType = 'esatto';
+                    } 
+                    // Tentativo 2: Match normalizzato (case-insensitive, spazi, apostrofi)
+                    else if (window.normalizedProductMap) {
+                        const nomeNormalized = normalizeProductName(nome);
+                        if (window.normalizedProductMap.has(nomeNormalized)) {
+                            const existing = window.normalizedProductMap.get(nomeNormalized);
+                            sku_origine = existing.sku_origine;
+                            sku_conversione = existing.sku_conversione;
+                            id_settore = existing.id_settore;
+                            existingCount++;
+                            matchType = 'normalizzato';
+                            console.log(`🔍 Match flessibile: "${nome}" → "${existing.nome_originale}"`);
+                        } else {
+                            // Nessun match: crea nuovo
+                            maxSkuOrigine++;
+                            maxSkuConversione++;
+                            sku_origine = `SKU-${String(maxSkuOrigine).padStart(6, '0')}`;
+                            sku_conversione = `CONV-${String(maxSkuConversione).padStart(6, '0')}`;
+                            id_settore = categoria.substring(0, 3).toUpperCase();
+                            newCount++;
+                            isNew = true;
+                            matchType = 'nuovo';
+                        }
                     } else {
+                        // Fallback: crea nuovo
                         maxSkuOrigine++;
                         maxSkuConversione++;
                         sku_origine = `SKU-${String(maxSkuOrigine).padStart(6, '0')}`;
@@ -1326,6 +1390,7 @@
                         id_settore = categoria.substring(0, 3).toUpperCase();
                         newCount++;
                         isNew = true;
+                        matchType = 'nuovo';
                     }
                     
                     // Auto-assegna gruppo vendita
@@ -1340,6 +1405,10 @@
                     const prezzo_medio = colMap.prezzo_medio !== undefined ? 
                         (parseFloat(row[colMap.prezzo_medio]) || prezzo) : prezzo;
                     
+                    // Tracking tipo di match
+                    if (matchType === 'esatto') exactMatchCount++;
+                    else if (matchType === 'normalizzato') fuzzyMatchCount++;
+                    
                     return {
                         nome,
                         categoria,
@@ -1352,12 +1421,20 @@
                         id_settore,
                         nome_univoco: nome.substring(0, 50),
                         gruppo_vendita_id,
-                        isNew
+                        isNew,
+                        matchType  // Info per debug
                     };
                 }).filter(r => r !== null);
                 
+                // Log riepilogo match
+                console.log('\n📊 RIEPILOGO MATCH:');
+                console.log(`   ✅ Match esatti: ${exactMatchCount}`);
+                console.log(`   🔍 Match normalizzati: ${fuzzyMatchCount}`);
+                console.log(`   🆕 Prodotti nuovi: ${newCount}`);
+                console.log(`   📋 Totale righe: ${parsedImportData.length}\n`);
+                
                 // Mostra anteprima
-                showPreview(parsedImportData, existingCount, newCount);
+                showPreview(parsedImportData, existingCount, newCount, exactMatchCount, fuzzyMatchCount);
                 
             } catch (err) {
                 console.error('Errore parsing Excel:', err);
@@ -1370,7 +1447,7 @@
         /**
          * Mostra anteprima dei dati parsed
          */
-        function showPreview(data, existingCount, newCount) {
+        function showPreview(data, existingCount, newCount, exactMatch = 0, fuzzyMatch = 0) {
             const preview = document.getElementById('previewSection');
             const previewBody = document.getElementById('previewBody');
             const btnStart = document.getElementById('btnStartImport');
@@ -1378,26 +1455,52 @@
             preview.classList.remove('hidden');
             btnStart.classList.remove('hidden');
             
-            // Prime 5 righe
+            // Prime 5 righe con indicatore tipo match
             const rows = data.slice(0, 5);
-            previewBody.innerHTML = rows.map(r => `
-                <tr class="hover:bg-gray-100">
-                    <td class="px-2 py-1 border-b text-xs">${r.nome.substring(0, 30)}</td>
-                    <td class="px-2 py-1 border-b text-xs">${r.categoria}</td>
-                    <td class="px-2 py-1 border-b text-right text-xs">${r.pezzi_venduti}</td>
-                    <td class="px-2 py-1 border-b text-right text-xs">€${r.ricavi.toFixed(2)}</td>
-                    <td class="px-2 py-1 border-b text-center">
-                        <span class="px-1 py-0.5 text-xs rounded ${r.isNew ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">
-                            ${r.isNew ? '🆕' : '✓'}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
+            previewBody.innerHTML = rows.map(r => {
+                let badgeClass, badgeIcon, badgeTooltip;
+                
+                if (r.matchType === 'esatto') {
+                    badgeClass = 'bg-green-100 text-green-700';
+                    badgeIcon = '✓';
+                    badgeTooltip = 'Match esatto';
+                } else if (r.matchType === 'normalizzato') {
+                    badgeClass = 'bg-blue-100 text-blue-700';
+                    badgeIcon = '≈';
+                    badgeTooltip = 'Match flessibile';
+                } else {
+                    badgeClass = 'bg-orange-100 text-orange-700';
+                    badgeIcon = '🆕';
+                    badgeTooltip = 'Nuovo prodotto';
+                }
+                
+                return `
+                    <tr class="hover:bg-gray-100">
+                        <td class="px-2 py-1 border-b text-xs">${r.nome.substring(0, 30)}</td>
+                        <td class="px-2 py-1 border-b text-xs">${r.categoria}</td>
+                        <td class="px-2 py-1 border-b text-right text-xs">${r.pezzi_venduti}</td>
+                        <td class="px-2 py-1 border-b text-right text-xs">€${r.ricavi.toFixed(2)}</td>
+                        <td class="px-2 py-1 border-b text-center">
+                            <span class="px-1 py-0.5 text-xs rounded ${badgeClass}" title="${badgeTooltip}">
+                                ${badgeIcon}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
             
-            // Stats
+            // Stats dettagliate
             document.getElementById('statTotal').textContent = data.length;
             document.getElementById('statExisting').textContent = existingCount;
             document.getElementById('statNew').textContent = newCount;
+            
+            // Aggiungi info sui match (se disponibile)
+            if (exactMatch > 0 || fuzzyMatch > 0) {
+                const existingLabel = document.getElementById('statExisting').parentElement.querySelector('.text-gray-600');
+                if (existingLabel) {
+                    existingLabel.innerHTML = `Esistenti<br><span class="text-xs">(${exactMatch} esatti + ${fuzzyMatch} simili)</span>`;
+                }
+            }
         }
 
         /**
