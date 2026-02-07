@@ -722,6 +722,55 @@
             }
         }
 
+        /**
+         * Carica prodotti esistenti per gestione SKU automatica
+         */
+        async function loadExistingProducts() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('vendite')
+                    .select('nome, sku_origine, sku_conversione, id_settore')
+                    .not('nome', 'is', null);
+                
+                if (error) throw error;
+
+                // Crea map di prodotti esistenti (ultimo per ogni nome)
+                existingProducts.clear();
+                maxSkuOrigine = 0;
+                maxSkuConversione = 0;
+
+                (data || []).forEach(v => {
+                    existingProducts.set(v.nome, {
+                        sku_origine: v.sku_origine,
+                        sku_conversione: v.sku_conversione,
+                        id_settore: v.id_settore
+                    });
+
+                    // Trova max SKU per progressivi
+                    if (v.sku_origine) {
+                        const match = v.sku_origine.match(/\d+/);
+                        if (match) {
+                            const num = parseInt(match[0]);
+                            maxSkuOrigine = Math.max(maxSkuOrigine, num);
+                        }
+                    }
+                    if (v.sku_conversione) {
+                        const match = v.sku_conversione.match(/\d+/);
+                        if (match) {
+                            const num = parseInt(match[0]);
+                            maxSkuConversione = Math.max(maxSkuConversione, num);
+                        }
+                    }
+                });
+
+                console.log(`✅ Caricati ${existingProducts.size} prodotti esistenti`);
+                console.log(`📊 Max SKU: Origine=${maxSkuOrigine}, Conversione=${maxSkuConversione}`);
+
+            } catch (err) {
+                console.error('Errore caricamento prodotti esistenti:', err);
+            }
+        }
+
         // ===== LOADING UI =====
         function showLoading(show, percent = 0, detail = '') {
             const loading = document.getElementById('loadingProgress');
