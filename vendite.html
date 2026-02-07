@@ -69,7 +69,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ“Š Gestione Vendite</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Gestione Vendite</h1>
                 <p class="text-gray-600">Import Excel, categorizzazione e Gruppi Vendita</p>
             </div>
             <div class="flex space-x-3">
@@ -108,7 +108,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-blue-500">
                 <p class="text-xs text-gray-600">Fatturato</p>
-                <p id="statFatturato" class="text-2xl font-bold text-blue-600">â‚¬0</p>
+                <p id="statFatturato" class="text-2xl font-bold text-blue-600">€0</p>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-purple-500">
                 <p class="text-xs text-gray-600">Pezzi Venduti</p>
@@ -329,7 +329,7 @@
                 
                 <div class="grid md:grid-cols-3 gap-4 mb-6">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Prezzo â‚¬</label>
+                        <label class="block text-sm font-medium mb-2">Prezzo €</label>
                         <input type="number" step="0.01" id="editPrezzo" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
@@ -337,7 +337,7 @@
                         <input type="number" id="editPezzi" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Fatturato â‚¬</label>
+                        <label class="block text-sm font-medium mb-2">Fatturato €</label>
                         <input type="number" step="0.01" id="editFatturato" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                 </div>
@@ -565,7 +565,7 @@
             const venditeWithoutGruppo = allVendite.filter(v => !v.gruppo_vendita_id);
             
             if (venditeWithoutGruppo.length === 0) {
-                alert('âœ… Tutte le vendite hanno giÃƒÂ  un Gruppo Vendita assegnato!');
+                alert('✅ Tutte le vendite hanno giÃƒÂ  un Gruppo Vendita assegnato!');
                 return;
             }
             
@@ -628,7 +628,7 @@
             showLoading(false);
             
             alert(
-                `âœ… Auto-Assegnazione completata!\n\n` +
+                `✅ Auto-Assegnazione completata!\n\n` +
                 `Gruppi assegnati: ${assigned}\n` +
                 `Non identificabili: ${notIdentified}\n\n` +
                 `(I prodotti non identificabili richiedono assegnazione manuale)`
@@ -918,7 +918,7 @@
             const data = filteredVendite.length > 0 ? filteredVendite : allVendite;
             
             document.getElementById('statRighe').textContent = data.length.toLocaleString('it-IT');
-            document.getElementById('statFatturato').textContent = 'â‚¬' + data.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('statFatturato').textContent = '€' + data.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             document.getElementById('statPezzi').textContent = data.reduce((s, v) => s + (parseFloat(v.pezzi_venduti) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             document.getElementById('statCategorie').textContent = new Set(data.map(v => v.categoria).filter(Boolean)).size;
             document.getElementById('statGruppi').textContent = allGruppiVendita.length;
@@ -960,9 +960,9 @@
                                     ${gruppoNome}
                                 </span>
                             </td>
-                            <td class="px-3 py-2 text-right text-xs">â‚¬${(parseFloat(v.prezzo) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-right text-xs">€${(parseFloat(v.prezzo) || 0).toFixed(2)}</td>
                             <td class="px-3 py-2 text-right text-xs">${(parseFloat(v.pezzi_venduti) || 0).toLocaleString('it-IT')}</td>
-                            <td class="px-3 py-2 text-right text-xs font-bold text-green-600">â‚¬${(parseFloat(v.fatturato) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-right text-xs font-bold text-green-600">€${(parseFloat(v.fatturato) || 0).toFixed(2)}</td>
                             <td class="px-3 py-2 text-center">
                                 <button onclick="editVendita('${v.id}')" class="text-blue-600 hover:text-blue-800 p-1" title="Modifica">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -1583,7 +1583,7 @@
 
                 // ===== INIT =====
         loadData();
-        console.log('âœ… Gestione Vendite v2.0 - Scrollbar + Auto-Assegnazione Gruppi');
+        console.log('✅ Gestione Vendite v3.1 - Import Intelligente con Match Flessibile');
     </script>
 </body>
 </html>
