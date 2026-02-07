@@ -777,20 +777,20 @@
                         });
                     }
 
-                    // Trova max SKU per progressivi
+                    // Trova max SKU per progressivi (gestisce sia numeri che stringhe)
                     if (v.sku_origine) {
-                        const match = v.sku_origine.match(/\d+/);
-                        if (match) {
-                            const num = parseInt(match[0]);
-                            maxSkuOrigine = Math.max(maxSkuOrigine, num);
-                        }
+                        // Se è già un numero, usalo direttamente
+                        const num = typeof v.sku_origine === 'number' ? 
+                            v.sku_origine : 
+                            parseInt(String(v.sku_origine).replace(/\D/g, '')) || 0;
+                        maxSkuOrigine = Math.max(maxSkuOrigine, num);
                     }
                     if (v.sku_conversione) {
-                        const match = v.sku_conversione.match(/\d+/);
-                        if (match) {
-                            const num = parseInt(match[0]);
-                            maxSkuConversione = Math.max(maxSkuConversione, num);
-                        }
+                        // Se è già un numero, usalo direttamente
+                        const num = typeof v.sku_conversione === 'number' ? 
+                            v.sku_conversione : 
+                            parseInt(String(v.sku_conversione).replace(/\D/g, '')) || 0;
+                        maxSkuConversione = Math.max(maxSkuConversione, num);
                     }
                 });
 
@@ -1371,22 +1371,22 @@
                             matchType = 'normalizzato';
                             console.log(`🔍 Match flessibile: "${nome}" → "${existing.nome_originale}"`);
                         } else {
-                            // Nessun match: crea nuovo
+                            // Nessun match: crea nuovo (numeri per compatibilità DB)
                             maxSkuOrigine++;
                             maxSkuConversione++;
-                            sku_origine = `SKU-${String(maxSkuOrigine).padStart(6, '0')}`;
-                            sku_conversione = `CONV-${String(maxSkuConversione).padStart(6, '0')}`;
+                            sku_origine = maxSkuOrigine;
+                            sku_conversione = maxSkuConversione;
                             id_settore = categoria.substring(0, 3).toUpperCase();
                             newCount++;
                             isNew = true;
                             matchType = 'nuovo';
                         }
                     } else {
-                        // Fallback: crea nuovo
+                        // Fallback: crea nuovo (numeri per compatibilità DB)
                         maxSkuOrigine++;
                         maxSkuConversione++;
-                        sku_origine = `SKU-${String(maxSkuOrigine).padStart(6, '0')}`;
-                        sku_conversione = `CONV-${String(maxSkuConversione).padStart(6, '0')}`;
+                        sku_origine = maxSkuOrigine;
+                        sku_conversione = maxSkuConversione;
                         id_settore = categoria.substring(0, 3).toUpperCase();
                         newCount++;
                         isNew = true;
