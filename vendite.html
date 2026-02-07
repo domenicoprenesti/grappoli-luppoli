@@ -69,7 +69,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Gestione Vendite</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ“Š Gestione Vendite</h1>
                 <p class="text-gray-600">Import Excel, categorizzazione e Gruppi Vendita</p>
             </div>
             <div class="flex space-x-3">
@@ -108,7 +108,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-blue-500">
                 <p class="text-xs text-gray-600">Fatturato</p>
-                <p id="statFatturato" class="text-2xl font-bold text-blue-600">€0</p>
+                <p id="statFatturato" class="text-2xl font-bold text-blue-600">â‚¬0</p>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-purple-500">
                 <p class="text-xs text-gray-600">Pezzi Venduti</p>
@@ -127,7 +127,7 @@
         <!-- Filtri -->
         <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
             <div class="grid md:grid-cols-6 gap-3">
-                <input type="text" id="filterNome" placeholder="🔍 Cerca nome..." class="px-3 py-2 border rounded-lg text-sm" onkeyup="applyFilters()">
+                <input type="text" id="filterNome" placeholder="ðŸ” Cerca nome..." class="px-3 py-2 border rounded-lg text-sm" onkeyup="applyFilters()">
                 <select id="filterCategoria" class="px-3 py-2 border rounded-lg text-sm" onchange="applyFilters()">
                     <option value="">Tutte le categorie</option>
                 </select>
@@ -193,7 +193,7 @@
 
     <!-- Modal Import Excel -->
     <div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold">📥 Import Vendite da Excel</h2>
                 <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600">
@@ -201,18 +201,70 @@
                 </button>
             </div>
             
+            <!-- Campo Mese -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    📅 Mese di riferimento *
+                </label>
+                <input type="month" id="meseImport" 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       required>
+                <p class="mt-1 text-xs text-gray-500">Formato: YYYY-MM (es. 2026-01)</p>
+            </div>
+            
+            <!-- Upload File -->
             <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-green-500 cursor-pointer transition-colors" onclick="document.getElementById('excelInput').click()">
                 <input type="file" id="excelInput" accept=".xlsx,.xls" class="hidden" onchange="handleExcelUpload(event)">
                 <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                 </svg>
-                <p class="text-lg font-bold mb-2">Carica file VENDITE.xlsx</p>
-                <p class="text-sm text-gray-600">Trascina qui o clicca per selezionare</p>
+                <p class="text-lg font-bold mb-2">Carica file Excel</p>
+                <p class="text-sm text-gray-600">Clicca per selezionare</p>
+                <p id="fileNameDisplay" class="text-sm text-green-600 font-medium mt-2"></p>
             </div>
             
+            <!-- Anteprima -->
+            <div id="previewSection" class="hidden mt-6">
+                <h3 class="text-sm font-semibold mb-3">🔍 Anteprima (prime 5 righe)</h3>
+                <div class="bg-gray-50 rounded-lg p-3 max-h-48 overflow-auto text-xs">
+                    <table class="w-full">
+                        <thead class="bg-gray-200 sticky top-0">
+                            <tr>
+                                <th class="px-2 py-1 text-left text-xs">Nome</th>
+                                <th class="px-2 py-1 text-left text-xs">Categoria</th>
+                                <th class="px-2 py-1 text-right text-xs">Pz</th>
+                                <th class="px-2 py-1 text-right text-xs">€</th>
+                                <th class="px-2 py-1 text-center text-xs">SKU</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewBody"></tbody>
+                    </table>
+                </div>
+                <div class="grid grid-cols-3 gap-3 mt-3 text-center text-xs">
+                    <div class="bg-white p-2 rounded border">
+                        <div class="text-lg font-bold text-blue-600" id="statTotal">0</div>
+                        <div class="text-gray-600">Righe</div>
+                    </div>
+                    <div class="bg-white p-2 rounded border">
+                        <div class="text-lg font-bold text-green-600" id="statExisting">0</div>
+                        <div class="text-gray-600">Esistenti</div>
+                    </div>
+                    <div class="bg-white p-2 rounded border">
+                        <div class="text-lg font-bold text-orange-600" id="statNew">0</div>
+                        <div class="text-gray-600">Nuovi</div>
+                    </div>
+                </div>
+                
+                <!-- Bottone Import -->
+                <button id="btnStartImport" onclick="startImport()" class="hidden mt-4 w-full px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">
+                    🚀 Avvia Import
+                </button>
+            </div>
+            
+            <!-- Progress -->
             <div id="importProgress" class="hidden mt-6">
                 <div class="flex justify-between mb-2">
-                    <span class="text-sm font-medium">Importazione in corso...</span>
+                    <span class="text-sm font-medium">Importazione...</span>
                     <span id="importProgressText" class="text-sm">0%</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-3">
@@ -220,9 +272,14 @@
                 </div>
             </div>
             
-            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                <p class="text-sm text-blue-800"><strong>Formato atteso:</strong></p>
-                <p class="text-xs text-blue-700 mt-1">Mese, SKU ORIGINE, NOME, SKU CONVERSIONE, ID SETTORE, NOME UNIVOCO, Categoria, Prezzo, Prezzo medio, Pezzi Venduti, FATTURATO</p>
+            <!-- Info -->
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg text-xs">
+                <p class="text-blue-900 font-semibold mb-2">ℹ️ Come funziona:</p>
+                <ul class="text-blue-800 space-y-1">
+                    <li>• <strong>Richiesto:</strong> Nome, Categoria, Prezzo, Pezzi Venduti, Ricavi</li>
+                    <li>• <strong>SKU:</strong> Recuperati se esistente, generati se nuovo</li>
+                    <li>• <strong>Gruppo:</strong> Assegnato da categoria</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -231,7 +288,7 @@
     <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">✏️ Modifica Vendita</h2>
+                <h2 class="text-2xl font-bold">âœï¸ Modifica Vendita</h2>
                 <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -272,7 +329,7 @@
                 
                 <div class="grid md:grid-cols-3 gap-4 mb-6">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Prezzo €</label>
+                        <label class="block text-sm font-medium mb-2">Prezzo â‚¬</label>
                         <input type="number" step="0.01" id="editPrezzo" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
@@ -280,13 +337,13 @@
                         <input type="number" id="editPezzi" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Fatturato €</label>
+                        <label class="block text-sm font-medium mb-2">Fatturato â‚¬</label>
                         <input type="number" step="0.01" id="editFatturato" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                 </div>
                 
                 <div class="flex space-x-3">
-                    <button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">💾 Salva</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">ðŸ’¾ Salva</button>
                     <button type="button" onclick="closeEditModal()" class="px-4 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
                 </div>
             </form>
@@ -297,7 +354,7 @@
     <div id="bulkEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">✏️ Modifica Massiva</h2>
+                <h2 class="text-2xl font-bold">âœï¸ Modifica Massiva</h2>
                 <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -323,7 +380,7 @@
                 </div>
                 
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Applica</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Applica</button>
                     <button type="button" onclick="closeBulkEditModal()" class="px-4 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
                 </div>
             </form>
@@ -334,7 +391,7 @@
     <div id="gruppiVenditaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">🏷️ Gestione Gruppi Vendita</h2>
+                <h2 class="text-2xl font-bold">ðŸ·ï¸ Gestione Gruppi Vendita</h2>
                 <button onclick="closeGruppiVenditaModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -342,7 +399,7 @@
             
             <!-- Form nuovo gruppo -->
             <div class="bg-purple-50 rounded-xl p-4 mb-6">
-                <h3 class="font-bold text-purple-900 mb-3">➕ Nuovo Gruppo</h3>
+                <h3 class="font-bold text-purple-900 mb-3">âž• Nuovo Gruppo</h3>
                 <div class="grid md:grid-cols-4 gap-3">
                     <input type="text" id="newGruppoNome" placeholder="Nome gruppo" class="px-3 py-2 border rounded-lg">
                     <input type="color" id="newGruppoColore" value="#7C3AED" class="h-10 w-full border rounded-lg">
@@ -399,9 +456,13 @@
         let filteredVendite = [];
         let allGruppiVendita = [];
         let allCategorie = [];
+        let existingProducts = new Map(); // nome -> {sku_origine, sku_conversione, id_settore}
+        let maxSkuOrigine = 0;
+        let maxSkuConversione = 0;
+        let parsedImportData = [];
         let allSettori = [];
         let selectedIds = new Set();
-        // RIMOSSO: currentPage - non più necessario
+        // RIMOSSO: currentPage - non piÃ¹ necessario
         let deleteAction = null;
 
         // ===== GRUPPI VENDITA DEFAULT =====
@@ -414,7 +475,7 @@
             { nome: 'Miscellaneo', colore: '#6B7280', ordine: 6 }
         ];
 
-        // Mappatura automatica Categoria ↑ Gruppo Vendita
+        // Mappatura automatica Categoria â†‘ Gruppo Vendita
         const MAPPING_CATEGORIA_GRUPPO = {
             'Birra': 'Birra',
             'Menu cibo': 'Cibo',
@@ -428,7 +489,7 @@
             'Vetrina': 'Miscellaneo'
         };
 
-        // ===== ALGORITMO NOME ↑ GRUPPO VENDITA =====
+        // ===== ALGORITMO NOME â†‘ GRUPPO VENDITA =====
         // Keywords per identificare il gruppo dal nome del prodotto
         const KEYWORDS_GRUPPO = {
             'Vino': [
@@ -437,7 +498,7 @@
                 'vermentino', 'pecorino', 'trebbiano', 'pinot', 'chardonnay', 'sauvignon',
                 'merlot', 'cabernet', 'syrah', 'shiraz', 'amarone', 'ripasso', 'lambrusco',
                 'franciacorta', 'spumante', 'moscato', 'gewurztraminer', 'riesling',
-                'bottiglia', 'calice', 'rosso', 'bianco', 'rosato', 'rosè'
+                'bottiglia', 'calice', 'rosso', 'bianco', 'rosato', 'rosÃ¨'
             ],
             'Birra': [
                 'birra', 'beer', 'lager', 'ale', 'ipa', 'pilsner', 'weiss', 'stout', 'porter',
@@ -450,7 +511,7 @@
                 'panino', 'sandwich', 'pizza', 'focaccia', 'tagliere', 'antipasto',
                 'insalata', 'salad', 'hamburger', 'burger', 'piadina', 'toast',
                 'bruschetta', 'crostino', 'patatine', 'fritte', 'snack', 'stuzzichino',
-                'menu', 'piatto', 'portata', 'contorno', 'dolce', 'dessert', 'tiramisù',
+                'menu', 'piatto', 'portata', 'contorno', 'dolce', 'dessert', 'tiramisÃ¹',
                 'pasta', 'spaghetti', 'penne', 'lasagna', 'risotto', 'carne', 'pesce',
                 'formaggio', 'salume', 'prosciutto', 'mortadella', 'bresaola', 'coppa',
                 'olive', 'noccioline', 'mandorle', 'pistacchi', 'chips', 'nachos'
@@ -467,7 +528,7 @@
             'Bevande': [
                 'acqua', 'water', 'coca cola', 'coca-cola', 'pepsi', 'fanta', 'sprite',
                 'aranciata', 'limonata', 'chinotto', 'gassosa', 'tonica', 'soda',
-                'succo', 'juice', 'frutta', 'the', 'tè', 'tea', 'caffè', 'coffee',
+                'succo', 'juice', 'frutta', 'the', 'tÃ¨', 'tea', 'caffÃ¨', 'coffee',
                 'cappuccino', 'espresso', 'latte', 'macchiato', 'cioccolata', 'chocolate',
                 'energy drink', 'red bull', 'monster', 'gatorade', 'integratore',
                 'analcolico', 'virgin', 'mocktail', 'centrifuga', 'smoothie', 'frullato'
@@ -504,14 +565,14 @@
             const venditeWithoutGruppo = allVendite.filter(v => !v.gruppo_vendita_id);
             
             if (venditeWithoutGruppo.length === 0) {
-                alert('✅ Tutte le vendite hanno giÃ  un Gruppo Vendita assegnato!');
+                alert('âœ… Tutte le vendite hanno giÃƒÂ  un Gruppo Vendita assegnato!');
                 return;
             }
             
             const conferma = confirm(
-                `🤖 Auto-Assegnazione Gruppi Vendita\n\n` +
+                `ðŸ¤– Auto-Assegnazione Gruppi Vendita\n\n` +
                 `Trovate ${venditeWithoutGruppo.length} vendite senza gruppo.\n\n` +
-                `L'algoritmo analizzerÃ  il NOME di ogni prodotto e assegnerÃ  automaticamente il gruppo in base a parole chiave.\n\n` +
+                `L'algoritmo analizzerÃƒÂ  il NOME di ogni prodotto e assegnerÃƒÂ  automaticamente il gruppo in base a parole chiave.\n\n` +
                 `Vuoi procedere?`
             );
             
@@ -541,7 +602,7 @@
             
             if (updates.length === 0) {
                 showLoading(false);
-                alert(`⚠️ Nessun gruppo identificabile automaticamente.\n\nProdotti analizzati: ${venditeWithoutGruppo.length}\nNon identificabili: ${notIdentified}`);
+                alert(`âš ï¸ Nessun gruppo identificabile automaticamente.\n\nProdotti analizzati: ${venditeWithoutGruppo.length}\nNon identificabili: ${notIdentified}`);
                 return;
             }
             
@@ -567,7 +628,7 @@
             showLoading(false);
             
             alert(
-                `✅ Auto-Assegnazione completata!\n\n` +
+                `âœ… Auto-Assegnazione completata!\n\n` +
                 `Gruppi assegnati: ${assigned}\n` +
                 `Non identificabili: ${notIdentified}\n\n` +
                 `(I prodotti non identificabili richiedono assegnazione manuale)`
@@ -585,6 +646,9 @@
                 // Carica gruppi vendita
                 showLoading(true, 10, 'Caricamento gruppi vendita...');
                 await loadGruppiVendita();
+                
+                // Carica prodotti esistenti (per import)
+                await loadExistingProducts();
                 
                 // Carica vendite
                 showLoading(true, 20, 'Conteggio vendite...');
@@ -628,7 +692,7 @@
             } catch (err) {
                 console.error('Errore caricamento:', err);
                 showLoading(false);
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -640,7 +704,7 @@
                     .order('ordine', { ascending: true });
                 
                 if (error) {
-                    console.log('Tabella gruppo_vendita non trovata, verrÃ  creata al primo setup');
+                    console.log('Tabella gruppo_vendita non trovata, verrÃƒÂ  creata al primo setup');
                     allGruppiVendita = [];
                     return;
                 }
@@ -685,7 +749,7 @@
             
             // Gruppi
             const grpOptions = '<option value="">Tutti i gruppi</option>' +
-                '<option value="__null__">⚠️ Senza gruppo</option>' +
+                '<option value="__null__">âš ï¸ Senza gruppo</option>' +
                 allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
             document.getElementById('filterGruppo').innerHTML = grpOptions;
             
@@ -751,7 +815,7 @@
                 return true;
             });
             
-            // RIMOSSO: currentPage = 1 - non più necessario
+            // RIMOSSO: currentPage = 1 - non piÃ¹ necessario
             renderTable(filteredVendite);
             updateStats();
         }
@@ -770,7 +834,7 @@
             const data = filteredVendite.length > 0 ? filteredVendite : allVendite;
             
             document.getElementById('statRighe').textContent = data.length.toLocaleString('it-IT');
-            document.getElementById('statFatturato').textContent = '€' + data.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('statFatturato').textContent = 'â‚¬' + data.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             document.getElementById('statPezzi').textContent = data.reduce((s, v) => s + (parseFloat(v.pezzi_venduti) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             document.getElementById('statCategorie').textContent = new Set(data.map(v => v.categoria).filter(Boolean)).size;
             document.getElementById('statGruppi').textContent = allGruppiVendita.length;
@@ -812,9 +876,9 @@
                                     ${gruppoNome}
                                 </span>
                             </td>
-                            <td class="px-3 py-2 text-right text-xs">€${(parseFloat(v.prezzo) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-right text-xs">â‚¬${(parseFloat(v.prezzo) || 0).toFixed(2)}</td>
                             <td class="px-3 py-2 text-right text-xs">${(parseFloat(v.pezzi_venduti) || 0).toLocaleString('it-IT')}</td>
-                            <td class="px-3 py-2 text-right text-xs font-bold text-green-600">€${(parseFloat(v.fatturato) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-right text-xs font-bold text-green-600">â‚¬${(parseFloat(v.fatturato) || 0).toFixed(2)}</td>
                             <td class="px-3 py-2 text-center">
                                 <button onclick="editVendita('${v.id}')" class="text-blue-600 hover:text-blue-800 p-1" title="Modifica">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -839,7 +903,7 @@
             updateSelectionBar();
         }
 
-        // RIMOSSE: prevPage() e nextPage() - non più necessarie
+        // RIMOSSE: prevPage() e nextPage() - non piÃ¹ necessarie
 
         // ===== SELEZIONE =====
         function toggleSelect(id) {
@@ -875,6 +939,14 @@
 
         // ===== MODAL IMPORT =====
         function openImportModal() {
+            // Reset stato
+            document.getElementById('meseImport').value = '';
+            document.getElementById('excelInput').value = '';
+            document.getElementById('fileNameDisplay').textContent = '';
+            document.getElementById('previewSection').classList.add('hidden');
+            document.getElementById('importProgress').classList.add('hidden');
+            parsedImportData = [];
+            
             document.getElementById('importModal').classList.remove('hidden');
         }
 
@@ -949,7 +1021,7 @@
                 await loadData();
                 
             } catch (err) {
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1003,7 +1075,7 @@
                 
             } catch (err) {
                 showLoading(false);
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1066,7 +1138,7 @@
                 populateFilters();
                 
             } catch (err) {
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1086,7 +1158,7 @@
                 populateFilters();
                 
             } catch (err) {
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1128,7 +1200,7 @@
                 
             } catch (err) {
                 showLoading(false);
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
             }
         }
 
@@ -1137,7 +1209,7 @@
             const file = e.target.files[0];
             if (!file) return;
             
-            document.getElementById('importProgress').classList.remove('hidden');
+            document.getElementById('fileNameDisplay').textContent = `✓ ${file.name}`;
             
             try {
                 const data = await file.arrayBuffer();
@@ -1151,77 +1223,190 @@
                 }
                 
                 const headers = rows[0];
-                const dataRows = rows.slice(1).filter(r => r.length > 0);
+                const dataRows = rows.slice(1).filter(r => r && r.length > 0);
                 
-                // Mappa colonne
+                // Mappa colonne (gestisce variazioni nei nomi)
                 const colMap = {};
-                const expectedCols = ['Mese', 'SKU ORIGINE', 'NOME', 'SKU CONVERSIONE', 'ID SETTORE', 'NOME UNIVOCO', 'Categoria', 'Prezzo', 'Prezzo medio', 'Pezzi Venduti', 'FATTURATO'];
-                
                 headers.forEach((h, i) => {
-                    const normalized = (h || '').toString().trim().toUpperCase();
-                    if (normalized.includes('MESE')) colMap.mese = i;
-                    else if (normalized.includes('SKU') && normalized.includes('ORIGINE')) colMap.sku_origine = i;
-                    else if (normalized === 'NOME') colMap.nome = i;
-                    else if (normalized.includes('SKU') && normalized.includes('CONVERSIONE')) colMap.sku_conversione = i;
-                    else if (normalized.includes('ID') && normalized.includes('SETTORE')) colMap.id_settore = i;
-                    else if (normalized.includes('NOME') && normalized.includes('UNIVOCO')) colMap.nome_univoco = i;
-                    else if (normalized.includes('CATEGORIA')) colMap.categoria = i;
-                    else if (normalized === 'PREZZO') colMap.prezzo = i;
-                    else if (normalized.includes('PREZZO') && normalized.includes('MEDIO')) colMap.prezzo_medio = i;
-                    else if (normalized.includes('PEZZI')) colMap.pezzi_venduti = i;
-                    else if (normalized.includes('FATTURATO')) colMap.fatturato = i;
+                    const normalized = (h || '').toString().trim().toLowerCase();
+                    if (normalized.includes('nome') && !normalized.includes('univoco')) colMap.nome = i;
+                    else if (normalized.includes('categoria')) colMap.categoria = i;
+                    else if (normalized === 'prezzo' || (normalized.includes('prezzo') && !normalized.includes('medio'))) colMap.prezzo = i;
+                    else if (normalized.includes('prezzo') && normalized.includes('medio')) colMap.prezzo_medio = i;
+                    else if (normalized.includes('pezzi') || normalized.includes('vendut')) colMap.pezzi_venduti = i;
+                    else if (normalized.includes('ricav') || normalized.includes('fatturato')) colMap.ricavi = i;
                 });
                 
-                // Prepara records
-                const records = dataRows.map(row => {
-                    const categoria = row[colMap.categoria]?.toString().trim() || null;
-                    const nome = row[colMap.nome]?.toString().trim() || null;
+                // Verifica colonne obbligatorie
+                const missing = [];
+                if (colMap.nome === undefined) missing.push('Nome');
+                if (colMap.categoria === undefined) missing.push('Categoria');
+                if (colMap.prezzo === undefined) missing.push('Prezzo');
+                if (colMap.pezzi_venduti === undefined) missing.push('Pezzi Venduti');
+                if (colMap.ricavi === undefined) missing.push('Ricavi');
+                
+                if (missing.length > 0) {
+                    throw new Error(`Colonne mancanti: ${missing.join(', ')}`);
+                }
+                
+                // Processa dati
+                let newCount = 0;
+                let existingCount = 0;
+                
+                parsedImportData = dataRows.map(row => {
+                    const nome = row[colMap.nome]?.toString().trim() || '';
+                    const categoria = row[colMap.categoria]?.toString().trim() || '';
                     
-                    // Auto-assegna gruppo da categoria
-                    let gruppoId = null;
+                    if (!nome) return null; // Salta righe senza nome
+                    
+                    // Recupera SKU esistenti o genera nuovi
+                    let sku_origine, sku_conversione, id_settore;
+                    let isNew = false;
+                    
+                    if (existingProducts.has(nome)) {
+                        const existing = existingProducts.get(nome);
+                        sku_origine = existing.sku_origine;
+                        sku_conversione = existing.sku_conversione;
+                        id_settore = existing.id_settore;
+                        existingCount++;
+                    } else {
+                        maxSkuOrigine++;
+                        maxSkuConversione++;
+                        sku_origine = `SKU-${String(maxSkuOrigine).padStart(6, '0')}`;
+                        sku_conversione = `CONV-${String(maxSkuConversione).padStart(6, '0')}`;
+                        id_settore = categoria.substring(0, 3).toUpperCase();
+                        newCount++;
+                        isNew = true;
+                    }
+                    
+                    // Auto-assegna gruppo vendita
+                    let gruppo_vendita_id = null;
                     if (categoria && MAPPING_CATEGORIA_GRUPPO[categoria]) {
                         const gruppoNome = MAPPING_CATEGORIA_GRUPPO[categoria];
                         const gruppo = allGruppiVendita.find(g => g.nome === gruppoNome);
-                        if (gruppo) gruppoId = gruppo.id;
+                        if (gruppo) gruppo_vendita_id = gruppo.id;
                     }
                     
-                    // Se non assegnato, prova con il nome
-                    if (!gruppoId && nome) {
-                        const gruppoNome = detectGruppoByName(nome);
-                        if (gruppoNome) {
-                            const gruppo = allGruppiVendita.find(g => g.nome === gruppoNome);
-                            if (gruppo) gruppoId = gruppo.id;
-                        }
-                    }
+                    const prezzo = parseFloat(row[colMap.prezzo]) || 0;
+                    const prezzo_medio = colMap.prezzo_medio !== undefined ? 
+                        (parseFloat(row[colMap.prezzo_medio]) || prezzo) : prezzo;
                     
                     return {
-                        mese: row[colMap.mese]?.toString().trim() || null,
-                        sku_origine: row[colMap.sku_origine]?.toString().trim() || null,
-                        nome: nome,
-                        sku_conversione: row[colMap.sku_conversione]?.toString().trim() || null,
-                        id_settore: row[colMap.id_settore]?.toString().trim() || null,
-                        nome_univoco: row[colMap.nome_univoco]?.toString().trim() || null,
-                        categoria: categoria,
-                        prezzo: parseFloat(row[colMap.prezzo]) || null,
-                        prezzo_medio: parseFloat(row[colMap.prezzo_medio]) || null,
-                        pezzi_venduti: parseFloat(row[colMap.pezzi_venduti]) || null,
-                        fatturato: parseFloat(row[colMap.fatturato]) || null,
-                        gruppo_vendita_id: gruppoId
+                        nome,
+                        categoria,
+                        prezzo,
+                        prezzo_medio,
+                        pezzi_venduti: parseFloat(row[colMap.pezzi_venduti]) || 0,
+                        ricavi: parseFloat(row[colMap.ricavi]) || 0,
+                        sku_origine,
+                        sku_conversione,
+                        id_settore,
+                        nome_univoco: nome.substring(0, 50),
+                        gruppo_vendita_id,
+                        isNew
                     };
-                });
+                }).filter(r => r !== null);
+                
+                // Mostra anteprima
+                showPreview(parsedImportData, existingCount, newCount);
+                
+            } catch (err) {
+                console.error('Errore parsing Excel:', err);
+                alert('❌ Errore: ' + err.message);
+                document.getElementById('fileNameDisplay').textContent = '';
+            }
+        }
+
+
+        /**
+         * Mostra anteprima dei dati parsed
+         */
+        function showPreview(data, existingCount, newCount) {
+            const preview = document.getElementById('previewSection');
+            const previewBody = document.getElementById('previewBody');
+            const btnStart = document.getElementById('btnStartImport');
+            
+            preview.classList.remove('hidden');
+            btnStart.classList.remove('hidden');
+            
+            // Prime 5 righe
+            const rows = data.slice(0, 5);
+            previewBody.innerHTML = rows.map(r => `
+                <tr class="hover:bg-gray-100">
+                    <td class="px-2 py-1 border-b text-xs">${r.nome.substring(0, 30)}</td>
+                    <td class="px-2 py-1 border-b text-xs">${r.categoria}</td>
+                    <td class="px-2 py-1 border-b text-right text-xs">${r.pezzi_venduti}</td>
+                    <td class="px-2 py-1 border-b text-right text-xs">€${r.ricavi.toFixed(2)}</td>
+                    <td class="px-2 py-1 border-b text-center">
+                        <span class="px-1 py-0.5 text-xs rounded ${r.isNew ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">
+                            ${r.isNew ? '🆕' : '✓'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Stats
+            document.getElementById('statTotal').textContent = data.length;
+            document.getElementById('statExisting').textContent = existingCount;
+            document.getElementById('statNew').textContent = newCount;
+        }
+
+        /**
+         * Avvia import effettivo
+         */
+        async function startImport() {
+            const mese = document.getElementById('meseImport').value;
+            
+            if (!mese) {
+                alert('⚠️ Seleziona il mese di riferimento');
+                return;
+            }
+            
+            if (parsedImportData.length === 0) {
+                alert('⚠️ Nessun dato da importare');
+                return;
+            }
+            
+            if (!confirm(`Confermi l'import di ${parsedImportData.length} righe per il mese ${mese}?`)) {
+                return;
+            }
+            
+            // Nascondi preview, mostra progress
+            document.getElementById('previewSection').classList.add('hidden');
+            document.getElementById('importProgress').classList.remove('hidden');
+            
+            try {
+                // Aggiungi mese ai records
+                const records = parsedImportData.map(row => ({
+                    mese: mese,
+                    sku_origine: row.sku_origine,
+                    nome: row.nome,
+                    sku_conversione: row.sku_conversione,
+                    id_settore: row.id_settore,
+                    nome_univoco: row.nome_univoco,
+                    categoria: row.categoria,
+                    prezzo: row.prezzo,
+                    prezzo_medio: row.prezzo_medio,
+                    pezzi_venduti: row.pezzi_venduti,
+                    fatturato: row.ricavi,
+                    gruppo_vendita_id: row.gruppo_vendita_id
+                }));
                 
                 // Insert in batch
-                const BATCH_INSERT = 500;
+                const BATCH_SIZE = 500;
                 let inserted = 0;
                 
-                for (let i = 0; i < records.length; i += BATCH_INSERT) {
-                    const batch = records.slice(i, i + BATCH_INSERT);
+                for (let i = 0; i < records.length; i += BATCH_SIZE) {
+                    const batch = records.slice(i, i + BATCH_SIZE);
                     const percent = Math.round((i / records.length) * 100);
                     
                     document.getElementById('importProgressBar').style.width = percent + '%';
                     document.getElementById('importProgressText').textContent = `${percent}% (${i}/${records.length})`;
                     
-                    const { error } = await supabaseClient.from('vendite').insert(batch);
+                    const { error } = await supabaseClient
+                        .from('vendite')
+                        .insert(batch);
+                    
                     if (error) throw error;
                     
                     inserted += batch.length;
@@ -1232,21 +1417,21 @@
                 
                 setTimeout(async () => {
                     closeImportModal();
-                    e.target.value = '';
                     await loadData();
-                    alert(`✅ Importate ${inserted} righe con successo!`);
-                }, 500);
+                    alert(`✅ Import completato!\n\n${inserted} righe inserite per ${mese}`);
+                }, 1000);
                 
             } catch (err) {
                 console.error('Errore import:', err);
                 alert('❌ Errore import: ' + err.message);
                 document.getElementById('importProgress').classList.add('hidden');
+                document.getElementById('previewSection').classList.remove('hidden');
             }
         }
 
-        // ===== INIT =====
+                // ===== INIT =====
         loadData();
-        console.log('✅ Gestione Vendite v2.0 - Scrollbar + Auto-Assegnazione Gruppi');
+        console.log('âœ… Gestione Vendite v2.0 - Scrollbar + Auto-Assegnazione Gruppi');
     </script>
 </body>
 </html>
