@@ -7,12 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .input-currency { text-align: right; font-variant-numeric: tabular-nums; }
         .day-row:hover { background-color: #f0f9ff !important; cursor: pointer; }
         .day-row-weekend { background-color: #fefce8; }
+        .drop-active { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -31,7 +33,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <img src="data:image/png;base64,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" alt="Logo" class="w-12 h-12 rounded-lg object-contain">
+                        <img src="data:image/png;base64,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" alt="Logo" class="w-12 h-12 rounded-lg object-contain">
                         <span class="text-lg font-bold">Grappoli &amp; Luppoli</span>
                     </button>
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
@@ -53,7 +55,7 @@
         </div>
     </nav>
 
-    <!-- MODAL INSERIMENTO GIORNALIERO -->
+    <!-- ==================== MODAL INSERIMENTO GIORNALIERO ==================== -->
     <div id="modalRicavo" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto fade-in">
             <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-2xl">
@@ -85,7 +87,95 @@
         </div>
     </div>
 
-    <!-- MODAL DETTAGLIO MESE -->
+    <!-- ==================== MODAL IMPORT FILE ==================== -->
+    <div id="modalImport" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto fade-in">
+            <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white p-6 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">📥 Importa Ricavi da File</h2>
+                    <button onclick="closeImportModal()" class="hover:bg-white/20 rounded-lg p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+            </div>
+            <div class="p-6">
+                <!-- Drop zone -->
+                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-emerald-500 cursor-pointer transition-colors mb-4" onclick="document.getElementById('fileInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(event)">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-lg font-bold mb-2 text-gray-700">Carica file Pagamenti</p>
+                    <p class="text-sm text-gray-500">Trascina qui o clicca per selezionare (.xlsx, .xls, .csv)</p>
+                </div>
+
+                <!-- Modalità import -->
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Modalità importazione:</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="importMode" value="upsert" checked class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm text-gray-700"><strong>Aggiorna</strong> — sovrascrive giorni esistenti</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="importMode" value="skip" class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm text-gray-700"><strong>Salta</strong> — ignora giorni già presenti</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div id="importPreview" class="hidden mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-gray-800">Anteprima dati</h3>
+                        <span id="importCount" class="text-sm text-emerald-700 font-medium bg-emerald-100 px-3 py-1 rounded-full"></span>
+                    </div>
+                    <div class="max-h-48 overflow-y-auto border rounded-lg">
+                        <table class="w-full text-xs whitespace-nowrap">
+                            <thead class="bg-gray-100 sticky top-0"><tr>
+                                <th class="py-1.5 px-2 text-left">Data</th>
+                                <th class="py-1.5 px-2 text-right text-blue-700">POS</th>
+                                <th class="py-1.5 px-2 text-right text-green-700">Cont.</th>
+                                <th class="py-1.5 px-2 text-right text-purple-700">Sat.</th>
+                                <th class="py-1.5 px-2 text-right text-cyan-700">Fatt.</th>
+                                <th class="py-1.5 px-2 text-right text-amber-700">Misc.</th>
+                                <th class="py-1.5 px-2 text-right font-bold">Totale</th>
+                            </tr></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div id="importProgress" class="hidden mb-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm font-medium text-emerald-800">Importazione in corso...</span>
+                        <span id="importProgressText" class="text-sm font-medium text-emerald-700">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="importProgressBar" class="bg-emerald-600 h-3 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                    <p id="importStats" class="text-xs text-gray-500 mt-2"></p>
+                </div>
+
+                <!-- Result -->
+                <div id="importResult" class="hidden mb-4"></div>
+
+                <!-- Formato atteso -->
+                <div class="p-4 bg-blue-50 rounded-lg mb-4">
+                    <p class="text-sm text-blue-800 font-semibold mb-1">📋 Formato atteso (come Pagamenti.xlsx):</p>
+                    <p class="text-xs text-blue-700">Colonne: Data | Bancomat/POS | Contanti | Satispay | Fatture | ... | Black/Miscellaneo</p>
+                    <p class="text-xs text-blue-600 mt-1">Oppure CSV con colonne: data, pos, contanti, satispay, fatture, miscellaneo</p>
+                </div>
+
+                <!-- Azioni -->
+                <div class="flex space-x-3">
+                    <button onclick="closeImportModal()" class="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Chiudi</button>
+                    <button onclick="executeImport()" id="btnImport" disabled class="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">📥 Importa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL DETTAGLIO MESE ==================== -->
     <div id="modalMese" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto fade-in">
             <div class="bg-gradient-to-r from-gray-700 to-gray-800 text-white p-6 rounded-t-2xl">
@@ -113,7 +203,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONFERMA ELIMINAZIONE -->
+    <!-- ==================== MODAL CONFERMA ELIMINAZIONE ==================== -->
     <div id="modalDelete" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 fade-in">
             <div class="text-center mb-6">
@@ -128,16 +218,20 @@
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
+    <!-- ==================== MAIN CONTENT ==================== -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">📈 Andamento Ricavi</h1>
                 <p class="mt-2 text-gray-600">Analisi ricavi mensili per tipologia di pagamento</p>
             </div>
-            <div class="mt-4 md:mt-0 flex items-center space-x-3">
+            <div class="mt-4 md:mt-0 flex flex-wrap items-center gap-3">
                 <label class="text-sm font-medium text-gray-700">Anno:</label>
                 <select id="filterAnno" onchange="applyFilter()" class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"><option value="">Tutti</option></select>
+                <button onclick="openImportModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium shadow-lg flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+                    <span>Importa File</span>
+                </button>
                 <button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg flex items-center space-x-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <span>Nuovo Ricavo</span>
@@ -187,6 +281,7 @@
         (function(){ const a = JSON.parse(localStorage.getItem(SESSION_KEY)||'{}'); document.getElementById('userName').textContent = 'Ciao, '+(a.userName||'Utente'); })();
 
         let allDailyData=[], monthlyData=[], filteredMonthly=[], charts={}, editingId=null, deletingId=null;
+        let pendingImportRecords = []; // dati parsati in attesa di import
 
         const COLORS = { pos:{bg:'rgba(59,130,246,0.8)',border:'rgba(59,130,246,1)'}, contanti:{bg:'rgba(34,197,94,0.8)',border:'rgba(34,197,94,1)'}, satispay:{bg:'rgba(168,85,247,0.8)',border:'rgba(168,85,247,1)'}, fatture:{bg:'rgba(6,182,212,0.8)',border:'rgba(6,182,212,1)'}, miscellaneo:{bg:'rgba(245,158,11,0.8)',border:'rgba(245,158,11,1)'} };
         const TL = {pos:'POS',contanti:'Contanti',satispay:'Satispay',fatture:'Fatture',miscellaneo:'Miscellaneo'};
@@ -198,8 +293,9 @@
         function fmt(v){return new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',minimumFractionDigits:0,maximumFractionDigits:0}).format(v||0);}
         function fmt2(v){return new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(v||0);}
         function pf(v){return parseFloat(v)||0;}
-        function rt(r){return pf(r.pos)+pf(r.contanti)+pf(r.satispay)+pf(r.fatture)+pf(r.miscellaneo);}
+        function rowTot(r){return pf(r.pos)+pf(r.contanti)+pf(r.satispay)+pf(r.fatture)+pf(r.miscellaneo);}
 
+        // ===== LOAD DATA =====
         async function loadData(){
             try {
                 let all=[], from=0;
@@ -248,7 +344,7 @@
             renderAll();
         }
 
-        // ===== MODAL =====
+        // ===== MODAL INSERIMENTO =====
         function openModal(row){
             editingId=null;
             document.getElementById('modalTitle').textContent='Inserisci Ricavo Giornaliero';
@@ -317,7 +413,7 @@
             let tP=0,tC=0,tS=0,tF=0,tM=0,tT=0;
             const tbody=document.getElementById('meseTableBody');
             tbody.innerHTML=rows.map(r=>{
-                const d=new Date(r.data+'T00:00:00'), dow=GN[d.getDay()], isWe=d.getDay()===0||d.getDay()===6, tot=rt(r);
+                const d=new Date(r.data+'T00:00:00'), dow=GN[d.getDay()], isWe=d.getDay()===0||d.getDay()===6, tot=rowTot(r);
                 tP+=pf(r.pos);tC+=pf(r.contanti);tS+=pf(r.satispay);tF+=pf(r.fatture);tM+=pf(r.miscellaneo);tT+=tot;
                 return '<tr class="border-b border-gray-100 day-row '+(isWe?'day-row-weekend':'')+'" ondblclick="openModal(allDailyData.find(x=>x.id===\''+r.id+'\'))"><td class="py-2 px-2 font-medium text-gray-800">'+d.getDate()+' '+dow+'</td><td class="py-2 px-2 text-right text-blue-700">'+fmt2(r.pos)+'</td><td class="py-2 px-2 text-right text-green-700">'+fmt2(r.contanti)+'</td><td class="py-2 px-2 text-right text-purple-700">'+fmt2(r.satispay)+'</td><td class="py-2 px-2 text-right text-cyan-700">'+fmt2(r.fatture)+'</td><td class="py-2 px-2 text-right text-amber-700">'+fmt2(r.miscellaneo)+'</td><td class="py-2 px-2 text-right text-gray-900 font-bold bg-gray-50">'+fmt2(tot)+'</td><td class="py-2 px-2 text-gray-400 text-xs max-w-[120px] truncate" title="'+(r.note||'')+'">'+(r.note||'')+'</td><td class="py-2 px-1 text-right"><button onclick="openModal(allDailyData.find(x=>x.id===\''+r.id+'\'))" class="text-blue-500 hover:text-blue-700 p-1" title="Modifica">✏️</button><button onclick="askDeleteRicavo(\''+r.id+'\',\''+r.data+'\')" class="text-red-400 hover:text-red-600 p-1" title="Elimina">🗑️</button></td></tr>';
             }).join('');
@@ -326,6 +422,294 @@
         }
         function closeMeseModal(){document.getElementById('modalMese').classList.add('hidden');}
         function formatDateIT(ds){const d=new Date(ds+'T00:00:00');return d.getDate()+' '+MF[d.getMonth()+1]+' '+d.getFullYear();}
+
+        // ============================================================
+        // ==================== IMPORT FILE ===========================
+        // ============================================================
+        function openImportModal(){
+            pendingImportRecords=[];
+            document.getElementById('importPreview').classList.add('hidden');
+            document.getElementById('importProgress').classList.add('hidden');
+            document.getElementById('importResult').classList.add('hidden');
+            document.getElementById('btnImport').disabled=true;
+            document.getElementById('fileInput').value='';
+            document.getElementById('modalImport').classList.remove('hidden');
+        }
+        function closeImportModal(){document.getElementById('modalImport').classList.add('hidden');}
+
+        // Drag & drop handlers
+        function handleDragOver(e){e.preventDefault();e.stopPropagation();document.getElementById('dropZone').classList.add('drop-active');}
+        function handleDragLeave(e){e.preventDefault();e.stopPropagation();document.getElementById('dropZone').classList.remove('drop-active');}
+        function handleDrop(e){
+            e.preventDefault();e.stopPropagation();
+            document.getElementById('dropZone').classList.remove('drop-active');
+            const files=e.dataTransfer.files;
+            if(files.length>0) processFile(files[0]);
+        }
+        function handleFileSelect(e){
+            const file=e.target.files[0];
+            if(file) processFile(file);
+        }
+
+        // ===== PROCESS FILE (xlsx/csv) =====
+        async function processFile(file){
+            console.log('Processando file:', file.name, file.type, file.size);
+            try {
+                const ext = file.name.split('.').pop().toLowerCase();
+                let records = [];
+
+                if (ext === 'csv') {
+                    const text = await file.text();
+                    records = parseCSV(text);
+                } else {
+                    const data = await file.arrayBuffer();
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    records = parseExcelSheet(sheet, workbook);
+                }
+
+                // Filtra record validi (con data e almeno un valore > 0)
+                records = records.filter(r => r.data && (r.pos > 0 || r.contanti > 0 || r.satispay > 0 || r.fatture > 0 || r.miscellaneo > 0));
+
+                if (records.length === 0) {
+                    alert('⚠️ Nessun dato valido trovato nel file.\nVerifica che il formato sia corretto.');
+                    return;
+                }
+
+                pendingImportRecords = records;
+                showImportPreview(records);
+                document.getElementById('btnImport').disabled = false;
+                console.log('✅ Parsati ' + records.length + ' record dal file');
+
+            } catch(err) {
+                console.error('Errore parsing file:', err);
+                alert('❌ Errore nella lettura del file: ' + err.message);
+            }
+        }
+
+        // ===== PARSE EXCEL (formato Pagamenti.xlsx) =====
+        function parseExcelSheet(sheet, workbook) {
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: true });
+            if (rows.length < 3) return [];
+
+            // Trova header row (cerca "Bancomat" o "POS" o "Contanti")
+            let headerRow = -1;
+            let colMap = {};
+            for (let i = 0; i < Math.min(5, rows.length); i++) {
+                const row = rows[i];
+                if (!row) continue;
+                const joined = row.map(c => String(c || '').toUpperCase()).join('|');
+                if (joined.includes('BANCOMAT') || joined.includes('CONTANTI') || joined.includes('POS')) {
+                    headerRow = i;
+                    row.forEach((cell, ci) => {
+                        const h = String(cell || '').trim().toUpperCase();
+                        if (h.includes('DATA') || h === 'DATE') colMap.data = ci;
+                        if (h.includes('BANCOMAT') || h === 'POS') colMap.pos = ci;
+                        if (h.includes('CONTANTI') || h === 'CASH') colMap.contanti = ci;
+                        if (h.includes('SATISPAY')) colMap.satispay = ci;
+                        if (h.includes('FATTUR')) colMap.fatture = ci;
+                        if (h.includes('BLACK') || h.includes('MISCELLANEO') || h.includes('MISC')) colMap.miscellaneo = ci;
+                        if (h === 'GIORNO') colMap.giorno = ci;
+                        if (h === 'MESE') colMap.meseCol = ci;
+                        if (h === 'ANNO') colMap.annoCol = ci;
+                    });
+                    break;
+                }
+            }
+
+            // Fallback: usa posizioni fisse come Pagamenti.xlsx (0-indexed)
+            // Col 1=giorno, 2=mese, 3=anno, 5=Data, 6=Bancomat, 7=Contanti, 8=Satispay, 9=Fatture, 11=Black
+            if (headerRow === -1) {
+                headerRow = 1; // header su riga 2 (index 1)
+                colMap = { giorno: 0, meseCol: 1, annoCol: 2, data: 4, pos: 5, contanti: 6, satispay: 7, fatture: 8, miscellaneo: 10 };
+            }
+
+            const records = [];
+            for (let i = headerRow + 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length < 3) continue;
+
+                // Determina la data
+                let dataStr = null;
+                if (colMap.data !== undefined && row[colMap.data]) {
+                    const cellVal = row[colMap.data];
+                    if (cellVal instanceof Date) {
+                        dataStr = cellVal.toISOString().split('T')[0];
+                    } else {
+                        const parsed = parseFlexDate(String(cellVal));
+                        if (parsed) dataStr = parsed;
+                    }
+                }
+                // Fallback: ricostruisci da giorno/mese/anno
+                if (!dataStr && colMap.giorno !== undefined && colMap.meseCol !== undefined && colMap.annoCol !== undefined) {
+                    const g = parseInt(row[colMap.giorno]);
+                    const m = parseInt(row[colMap.meseCol]);
+                    const a = parseInt(row[colMap.annoCol]);
+                    if (g > 0 && m > 0 && a > 2000) {
+                        dataStr = a + '-' + String(m).padStart(2, '0') + '-' + String(g).padStart(2, '0');
+                    }
+                }
+                if (!dataStr) continue;
+
+                // Verifica data valida
+                const testDate = new Date(dataStr + 'T00:00:00');
+                if (isNaN(testDate.getTime())) continue;
+
+                records.push({
+                    data: dataStr,
+                    pos: pf(row[colMap.pos]),
+                    contanti: pf(row[colMap.contanti]),
+                    satispay: pf(row[colMap.satispay]),
+                    fatture: colMap.fatture !== undefined ? pf(row[colMap.fatture]) : 0,
+                    miscellaneo: colMap.miscellaneo !== undefined ? pf(row[colMap.miscellaneo]) : 0,
+                    note: ''
+                });
+            }
+            return records;
+        }
+
+        // ===== PARSE CSV =====
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return [];
+            const sep = lines[0].includes(';') ? ';' : ',';
+            const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+
+            const colMap = {};
+            headers.forEach((h, i) => {
+                if (h.includes('data') || h === 'date') colMap.data = i;
+                if (h.includes('pos') || h.includes('bancomat')) colMap.pos = i;
+                if (h.includes('contanti') || h.includes('cash')) colMap.contanti = i;
+                if (h.includes('satispay')) colMap.satispay = i;
+                if (h.includes('fattur')) colMap.fatture = i;
+                if (h.includes('miscellaneo') || h.includes('misc') || h.includes('black')) colMap.miscellaneo = i;
+            });
+
+            if (colMap.data === undefined) { alert('Colonna "data" non trovata nel CSV'); return []; }
+
+            const records = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(sep).map(c => c.trim().replace(/['"]/g, ''));
+                const dataStr = parseFlexDate(cols[colMap.data]);
+                if (!dataStr) continue;
+                records.push({
+                    data: dataStr,
+                    pos: pf(cols[colMap.pos]),
+                    contanti: pf(cols[colMap.contanti]),
+                    satispay: colMap.satispay !== undefined ? pf(cols[colMap.satispay]) : 0,
+                    fatture: colMap.fatture !== undefined ? pf(cols[colMap.fatture]) : 0,
+                    miscellaneo: colMap.miscellaneo !== undefined ? pf(cols[colMap.miscellaneo]) : 0,
+                    note: ''
+                });
+            }
+            return records;
+        }
+
+        // ===== PARSE FLEXIBLE DATE =====
+        function parseFlexDate(str) {
+            if (!str) return null;
+            str = String(str).trim();
+            // YYYY-MM-DD
+            let m = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+            if (m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+            // DD/MM/YYYY or DD-MM-YYYY
+            m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            if (m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+            // Excel serial date
+            const num = parseFloat(str);
+            if (!isNaN(num) && num > 40000 && num < 50000) {
+                const d = new Date((num - 25569) * 86400000);
+                if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+            }
+            return null;
+        }
+
+        // ===== PREVIEW =====
+        function showImportPreview(records) {
+            document.getElementById('importCount').textContent = records.length + ' righe trovate';
+            const tbody = document.getElementById('previewBody');
+            // Mostra prime 20 e ultime 5
+            const show = records.length <= 25 ? records : [...records.slice(0,15), null, ...records.slice(-5)];
+            tbody.innerHTML = show.map(r => {
+                if (!r) return '<tr><td colspan="7" class="py-1 px-2 text-center text-gray-400">... ' + (records.length - 20) + ' righe nascoste ...</td></tr>';
+                const d = new Date(r.data+'T00:00:00');
+                const tot = r.pos+r.contanti+r.satispay+r.fatture+r.miscellaneo;
+                return '<tr class="border-b border-gray-100"><td class="py-1 px-2 text-gray-700">'+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+'</td><td class="py-1 px-2 text-right text-blue-600">'+fmt2(r.pos)+'</td><td class="py-1 px-2 text-right text-green-600">'+fmt2(r.contanti)+'</td><td class="py-1 px-2 text-right text-purple-600">'+fmt2(r.satispay)+'</td><td class="py-1 px-2 text-right text-cyan-600">'+fmt2(r.fatture)+'</td><td class="py-1 px-2 text-right text-amber-600">'+fmt2(r.miscellaneo)+'</td><td class="py-1 px-2 text-right font-bold">'+fmt2(tot)+'</td></tr>';
+            }).join('');
+            document.getElementById('importPreview').classList.remove('hidden');
+            document.getElementById('importResult').classList.add('hidden');
+        }
+
+        // ===== EXECUTE IMPORT =====
+        async function executeImport() {
+            if (pendingImportRecords.length === 0) return;
+
+            const mode = document.querySelector('input[name="importMode"]:checked').value;
+            const btn = document.getElementById('btnImport');
+            btn.disabled = true;
+            btn.textContent = '⏳ Importazione...';
+            document.getElementById('importProgress').classList.remove('hidden');
+
+            const BATCH = 100;
+            let inserted = 0, updated = 0, skipped = 0, errors = 0;
+
+            try {
+                for (let i = 0; i < pendingImportRecords.length; i += BATCH) {
+                    const batch = pendingImportRecords.slice(i, i + BATCH);
+                    const percent = Math.round(((i + batch.length) / pendingImportRecords.length) * 100);
+
+                    if (mode === 'upsert') {
+                        // Upsert: sovrascrive se data esiste
+                        const { data, error } = await supabaseClient.from('ricavi_giornalieri').upsert(batch, { onConflict: 'data' });
+                        if (error) throw error;
+                        inserted += batch.length;
+                    } else {
+                        // Skip: inserisce solo date nuove
+                        for (const rec of batch) {
+                            try {
+                                const { data, error } = await supabaseClient.from('ricavi_giornalieri').insert(rec);
+                                if (error) {
+                                    if (error.code === '23505') { skipped++; } // duplicate
+                                    else { errors++; console.warn('Errore insert:', rec.data, error.message); }
+                                } else { inserted++; }
+                            } catch(e) { errors++; }
+                        }
+                    }
+
+                    document.getElementById('importProgressBar').style.width = percent + '%';
+                    document.getElementById('importProgressText').textContent = percent + '%';
+                    document.getElementById('importStats').textContent = 'Processati: ' + Math.min(i + batch.length, pendingImportRecords.length) + ' / ' + pendingImportRecords.length;
+
+                    // Yield to UI
+                    await new Promise(r => setTimeout(r, 10));
+                }
+
+                document.getElementById('importProgressBar').style.width = '100%';
+                document.getElementById('importProgressText').textContent = '100%';
+
+                // Show result
+                let resultHtml = '<div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded">';
+                resultHtml += '<p class="font-semibold text-emerald-800">✅ Importazione completata!</p>';
+                resultHtml += '<p class="text-sm text-emerald-700 mt-1">' + inserted + ' righe importate';
+                if (skipped > 0) resultHtml += ', ' + skipped + ' saltate (già presenti)';
+                if (errors > 0) resultHtml += ', ' + errors + ' errori';
+                resultHtml += '</p></div>';
+                document.getElementById('importResult').innerHTML = resultHtml;
+                document.getElementById('importResult').classList.remove('hidden');
+
+                // Reload
+                await loadData();
+
+            } catch(err) {
+                console.error('Errore import:', err);
+                document.getElementById('importResult').innerHTML = '<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded"><p class="font-semibold text-red-800">❌ Errore importazione</p><p class="text-sm text-red-700 mt-1">' + (err.message || 'Errore sconosciuto') + '</p></div>';
+                document.getElementById('importResult').classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📥 Importa';
+                pendingImportRecords = [];
+            }
+        }
 
         // ===== KPI =====
         function renderKPI(){
@@ -349,25 +733,21 @@
             const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
             charts.stacked=new Chart(document.getElementById('chartStacked').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredMonthly.map(d=>d[t]),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1,borderRadius:2}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw),footer:i=>'Totale: '+fmt2(i.reduce((s,x)=>s+x.raw,0))}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
         }
-
         function renderTrend(){
             dc('trend');
             const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
             charts.trend=new Chart(document.getElementById('chartTrend').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'Totale',data:filteredMonthly.map(d=>d.totale),borderColor:'rgba(55,65,81,1)',backgroundColor:'rgba(55,65,81,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2.5},{label:'POS',data:filteredMonthly.map(d=>d.pos),borderColor:COLORS.pos.border,borderDash:[5,5],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'},{label:'Miscellaneo',data:filteredMonthly.map(d=>d.miscellaneo),borderColor:COLORS.miscellaneo.border,borderDash:[3,3],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw)}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
         }
-
         function renderComposizione(){
             dc('composizione');
             const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
             charts.composizione=new Chart(document.getElementById('chartComposizione').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredMonthly.map(d=>d.totale>0?((d[t]/d.totale)*100):0),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw.toFixed(1)+'%'}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}});
         }
-
         function renderYoY(){
             dc('yoy');
             const anni=[...new Set(monthlyData.map(d=>d.anno))].sort(), yc=['rgba(156,163,175,0.9)','rgba(59,130,246,0.9)','rgba(16,185,129,0.9)','rgba(245,158,11,0.9)','rgba(239,68,68,0.9)'];
             charts.yoy=new Chart(document.getElementById('chartYoY').getContext('2d'),{type:'line',data:{labels:MS,datasets:anni.map((a,i)=>{const m={};monthlyData.filter(d=>d.anno===a).forEach(d=>m[d.mese]=d.totale);return{label:String(a),data:Array.from({length:12},(_,x)=>m[x+1]||null),borderColor:yc[i%yc.length],backgroundColor:'transparent',tension:0.3,pointRadius:3,borderWidth:2,spanGaps:false};})},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.raw?c.dataset.label+': '+fmt2(c.raw):''}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
         }
-
         function renderDailyAvg(){
             dc('dailyAvg');
             const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
@@ -387,7 +767,7 @@
         }
 
         function renderAll(){renderKPI();renderStacked();renderTrend();renderComposizione();renderYoY();renderDailyAvg();renderTable();}
-        document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeMeseModal();closeDeleteModal();}});
+        document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeMeseModal();closeDeleteModal();closeImportModal();}});
         loadData();
     </script>
 </body>
