@@ -508,7 +508,7 @@
                         if (h.includes('CONTANTI') || h === 'CASH') colMap.contanti = ci;
                         if (h.includes('SATISPAY')) colMap.satispay = ci;
                         if (h.includes('FATTUR')) colMap.fatture = ci;
-                        if (h.includes('BLACK') || h.includes('MISCELLANEO') || h.includes('MISC')) colMap.miscellaneo = ci;
+                        if ((h === 'MISCELLANEO' || h === 'MISC' || h === 'BLACK') && !h.includes('TOTALE')) colMap.miscellaneo = ci;
                         if (h === 'GIORNO') colMap.giorno = ci;
                         if (h === 'MESE') colMap.meseCol = ci;
                         if (h === 'ANNO') colMap.annoCol = ci;
@@ -521,7 +521,7 @@
             // Col 1=giorno, 2=mese, 3=anno, 5=Data, 6=Bancomat, 7=Contanti, 8=Satispay, 9=Fatture, 11=Black
             if (headerRow === -1) {
                 headerRow = 1; // header su riga 2 (index 1)
-                colMap = { giorno: 0, meseCol: 1, annoCol: 2, data: 4, pos: 5, contanti: 6, satispay: 7, fatture: 8, miscellaneo: 10 };
+                colMap = { giorno: 0, meseCol: 1, annoCol: 2, data: 4, pos: 5, contanti: 6, satispay: 7, fatture: 8, miscellaneo: 9 };
             }
 
             const records = [];
@@ -534,7 +534,7 @@
                 if (colMap.data !== undefined && row[colMap.data]) {
                     const cellVal = row[colMap.data];
                     if (cellVal instanceof Date) {
-                        dataStr = cellVal.toISOString().split('T')[0];
+                        dataStr = cellVal.getFullYear() + '-' + String(cellVal.getMonth()+1).padStart(2,'0') + '-' + String(cellVal.getDate()).padStart(2,'0');
                     } else {
                         const parsed = parseFlexDate(String(cellVal));
                         if (parsed) dataStr = parsed;
@@ -619,7 +619,7 @@
             const num = parseFloat(str);
             if (!isNaN(num) && num > 40000 && num < 50000) {
                 const d = new Date((num - 25569) * 86400000);
-                if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+                if (!isNaN(d.getTime())) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
             }
             return null;
         }
