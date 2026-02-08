@@ -69,6 +69,40 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
         const SESSION_KEY = 'app_authenticated';
         const SESSION_DURATION = 24 * 60 * 60 * 1000;
+
+        // ============================================
+        // TRACCIAMENTO ACCESSI
+        // ============================================
+        async function registraAccesso(pagina, azione = 'visualizzazione') {
+            try {
+                const auth = localStorage.getItem('app_authenticated');
+                if (!auth) return;
+
+                const authData = JSON.parse(auth);
+                
+                const accessoData = {
+                    user_id: authData.userId || null,
+                    user_email: authData.userEmail || 'sconosciuto',
+                    user_nome: authData.userName ? `${authData.userName} ${authData.userSurname || ''}`.trim() : authData.userName || 'Utente',
+                    user_ruolo: authData.userRole || 'Sconosciuto',
+                    pagina: pagina,
+                    azione: azione,
+                    timestamp: new Date().toISOString()
+                };
+
+                await supabaseClient.from('log_accessi').insert([accessoData]);
+                
+                if (authData.userId) {
+                    await supabaseClient.from('utenti')
+                        .update({ ultimo_accesso: new Date().toISOString() })
+                        .eq('id', authData.userId);
+                }
+
+                console.log(`✅ Accesso registrato: ${pagina} - ${azione}`);
+            } catch (err) {
+                console.error('Errore tracciamento:', err);
+            }
+        }
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ Supabase inizializzato');
 
@@ -150,6 +184,7 @@
                     userRole: data.ruolo
                 };
                 localStorage.setItem(SESSION_KEY, JSON.stringify(authData));
+                await registraAccesso('index.html', 'login');
                 window.location.href = 'dashboard.html';
             } catch (err) {
                 console.error('❌ Errore:', err);

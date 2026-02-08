@@ -6,6 +6,7 @@
     <title>Grappoli &amp; Luppoli - Andamento Ricavi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
@@ -22,6 +23,55 @@
                 }
             } catch (e) { localStorage.removeItem(SESSION_KEY); window.location.href = 'index.html'; }
         })();
+
+    <script>
+        // ========== CONFIGURAZIONE SUPABASE ==========
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ============================================
+        // TRACCIAMENTO ACCESSI
+        // ============================================
+        async function registraAccesso(pagina, azione = 'visualizzazione') {
+            try {
+                const auth = localStorage.getItem('app_authenticated');
+                if (!auth) return;
+
+                const authData = JSON.parse(auth);
+                
+                const accessoData = {
+                    user_id: authData.userId || null,
+                    user_email: authData.userEmail || 'sconosciuto',
+                    user_nome: authData.userName ? `${authData.userName} ${authData.userSurname || ''}`.trim() : authData.userName || 'Utente',
+                    user_ruolo: authData.userRole || 'Sconosciuto',
+                    pagina: pagina,
+                    azione: azione,
+                    timestamp: new Date().toISOString()
+                };
+
+                await supabaseClient.from('log_accessi').insert([accessoData]);
+                
+                if (authData.userId) {
+                    await supabaseClient.from('utenti')
+                        .update({ ultimo_accesso: new Date().toISOString() })
+                        .eq('id', authData.userId);
+                }
+
+                console.log(`✅ Accesso registrato: ${pagina} - ${azione}`);
+            } catch (err) {
+                console.error('Errore tracciamento:', err);
+            }
+        }
+
+        // Registra accesso alla pagina ricavi
+        registraAccesso('ricavi.html', 'visualizzazione');
+
+        // Helper per tracciare azioni
+        async function traccia(azione) {
+            await registraAccesso('ricavi.html', azione);
+        }
+    </script>
     </script>
 
     <!-- Navbar -->
