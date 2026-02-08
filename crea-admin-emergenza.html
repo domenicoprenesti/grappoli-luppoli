@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crea Utente Admin - Emergenza</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl w-full mx-auto px-4">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">🔐 Crea Utente Admin</h1>
+                <p class="text-gray-600">Script di emergenza per creare l'utente Admin</p>
+            </div>
+
+            <div id="message" class="mb-6 p-4 rounded-lg bg-blue-50 border-2 border-blue-200 text-blue-800">
+                <p class="font-semibold mb-2">Creazione in corso...</p>
+                <p class="text-sm">Email: domenicoprenesti@gmail.com</p>
+                <p class="text-sm">Password: mico</p>
+                <p class="text-sm">Ruolo: Admin</p>
+            </div>
+
+            <div id="result" class="hidden p-4 rounded-lg"></div>
+
+            <button onclick="createAdmin()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg">
+                Crea Utente Admin
+            </button>
+
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-blue-600 hover:text-blue-800 text-sm">← Torna al Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function createAdmin() {
+            const resultDiv = document.getElementById('result');
+            const messageDiv = document.getElementById('message');
+
+            try {
+                // Verifica se l'utente esiste già
+                const { data: existing, error: checkError } = await supabaseClient
+                    .from('utenti')
+                    .select('*')
+                    .eq('email', 'domenicoprenesti@gmail.com')
+                    .single();
+
+                if (existing) {
+                    // L'utente esiste, aggiorniamo il ruolo ad Admin
+                    const { error: updateError } = await supabaseClient
+                        .from('utenti')
+                        .update({ 
+                            ruolo: 'Admin',
+                            attivo: true
+                        })
+                        .eq('email', 'domenicoprenesti@gmail.com');
+
+                    if (updateError) throw updateError;
+
+                    messageDiv.classList.add('hidden');
+                    resultDiv.className = 'p-4 rounded-lg bg-green-50 border-2 border-green-200 text-green-800';
+                    resultDiv.innerHTML = `
+                        <p class="font-semibold mb-2">✅ Utente aggiornato con successo!</p>
+                        <p class="text-sm mb-1">Email: domenicoprenesti@gmail.com</p>
+                        <p class="text-sm mb-1">Password: mico</p>
+                        <p class="text-sm mb-3">Ruolo: Admin (aggiornato)</p>
+                        <a href="index.html" class="inline-block mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            Vai al Login
+                        </a>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                } else {
+                    // L'utente non esiste, lo creiamo
+                    const { error: insertError } = await supabaseClient
+                        .from('utenti')
+                        .insert([{
+                            nome: 'Domenico',
+                            cognome: 'Prenesti',
+                            email: 'domenicoprenesti@gmail.com',
+                            password: 'mico',
+                            ruolo: 'Admin',
+                            attivo: true
+                        }]);
+
+                    if (insertError) throw insertError;
+
+                    messageDiv.classList.add('hidden');
+                    resultDiv.className = 'p-4 rounded-lg bg-green-50 border-2 border-green-200 text-green-800';
+                    resultDiv.innerHTML = `
+                        <p class="font-semibold mb-2">✅ Utente Admin creato con successo!</p>
+                        <p class="text-sm mb-1">Email: domenicoprenesti@gmail.com</p>
+                        <p class="text-sm mb-1">Password: mico</p>
+                        <p class="text-sm mb-3">Ruolo: Admin</p>
+                        <a href="index.html" class="inline-block mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            Vai al Login
+                        </a>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                console.error('Errore:', err);
+                messageDiv.classList.add('hidden');
+                resultDiv.className = 'p-4 rounded-lg bg-red-50 border-2 border-red-200 text-red-800';
+                resultDiv.innerHTML = `
+                    <p class="font-semibold mb-2">❌ Errore durante la creazione</p>
+                    <p class="text-sm">${err.message}</p>
+                `;
+                resultDiv.classList.remove('hidden');
+            }
+        }
+
+        // Esegui automaticamente al caricamento della pagina
+        window.addEventListener('DOMContentLoaded', () => {
+            // Puoi decidere se eseguire automaticamente o solo al click del bottone
+            console.log('Pagina caricata. Clicca il pulsante per creare l\'utente Admin.');
+        });
+    </script>
+</body>
+</html>
