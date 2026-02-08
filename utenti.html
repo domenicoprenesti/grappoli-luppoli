@@ -410,11 +410,18 @@
                             ${formatUltimoAccesso(user.ultimo_accesso)}
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Elimina">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
+                            <div class="flex items-center justify-center space-x-2">
+                                <button onclick="openPermissionsModal('${user.id}', '${user.nome} ${user.cognome}', '${user.ruolo}')" class="text-blue-600 hover:text-blue-800 transition-colors" title="Gestisci Permessi">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Elimina">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `).join('');
@@ -424,8 +431,198 @@
             }
         }
 
+        // ============================================
+        // GESTIONE PERMESSI
+        // ============================================
+        
+        const AVAILABLE_PAGES = [
+            { id: 'dashboard.html', nome: '📊 Dashboard', descrizione: 'Visualizza analytics e statistiche' },
+            { id: 'fatture.html', nome: '📄 Fatture', descrizione: 'Gestione fatture e documenti' },
+            { id: 'prodotti.html', nome: '📦 Prodotti', descrizione: 'Catalogo prodotti' },
+            { id: 'fornitori.html', nome: '🏢 Fornitori', descrizione: 'Gestione fornitori' },
+            { id: 'utenti.html', nome: '👥 Utenti', descrizione: 'Gestione utenti (solo Admin)' },
+            { id: 'vendite.html', nome: '💰 Vendite', descrizione: 'Analisi vendite' },
+            { id: 'ricavi.html', nome: '📈 Ricavi', descrizione: 'Analisi ricavi' },
+            { id: 'inserimento-giornaliero.html', nome: '📝 Inserimento', descrizione: 'Inserimento ricavi giornalieri' }
+        ];
+
+        let currentEditingUserId = null;
+
+        async function openPermissionsModal(userId, userName, userRole) {
+            currentEditingUserId = userId;
+            document.getElementById('permUserName').textContent = userName;
+            document.getElementById('permUserRole').textContent = userRole;
+            
+            // Carica permessi correnti
+            await loadUserPermissions(userId);
+            
+            document.getElementById('permissionsModal').classList.remove('hidden');
+        }
+
+        function closePermissionsModal() {
+            document.getElementById('permissionsModal').classList.add('hidden');
+            currentEditingUserId = null;
+        }
+
+        async function loadUserPermissions(userId) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('permessi_pagine')
+                    .select('*')
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+
+                // Crea mappa dei permessi
+                const permissionsMap = {};
+                if (data) {
+                    data.forEach(perm => {
+                        permissionsMap[perm.pagina] = perm.can_access;
+                    });
+                }
+
+                // Genera lista permessi
+                const container = document.getElementById('permissionsList');
+                container.innerHTML = AVAILABLE_PAGES.map(page => {
+                    const hasAccess = permissionsMap[page.id] !== undefined ? permissionsMap[page.id] : true;
+                    return `
+                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-medium text-gray-800">${page.nome}</span>
+                                    ${page.id === 'utenti.html' ? '<span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Solo Admin</span>' : ''}
+                                </div>
+                                <p class="text-sm text-gray-500 mt-1">${page.descrizione}</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" 
+                                       class="sr-only peer" 
+                                       ${hasAccess ? 'checked' : ''}
+                                       ${page.id === 'utenti.html' && document.getElementById('permUserRole').textContent !== 'Admin' ? 'disabled' : ''}
+                                       onchange="togglePermission('${page.id}', this.checked)">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                            </label>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Errore caricamento permessi:', err);
+                alert('Errore durante il caricamento dei permessi');
+            }
+        }
+
+        async function togglePermission(pagina, canAccess) {
+            if (!currentEditingUserId) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('permessi_pagine')
+                    .upsert({
+                        user_id: currentEditingUserId,
+                        pagina: pagina,
+                        can_access: canAccess
+                    }, {
+                        onConflict: 'user_id,pagina'
+                    });
+
+                if (error) throw error;
+
+                console.log(`✅ Permesso ${canAccess ? 'abilitato' : 'disabilitato'} per ${pagina}`);
+            } catch (err) {
+                console.error('Errore aggiornamento permesso:', err);
+                alert('Errore durante l\'aggiornamento del permesso');
+            }
+        }
+
+        async function setAllPermissions(enable) {
+            if (!currentEditingUserId) return;
+            
+            const userRole = document.getElementById('permUserRole').textContent;
+            const permissions = AVAILABLE_PAGES
+                .filter(page => {
+                    // Se non è Admin, non può avere accesso a utenti.html
+                    if (page.id === 'utenti.html' && userRole !== 'Admin') return false;
+                    return true;
+                })
+                .map(page => ({
+                    user_id: currentEditingUserId,
+                    pagina: page.id,
+                    can_access: enable
+                }));
+
+            try {
+                const { error } = await supabaseClient
+                    .from('permessi_pagine')
+                    .upsert(permissions, {
+                        onConflict: 'user_id,pagina'
+                    });
+
+                if (error) throw error;
+
+                // Ricarica i permessi
+                await loadUserPermissions(currentEditingUserId);
+                
+                alert(`✅ Tutti i permessi ${enable ? 'abilitati' : 'disabilitati'}`);
+            } catch (err) {
+                console.error('Errore aggiornamento permessi:', err);
+                alert('Errore durante l\'aggiornamento dei permessi');
+            }
+        }
+
         loadUsers();
         console.log('✅ Pagina utenti caricata con sistema a 3 livelli di permessi');
     </script>
+
+    <!-- Modal Gestione Permessi -->
+    <div id="permissionsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">🔐 Gestione Permessi</h2>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Utente: <span id="permUserName" class="font-medium"></span> 
+                            (<span id="permUserRole" class="font-medium"></span>)
+                        </p>
+                    </div>
+                    <button onclick="closePermissionsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">Azioni Rapide:</span>
+                    <div class="flex space-x-2">
+                        <button onclick="setAllPermissions(true)" class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm font-medium">
+                            ✅ Abilita Tutto
+                        </button>
+                        <button onclick="setAllPermissions(false)" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium">
+                            ❌ Disabilita Tutto
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissions List -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="permissionsList" class="space-y-3"></div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closePermissionsModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        ✅ Chiudi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
