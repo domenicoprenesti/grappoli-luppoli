@@ -3,20 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grappoli &amp; Luppoli - Gestione Vendite</title>
+    <title>Gestione Vendite - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        .table-compact th, .table-compact td { padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+        .truncate-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        /* Scrollbar per tabella */
+        .table-scroll-container {
+            max-height: 65vh;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        .table-scroll-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-scroll-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .table-scroll-container::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        .table-scroll-container::-webkit-scrollbar-thumb:hover { background: #059669; }
+        
+        /* Header sticky */
+        .table-scroll-container thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        (function() {
-            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
-            if (!a) { window.location.href = 'index.html'; return; }
-            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
-            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
-        })();
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
     <!-- Navbar -->
@@ -49,7 +66,7 @@
         </div>
     </nav>
 
-        <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
+    <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>

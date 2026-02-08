@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grappoli &amp; Luppoli - Analisi Margini</title>
+    <title>Analisi Margini - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        .gradient-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+            backdrop-filter: blur(10px);
+        }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        (function() {
-            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
-            if (!a) { window.location.href = 'index.html'; return; }
-            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
-            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
-        })();
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
     <!-- Navbar -->
@@ -49,7 +52,7 @@
         </div>
     </nav>
 
-        <div class="max-w-full mx-auto px-4 pt-20 pb-8">
+    <div class="max-w-full mx-auto px-4 pt-20 pb-8">
         <!-- Header con Titolo e Filtri in linea -->
         <div class="flex flex-wrap items-start justify-between mb-6 gap-4">
             <!-- Titolo a sinistra -->

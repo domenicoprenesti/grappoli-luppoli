@@ -3,23 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grappoli &amp; Luppoli - Gestione Prodotti</title>
+    <title>Gestione Prodotti - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        .table-compact th, .table-compact td { padding: 0.5rem 0.75rem; }
+        .col-checkbox { width: 40px; }
+        .col-nome { min-width: 200px; max-width: 300px; }
+        .col-categoria { width: 120px; }
+        .col-fornitore { width: 140px; }
+        .col-prezzo { width: 90px; text-align: right; }
+        .col-iva { width: 60px; text-align: center; }
+        .col-prezzo-ivato { width: 100px; text-align: right; }
+        .col-qta { width: 70px; text-align: right; }
+        .col-stato { width: 80px; text-align: center; }
+        .col-azioni { width: 100px; text-align: center; }
+        .truncate-cell { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        (function() {
-            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
-            if (!a) { window.location.href = 'index.html'; return; }
-            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
-            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
-        })();
+        const SESSION_KEY = 'app_authenticated';
+        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
-    <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
+<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -48,7 +56,7 @@
         </div>
     </nav>
 
-        <div class="max-w-[1400px] mx-auto px-4 pt-24 pb-8">
+    <div class="max-w-[1400px] mx-auto px-4 pt-24 pb-8">
         <h1 class="text-3xl font-bold mb-2">Ã°Å¸â€œÂ¦ Gestione Prodotti</h1>
         <p class="text-gray-600 mb-8">Prodotti con categorizzazione completa</p>
 

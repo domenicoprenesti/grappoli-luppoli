@@ -3,23 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grappoli &amp; Luppoli - Gestione Utenti</title>
+    <title>Gestione Utenti - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        (function() {
-            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
-            if (!a) { window.location.href = 'index.html'; return; }
-            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
-            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
-        })();
+        const SESSION_KEY = 'app_authenticated';
+        const SESSION_DURATION = 24 * 60 * 60 * 1000;
+        
+        const auth = localStorage.getItem(SESSION_KEY);
+        if (!auth) {
+            window.location.href = 'index.html';
+        } else {
+            try {
+                const authData = JSON.parse(auth);
+                const now = new Date().getTime();
+                if (now - authData.timestamp >= SESSION_DURATION) {
+                    localStorage.removeItem(SESSION_KEY);
+                    window.location.href = 'index.html';
+                } else if (authData.userRole !== 'Admin') {
+                    alert('Accesso negato. Solo Admin.');
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (e) {
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = 'index.html';
+            }
+        }
     </script>
 
-    <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
+<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -48,7 +62,7 @@
         </div>
     </nav>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ‘¥ Gestione Utenti Autorizzati</h1>
             <p class="text-gray-600">Visualizza e gestisci tutti gli utenti del sistema</p>
