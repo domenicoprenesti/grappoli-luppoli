@@ -3,46 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisi Margini - Grappoli & Luppoli</title>
+    <title>Grappoli &amp; Luppoli - Analisi Margini</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .gradient-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
-            backdrop-filter: blur(10px);
-        }
-        .positive { color: #10b981; }
-        .negative { color: #ef4444; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        const SESSION_KEY = 'app_authenticated';
-        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+        (function() {
+            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
+            if (!a) { window.location.href = 'index.html'; return; }
+            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
+            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
+        })();
     </script>
 
     <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <img src="logo.png" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
-                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                        <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src="logo.png" alt="Logo" class="w-full h-full object-cover">
+                        </div>
+                        <span class="text-lg font-bold">Grappoli &amp; Luppoli</span>
                     </button>
-                    
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
                         <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
                         <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Margini</a>
+                        <a href="ricavi.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Ricavi</a>
                         <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
                 </div>
-                
                 <div class="flex items-center space-x-3">
                     <span id="userName" class="text-sm text-gray-600"></span>
                     <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
@@ -51,12 +49,12 @@
         </div>
     </nav>
 
-    <div class="max-w-full mx-auto px-4 pt-20 pb-8">
+        <div class="max-w-full mx-auto px-4 pt-20 pb-8">
         <!-- Header con Titolo e Filtri in linea -->
         <div class="flex flex-wrap items-start justify-between mb-6 gap-4">
             <!-- Titolo a sinistra -->
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">📊 Analisi Margini</h1>
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">ðŸ“Š Analisi Margini</h1>
                 <p class="text-sm text-gray-600">Confronto Acquisti vs Vendite per Gruppo Vendita e Mese</p>
             </div>
             
@@ -92,7 +90,7 @@
                         <option value="">Tutti i gruppi</option>
                     </select>
                 </div>
-                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm">↺ Pulisci</button>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm">â†º Pulisci</button>
             </div>
         </div>
 
@@ -117,7 +115,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 mb-1">Vendite Totali</p>
-                            <p id="kpiVendite" class="text-xl font-bold text-green-600">€0</p>
+                            <p id="kpiVendite" class="text-xl font-bold text-green-600">â‚¬0</p>
                             <p id="kpiVenditeCount" class="text-xs text-gray-400">0 transazioni</p>
                         </div>
                         <div class="bg-green-100 p-2 rounded-full">
@@ -133,7 +131,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 mb-1">Acquisti Totali</p>
-                            <p id="kpiAcquisti" class="text-xl font-bold text-red-600">€0</p>
+                            <p id="kpiAcquisti" class="text-xl font-bold text-red-600">â‚¬0</p>
                             <p id="kpiAcquistiCount" class="text-xs text-gray-400">0 prodotti</p>
                         </div>
                         <div class="bg-red-100 p-2 rounded-full">
@@ -149,7 +147,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 mb-1">Margine Lordo</p>
-                            <p id="kpiMargine" class="text-xl font-bold text-green-600">€0</p>
+                            <p id="kpiMargine" class="text-xl font-bold text-green-600">â‚¬0</p>
                             <p id="kpiMarginePerc" class="text-xs text-gray-500">0%</p>
                         </div>
                         <div class="bg-purple-100 p-2 rounded-full">
@@ -181,7 +179,7 @@
             <div class="flex-1 grid grid-cols-2 gap-6">
                 <!-- Grafico 1: Vendite vs Acquisti per Gruppo -->
                 <div class="bg-white rounded-xl shadow-lg p-4">
-                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">📊 Vendite vs Acquisti per Gruppo</h3>
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">ðŸ“Š Vendite vs Acquisti per Gruppo</h3>
                     <div class="h-64">
                         <canvas id="chartMain"></canvas>
                     </div>
@@ -189,7 +187,7 @@
 
                 <!-- Grafico 2: Margine per Mese -->
                 <div class="bg-white rounded-xl shadow-lg p-4">
-                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">💰 Margine per Mese</h3>
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">ðŸ’° Margine per Mese</h3>
                     <div class="h-64">
                         <canvas id="chartMargini"></canvas>
                     </div>
@@ -197,7 +195,7 @@
 
                 <!-- Grafico 3: Trend Mensile -->
                 <div class="bg-white rounded-xl shadow-lg p-4">
-                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">📈 Trend Mensile</h3>
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">ðŸ“ˆ Trend Mensile</h3>
                     <div class="h-64">
                         <canvas id="chartTrend"></canvas>
                     </div>
@@ -205,7 +203,7 @@
 
                 <!-- Grafico 4: Distribuzione Vendite -->
                 <div class="bg-white rounded-xl shadow-lg p-4">
-                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">🎯 Distribuzione Vendite per Gruppo</h3>
+                    <h3 class="text-sm font-bold mb-3 flex items-center gap-2">ðŸŽ¯ Distribuzione Vendite per Gruppo</h3>
                     <div class="h-64">
                         <canvas id="chartDistribuzione"></canvas>
                     </div>
@@ -218,16 +216,16 @@
             <!-- Tabella Dettaglio -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600">
-                <h3 class="text-lg font-bold text-white">📋 Dettaglio per Gruppo Vendita</h3>
+                <h3 class="text-lg font-bold text-white">ðŸ“‹ Dettaglio per Gruppo Vendita</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Gruppo Vendita</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite €</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti €</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine €</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite â‚¬</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti â‚¬</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine â‚¬</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine %</th>
                             <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Performance</th>
                         </tr>
@@ -236,9 +234,9 @@
                     <tfoot class="bg-gray-100 font-bold">
                         <tr>
                             <td class="px-6 py-3 text-left">TOTALE</td>
-                            <td id="footerVendite" class="px-6 py-3 text-right text-green-600">€0</td>
-                            <td id="footerAcquisti" class="px-6 py-3 text-right text-red-600">€0</td>
-                            <td id="footerMargine" class="px-6 py-3 text-right">€0</td>
+                            <td id="footerVendite" class="px-6 py-3 text-right text-green-600">â‚¬0</td>
+                            <td id="footerAcquisti" class="px-6 py-3 text-right text-red-600">â‚¬0</td>
+                            <td id="footerMargine" class="px-6 py-3 text-right">â‚¬0</td>
                             <td id="footerMarginePerc" class="px-6 py-3 text-right">0%</td>
                             <td class="px-6 py-3"></td>
                         </tr>
@@ -250,16 +248,16 @@
         <!-- Tabella Mensile -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-600">
-                <h3 class="text-lg font-bold text-white">📅 Riepilogo Mensile</h3>
+                <h3 class="text-lg font-bold text-white">ðŸ“… Riepilogo Mensile</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Mese</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite €</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti €</th>
-                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine €</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Vendite â‚¬</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Acquisti â‚¬</th>
+                            <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine â‚¬</th>
                             <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Margine %</th>
                             <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Trend</th>
                         </tr>
@@ -375,7 +373,7 @@
 
             } catch (err) {
                 console.error('Errore:', err);
-                document.getElementById('progressDetail').textContent = '❌ ' + err.message;
+                document.getElementById('progressDetail').textContent = 'âŒ ' + err.message;
             }
         }
 
@@ -458,11 +456,11 @@
             const margine = totVendite - totAcquisti;
             const marginePerc = totVendite > 0 ? (margine / totVendite * 100) : 0;
 
-            document.getElementById('kpiVendite').textContent = '€' + totVendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('kpiVendite').textContent = 'â‚¬' + totVendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('kpiVenditeCount').textContent = filteredData.vendite.length.toLocaleString('it-IT') + ' transazioni';
-            document.getElementById('kpiAcquisti').textContent = '€' + totAcquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('kpiAcquisti').textContent = 'â‚¬' + totAcquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('kpiAcquistiCount').textContent = filteredData.prodotti.length.toLocaleString('it-IT') + ' prodotti';
-            document.getElementById('kpiMargine').textContent = '€' + margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('kpiMargine').textContent = 'â‚¬' + margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('kpiMargine').className = `text-2xl font-bold ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
             document.getElementById('kpiMarginePerc').textContent = marginePerc.toFixed(1) + '%';
 
@@ -486,9 +484,9 @@
             updateChartDistribuzione(dataGruppo);
             updateTabellaMensile(dataMese);
 
-            document.getElementById('footerVendite').textContent = '€' + totVendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('footerAcquisti').textContent = '€' + totAcquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('footerMargine').textContent = '€' + margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('footerVendite').textContent = 'â‚¬' + totVendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('footerAcquisti').textContent = 'â‚¬' + totAcquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('footerMargine').textContent = 'â‚¬' + margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             document.getElementById('footerMargine').className = `px-6 py-3 text-right ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
             document.getElementById('footerMarginePerc').textContent = marginePerc.toFixed(1) + '%';
             document.getElementById('footerMarginePerc').className = `px-6 py-3 text-right ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`;
@@ -580,7 +578,7 @@
                 .filter(v => v && v.mese && typeof v.mese === 'string' && v.mese.length >= 7)
                 .map(v => normalizeMese(v.mese));
             
-            // I prodotti hanno già il formato corretto (2023-04-15 -> 2023-04)
+            // I prodotti hanno giÃ  il formato corretto (2023-04-15 -> 2023-04)
             const mesiP = filteredData.prodotti
                 .filter(p => p && p.data_fattura && typeof p.data_fattura === 'string' && p.data_fattura.length >= 7)
                 .map(p => p.data_fattura.substring(0, 7));
@@ -625,7 +623,7 @@
             const ctx = document.getElementById('chartMain').getContext('2d');
             if (charts.main) charts.main.destroy();
             
-            // Se tipo è 'gruppo' e abbiamo dati per anno, mostra barre raggruppate per anno
+            // Se tipo Ã¨ 'gruppo' e abbiamo dati per anno, mostra barre raggruppate per anno
             if (tipo === 'gruppo' && dataGruppoAnno && dataGruppoAnno.anni.length > 1) {
                 const { data: gruppoData, anni } = dataGruppoAnno;
                 
@@ -666,7 +664,7 @@
                         const v = g.anni[anno]?.vendite || 0;
                         const a = g.anni[anno]?.acquisti || 0;
                         if (a > 0) return ((v - a) / a * 100).toFixed(0);
-                        return v > 0 ? '∞' : '';
+                        return v > 0 ? 'âˆž' : '';
                     });
                     
                     datasets.push({
@@ -732,7 +730,7 @@
                             y: {
                                 stacked: true,
                                 beginAtZero: true,
-                                ticks: { callback: v => '€' + v.toLocaleString('it-IT') }
+                                ticks: { callback: v => 'â‚¬' + v.toLocaleString('it-IT') }
                             }
                         }
                     }
@@ -759,7 +757,7 @@
                 const markup = entries.map(([_, d]) => Math.max(0, d.vendite - d.acquisti));
                 const markupPerc = entries.map(([_, d]) => {
                     if (d.acquisti > 0) return ((d.vendite - d.acquisti) / d.acquisti * 100).toFixed(0);
-                    return d.vendite > 0 ? '∞' : '0';
+                    return d.vendite > 0 ? 'âˆž' : '0';
                 });
                 
                 charts.main = new Chart(ctx, {
@@ -795,7 +793,7 @@
                                         const entry = entries[idx][1];
                                         return [
                                             '',
-                                            'Vendite Totali: €' + entry.vendite.toLocaleString('it-IT'),
+                                            'Vendite Totali: â‚¬' + entry.vendite.toLocaleString('it-IT'),
                                             'Markup %: ' + markupPerc[idx] + '%'
                                         ];
                                     }
@@ -807,7 +805,7 @@
                             y: { 
                                 stacked: true,
                                 beginAtZero: true, 
-                                ticks: { callback: v => '€' + v.toLocaleString('it-IT') } 
+                                ticks: { callback: v => 'â‚¬' + v.toLocaleString('it-IT') } 
                             } 
                         },
                         animation: {
@@ -823,7 +821,7 @@
                                     const bar = meta.data[index];
                                     if (bar && markupPerc[index] !== '0') {
                                         const perc = markupPerc[index];
-                                        const label = perc === '∞' ? '∞' : perc + '%';
+                                        const label = perc === 'âˆž' ? 'âˆž' : perc + '%';
                                         ctx.fillText(label, bar.x, bar.y - 5);
                                     }
                                 });
@@ -868,7 +866,7 @@
                                 minRotation: 45
                             }
                         },
-                        y: { ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } 
+                        y: { ticks: { callback: v => 'â‚¬' + v.toLocaleString('it-IT') } } 
                     } 
                 }
             });
@@ -900,7 +898,7 @@
                         { label: 'Margine', data: entries.map(([_, d]) => d.margine), borderColor: '#8B5CF6', borderDash: [5, 5], fill: false, tension: 0.4 }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: v => '€' + v.toLocaleString('it-IT') } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: v => 'â‚¬' + v.toLocaleString('it-IT') } } } }
             });
         }
 
@@ -920,7 +918,7 @@
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
-                        tooltip: { callbacks: { label: ctx => { const v = ctx.raw; const t = ctx.dataset.data.reduce((a, b) => a + b, 0); return `€${v.toLocaleString('it-IT')} (${((v / t) * 100).toFixed(1)}%)`; } } }
+                        tooltip: { callbacks: { label: ctx => { const v = ctx.raw; const t = ctx.dataset.data.reduce((a, b) => a + b, 0); return `â‚¬${v.toLocaleString('it-IT')} (${((v / t) * 100).toFixed(1)}%)`; } } }
                     }
                 }
             });
@@ -943,9 +941,9 @@
                 
                 return `<tr class="hover:bg-gray-50">
                     <td class="px-6 py-4"><div class="flex items-center">${col ? `<div class="w-3 h-3 rounded-full mr-3" style="background-color:${col}"></div>` : ''}<span class="font-medium">${label}</span></div></td>
-                    <td class="px-6 py-4 text-right font-medium text-green-600">€${r.vendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
-                    <td class="px-6 py-4 text-right font-medium text-red-600">€${r.acquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
-                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${pos ? '+' : ''}€${r.margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-medium text-green-600">â‚¬${r.vendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-medium text-red-600">â‚¬${r.acquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${pos ? '+' : ''}â‚¬${r.margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
                     <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${r.marginePerc.toFixed(1)}%</td>
                     <td class="px-6 py-4"><div class="w-full bg-gray-200 rounded-full h-4"><div class="${bc} h-4 rounded-full" style="width:${bw}%"></div></div></td>
                 </tr>`;
@@ -975,15 +973,15 @@
                 let trend = '', tc = 'text-gray-400';
                 if (i > 0) {
                     const diff = r.margine - entries[i - 1][1].margine;
-                    if (diff > 0) { trend = '↑'; tc = 'text-green-600'; }
-                    else if (diff < 0) { trend = '↓'; tc = 'text-red-600'; }
-                    else { trend = '→'; }
+                    if (diff > 0) { trend = 'â†‘'; tc = 'text-green-600'; }
+                    else if (diff < 0) { trend = 'â†“'; tc = 'text-red-600'; }
+                    else { trend = 'â†’'; }
                 }
                 return `<tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 font-medium">${label}</td>
-                    <td class="px-6 py-4 text-right font-medium text-green-600">€${r.vendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
-                    <td class="px-6 py-4 text-right font-medium text-red-600">€${r.acquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
-                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${pos ? '+' : ''}€${r.margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-medium text-green-600">â‚¬${r.vendite.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-medium text-red-600">â‚¬${r.acquisti.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${pos ? '+' : ''}â‚¬${r.margine.toLocaleString('it-IT', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
                     <td class="px-6 py-4 text-right font-bold ${pos ? 'text-green-600' : 'text-red-600'}">${r.marginePerc.toFixed(1)}%</td>
                     <td class="px-6 py-4 text-center text-2xl ${tc}">${trend}</td>
                 </tr>`;
@@ -991,7 +989,7 @@
         }
 
         loadData();
-        console.log('✅ Margini caricata');
+        console.log('âœ… Margini caricata');
     </script>
 </body>
 </html>

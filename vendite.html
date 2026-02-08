@@ -3,60 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Vendite - Grappoli & Luppoli</title>
+    <title>Grappoli &amp; Luppoli - Gestione Vendite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        .table-compact th, .table-compact td { padding: 0.4rem 0.6rem; font-size: 0.8rem; }
-        .truncate-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        
-        /* Scrollbar per tabella */
-        .table-scroll-container {
-            max-height: 65vh;
-            overflow-y: auto;
-            overflow-x: auto;
-        }
-        .table-scroll-container::-webkit-scrollbar { width: 8px; height: 8px; }
-        .table-scroll-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .table-scroll-container::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
-        .table-scroll-container::-webkit-scrollbar-thumb:hover { background: #059669; }
-        
-        /* Header sticky */
-        .table-scroll-container thead th {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        const SESSION_KEY = 'app_authenticated';
-        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+        (function() {
+            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
+            if (!a) { window.location.href = 'index.html'; return; }
+            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
+            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
+        })();
     </script>
 
     <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <img src="data:image/png;base64,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" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
-                        <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                        <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src="logo.png" alt="Logo" class="w-full h-full object-cover">
+                        </div>
+                        <span class="text-lg font-bold">Grappoli &amp; Luppoli</span>
                     </button>
-                    
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
                         <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Vendite</a>
                         <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
+                        <a href="ricavi.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Ricavi</a>
                         <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
                 </div>
-                
                 <div class="flex items-center space-x-3">
                     <span id="userName" class="text-sm text-gray-600"></span>
                     <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
@@ -65,11 +49,11 @@
         </div>
     </nav>
 
-    <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
+        <div class="max-w-[1600px] mx-auto px-4 pt-24 pb-8">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Gestione Vendite</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ“Š Gestione Vendite</h1>
                 <p class="text-gray-600">Import Excel, categorizzazione e Gruppi Vendita</p>
             </div>
             <div class="flex space-x-3">
@@ -108,7 +92,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-blue-500">
                 <p class="text-xs text-gray-600">Fatturato</p>
-                <p id="statFatturato" class="text-2xl font-bold text-blue-600">€0</p>
+                <p id="statFatturato" class="text-2xl font-bold text-blue-600">â‚¬0</p>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-purple-500">
                 <p class="text-xs text-gray-600">Pezzi Venduti</p>
@@ -127,7 +111,7 @@
         <!-- Filtri -->
         <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
             <div class="grid md:grid-cols-6 gap-3">
-                <input type="text" id="filterNome" placeholder="ðŸ” Cerca nome..." class="px-3 py-2 border rounded-lg text-sm" onkeyup="applyFilters()">
+                <input type="text" id="filterNome" placeholder="Ã°Å¸â€Â Cerca nome..." class="px-3 py-2 border rounded-lg text-sm" onkeyup="applyFilters()">
                 <select id="filterCategoria" class="px-3 py-2 border rounded-lg text-sm" onchange="applyFilters()">
                     <option value="">Tutte le categorie</option>
                 </select>
@@ -195,7 +179,7 @@
     <div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">📥 Import Vendite da Excel</h2>
+                <h2 class="text-2xl font-bold">ðŸ“¥ Import Vendite da Excel</h2>
                 <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -204,7 +188,7 @@
             <!-- Campo Mese -->
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    📅 Mese di riferimento *
+                    ðŸ“… Mese di riferimento *
                 </label>
                 <input type="month" id="meseImport" 
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -225,7 +209,7 @@
             
             <!-- Anteprima -->
             <div id="previewSection" class="hidden mt-6">
-                <h3 class="text-sm font-semibold mb-3">🔍 Anteprima (prime 5 righe)</h3>
+                <h3 class="text-sm font-semibold mb-3">ðŸ” Anteprima (prime 5 righe)</h3>
                 <div class="bg-gray-50 rounded-lg p-3 max-h-48 overflow-auto text-xs">
                     <table class="w-full">
                         <thead class="bg-gray-200 sticky top-0">
@@ -233,7 +217,7 @@
                                 <th class="px-2 py-1 text-left text-xs">Nome</th>
                                 <th class="px-2 py-1 text-left text-xs">Categoria</th>
                                 <th class="px-2 py-1 text-right text-xs">Pz</th>
-                                <th class="px-2 py-1 text-right text-xs">€</th>
+                                <th class="px-2 py-1 text-right text-xs">â‚¬</th>
                                 <th class="px-2 py-1 text-center text-xs">SKU</th>
                             </tr>
                         </thead>
@@ -257,7 +241,7 @@
                 
                 <!-- Bottone Import -->
                 <button id="btnStartImport" onclick="startImport()" class="hidden mt-4 w-full px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">
-                    🚀 Avvia Import
+                    ðŸš€ Avvia Import
                 </button>
             </div>
             
@@ -274,11 +258,11 @@
             
             <!-- Info -->
             <div class="mt-6 p-4 bg-blue-50 rounded-lg text-xs">
-                <p class="text-blue-900 font-semibold mb-2">ℹ️ Come funziona:</p>
+                <p class="text-blue-900 font-semibold mb-2">â„¹ï¸ Come funziona:</p>
                 <ul class="text-blue-800 space-y-1">
-                    <li>• <strong>Richiesto:</strong> Nome, Categoria, Prezzo, Pezzi Venduti, Ricavi</li>
-                    <li>• <strong>SKU:</strong> Recuperati se esistente, generati se nuovo</li>
-                    <li>• <strong>Gruppo:</strong> Assegnato da categoria</li>
+                    <li>â€¢ <strong>Richiesto:</strong> Nome, Categoria, Prezzo, Pezzi Venduti, Ricavi</li>
+                    <li>â€¢ <strong>SKU:</strong> Recuperati se esistente, generati se nuovo</li>
+                    <li>â€¢ <strong>Gruppo:</strong> Assegnato da categoria</li>
                 </ul>
             </div>
         </div>
@@ -288,7 +272,7 @@
     <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">âœï¸ Modifica Vendita</h2>
+                <h2 class="text-2xl font-bold">Ã¢Å“ÂÃ¯Â¸Â Modifica Vendita</h2>
                 <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -329,7 +313,7 @@
                 
                 <div class="grid md:grid-cols-3 gap-4 mb-6">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Prezzo €</label>
+                        <label class="block text-sm font-medium mb-2">Prezzo â‚¬</label>
                         <input type="number" step="0.01" id="editPrezzo" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
@@ -337,13 +321,13 @@
                         <input type="number" id="editPezzi" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Fatturato €</label>
+                        <label class="block text-sm font-medium mb-2">Fatturato â‚¬</label>
                         <input type="number" step="0.01" id="editFatturato" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                 </div>
                 
                 <div class="flex space-x-3">
-                    <button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">ðŸ’¾ Salva</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Ã°Å¸â€™Â¾ Salva</button>
                     <button type="button" onclick="closeEditModal()" class="px-4 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
                 </div>
             </form>
@@ -354,7 +338,7 @@
     <div id="bulkEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">âœï¸ Modifica Massiva</h2>
+                <h2 class="text-2xl font-bold">Ã¢Å“ÂÃ¯Â¸Â Modifica Massiva</h2>
                 <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -380,7 +364,7 @@
                 </div>
                 
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Applica</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Ã°Å¸â€™Â¾ Applica</button>
                     <button type="button" onclick="closeBulkEditModal()" class="px-4 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Annulla</button>
                 </div>
             </form>
@@ -391,7 +375,7 @@
     <div id="gruppiVenditaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">ðŸ·ï¸ Gestione Gruppi Vendita</h2>
+                <h2 class="text-2xl font-bold">Ã°Å¸ÂÂ·Ã¯Â¸Â Gestione Gruppi Vendita</h2>
                 <button onclick="closeGruppiVenditaModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -399,7 +383,7 @@
             
             <!-- Form nuovo gruppo -->
             <div class="bg-purple-50 rounded-xl p-4 mb-6">
-                <h3 class="font-bold text-purple-900 mb-3">âž• Nuovo Gruppo</h3>
+                <h3 class="font-bold text-purple-900 mb-3">Ã¢Å¾â€¢ Nuovo Gruppo</h3>
                 <div class="grid md:grid-cols-4 gap-3">
                     <input type="text" id="newGruppoNome" placeholder="Nome gruppo" class="px-3 py-2 border rounded-lg">
                     <input type="color" id="newGruppoColore" value="#7C3AED" class="h-10 w-full border rounded-lg">
@@ -465,7 +449,7 @@
                         .eq('id', authData.userId);
                 }
 
-                console.log(`✅ Accesso registrato: ${pagina} - ${azione}`);
+                console.log(`âœ… Accesso registrato: ${pagina} - ${azione}`);
             } catch (err) {
                 console.error('Errore tracciamento:', err);
             }
@@ -504,7 +488,7 @@
         let parsedImportData = [];
         let allSettori = [];
         let selectedIds = new Set();
-        // RIMOSSO: currentPage - non piÃ¹ necessario
+        // RIMOSSO: currentPage - non piÃƒÂ¹ necessario
         let deleteAction = null;
 
         // ===== GRUPPI VENDITA DEFAULT =====
@@ -517,7 +501,7 @@
             { nome: 'Miscellaneo', colore: '#6B7280', ordine: 6 }
         ];
 
-        // Mappatura automatica Categoria â†‘ Gruppo Vendita
+        // Mappatura automatica Categoria Ã¢â€ â€˜ Gruppo Vendita
         const MAPPING_CATEGORIA_GRUPPO = {
             'Birra': 'Birra',
             'Menu cibo': 'Cibo',
@@ -531,7 +515,7 @@
             'Vetrina': 'Miscellaneo'
         };
 
-        // ===== ALGORITMO NOME â†‘ GRUPPO VENDITA =====
+        // ===== ALGORITMO NOME Ã¢â€ â€˜ GRUPPO VENDITA =====
         // Keywords per identificare il gruppo dal nome del prodotto
         const KEYWORDS_GRUPPO = {
             'Vino': [
@@ -540,7 +524,7 @@
                 'vermentino', 'pecorino', 'trebbiano', 'pinot', 'chardonnay', 'sauvignon',
                 'merlot', 'cabernet', 'syrah', 'shiraz', 'amarone', 'ripasso', 'lambrusco',
                 'franciacorta', 'spumante', 'moscato', 'gewurztraminer', 'riesling',
-                'bottiglia', 'calice', 'rosso', 'bianco', 'rosato', 'rosÃ¨'
+                'bottiglia', 'calice', 'rosso', 'bianco', 'rosato', 'rosÃƒÂ¨'
             ],
             'Birra': [
                 'birra', 'beer', 'lager', 'ale', 'ipa', 'pilsner', 'weiss', 'stout', 'porter',
@@ -553,7 +537,7 @@
                 'panino', 'sandwich', 'pizza', 'focaccia', 'tagliere', 'antipasto',
                 'insalata', 'salad', 'hamburger', 'burger', 'piadina', 'toast',
                 'bruschetta', 'crostino', 'patatine', 'fritte', 'snack', 'stuzzichino',
-                'menu', 'piatto', 'portata', 'contorno', 'dolce', 'dessert', 'tiramisÃ¹',
+                'menu', 'piatto', 'portata', 'contorno', 'dolce', 'dessert', 'tiramisÃƒÂ¹',
                 'pasta', 'spaghetti', 'penne', 'lasagna', 'risotto', 'carne', 'pesce',
                 'formaggio', 'salume', 'prosciutto', 'mortadella', 'bresaola', 'coppa',
                 'olive', 'noccioline', 'mandorle', 'pistacchi', 'chips', 'nachos'
@@ -570,7 +554,7 @@
             'Bevande': [
                 'acqua', 'water', 'coca cola', 'coca-cola', 'pepsi', 'fanta', 'sprite',
                 'aranciata', 'limonata', 'chinotto', 'gassosa', 'tonica', 'soda',
-                'succo', 'juice', 'frutta', 'the', 'tÃ¨', 'tea', 'caffÃ¨', 'coffee',
+                'succo', 'juice', 'frutta', 'the', 'tÃƒÂ¨', 'tea', 'caffÃƒÂ¨', 'coffee',
                 'cappuccino', 'espresso', 'latte', 'macchiato', 'cioccolata', 'chocolate',
                 'energy drink', 'red bull', 'monster', 'gatorade', 'integratore',
                 'analcolico', 'virgin', 'mocktail', 'centrifuga', 'smoothie', 'frullato'
@@ -607,14 +591,14 @@
             const venditeWithoutGruppo = allVendite.filter(v => !v.gruppo_vendita_id);
             
             if (venditeWithoutGruppo.length === 0) {
-                alert('✅ Tutte le vendite hanno giÃƒÂ  un Gruppo Vendita assegnato!');
+                alert('âœ… Tutte le vendite hanno giÃƒÆ’Ã‚Â  un Gruppo Vendita assegnato!');
                 return;
             }
             
             const conferma = confirm(
-                `ðŸ¤– Auto-Assegnazione Gruppi Vendita\n\n` +
+                `Ã°Å¸Â¤â€“ Auto-Assegnazione Gruppi Vendita\n\n` +
                 `Trovate ${venditeWithoutGruppo.length} vendite senza gruppo.\n\n` +
-                `L'algoritmo analizzerÃƒÂ  il NOME di ogni prodotto e assegnerÃƒÂ  automaticamente il gruppo in base a parole chiave.\n\n` +
+                `L'algoritmo analizzerÃƒÆ’Ã‚Â  il NOME di ogni prodotto e assegnerÃƒÆ’Ã‚Â  automaticamente il gruppo in base a parole chiave.\n\n` +
                 `Vuoi procedere?`
             );
             
@@ -644,7 +628,7 @@
             
             if (updates.length === 0) {
                 showLoading(false);
-                alert(`âš ï¸ Nessun gruppo identificabile automaticamente.\n\nProdotti analizzati: ${venditeWithoutGruppo.length}\nNon identificabili: ${notIdentified}`);
+                alert(`Ã¢Å¡Â Ã¯Â¸Â Nessun gruppo identificabile automaticamente.\n\nProdotti analizzati: ${venditeWithoutGruppo.length}\nNon identificabili: ${notIdentified}`);
                 return;
             }
             
@@ -670,7 +654,7 @@
             showLoading(false);
             
             alert(
-                `✅ Auto-Assegnazione completata!\n\n` +
+                `âœ… Auto-Assegnazione completata!\n\n` +
                 `Gruppi assegnati: ${assigned}\n` +
                 `Non identificabili: ${notIdentified}\n\n` +
                 `(I prodotti non identificabili richiedono assegnazione manuale)`
@@ -734,7 +718,7 @@
             } catch (err) {
                 console.error('Errore caricamento:', err);
                 showLoading(false);
-                alert('âŒ Errore: ' + err.message);
+                alert('Ã¢ÂÅ’ Errore: ' + err.message);
             }
         }
 
@@ -746,7 +730,7 @@
                     .order('ordine', { ascending: true });
                 
                 if (error) {
-                    console.log('Tabella gruppo_vendita non trovata, verrÃƒÂ  creata al primo setup');
+                    console.log('Tabella gruppo_vendita non trovata, verrÃƒÆ’Ã‚Â  creata al primo setup');
                     allGruppiVendita = [];
                     return;
                 }
@@ -778,7 +762,7 @@
                 .replace(/\s+/g, ' ')  // Doppi spazi -> singolo
                 .replace(/['']/g, "'") // Apostrofi diversi -> standard
                 .replace(/[""]/g, '"') // Virgolette diverse -> standard
-                .normalize('NFD').replace(/[̀-ͯ]/g, ''); // Rimuove accenti
+                .normalize('NFD').replace(/[Ì€-Í¯]/g, ''); // Rimuove accenti
         }
 
         async function loadExistingProducts() {
@@ -821,14 +805,14 @@
 
                     // Trova max SKU per progressivi (gestisce sia numeri che stringhe)
                     if (v.sku_origine) {
-                        // Se è già un numero, usalo direttamente
+                        // Se Ã¨ giÃ  un numero, usalo direttamente
                         const num = typeof v.sku_origine === 'number' ? 
                             v.sku_origine : 
                             parseInt(String(v.sku_origine).replace(/\D/g, '')) || 0;
                         maxSkuOrigine = Math.max(maxSkuOrigine, num);
                     }
                     if (v.sku_conversione) {
-                        // Se è già un numero, usalo direttamente
+                        // Se Ã¨ giÃ  un numero, usalo direttamente
                         const num = typeof v.sku_conversione === 'number' ? 
                             v.sku_conversione : 
                             parseInt(String(v.sku_conversione).replace(/\D/g, '')) || 0;
@@ -839,9 +823,9 @@
                 // Salva anche la map normalizzata globalmente
                 window.normalizedProductMap = normalizedMap;
 
-                console.log(`✅ Caricati ${existingProducts.size} prodotti esistenti`);
-                console.log(`📊 Max SKU: Origine=${maxSkuOrigine}, Conversione=${maxSkuConversione}`);
-                console.log(`🔍 Match flessibile: ${normalizedMap.size} nomi normalizzati`);
+                console.log(`âœ… Caricati ${existingProducts.size} prodotti esistenti`);
+                console.log(`ðŸ“Š Max SKU: Origine=${maxSkuOrigine}, Conversione=${maxSkuConversione}`);
+                console.log(`ðŸ” Match flessibile: ${normalizedMap.size} nomi normalizzati`);
 
             } catch (err) {
                 console.error('Errore caricamento prodotti esistenti:', err);
@@ -875,7 +859,7 @@
             
             // Gruppi
             const grpOptions = '<option value="">Tutti i gruppi</option>' +
-                '<option value="__null__">âš ï¸ Senza gruppo</option>' +
+                '<option value="__null__">Ã¢Å¡Â Ã¯Â¸Â Senza gruppo</option>' +
                 allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
             document.getElementById('filterGruppo').innerHTML = grpOptions;
             
@@ -941,7 +925,7 @@
                 return true;
             });
             
-            // RIMOSSO: currentPage = 1 - non piÃ¹ necessario
+            // RIMOSSO: currentPage = 1 - non piÃƒÂ¹ necessario
             renderTable(filteredVendite);
             updateStats();
         }
@@ -960,7 +944,7 @@
             const data = filteredVendite.length > 0 ? filteredVendite : allVendite;
             
             document.getElementById('statRighe').textContent = data.length.toLocaleString('it-IT');
-            document.getElementById('statFatturato').textContent = '€' + data.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('statFatturato').textContent = 'â‚¬' + data.reduce((s, v) => s + (parseFloat(v.fatturato) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             document.getElementById('statPezzi').textContent = data.reduce((s, v) => s + (parseFloat(v.pezzi_venduti) || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             document.getElementById('statCategorie').textContent = new Set(data.map(v => v.categoria).filter(Boolean)).size;
             document.getElementById('statGruppi').textContent = allGruppiVendita.length;
@@ -1002,9 +986,9 @@
                                     ${gruppoNome}
                                 </span>
                             </td>
-                            <td class="px-3 py-2 text-right text-xs">€${(parseFloat(v.prezzo) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-right text-xs">â‚¬${(parseFloat(v.prezzo) || 0).toFixed(2)}</td>
                             <td class="px-3 py-2 text-right text-xs">${(parseFloat(v.pezzi_venduti) || 0).toLocaleString('it-IT')}</td>
-                            <td class="px-3 py-2 text-right text-xs font-bold text-green-600">€${(parseFloat(v.fatturato) || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 text-right text-xs font-bold text-green-600">â‚¬${(parseFloat(v.fatturato) || 0).toFixed(2)}</td>
                             <td class="px-3 py-2 text-center">
                                 <button onclick="editVendita('${v.id}')" class="text-blue-600 hover:text-blue-800 p-1" title="Modifica">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -1029,7 +1013,7 @@
             updateSelectionBar();
         }
 
-        // RIMOSSE: prevPage() e nextPage() - non piÃ¹ necessarie
+        // RIMOSSE: prevPage() e nextPage() - non piÃƒÂ¹ necessarie
 
         // ===== SELEZIONE =====
         function toggleSelect(id) {
@@ -1147,7 +1131,7 @@
                 await loadData();
                 
             } catch (err) {
-                alert('âŒ Errore: ' + err.message);
+                alert('Ã¢ÂÅ’ Errore: ' + err.message);
             }
         }
 
@@ -1201,7 +1185,7 @@
                 
             } catch (err) {
                 showLoading(false);
-                alert('âŒ Errore: ' + err.message);
+                alert('Ã¢ÂÅ’ Errore: ' + err.message);
             }
         }
 
@@ -1264,7 +1248,7 @@
                 populateFilters();
                 
             } catch (err) {
-                alert('âŒ Errore: ' + err.message);
+                alert('Ã¢ÂÅ’ Errore: ' + err.message);
             }
         }
 
@@ -1284,7 +1268,7 @@
                 populateFilters();
                 
             } catch (err) {
-                alert('âŒ Errore: ' + err.message);
+                alert('Ã¢ÂÅ’ Errore: ' + err.message);
             }
         }
 
@@ -1326,7 +1310,7 @@
                 
             } catch (err) {
                 showLoading(false);
-                alert('âŒ Errore: ' + err.message);
+                alert('Ã¢ÂÅ’ Errore: ' + err.message);
             }
         }
 
@@ -1335,7 +1319,7 @@
             const file = e.target.files[0];
             if (!file) return;
             
-            document.getElementById('fileNameDisplay').textContent = `✓ ${file.name}`;
+            document.getElementById('fileNameDisplay').textContent = `âœ“ ${file.name}`;
             
             try {
                 const data = await file.arrayBuffer();
@@ -1411,9 +1395,9 @@
                             id_settore = existing.id_settore;
                             existingCount++;
                             matchType = 'normalizzato';
-                            console.log(`🔍 Match flessibile: "${nome}" → "${existing.nome_originale}"`);
+                            console.log(`ðŸ” Match flessibile: "${nome}" â†’ "${existing.nome_originale}"`);
                         } else {
-                            // Nessun match: crea nuovo (numeri per compatibilità DB)
+                            // Nessun match: crea nuovo (numeri per compatibilitÃ  DB)
                             maxSkuOrigine++;
                             maxSkuConversione++;
                             sku_origine = maxSkuOrigine;
@@ -1424,7 +1408,7 @@
                             matchType = 'nuovo';
                         }
                     } else {
-                        // Fallback: crea nuovo (numeri per compatibilità DB)
+                        // Fallback: crea nuovo (numeri per compatibilitÃ  DB)
                         maxSkuOrigine++;
                         maxSkuConversione++;
                         sku_origine = maxSkuOrigine;
@@ -1469,18 +1453,18 @@
                 }).filter(r => r !== null);
                 
                 // Log riepilogo match
-                console.log('\n📊 RIEPILOGO MATCH:');
-                console.log(`   ✅ Match esatti: ${exactMatchCount}`);
-                console.log(`   🔍 Match normalizzati: ${fuzzyMatchCount}`);
-                console.log(`   🆕 Prodotti nuovi: ${newCount}`);
-                console.log(`   📋 Totale righe: ${parsedImportData.length}\n`);
+                console.log('\nðŸ“Š RIEPILOGO MATCH:');
+                console.log(`   âœ… Match esatti: ${exactMatchCount}`);
+                console.log(`   ðŸ” Match normalizzati: ${fuzzyMatchCount}`);
+                console.log(`   ðŸ†• Prodotti nuovi: ${newCount}`);
+                console.log(`   ðŸ“‹ Totale righe: ${parsedImportData.length}\n`);
                 
                 // Mostra anteprima
                 showPreview(parsedImportData, existingCount, newCount, exactMatchCount, fuzzyMatchCount);
                 
             } catch (err) {
                 console.error('Errore parsing Excel:', err);
-                alert('❌ Errore: ' + err.message);
+                alert('âŒ Errore: ' + err.message);
                 document.getElementById('fileNameDisplay').textContent = '';
             }
         }
@@ -1504,15 +1488,15 @@
                 
                 if (r.matchType === 'esatto') {
                     badgeClass = 'bg-green-100 text-green-700';
-                    badgeIcon = '✓';
+                    badgeIcon = 'âœ“';
                     badgeTooltip = 'Match esatto';
                 } else if (r.matchType === 'normalizzato') {
                     badgeClass = 'bg-blue-100 text-blue-700';
-                    badgeIcon = '≈';
+                    badgeIcon = 'â‰ˆ';
                     badgeTooltip = 'Match flessibile';
                 } else {
                     badgeClass = 'bg-orange-100 text-orange-700';
-                    badgeIcon = '🆕';
+                    badgeIcon = 'ðŸ†•';
                     badgeTooltip = 'Nuovo prodotto';
                 }
                 
@@ -1521,7 +1505,7 @@
                         <td class="px-2 py-1 border-b text-xs">${r.nome.substring(0, 30)}</td>
                         <td class="px-2 py-1 border-b text-xs">${r.categoria}</td>
                         <td class="px-2 py-1 border-b text-right text-xs">${r.pezzi_venduti}</td>
-                        <td class="px-2 py-1 border-b text-right text-xs">€${r.ricavi.toFixed(2)}</td>
+                        <td class="px-2 py-1 border-b text-right text-xs">â‚¬${r.ricavi.toFixed(2)}</td>
                         <td class="px-2 py-1 border-b text-center">
                             <span class="px-1 py-0.5 text-xs rounded ${badgeClass}" title="${badgeTooltip}">
                                 ${badgeIcon}
@@ -1552,12 +1536,12 @@
             const mese = document.getElementById('meseImport').value;
             
             if (!mese) {
-                alert('⚠️ Seleziona il mese di riferimento');
+                alert('âš ï¸ Seleziona il mese di riferimento');
                 return;
             }
             
             if (parsedImportData.length === 0) {
-                alert('⚠️ Nessun dato da importare');
+                alert('âš ï¸ Nessun dato da importare');
                 return;
             }
             
@@ -1612,12 +1596,12 @@
                 setTimeout(async () => {
                     closeImportModal();
                     await loadData();
-                    alert(`✅ Import completato!\n\n${inserted} righe inserite per ${mese}`);
+                    alert(`âœ… Import completato!\n\n${inserted} righe inserite per ${mese}`);
                 }, 1000);
                 
             } catch (err) {
                 console.error('Errore import:', err);
-                alert('❌ Errore import: ' + err.message);
+                alert('âŒ Errore import: ' + err.message);
                 document.getElementById('importProgress').classList.add('hidden');
                 document.getElementById('previewSection').classList.remove('hidden');
             }
@@ -1625,7 +1609,7 @@
 
                 // ===== INIT =====
         loadData();
-        console.log('✅ Gestione Vendite v3.1 - Import Intelligente con Match Flessibile');
+        console.log('âœ… Gestione Vendite v3.1 - Import Intelligente con Match Flessibile');
     </script>
 </body>
 </html>
