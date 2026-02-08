@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grappoli & Luppoli - Andamento Ricavi</title>
+    <title>Grappoli &amp; Luppoli - Andamento Ricavi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        // ========== REDIRECT SE NON AUTENTICATO ==========
         (function() {
             const SESSION_KEY = 'app_authenticated';
             const SESSION_DURATION = 24 * 60 * 60 * 1000;
@@ -31,10 +30,9 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <img src="data:image/png;base64,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" alt="Logo Grappoli & Luppoli" class="w-12 h-12 rounded-lg object-contain">
+                        <img src="data:image/png;base64,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" alt="Logo" class="w-12 h-12 rounded-lg object-contain">
                         <span class="text-lg font-bold">Grappoli &amp; Luppoli</span>
                     </button>
-                    
                     <div class="hidden md:ml-10 md:flex md:space-x-4">
                         <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                         <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
@@ -46,7 +44,6 @@
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
                 </div>
-                
                 <div class="flex items-center space-x-3">
                     <span id="userName" class="text-sm text-gray-600"></span>
                     <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
@@ -62,7 +59,7 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">📈 Andamento Ricavi</h1>
-                <p class="mt-2 text-gray-600">Analisi ricavi mensili &mdash; Consuntivo e Miscellaneo separati</p>
+                <p class="mt-2 text-gray-600">Analisi ricavi mensili per tipologia di pagamento</p>
             </div>
             <div class="mt-4 md:mt-0 flex items-center space-x-3">
                 <label class="text-sm font-medium text-gray-700">Anno:</label>
@@ -73,152 +70,136 @@
         </div>
 
         <!-- KPI Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8" id="kpiCards"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8" id="kpiCards"></div>
 
         <!-- Charts Row 1 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <!-- Stacked Bar Chart -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Ricavi Mensili per Tipologia</h2>
-                <div class="relative" style="height:350px">
-                    <canvas id="chartStacked"></canvas>
-                </div>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Ricavi Mensili per Tipologia di Pagamento</h2>
+                <div class="relative" style="height:370px"><canvas id="chartStacked"></canvas></div>
             </div>
-            <!-- Trend Line -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Trend Totale Ricavi</h2>
-                <div class="relative" style="height:350px">
-                    <canvas id="chartTrend"></canvas>
-                </div>
+                <div class="relative" style="height:370px"><canvas id="chartTrend"></canvas></div>
             </div>
         </div>
 
         <!-- Charts Row 2 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <!-- YoY Comparison -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Composizione Pagamenti (%)</h2>
+                <div class="relative" style="height:370px"><canvas id="chartComposizione"></canvas></div>
+            </div>
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Confronto Anno su Anno</h2>
-                <div class="relative" style="height:350px">
-                    <canvas id="chartYoY"></canvas>
-                </div>
-            </div>
-            <!-- Incidenza % Miscellaneo -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Incidenza % Miscellaneo su Totale</h2>
-                <div class="relative" style="height:350px">
-                    <canvas id="chartIncidenza"></canvas>
-                </div>
+                <div class="relative" style="height:370px"><canvas id="chartYoY"></canvas></div>
             </div>
         </div>
 
-        <!-- Fatturato Giornaliero Medio -->
+        <!-- Fatturato Giornaliero -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
             <h2 class="text-lg font-bold text-gray-900 mb-4">Fatturato Medio Giornaliero</h2>
-            <div class="relative" style="height:300px">
-                <canvas id="chartDailyAvg"></canvas>
-            </div>
+            <div class="relative" style="height:280px"><canvas id="chartDailyAvg"></canvas></div>
         </div>
 
         <!-- Data Table -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8 overflow-x-auto">
             <h2 class="text-lg font-bold text-gray-900 mb-4">Dettaglio Mensile</h2>
-            <table class="w-full text-sm">
+            <table class="w-full text-sm whitespace-nowrap">
                 <thead>
                     <tr class="border-b-2 border-gray-200">
                         <th class="text-left py-3 px-2 font-semibold text-gray-700">Mese</th>
-                        <th class="text-right py-3 px-2 font-semibold text-gray-700">Consuntivo</th>
-                        <th class="text-right py-3 px-2 font-semibold text-gray-700">Miscellaneo</th>
-                        <th class="text-right py-3 px-2 font-semibold text-blue-700 bg-blue-50 rounded">Totale</th>
-                        <th class="text-right py-3 px-2 font-semibold text-gray-700">GG Lav.</th>
-                        <th class="text-right py-3 px-2 font-semibold text-gray-700">€/Giorno</th>
-                        <th class="text-right py-3 px-2 font-semibold text-gray-700">% Misc.</th>
-                        <th class="text-right py-3 px-2 font-semibold text-gray-700">Pranzo</th>
+                        <th class="text-right py-3 px-2 font-semibold text-blue-700">💳 POS</th>
+                        <th class="text-right py-3 px-2 font-semibold text-green-700">💵 Contanti</th>
+                        <th class="text-right py-3 px-2 font-semibold text-purple-700">📱 Satispay</th>
+                        <th class="text-right py-3 px-2 font-semibold text-cyan-700">📄 Fatture</th>
+                        <th class="text-right py-3 px-2 font-semibold text-amber-700">📦 Miscellaneo</th>
+                        <th class="text-right py-3 px-2 font-semibold text-gray-900 bg-gray-100 rounded">Totale</th>
+                        <th class="text-right py-3 px-2 font-semibold text-gray-600">GG</th>
+                        <th class="text-right py-3 px-2 font-semibold text-gray-600">€/GG</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-
     </div>
 
     <script>
         // ========== AUTH ==========
         const SESSION_KEY = 'app_authenticated';
-        function logout() {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.href = 'index.html';
-        }
+        function logout() { localStorage.removeItem(SESSION_KEY); window.location.href = 'index.html'; }
         (function() {
             const auth = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}');
-            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
+            document.getElementById('userName').textContent = 'Ciao, ' + (auth.userName || 'Utente');
         })();
 
-        // ========== DATI RICAVI (da Excel Ricavi.xlsx) ==========
+        // ========== DATI AGGREGATI DA Pagamenti.xlsx ==========
         const RICAVI_DATA = [
-            { anno: 2023, mese: 4, meseNome: 'Aprile',    consuntivo: 4389.95,  miscellaneo: 896.00,   totale: 5285.95,  ggLav: 5,  fattGg: 1057.19, pranzo: 0 },
-            { anno: 2023, mese: 5, meseNome: 'Maggio',    consuntivo: 24439.19, miscellaneo: 5400.00,  totale: 29839.19, ggLav: 30, fattGg: 994.64,  pranzo: 0 },
-            { anno: 2023, mese: 6, meseNome: 'Giugno',    consuntivo: 23356.03, miscellaneo: 2730.00,  totale: 26086.03, ggLav: 30, fattGg: 869.53,  pranzo: 0 },
-            { anno: 2023, mese: 7, meseNome: 'Luglio',    consuntivo: 21185.39, miscellaneo: 5630.00,  totale: 26815.39, ggLav: 31, fattGg: 865.01,  pranzo: 0 },
-            { anno: 2023, mese: 8, meseNome: 'Agosto',    consuntivo: 5771.90,  miscellaneo: 796.57,   totale: 6568.47,  ggLav: 15, fattGg: 437.90,  pranzo: 0 },
-            { anno: 2023, mese: 9, meseNome: 'Settembre', consuntivo: 20583.53, miscellaneo: 2500.00,  totale: 23083.53, ggLav: 30, fattGg: 769.45,  pranzo: 0 },
-            { anno: 2023, mese: 10, meseNome: 'Ottobre',  consuntivo: 20617.70, miscellaneo: 2500.00,  totale: 23117.70, ggLav: 31, fattGg: 745.73,  pranzo: 0 },
-            { anno: 2023, mese: 11, meseNome: 'Novembre', consuntivo: 18020.02, miscellaneo: 2500.00,  totale: 20520.02, ggLav: 30, fattGg: 684.00,  pranzo: 0 },
-            { anno: 2023, mese: 12, meseNome: 'Dicembre', consuntivo: 18239.28, miscellaneo: 2500.00,  totale: 20739.28, ggLav: 29, fattGg: 715.15,  pranzo: 0 },
+            { anno: 2023, mese: 4, meseNome: 'Aprile', pos: 3960.58, contanti: 428.37, satispay: 1.00, fatture: 0.00, miscellaneo: 896.00, totale: 5285.95, ggLav: 5, fattGg: 1057.19 },
+            { anno: 2023, mese: 5, meseNome: 'Maggio', pos: 19756.18, contanti: 3914.31, satispay: 768.70, fatture: 0.00, miscellaneo: 5400.00, totale: 29839.19, ggLav: 30, fattGg: 994.64 },
+            { anno: 2023, mese: 6, meseNome: 'Giugno', pos: 18686.53, contanti: 3513.01, satispay: 1156.49, fatture: 0.00, miscellaneo: 2730.00, totale: 26086.03, ggLav: 30, fattGg: 869.53 },
+            { anno: 2023, mese: 7, meseNome: 'Luglio', pos: 18184.85, contanti: 2167.52, satispay: 833.02, fatture: 0.00, miscellaneo: 5630.00, totale: 26815.39, ggLav: 31, fattGg: 865.01 },
+            { anno: 2023, mese: 8, meseNome: 'Agosto', pos: 4613.65, contanti: 788.95, satispay: 369.30, fatture: 0.00, miscellaneo: 796.57, totale: 6568.47, ggLav: 15, fattGg: 437.90 },
+            { anno: 2023, mese: 9, meseNome: 'Settembre', pos: 16990.51, contanti: 2838.54, satispay: 754.48, fatture: 0.00, miscellaneo: 2500.00, totale: 23083.53, ggLav: 30, fattGg: 769.45 },
+            { anno: 2023, mese: 10, meseNome: 'Ottobre', pos: 16982.73, contanti: 2589.68, satispay: 1045.29, fatture: 0.00, miscellaneo: 2500.00, totale: 23117.70, ggLav: 31, fattGg: 745.73 },
+            { anno: 2023, mese: 11, meseNome: 'Novembre', pos: 15647.53, contanti: 2357.49, satispay: 15.00, fatture: 0.00, miscellaneo: 2500.00, totale: 20520.02, ggLav: 30, fattGg: 684.00 },
+            { anno: 2023, mese: 12, meseNome: 'Dicembre', pos: 15015.36, contanti: 2382.69, satispay: 841.23, fatture: 0.00, miscellaneo: 2500.00, totale: 20739.28, ggLav: 29, fattGg: 715.15 },
 
-            { anno: 2024, mese: 1,  meseNome: 'Gennaio',  consuntivo: 17789.27, miscellaneo: 2000.00,  totale: 19789.27, ggLav: 30, fattGg: 659.64,  pranzo: 0 },
-            { anno: 2024, mese: 2,  meseNome: 'Febbraio', consuntivo: 16223.52, miscellaneo: 2000.00,  totale: 18223.52, ggLav: 29, fattGg: 628.40,  pranzo: 0 },
-            { anno: 2024, mese: 3,  meseNome: 'Marzo',    consuntivo: 20136.71, miscellaneo: 2000.00,  totale: 22136.71, ggLav: 31, fattGg: 714.09,  pranzo: 0 },
-            { anno: 2024, mese: 4,  meseNome: 'Aprile',   consuntivo: 19408.59, miscellaneo: 2000.00,  totale: 21408.59, ggLav: 28, fattGg: 764.59,  pranzo: 0 },
-            { anno: 2024, mese: 5,  meseNome: 'Maggio',   consuntivo: 25971.10, miscellaneo: 2350.00,  totale: 28321.10, ggLav: 30, fattGg: 944.04,  pranzo: 0 },
-            { anno: 2024, mese: 6,  meseNome: 'Giugno',   consuntivo: 28152.41, miscellaneo: 2000.00,  totale: 30152.41, ggLav: 29, fattGg: 1039.74, pranzo: 0 },
-            { anno: 2024, mese: 7,  meseNome: 'Luglio',   consuntivo: 23649.32, miscellaneo: 2000.00,  totale: 25649.32, ggLav: 31, fattGg: 827.40,  pranzo: 0 },
-            { anno: 2024, mese: 8,  meseNome: 'Agosto',   consuntivo: 5636.00,  miscellaneo: 0.00,     totale: 5636.00,  ggLav: 10, fattGg: 563.60,  pranzo: 0 },
-            { anno: 2024, mese: 9,  meseNome: 'Settembre',consuntivo: 20975.84, miscellaneo: 1030.00,  totale: 22005.84, ggLav: 30, fattGg: 733.53,  pranzo: 0 },
-            { anno: 2024, mese: 10, meseNome: 'Ottobre',  consuntivo: 21691.86, miscellaneo: 3400.00,  totale: 25091.86, ggLav: 31, fattGg: 809.41,  pranzo: 0 },
-            { anno: 2024, mese: 11, meseNome: 'Novembre', consuntivo: 21398.52, miscellaneo: 1850.00,  totale: 23248.52, ggLav: 30, fattGg: 774.95,  pranzo: 0 },
-            { anno: 2024, mese: 12, meseNome: 'Dicembre', consuntivo: 22254.15, miscellaneo: 0.00,     totale: 22254.15, ggLav: 28, fattGg: 794.79,  pranzo: 0 },
+            { anno: 2024, mese: 1, meseNome: 'Gennaio', pos: 14967.29, contanti: 2480.28, satispay: 341.70, fatture: 0.00, miscellaneo: 2000.00, totale: 19789.27, ggLav: 30, fattGg: 659.64 },
+            { anno: 2024, mese: 2, meseNome: 'Febbraio', pos: 13395.96, contanti: 1943.91, satispay: 883.65, fatture: 0.00, miscellaneo: 2000.00, totale: 18223.52, ggLav: 29, fattGg: 628.40 },
+            { anno: 2024, mese: 3, meseNome: 'Marzo', pos: 17624.15, contanti: 1717.56, satispay: 795.00, fatture: 0.00, miscellaneo: 2000.00, totale: 22136.71, ggLav: 31, fattGg: 714.09 },
+            { anno: 2024, mese: 4, meseNome: 'Aprile', pos: 15531.59, contanti: 2474.09, satispay: 1402.91, fatture: 0.00, miscellaneo: 2000.00, totale: 21408.59, ggLav: 28, fattGg: 764.59 },
+            { anno: 2024, mese: 5, meseNome: 'Maggio', pos: 21861.45, contanti: 2578.33, satispay: 1531.32, fatture: 0.00, miscellaneo: 2350.00, totale: 28321.10, ggLav: 30, fattGg: 944.04 },
+            { anno: 2024, mese: 6, meseNome: 'Giugno', pos: 22863.83, contanti: 3827.87, satispay: 1460.71, fatture: 0.00, miscellaneo: 2000.00, totale: 30152.41, ggLav: 29, fattGg: 1039.74 },
+            { anno: 2024, mese: 7, meseNome: 'Luglio', pos: 20315.18, contanti: 2288.06, satispay: 1046.08, fatture: 0.00, miscellaneo: 2000.00, totale: 25649.32, ggLav: 31, fattGg: 827.40 },
+            { anno: 2024, mese: 8, meseNome: 'Agosto', pos: 4788.75, contanti: 623.50, satispay: 223.75, fatture: 0.00, miscellaneo: 0.00, totale: 5636.00, ggLav: 10, fattGg: 563.60 },
+            { anno: 2024, mese: 9, meseNome: 'Settembre', pos: 18053.46, contanti: 2020.10, satispay: 902.28, fatture: 0.00, miscellaneo: 1030.00, totale: 22005.84, ggLav: 30, fattGg: 733.53 },
+            { anno: 2024, mese: 10, meseNome: 'Ottobre', pos: 19417.31, contanti: 1419.25, satispay: 855.30, fatture: 0.00, miscellaneo: 3400.00, totale: 25091.86, ggLav: 31, fattGg: 809.41 },
+            { anno: 2024, mese: 11, meseNome: 'Novembre', pos: 18871.66, contanti: 1690.56, satispay: 836.30, fatture: 0.00, miscellaneo: 1850.00, totale: 23248.52, ggLav: 30, fattGg: 774.95 },
+            { anno: 2024, mese: 12, meseNome: 'Dicembre', pos: 15858.41, contanti: 2347.29, satispay: 1014.45, fatture: 3034.00, miscellaneo: 0.00, totale: 22254.15, ggLav: 28, fattGg: 794.79 },
 
-            { anno: 2025, mese: 1,  meseNome: 'Gennaio',  consuntivo: 16583.73, miscellaneo: 2415.00,  totale: 18998.73, ggLav: 29, fattGg: 655.13,  pranzo: 0 },
-            { anno: 2025, mese: 2,  meseNome: 'Febbraio', consuntivo: 20742.58, miscellaneo: 2090.00,  totale: 22832.58, ggLav: 28, fattGg: 815.45,  pranzo: 0 },
-            { anno: 2025, mese: 3,  meseNome: 'Marzo',    consuntivo: 32508.67, miscellaneo: 4335.00,  totale: 36843.67, ggLav: 31, fattGg: 1188.51, pranzo: 1092.50 },
-            { anno: 2025, mese: 4,  meseNome: 'Aprile',   consuntivo: 23847.77, miscellaneo: 3050.00,  totale: 26897.77, ggLav: 27, fattGg: 996.21,  pranzo: 552.50 },
-            { anno: 2025, mese: 5,  meseNome: 'Maggio',   consuntivo: 28079.96, miscellaneo: 4695.00,  totale: 32774.96, ggLav: 30, fattGg: 1092.50, pranzo: 769.00 },
-            { anno: 2025, mese: 6,  meseNome: 'Giugno',   consuntivo: 33493.56, miscellaneo: 4585.00,  totale: 38078.56, ggLav: 29, fattGg: 1313.05, pranzo: 483.00 },
-            { anno: 2025, mese: 7,  meseNome: 'Luglio',   consuntivo: 25216.90, miscellaneo: 3810.00,  totale: 29026.90, ggLav: 31, fattGg: 936.35,  pranzo: 0 },
-            { anno: 2025, mese: 8,  meseNome: 'Agosto',   consuntivo: 4853.70,  miscellaneo: 625.00,   totale: 4853.70,  ggLav: 8,  fattGg: 606.71,  pranzo: 0 },
-            { anno: 2025, mese: 9,  meseNome: 'Settembre',consuntivo: 23207.06, miscellaneo: 3655.00,  totale: 26862.06, ggLav: 30, fattGg: 895.40,  pranzo: 1132.00 },
-            { anno: 2025, mese: 10, meseNome: 'Ottobre',  consuntivo: 28307.47, miscellaneo: 3920.00,  totale: 32227.47, ggLav: 31, fattGg: 1039.60, pranzo: 0 },
-            { anno: 2025, mese: 11, meseNome: 'Novembre', consuntivo: 24969.15, miscellaneo: 3910.00,  totale: 28879.15, ggLav: 30, fattGg: 962.64,  pranzo: 0 },
-            { anno: 2025, mese: 12, meseNome: 'Dicembre', consuntivo: 22377.02, miscellaneo: 4270.00,  totale: 26647.02, ggLav: 27, fattGg: 986.93,  pranzo: 0 },
+            { anno: 2025, mese: 1, meseNome: 'Gennaio', pos: 14866.87, contanti: 982.15, satispay: 734.71, fatture: 0.00, miscellaneo: 2415.00, totale: 18998.73, ggLav: 29, fattGg: 655.13 },
+            { anno: 2025, mese: 2, meseNome: 'Febbraio', pos: 17785.27, contanti: 1197.34, satispay: 1285.97, fatture: 474.00, miscellaneo: 2090.00, totale: 22832.58, ggLav: 28, fattGg: 815.45 },
+            { anno: 2025, mese: 3, meseNome: 'Marzo', pos: 29584.18, contanti: 1726.17, satispay: 1198.32, fatture: 0.00, miscellaneo: 4335.00, totale: 36843.67, ggLav: 31, fattGg: 1188.51 },
+            { anno: 2025, mese: 4, meseNome: 'Aprile', pos: 20610.76, contanti: 1274.60, satispay: 919.41, fatture: 1043.00, miscellaneo: 3050.00, totale: 26897.77, ggLav: 27, fattGg: 996.21 },
+            { anno: 2025, mese: 5, meseNome: 'Maggio', pos: 25442.75, contanti: 1300.15, satispay: 1106.56, fatture: 230.50, miscellaneo: 4695.00, totale: 32774.96, ggLav: 30, fattGg: 1092.50 },
+            { anno: 2025, mese: 6, meseNome: 'Giugno', pos: 31594.87, contanti: 603.01, satispay: 1253.68, fatture: 42.00, miscellaneo: 4585.00, totale: 38078.56, ggLav: 29, fattGg: 1313.05 },
+            { anno: 2025, mese: 7, meseNome: 'Luglio', pos: 23244.65, contanti: 562.25, satispay: 845.50, fatture: 564.50, miscellaneo: 3810.00, totale: 29026.90, ggLav: 31, fattGg: 936.35 },
+            { anno: 2025, mese: 8, meseNome: 'Agosto', pos: 4367.20, contanti: 263.50, satispay: 174.00, fatture: 49.00, miscellaneo: 625.00, totale: 5478.70, ggLav: 8, fattGg: 684.84 },
+            { anno: 2025, mese: 9, meseNome: 'Settembre', pos: 21896.89, contanti: 588.00, satispay: 572.17, fatture: 150.00, miscellaneo: 3655.00, totale: 26862.06, ggLav: 30, fattGg: 895.40 },
+            { anno: 2025, mese: 10, meseNome: 'Ottobre', pos: 26168.81, contanti: 602.50, satispay: 600.25, fatture: 935.91, miscellaneo: 3920.00, totale: 32227.47, ggLav: 31, fattGg: 1039.60 },
+            { anno: 2025, mese: 11, meseNome: 'Novembre', pos: 22737.98, contanti: 342.00, satispay: 789.17, fatture: 1100.00, miscellaneo: 3910.00, totale: 28879.15, ggLav: 30, fattGg: 962.64 },
+            { anno: 2025, mese: 12, meseNome: 'Dicembre', pos: 20914.25, contanti: 259.27, satispay: 671.50, fatture: 532.00, miscellaneo: 4270.00, totale: 26647.02, ggLav: 27, fattGg: 986.93 },
 
-            { anno: 2026, mese: 1,  meseNome: 'Gennaio',  consuntivo: 22550.77, miscellaneo: 3420.00,  totale: 25970.77, ggLav: 29, fattGg: 895.54,  pranzo: 0 },
-            { anno: 2026, mese: 2,  meseNome: 'Febbraio', consuntivo: 0.00,     miscellaneo: 210.00,   totale: 210.00,   ggLav: 5,  fattGg: 42.00,   pranzo: 0 },
+            { anno: 2026, mese: 1, meseNome: 'Gennaio', pos: 20379.11, contanti: 354.00, satispay: 1308.66, fatture: 509.00, miscellaneo: 3420.00, totale: 25970.77, ggLav: 29, fattGg: 895.54 },
+            { anno: 2026, mese: 2, meseNome: 'Febbraio', pos: 0.00, contanti: 0.00, satispay: 0.00, fatture: 0.00, miscellaneo: 210.00, totale: 210.00, ggLav: 0, fattGg: 0.00 },
         ];
 
+        // ========== COLORI TIPOLOGIE ==========
+        const COLORS = {
+            pos:         { bg: 'rgba(59, 130, 246, 0.8)',  border: 'rgba(59, 130, 246, 1)' },
+            contanti:    { bg: 'rgba(34, 197, 94, 0.8)',   border: 'rgba(34, 197, 94, 1)' },
+            satispay:    { bg: 'rgba(168, 85, 247, 0.8)',  border: 'rgba(168, 85, 247, 1)' },
+            fatture:     { bg: 'rgba(6, 182, 212, 0.8)',   border: 'rgba(6, 182, 212, 1)' },
+            miscellaneo: { bg: 'rgba(245, 158, 11, 0.8)',  border: 'rgba(245, 158, 11, 1)' },
+        };
+        const TYPE_LABELS = { pos: 'POS', contanti: 'Contanti', satispay: 'Satispay', fatture: 'Fatture', miscellaneo: 'Miscellaneo' };
+        const TYPES = ['pos', 'contanti', 'satispay', 'fatture', 'miscellaneo'];
+
         // ========== UTILITY ==========
-        function formatCurrency(v) {
-            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v || 0);
-        }
-        function formatCurrencyDec(v) {
-            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v || 0);
-        }
-        function getMonthShort(m) {
-            return ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'][m - 1] || '';
-        }
+        function fmt(v) { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v || 0); }
+        function fmt2(v) { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v || 0); }
+        function mShort(m) { return ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'][m - 1] || ''; }
 
         // ========== STATO ==========
-        let filteredData = [...RICAVI_DATA];
+        let filteredData = [];
         let charts = {};
 
         // ========== FILTRO ==========
         function initFilter() {
             const anni = [...new Set(RICAVI_DATA.map(d => d.anno))].sort();
             const sel = document.getElementById('filterAnno');
-            anni.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a; opt.textContent = a;
-                sel.appendChild(opt);
-            });
+            anni.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
         }
 
         function applyFilter() {
@@ -229,228 +210,164 @@
 
         // ========== KPI ==========
         function renderKPI() {
-            const totConsuntivo = filteredData.reduce((s, d) => s + d.consuntivo, 0);
-            const totMiscellaneo = filteredData.reduce((s, d) => s + d.miscellaneo, 0);
-            const totTotale = filteredData.reduce((s, d) => s + d.totale, 0);
-            const completedMonths = filteredData.filter(d => d.ggLav >= 15);
-            const avgMensile = completedMonths.length > 0 ? completedMonths.reduce((s, d) => s + d.totale, 0) / completedMonths.length : 0;
-            const allGg = filteredData.reduce((s, d) => s + d.ggLav, 0);
-            const avgGiornaliero = allGg > 0 ? totTotale / allGg : 0;
+            const s = (k) => filteredData.reduce((a, d) => a + d[k], 0);
+            const totale = s('totale');
 
             const kpis = [
-                { label: 'Totale Ricavi',   value: formatCurrency(totTotale),      color: 'from-blue-500 to-blue-600',   icon: '💰' },
-                { label: 'Consuntivo',      value: formatCurrency(totConsuntivo),   color: 'from-emerald-500 to-emerald-600', icon: '🧾' },
-                { label: 'Miscellaneo',     value: formatCurrency(totMiscellaneo),  color: 'from-amber-500 to-amber-600', icon: '📦' },
-                { label: 'Media Mensile',   value: formatCurrency(avgMensile),      color: 'from-violet-500 to-violet-600', icon: '📊' },
-                { label: '€/Giorno Medio',  value: formatCurrencyDec(avgGiornaliero), color: 'from-rose-500 to-rose-600', icon: '📅' },
+                { label: 'Totale Ricavi',  value: fmt(totale),         color: 'from-gray-700 to-gray-800',       icon: '\uD83D\uDCB0' },
+                { label: 'POS',            value: fmt(s('pos')),       color: 'from-blue-500 to-blue-600',       icon: '\uD83D\uDCB3' },
+                { label: 'Contanti',       value: fmt(s('contanti')),  color: 'from-green-500 to-green-600',     icon: '\uD83D\uDCB5' },
+                { label: 'Satispay',       value: fmt(s('satispay')),  color: 'from-purple-500 to-purple-600',   icon: '\uD83D\uDCF1' },
+                { label: 'Fatture',        value: fmt(s('fatture')),   color: 'from-cyan-500 to-cyan-600',       icon: '\uD83D\uDCC4' },
+                { label: 'Miscellaneo',    value: fmt(s('miscellaneo')),color: 'from-amber-500 to-amber-600',    icon: '\uD83D\uDCE6' },
             ];
 
             document.getElementById('kpiCards').innerHTML = kpis.map(k => `
-                <div class="bg-gradient-to-br ${k.color} rounded-xl p-5 text-white shadow-lg">
-                    <div class="text-2xl mb-1">${k.icon}</div>
+                <div class="bg-gradient-to-br ${k.color} rounded-xl p-4 text-white shadow-lg">
+                    <div class="text-xl mb-0.5">${k.icon}</div>
                     <p class="text-xs opacity-80 uppercase tracking-wide">${k.label}</p>
-                    <p class="text-xl font-bold mt-1">${k.value}</p>
+                    <p class="text-lg font-bold mt-1">${k.value}</p>
                 </div>
             `).join('');
         }
 
-        // ========== CHARTS ==========
-        function destroyChart(key) {
-            if (charts[key]) { charts[key].destroy(); charts[key] = null; }
-        }
+        // ========== CHART UTILS ==========
+        function destroyChart(key) { if (charts[key]) { charts[key].destroy(); charts[key] = null; } }
 
-        function renderStackedChart() {
+        // ========== STACKED BAR (5 tipologie) ==========
+        function renderStacked() {
             destroyChart('stacked');
-            const labels = filteredData.map(d => `${getMonthShort(d.mese)} ${d.anno}`);
-            const ctx = document.getElementById('chartStacked').getContext('2d');
-            charts.stacked = new Chart(ctx, {
+            const labels = filteredData.map(d => mShort(d.mese) + ' ' + d.anno);
+            const datasets = TYPES.map(t => ({
+                label: TYPE_LABELS[t],
+                data: filteredData.map(d => d[t]),
+                backgroundColor: COLORS[t].bg,
+                borderColor: COLORS[t].border,
+                borderWidth: 1, borderRadius: 2,
+            }));
+            charts.stacked = new Chart(document.getElementById('chartStacked').getContext('2d'), {
                 type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        {
-                            label: 'Consuntivo',
-                            data: filteredData.map(d => d.consuntivo),
-                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                            borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 1,
-                            borderRadius: 2,
-                        },
-                        {
-                            label: 'Miscellaneo',
-                            data: filteredData.map(d => d.miscellaneo),
-                            backgroundColor: 'rgba(245, 158, 11, 0.8)',
-                            borderColor: 'rgba(245, 158, 11, 1)',
-                            borderWidth: 1,
-                            borderRadius: 2,
-                        }
-                    ]
-                },
+                data: { labels, datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
                         tooltip: {
                             callbacks: {
-                                label: ctx => `${ctx.dataset.label}: ${formatCurrencyDec(ctx.raw)}`,
-                                footer: items => {
-                                    const sum = items.reduce((s, i) => s + i.raw, 0);
-                                    return `Totale: ${formatCurrencyDec(sum)}`;
-                                }
+                                label: ctx => ctx.dataset.label + ': ' + fmt2(ctx.raw),
+                                footer: items => 'Totale: ' + fmt2(items.reduce((s, i) => s + i.raw, 0))
                             }
                         },
-                        legend: { position: 'top' }
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
                     },
                     scales: {
-                        x: { stacked: true, ticks: { maxRotation: 45, font: { size: 10 } } },
-                        y: { stacked: true, ticks: { callback: v => '€' + (v/1000).toFixed(0) + 'k' } }
+                        x: { stacked: true, ticks: { maxRotation: 45, font: { size: 9 } } },
+                        y: { stacked: true, ticks: { callback: v => '\u20AC' + (v/1000).toFixed(0) + 'k' } }
                     }
                 }
             });
         }
 
-        function renderTrendChart() {
+        // ========== TREND LINE ==========
+        function renderTrend() {
             destroyChart('trend');
-            const labels = filteredData.map(d => `${getMonthShort(d.mese)} ${d.anno}`);
-            const ctx = document.getElementById('chartTrend').getContext('2d');
-            charts.trend = new Chart(ctx, {
+            const labels = filteredData.map(d => mShort(d.mese) + ' ' + d.anno);
+            charts.trend = new Chart(document.getElementById('chartTrend').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [
-                        {
-                            label: 'Totale',
-                            data: filteredData.map(d => d.totale),
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2.5,
-                        },
-                        {
-                            label: 'Consuntivo',
-                            data: filteredData.map(d => d.consuntivo),
-                            borderColor: 'rgba(16, 185, 129, 1)',
-                            backgroundColor: 'transparent',
-                            borderDash: [5, 5], tension: 0.3, pointRadius: 2, borderWidth: 1.5,
-                        },
-                        {
-                            label: 'Miscellaneo',
-                            data: filteredData.map(d => d.miscellaneo),
-                            borderColor: 'rgba(245, 158, 11, 1)',
-                            backgroundColor: 'transparent',
-                            borderDash: [3, 3], tension: 0.3, pointRadius: 2, borderWidth: 1.5,
-                        }
+                        { label: 'Totale', data: filteredData.map(d => d.totale), borderColor: 'rgba(55,65,81,1)', backgroundColor: 'rgba(55,65,81,0.08)', fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2.5 },
+                        { label: 'POS', data: filteredData.map(d => d.pos), borderColor: COLORS.pos.border, borderDash: [5,5], tension: 0.3, pointRadius: 2, borderWidth: 1.5, backgroundColor: 'transparent' },
+                        { label: 'Miscellaneo', data: filteredData.map(d => d.miscellaneo), borderColor: COLORS.miscellaneo.border, borderDash: [3,3], tension: 0.3, pointRadius: 2, borderWidth: 1.5, backgroundColor: 'transparent' },
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${formatCurrencyDec(ctx.raw)}` } },
-                        legend: { position: 'top' }
+                        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt2(ctx.raw) } },
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
                     },
                     scales: {
-                        x: { ticks: { maxRotation: 45, font: { size: 10 } } },
-                        y: { ticks: { callback: v => '€' + (v/1000).toFixed(0) + 'k' } }
+                        x: { ticks: { maxRotation: 45, font: { size: 9 } } },
+                        y: { ticks: { callback: v => '\u20AC' + (v/1000).toFixed(0) + 'k' } }
                     }
                 }
             });
         }
 
-        function renderYoYChart() {
+        // ========== COMPOSIZIONE % (stacked 100%) ==========
+        function renderComposizione() {
+            destroyChart('composizione');
+            const labels = filteredData.map(d => mShort(d.mese) + ' ' + d.anno);
+            const datasets = TYPES.map(t => ({
+                label: TYPE_LABELS[t],
+                data: filteredData.map(d => d.totale > 0 ? ((d[t] / d.totale) * 100) : 0),
+                backgroundColor: COLORS[t].bg,
+                borderColor: COLORS[t].border,
+                borderWidth: 1,
+            }));
+            charts.composizione = new Chart(document.getElementById('chartComposizione').getContext('2d'), {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + '%' } },
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+                    },
+                    scales: {
+                        x: { stacked: true, ticks: { maxRotation: 45, font: { size: 9 } } },
+                        y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } }
+                    }
+                }
+            });
+        }
+
+        // ========== YoY ==========
+        function renderYoY() {
             destroyChart('yoy');
             const anni = [...new Set(RICAVI_DATA.map(d => d.anno))].sort();
             const mesiLabels = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-            const colors = [
-                'rgba(156, 163, 175, 0.9)',  // 2023 gray
-                'rgba(59, 130, 246, 0.9)',    // 2024 blue
-                'rgba(16, 185, 129, 0.9)',    // 2025 green
-                'rgba(245, 158, 11, 0.9)',    // 2026 amber
-            ];
+            const yoyColors = ['rgba(156,163,175,0.9)', 'rgba(59,130,246,0.9)', 'rgba(16,185,129,0.9)', 'rgba(245,158,11,0.9)'];
             const datasets = anni.map((anno, i) => {
-                const anniData = RICAVI_DATA.filter(d => d.anno === anno);
-                const meseMap = {};
-                anniData.forEach(d => meseMap[d.mese] = d.totale);
-                return {
-                    label: String(anno),
-                    data: Array.from({length: 12}, (_, m) => meseMap[m + 1] || null),
-                    borderColor: colors[i] || 'rgba(100,100,100,0.8)',
-                    backgroundColor: 'transparent',
-                    tension: 0.3, pointRadius: 3, borderWidth: 2,
-                    spanGaps: false,
-                };
+                const map = {}; RICAVI_DATA.filter(d => d.anno === anno).forEach(d => map[d.mese] = d.totale);
+                return { label: String(anno), data: Array.from({length: 12}, (_, m) => map[m+1] || null), borderColor: yoyColors[i], backgroundColor: 'transparent', tension: 0.3, pointRadius: 3, borderWidth: 2, spanGaps: false };
             });
-            const ctx = document.getElementById('chartYoY').getContext('2d');
-            charts.yoy = new Chart(ctx, {
+            charts.yoy = new Chart(document.getElementById('chartYoY').getContext('2d'), {
                 type: 'line',
                 data: { labels: mesiLabels, datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        tooltip: { callbacks: { label: ctx => ctx.raw ? `${ctx.dataset.label}: ${formatCurrencyDec(ctx.raw)}` : '' } },
-                        legend: { position: 'top' }
+                        tooltip: { callbacks: { label: ctx => ctx.raw ? ctx.dataset.label + ': ' + fmt2(ctx.raw) : '' } },
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
                     },
-                    scales: {
-                        y: { ticks: { callback: v => '€' + (v/1000).toFixed(0) + 'k' } }
-                    }
+                    scales: { y: { ticks: { callback: v => '\u20AC' + (v/1000).toFixed(0) + 'k' } } }
                 }
             });
         }
 
-        function renderIncidenzaChart() {
-            destroyChart('incidenza');
-            const labels = filteredData.map(d => `${getMonthShort(d.mese)} ${d.anno}`);
-            const incidenze = filteredData.map(d => d.totale > 0 ? ((d.miscellaneo / d.totale) * 100) : 0);
-            const ctx = document.getElementById('chartIncidenza').getContext('2d');
-            charts.incidenza = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: '% Miscellaneo',
-                        data: incidenze,
-                        backgroundColor: incidenze.map(v => v > 20 ? 'rgba(239, 68, 68, 0.7)' : v > 10 ? 'rgba(245, 158, 11, 0.7)' : 'rgba(16, 185, 129, 0.7)'),
-                        borderRadius: 3,
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        tooltip: { callbacks: { label: ctx => `${ctx.raw.toFixed(1)}%` } },
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: { ticks: { maxRotation: 45, font: { size: 10 } } },
-                        y: { ticks: { callback: v => v + '%' }, suggestedMax: 30 }
-                    }
-                }
-            });
-        }
-
-        function renderDailyAvgChart() {
+        // ========== DAILY AVG ==========
+        function renderDailyAvg() {
             destroyChart('dailyAvg');
-            const labels = filteredData.map(d => `${getMonthShort(d.mese)} ${d.anno}`);
-            const ctx = document.getElementById('chartDailyAvg').getContext('2d');
-            charts.dailyAvg = new Chart(ctx, {
+            const labels = filteredData.map(d => mShort(d.mese) + ' ' + d.anno);
+            charts.dailyAvg = new Chart(document.getElementById('chartDailyAvg').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [{
-                        label: '€/Giorno',
+                        label: '\u20AC/Giorno',
                         data: filteredData.map(d => d.fattGg),
-                        borderColor: 'rgba(139, 92, 246, 1)',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderColor: 'rgba(139,92,246,1)',
+                        backgroundColor: 'rgba(139,92,246,0.1)',
                         fill: true, tension: 0.3, pointRadius: 4, borderWidth: 2.5,
-                        pointBackgroundColor: filteredData.map(d => d.fattGg >= 1000 ? 'rgba(16, 185, 129, 1)' : d.fattGg >= 700 ? 'rgba(59, 130, 246, 1)' : 'rgba(239, 68, 68, 1)'),
+                        pointBackgroundColor: filteredData.map(d => d.fattGg >= 1000 ? '#10b981' : d.fattGg >= 700 ? '#3b82f6' : '#ef4444'),
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        tooltip: { callbacks: { label: ctx => `€/giorno: ${formatCurrencyDec(ctx.raw)}` } },
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: { ticks: { maxRotation: 45, font: { size: 10 } } },
-                        y: { ticks: { callback: v => '€' + v } }
-                    }
+                    plugins: { tooltip: { callbacks: { label: ctx => '\u20AC/giorno: ' + fmt2(ctx.raw) } }, legend: { display: false } },
+                    scales: { x: { ticks: { maxRotation: 45, font: { size: 9 } } }, y: { ticks: { callback: v => '\u20AC' + v } } }
                 }
             });
         }
@@ -458,58 +375,47 @@
         // ========== TABLE ==========
         function renderTable() {
             const tbody = document.getElementById('tableBody');
-            let totC = 0, totM = 0, totT = 0, totGG = 0, totP = 0;
-            
+            let tPos = 0, tCont = 0, tSat = 0, tFatt = 0, tMisc = 0, tTot = 0, tGG = 0;
+
             tbody.innerHTML = filteredData.map(d => {
-                totC += d.consuntivo; totM += d.miscellaneo; totT += d.totale; totGG += d.ggLav; totP += d.pranzo;
-                const pctMisc = d.totale > 0 ? ((d.miscellaneo / d.totale) * 100).toFixed(1) : '0.0';
-                const rowBg = d.ggLav < 15 ? 'bg-yellow-50' : '';
-                return `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 ${rowBg}">
-                        <td class="py-2.5 px-2 font-medium text-gray-800">${d.meseNome} ${d.anno}</td>
-                        <td class="py-2.5 px-2 text-right text-emerald-700 font-medium">${formatCurrencyDec(d.consuntivo)}</td>
-                        <td class="py-2.5 px-2 text-right text-amber-700 font-medium">${formatCurrencyDec(d.miscellaneo)}</td>
-                        <td class="py-2.5 px-2 text-right text-blue-700 font-bold bg-blue-50">${formatCurrencyDec(d.totale)}</td>
-                        <td class="py-2.5 px-2 text-right text-gray-600">${d.ggLav}</td>
-                        <td class="py-2.5 px-2 text-right text-gray-600">${formatCurrencyDec(d.fattGg)}</td>
-                        <td class="py-2.5 px-2 text-right text-gray-500">${pctMisc}%</td>
-                        <td class="py-2.5 px-2 text-right ${d.pranzo > 0 ? 'text-violet-700 font-medium' : 'text-gray-300'}">${d.pranzo > 0 ? formatCurrencyDec(d.pranzo) : '-'}</td>
-                    </tr>
-                `;
+                tPos += d.pos; tCont += d.contanti; tSat += d.satispay; tFatt += d.fatture; tMisc += d.miscellaneo; tTot += d.totale; tGG += d.ggLav;
+                const rowCls = d.ggLav < 15 ? 'bg-yellow-50' : '';
+                return '<tr class="border-b border-gray-100 hover:bg-gray-50 ' + rowCls + '">' +
+                    '<td class="py-2.5 px-2 font-medium text-gray-800">' + d.meseNome + ' ' + d.anno + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-blue-700 font-medium">' + fmt2(d.pos) + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-green-700 font-medium">' + fmt2(d.contanti) + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-purple-700 font-medium">' + fmt2(d.satispay) + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-cyan-700 font-medium">' + fmt2(d.fatture) + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-amber-700 font-medium">' + fmt2(d.miscellaneo) + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-gray-900 font-bold bg-gray-100">' + fmt2(d.totale) + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-gray-600">' + d.ggLav + '</td>' +
+                    '<td class="py-2.5 px-2 text-right text-gray-600">' + fmt2(d.fattGg) + '</td>' +
+                    '</tr>';
             }).join('');
 
-            // Totals row
-            const avgGG = totGG > 0 ? totT / totGG : 0;
-            const pctMiscTot = totT > 0 ? ((totM / totT) * 100).toFixed(1) : '0.0';
-            tbody.innerHTML += `
-                <tr class="border-t-2 border-gray-300 bg-gray-50 font-bold">
-                    <td class="py-3 px-2 text-gray-900">TOTALE</td>
-                    <td class="py-3 px-2 text-right text-emerald-800">${formatCurrencyDec(totC)}</td>
-                    <td class="py-3 px-2 text-right text-amber-800">${formatCurrencyDec(totM)}</td>
-                    <td class="py-3 px-2 text-right text-blue-800 bg-blue-100">${formatCurrencyDec(totT)}</td>
-                    <td class="py-3 px-2 text-right text-gray-700">${totGG}</td>
-                    <td class="py-3 px-2 text-right text-gray-700">${formatCurrencyDec(avgGG)}</td>
-                    <td class="py-3 px-2 text-right text-gray-600">${pctMiscTot}%</td>
-                    <td class="py-3 px-2 text-right ${totP > 0 ? 'text-violet-800' : 'text-gray-300'}">${totP > 0 ? formatCurrencyDec(totP) : '-'}</td>
-                </tr>
-            `;
+            const avgGG = tGG > 0 ? tTot / tGG : 0;
+            tbody.innerHTML +=
+                '<tr class="border-t-2 border-gray-300 bg-gray-50 font-bold">' +
+                '<td class="py-3 px-2 text-gray-900">TOTALE</td>' +
+                '<td class="py-3 px-2 text-right text-blue-800">' + fmt2(tPos) + '</td>' +
+                '<td class="py-3 px-2 text-right text-green-800">' + fmt2(tCont) + '</td>' +
+                '<td class="py-3 px-2 text-right text-purple-800">' + fmt2(tSat) + '</td>' +
+                '<td class="py-3 px-2 text-right text-cyan-800">' + fmt2(tFatt) + '</td>' +
+                '<td class="py-3 px-2 text-right text-amber-800">' + fmt2(tMisc) + '</td>' +
+                '<td class="py-3 px-2 text-right text-gray-900 bg-gray-200">' + fmt2(tTot) + '</td>' +
+                '<td class="py-3 px-2 text-right text-gray-700">' + tGG + '</td>' +
+                '<td class="py-3 px-2 text-right text-gray-700">' + fmt2(avgGG) + '</td>' +
+                '</tr>';
         }
 
         // ========== RENDER ALL ==========
-        function renderAll() {
-            renderKPI();
-            renderStackedChart();
-            renderTrendChart();
-            renderYoYChart();
-            renderIncidenzaChart();
-            renderDailyAvgChart();
-            renderTable();
-        }
+        function renderAll() { renderKPI(); renderStacked(); renderTrend(); renderComposizione(); renderYoY(); renderDailyAvg(); renderTable(); }
 
         // ========== INIT ==========
         initFilter();
+        filteredData = [...RICAVI_DATA];
         renderAll();
-        console.log('✅ Pagina Ricavi caricata');
+        console.log('\u2705 Pagina Ricavi caricata');
     </script>
 </body>
 </html>
