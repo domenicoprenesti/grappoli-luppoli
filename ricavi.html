@@ -697,8 +697,9 @@
                 document.getElementById('importResult').innerHTML = resultHtml;
                 document.getElementById('importResult').classList.remove('hidden');
 
-                // Reload
+                // Reload e chiudi
                 await loadData();
+                setTimeout(() => { closeImportModal(); }, 1500);
 
             } catch(err) {
                 console.error('Errore import:', err);
