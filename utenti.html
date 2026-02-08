@@ -166,18 +166,18 @@
 
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full table-auto">
                     <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                         <tr>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Nome</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Cognome</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Email</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Password</th>
-                            <th class="px-6 py-4 text-center text-sm font-semibold">Ruolo</th>
-                            <th class="px-6 py-4 text-center text-sm font-semibold">Stato</th>
-                            <th class="px-6 py-4 text-center text-sm font-semibold">Data Creazione</th>
-                            <th class="px-6 py-4 text-center text-sm font-semibold">Ultimo Accesso</th>
-                            <th class="px-6 py-4 text-center text-sm font-semibold">Azioni</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold w-32">Nome</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold w-32">Cognome</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold w-56">Email</th>
+                            <th class="px-4 py-4 text-left text-sm font-semibold w-28">Password</th>
+                            <th class="px-4 py-4 text-center text-sm font-semibold w-40">Ruolo</th>
+                            <th class="px-4 py-4 text-center text-sm font-semibold w-24">Stato</th>
+                            <th class="px-4 py-4 text-center text-sm font-semibold w-28">Creazione</th>
+                            <th class="px-4 py-4 text-center text-sm font-semibold w-40 min-w-[160px]">Ultimo Accesso</th>
+                            <th class="px-4 py-4 text-center text-sm font-semibold w-20">Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody" class="divide-y divide-gray-200"></tbody>
@@ -287,7 +287,7 @@
                 if (data.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="9" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-4 py-12 text-center">
                                 <div class="text-gray-400">
                                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -318,7 +318,7 @@
                 // Funzione helper per formattare l'ultimo accesso
                 const formatUltimoAccesso = (ultimo_accesso) => {
                     if (!ultimo_accesso) {
-                        return '<span class="text-gray-400 text-sm italic">Mai</span>';
+                        return '<div class="text-center"><span class="text-gray-400 text-xs italic whitespace-nowrap">Mai connesso</span></div>';
                     }
                     
                     const date = new Date(ultimo_accesso);
@@ -329,23 +329,22 @@
                     const diffDays = Math.floor(diffMs / 86400000);
                     
                     let timeAgo = '';
+                    let showDate = true;
+                    
                     if (diffMins < 1) {
                         timeAgo = 'Adesso';
+                        showDate = false;
                     } else if (diffMins < 60) {
                         timeAgo = `${diffMins} min fa`;
+                        showDate = false;
                     } else if (diffHours < 24) {
                         timeAgo = `${diffHours}h fa`;
                     } else if (diffDays < 7) {
                         timeAgo = `${diffDays}g fa`;
                     } else {
-                        timeAgo = date.toLocaleDateString('it-IT');
+                        timeAgo = date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
                     }
                     
-                    const dateStr = date.toLocaleDateString('it-IT', { 
-                        day: '2-digit', 
-                        month: 'short', 
-                        year: 'numeric' 
-                    });
                     const timeStr = date.toLocaleTimeString('it-IT', { 
                         hour: '2-digit', 
                         minute: '2-digit' 
@@ -353,32 +352,40 @@
                     
                     const colorClass = diffHours < 24 ? 'text-green-600' : diffDays < 7 ? 'text-blue-600' : 'text-gray-600';
                     
+                    if (!showDate) {
+                        return `
+                            <div class="flex flex-col items-center whitespace-nowrap">
+                                <span class="font-semibold ${colorClass} text-sm">${timeAgo}</span>
+                            </div>
+                        `;
+                    }
+                    
                     return `
-                        <div class="flex flex-col items-center">
-                            <span class="font-medium ${colorClass}">${timeAgo}</span>
-                            <span class="text-xs text-gray-500">${dateStr} ${timeStr}</span>
+                        <div class="flex flex-col items-center whitespace-nowrap">
+                            <span class="font-semibold ${colorClass} text-sm">${timeAgo}</span>
+                            <span class="text-xs text-gray-500">${timeStr}</span>
                         </div>
                     `;
                 };
 
                 tbody.innerHTML = data.map(user => `
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="bg-blue-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
                                     <span class="text-blue-600 font-bold text-sm">${(user.nome || 'U').charAt(0).toUpperCase()}</span>
                                 </div>
-                                <span class="font-medium text-gray-800">${user.nome || '-'}</span>
+                                <span class="font-medium text-gray-800 text-sm">${user.nome || '-'}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-gray-700">${user.cognome || '-'}</td>
-                        <td class="px-6 py-4 text-gray-700">${user.email}</td>
-                        <td class="px-6 py-4">
-                            <code class="bg-gray-100 px-3 py-1 rounded text-sm font-mono">${user.password}</code>
+                        <td class="px-4 py-3 text-gray-700 text-sm">${user.cognome || '-'}</td>
+                        <td class="px-4 py-3 text-gray-700 text-sm">${user.email}</td>
+                        <td class="px-4 py-3">
+                            <code class="bg-gray-100 px-2 py-1 rounded text-xs font-mono">${user.password}</code>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex flex-col items-center space-y-2">
-                                <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeClass(user.ruolo)}">
+                        <td class="px-4 py-3 text-center">
+                            <div class="flex flex-col items-center space-y-1.5">
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium border ${getRoleBadgeClass(user.ruolo)}">
                                     ${getRoleIcon(user.ruolo)} ${user.ruolo}
                                 </span>
                                 <select 
@@ -391,18 +398,18 @@
                                 </select>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="toggleUserStatus('${user.id}', ${user.attivo})" class="inline-flex px-3 py-1 rounded-full text-xs font-medium ${user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="toggleUserStatus('${user.id}', ${user.attivo})" class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                                 ${user.attivo ? '✅ Attivo' : '❌ Disattivo'}
                             </button>
                         </td>
-                        <td class="px-6 py-4 text-center text-sm text-gray-600">
-                            ${new Date(user.data_creazione).toLocaleDateString('it-IT')}
+                        <td class="px-4 py-3 text-center text-xs text-gray-600">
+                            ${new Date(user.data_creazione).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             ${formatUltimoAccesso(user.ultimo_accesso)}
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-center">
                             <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Elimina">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
