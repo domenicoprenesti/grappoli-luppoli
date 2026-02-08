@@ -27,37 +27,38 @@
         if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
     </script>
 
-<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                            <img src="logo.png" alt="Logo" class="w-full h-full object-cover">
-                        </div>
-                        <span class="text-lg font-bold">Grappoli &amp; Luppoli</span>
-                    </button>
-                    <div class="hidden md:ml-10 md:flex md:space-x-4">
-                        <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
-                        <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
-                        <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Prodotti</a>
-                        <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
-                        <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
-                        <a href="ricavi.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Ricavi</a>
-                        <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
-                        <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
+<nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <button onclick="window.location.href='dashboard.html'" class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
                     </div>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <span id="userName" class="text-sm text-gray-600"></span>
-                    <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+                    <span class="text-lg font-bold">Grappoli & Luppoli</span>
+                </button>
+                
+                <div class="hidden md:ml-10 md:flex md:space-x-4">
+                    <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
+                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fatture</a>
+                    <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
+                    <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
+                    <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                 </div>
             </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Dashboard</button>
+                <button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>
+            </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <div class="max-w-[1400px] mx-auto px-4 pt-24 pb-8">
-        <h1 class="text-3xl font-bold mb-2">Ã°Å¸â€œÂ¦ Gestione Prodotti</h1>
+        <h1 class="text-3xl font-bold mb-2">ðŸ“¦ Gestione Prodotti</h1>
         <p class="text-gray-600 mb-8">Prodotti con categorizzazione completa</p>
 
         <div id="loadingProgress" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -81,11 +82,11 @@
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <p class="text-sm text-gray-600">Valore (senza IVA)</p>
-                <p id="valoreTotale" class="text-3xl font-bold text-purple-600">Ã¢â€šÂ¬0</p>
+                <p id="valoreTotale" class="text-3xl font-bold text-purple-600">â‚¬0</p>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <p class="text-sm text-gray-600">Valore (con IVA)</p>
-                <p id="valoreTotaleIvato" class="text-3xl font-bold text-orange-600">Ã¢â€šÂ¬0</p>
+                <p id="valoreTotaleIvato" class="text-3xl font-bold text-orange-600">â‚¬0</p>
             </div>
         </div>
 
@@ -127,11 +128,11 @@
                             <th class="col-nome text-left text-sm">Nome</th>
                             <th class="col-categoria text-left text-sm">Categoria</th>
                             <th class="col-fornitore text-left text-sm">Fornitore</th>
-                            <th class="col-prezzo text-sm">Ã¢â€šÂ¬ base</th>
-                            <th class="col-prezzo text-sm">Ã¢â€šÂ¬ scontato</th>
+                            <th class="col-prezzo text-sm">â‚¬ base</th>
+                            <th class="col-prezzo text-sm">â‚¬ scontato</th>
                             <th class="col-iva text-sm">IVA</th>
-                            <th class="col-prezzo-ivato text-sm">Ã¢â€šÂ¬ IVA</th>
-                            <th class="col-qta text-sm">Q.tÃƒÂ </th>
+                            <th class="col-prezzo-ivato text-sm">â‚¬ IVA</th>
+                            <th class="col-qta text-sm">Q.tÃ </th>
                             <th class="col-stato text-sm">U.M.</th>
                             <th class="col-azioni text-sm">Azioni</th>
                         </tr>
@@ -146,7 +147,7 @@
     <div id="modalBulkEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold"Ã¢Å“ÂÃ¯Â¸Â Modifica Massiva Categoria/Tipo</h2>
+                <h2 class="text-2xl font-bold"âœï¸ Modifica Massiva Categoria/Tipo</h2>
                 <button onclick="closeBulkEditModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -168,7 +169,7 @@
 
             <form onsubmit="saveBulkEdit(event)" class="space-y-6">
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">Ã°Å¸ÂÂ·Ã¯Â¸Â Nuova Categorizzazione</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">ðŸ·ï¸ Nuova Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
@@ -186,7 +187,7 @@
 
                     <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                         <p class="text-xs text-yellow-800">
-                            <strong>Ã°Å¸â€™Â¡ Suggerimento:</strong> Se selezioni "Non modificare" per la categoria, i prodotti manterranno la loro categoria attuale. Il tipo puÃƒÂ² essere modificato solo se selezioni una categoria.
+                            <strong>ðŸ’¡ Suggerimento:</strong> Se selezioni "Non modificare" per la categoria, i prodotti manterranno la loro categoria attuale. Il tipo puÃ² essere modificato solo se selezioni una categoria.
                         </p>
                     </div>
                 </div>
@@ -214,7 +215,7 @@
                 <input type="hidden" id="prodottoId">
                 
                 <div class="bg-blue-50 rounded-lg p-4">
-                    <h3 class="font-bold text-blue-900 mb-3">Ã°Å¸â€œâ€¹ Dati Base</h3>
+                    <h3 class="font-bold text-blue-900 mb-3">ðŸ“‹ Dati Base</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Nome *</label>
@@ -232,7 +233,7 @@
                 </div>
 
                 <div class="bg-purple-50 rounded-lg p-4">
-                    <h3 class="font-bold text-purple-900 mb-3">Ã°Å¸ÂÂ·Ã¯Â¸Â Categorizzazione</h3>
+                    <h3 class="font-bold text-purple-900 mb-3">ðŸ·ï¸ Categorizzazione</h3>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Categoria (Aggregante)</label>
@@ -259,14 +260,14 @@
                     </div>
                     
                     <div id="formNuovoAggregante" class="hidden mt-4 bg-green-50 border-2 border-green-300 rounded-lg p-4">
-                        <h4 class="font-bold text-green-900 mb-3">Ã¢Å“Â¨ Crea Nuova Categoria</h4>
+                        <h4 class="font-bold text-green-900 mb-3">âœ¨ Crea Nuova Categoria</h4>
                         <div class="grid md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-xs font-medium mb-1">Nome *</label>
                                 <input type="text" id="nuovoAggreganteNome" class="w-full px-3 py-2 border rounded text-sm" oninput="checkAggreganteExists()">
                                 <div id="aggreganteExistsWarning" class="hidden mt-1 text-xs text-orange-600 flex items-center">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    <span>Nome giÃƒÂ  esistente</span>
+                                    <span>Nome giÃ  esistente</span>
                                 </div>
                             </div>
                             <div>
@@ -281,14 +282,14 @@
                     </div>
 
                     <div id="formNuovoTipo" class="hidden mt-4 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-                        <h4 class="font-bold text-purple-900 mb-3">Ã¢Å“Â¨ Crea Nuovo Tipo</h4>
+                        <h4 class="font-bold text-purple-900 mb-3">âœ¨ Crea Nuovo Tipo</h4>
                         <div class="grid md:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-medium mb-1">Nome *</label>
                                 <input type="text" id="nuovoTipoNome" class="w-full px-3 py-2 border rounded text-sm" oninput="checkTipoExists()">
                                 <div id="tipoExistsWarning" class="hidden mt-1 text-xs text-orange-600 flex items-center">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    <span>Nome giÃƒÂ  esistente</span>
+                                    <span>Nome giÃ  esistente</span>
                                 </div>
                             </div>
                             <div>
@@ -300,24 +301,24 @@
                 </div>
 
                 <div class="bg-orange-50 rounded-lg p-4">
-                    <h3 class="font-bold text-orange-900 mb-3">Ã°Å¸â€™Â° Prezzi e QuantitÃƒÂ </h3>
+                    <h3 class="font-bold text-orange-900 mb-3">ðŸ’° Prezzi e QuantitÃ </h3>
                     <div class="grid md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Prezzo (senza IVA)</label>
                             <input type="number" step="any" id="prodottoPrezzo" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
-                            <p class="text-xs text-gray-500 mt-1">Ã°Å¸â€™Â¡ Usa virgola o punto per i decimali</p>
+                            <p class="text-xs text-gray-500 mt-1">ðŸ’¡ Usa virgola o punto per i decimali</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Aliquota IVA (%)</label>
                             <input type="number" step="any" id="prodottoAliquotaIVA" value="22" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">QuantitÃƒÂ </label>
+                            <label class="block text-sm font-medium mb-2">QuantitÃ </label>
                             <input type="number" step="any" id="prodottoQuantita" class="w-full px-4 py-2 border rounded-lg" onblur="normalizeDecimal(this)">
-                            <p class="text-xs text-gray-500 mt-1">Ã°Å¸â€™Â¡ Puoi usare sia virgola (4,49) che punto (4.49)</p>
+                            <p class="text-xs text-gray-500 mt-1">ðŸ’¡ Puoi usare sia virgola (4,49) che punto (4.49)</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">UnitÃƒÂ  di Misura</label>
+                            <label class="block text-sm font-medium mb-2">UnitÃ  di Misura</label>
                             <select id="prodottoUnitaMisura" class="w-full px-4 py-2 border rounded-lg">
                                 <option value="pz">Pezzi (pz)</option>
                                 <option value="kg">Kilogrammi (kg)</option>
@@ -338,7 +339,7 @@
                 </div>
 
                 <div class="flex space-x-4 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Ã°Å¸â€™Â¾ Salva Modifiche</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Salva Modifiche</button>
                     <button type="button" onclick="closeModal()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                 </div>
             </form>
@@ -358,7 +359,7 @@
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800"><strong>Ã¢Å¡Â Ã¯Â¸Â Attenzione:</strong> Questa azione ÃƒÂ¨ irreversibile!</p>
+                <p class="text-sm text-yellow-800"><strong>âš ï¸ Attenzione:</strong> Questa azione Ã¨ irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -370,7 +371,7 @@
     <!-- Modal Modifica Aggregante -->
     <div id="modalEditAggregante" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-            <h2 class="text-2xl font-bold mb-6">Ã¢Å“ÂÃ¯Â¸Â Modifica Categoria</h2>
+            <h2 class="text-2xl font-bold mb-6">âœï¸ Modifica Categoria</h2>
             <form onsubmit="saveEditAggregante(event)" class="space-y-4">
                 <input type="hidden" id="editAggId">
                 <div>
@@ -390,9 +391,9 @@
                     <textarea id="editAggDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
                 </div>
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Ã°Å¸â€™Â¾ Salva</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Salva</button>
                     <button type="button" onclick="closeEditAggregante()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteAggregante()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina categoria">Ã°Å¸â€”â€˜Ã¯Â¸Â</button>
+                    <button type="button" onclick="deleteAggregante()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina categoria">ðŸ—‘ï¸</button>
                 </div>
             </form>
         </div>
@@ -401,7 +402,7 @@
     <!-- Modal Modifica Tipo -->
     <div id="modalEditTipo" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-            <h2 class="text-2xl font-bold mb-6">Ã¢Å“ÂÃ¯Â¸Â Modifica Tipo</h2>
+            <h2 class="text-2xl font-bold mb-6">âœï¸ Modifica Tipo</h2>
             <form onsubmit="saveEditTipo(event)" class="space-y-4">
                 <input type="hidden" id="editTipoId">
                 <div>
@@ -421,9 +422,9 @@
                     <textarea id="editTipoDescrizione" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
                 </div>
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Ã°Å¸â€™Â¾ Salva</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">ðŸ’¾ Salva</button>
                     <button type="button" onclick="closeEditTipo()" class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
-                    <button type="button" onclick="deleteTipo()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina tipo">Ã°Å¸â€”â€˜Ã¯Â¸Â</button>
+                    <button type="button" onclick="deleteTipo()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium" title="Elimina tipo">ðŸ—‘ï¸</button>
                 </div>
             </form>
         </div>
@@ -462,7 +463,7 @@
                         .eq('id', authData.userId);
                 }
 
-                console.log(`âœ… Accesso registrato: ${pagina} - ${azione}`);
+                console.log(`✅ Accesso registrato: ${pagina} - ${azione}`);
             } catch (err) {
                 console.error('Errore tracciamento:', err);
             }
@@ -515,7 +516,7 @@
             allAggreganti.forEach(agg => {
                 select.innerHTML += `<option value="${agg.id}">${agg.nome}</option>`;
             });
-            select.innerHTML += '<option value="__remove__">Ã°Å¸â€”â€˜Ã¯Â¸Â Rimuovi categoria</option>';
+            select.innerHTML += '<option value="__remove__">ðŸ—‘ï¸ Rimuovi categoria</option>';
             
             // Reset tipo
             document.getElementById('bulkType').innerHTML = '<option value="">Seleziona prima categoria</option>';
@@ -558,13 +559,13 @@
             tipiOrdinati.forEach(tipo => {
                 const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
                 if (aggNome !== currentAgg) {
-                    options.push(`<option value="" disabled class="font-bold">Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ${aggNome} Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬</option>`);
+                    options.push(`<option value="" disabled class="font-bold">â”€â”€â”€ ${aggNome} â”€â”€â”€</option>`);
                     currentAgg = aggNome;
                 }
                 options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
             });
             
-            options.push('<option value="__remove__">Ã°Å¸â€”â€˜Ã¯Â¸Â Rimuovi tipo</option>');
+            options.push('<option value="__remove__">ðŸ—‘ï¸ Rimuovi tipo</option>');
             select.innerHTML = options.join('');
         }
 
@@ -582,8 +583,8 @@
             const count = selectedIds.size;
             const confirm = window.confirm(
                 `Confermi di voler modificare ${count} prodotti?\n\n` +
-                (aggreganteId === '__remove__' ? '- La categoria verrÃƒÂ  RIMOSSA\n' : aggreganteId ? `- Nuova categoria verrÃƒÂ  applicata\n` : '') +
-                (tipoId === '__remove__' ? '- Il tipo verrÃƒÂ  RIMOSSO\n' : tipoId ? `- Nuovo tipo verrÃƒÂ  applicato\n` : '')
+                (aggreganteId === '__remove__' ? '- La categoria verrÃ  RIMOSSA\n' : aggreganteId ? `- Nuova categoria verrÃ  applicata\n` : '') +
+                (tipoId === '__remove__' ? '- Il tipo verrÃ  RIMOSSO\n' : tipoId ? `- Nuovo tipo verrÃ  applicato\n` : '')
             );
             
             if (!confirm) return;
@@ -595,7 +596,7 @@
                 const tbody = document.getElementById('prodottiTableBody');
                 tbody.innerHTML = `
                     <tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">
-                        Ã¢Å“ÂÃ¯Â¸Â Modifica massiva in corso...<br>
+                        âœï¸ Modifica massiva in corso...<br>
                         <span id="bulkProgress">0 / ${count}</span>
                     </td></tr>
                 `;
@@ -614,7 +615,7 @@
                     updateData.tipo_id = tipoId;
                 } else if (aggreganteId && aggreganteId !== '') {
                     // Se cambiamo solo categoria senza tipo, dobbiamo trovare o creare un tipo generico
-                    // Per semplicitÃƒÂ  rimuoviamo il tipo
+                    // Per semplicitÃ  rimuoviamo il tipo
                     updateData.tipo_id = null;
                 }
                 
@@ -643,11 +644,11 @@
                 updateSelectionBar();
                 await loadAllProdotti();
                 
-                alert(`Ã¢Å“â€¦ ${updated} prodotti aggiornati con successo!`);
+                alert(`âœ… ${updated} prodotti aggiornati con successo!`);
                 
             } catch (err) {
                 console.error('Errore modifica massiva:', err);
-                alert(`Ã¢ÂÅ’ Errore durante la modifica massiva: ${err.message}`);
+                alert(`âŒ Errore durante la modifica massiva: ${err.message}`);
                 await loadAllProdotti();
             }
         };
@@ -655,7 +656,7 @@
         // ===== CARICAMENTO ANAGRAFICHE E PRODOTTI =====
         async function loadAnagrafiche() {
             try {
-                console.log('Ã°Å¸â€œâ€ž Caricamento anagrafiche...');
+                console.log('ðŸ“„ Caricamento anagrafiche...');
                 
                 const { data: aggreganti, error: aggError } = await supabaseClient
                     .from('aggregante_prodotto')
@@ -664,7 +665,7 @@
                 
                 if (aggError) throw aggError;
                 allAggreganti = aggreganti || [];
-                console.log(`Ã¢Å“â€¦ Caricati ${allAggreganti.length} aggreganti:`, allAggreganti.map(a => a.nome));
+                console.log(`âœ… Caricati ${allAggreganti.length} aggreganti:`, allAggreganti.map(a => a.nome));
                 
                 const { data: tipi, error: tipiError } = await supabaseClient
                     .from('tipo_prodotto')
@@ -673,10 +674,10 @@
                 
                 if (tipiError) throw tipiError;
                 allTipi = tipi || [];
-                console.log(`Ã¢Å“â€¦ Caricati ${allTipi.length} tipi:`, allTipi.map(t => `${t.nome} (aggregante: ${t.aggregante_prodotto?.nome || t.aggregante_id})`));
+                console.log(`âœ… Caricati ${allTipi.length} tipi:`, allTipi.map(t => `${t.nome} (aggregante: ${t.aggregante_prodotto?.nome || t.aggregante_id})`));
                 
             } catch (err) {
-                console.error('Ã¢ÂÅ’ Errore caricamento anagrafiche:', err);
+                console.error('âŒ Errore caricamento anagrafiche:', err);
             }
         }
 
@@ -754,8 +755,8 @@
             
             const percentualeIVA = valoreSenzaIVA > 0 ? ((valoreConIVA - valoreSenzaIVA) / valoreSenzaIVA * 100) : 0;
             
-            document.getElementById('valoreTotale').textContent = `Ã¢â€šÂ¬${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            document.getElementById('valoreTotaleIvato').textContent = `Ã¢â€šÂ¬${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} (${percentualeIVA.toFixed(2)}%)`;
+            document.getElementById('valoreTotale').textContent = `â‚¬${valoreSenzaIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            document.getElementById('valoreTotaleIvato').textContent = `â‚¬${valoreConIVA.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} (${percentualeIVA.toFixed(2)}%)`;
         }
         
         function updateFilters() {
@@ -862,10 +863,10 @@
                         </span>
                     </td>
                     <td class="col-fornitore truncate-cell text-sm" title="${p.fornitore || '-'}">${p.fornitore || '-'}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">Ã¢â€šÂ¬${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">Ã¢â€šÂ¬${(p.prezzo_scontato || p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">â‚¬${(p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="col-prezzo text-sm ${hasSconto ? 'font-bold text-orange-600' : 'text-gray-400'}">â‚¬${(p.prezzo_scontato || p.prezzo || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="col-iva"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${(p.aliquota_iva || 0).toFixed(0)}%</span></td>
-                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">Ã¢â€šÂ¬${(p.prezzo_ivato || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="col-prezzo-ivato font-bold text-green-600 text-sm">â‚¬${(p.prezzo_ivato || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="col-qta text-sm">${p.quantita || 0}</td>
                     <td class="col-stato text-sm text-center">${p.unita_misura || 'pz'}</td>
                     <td class="col-azioni">
@@ -924,7 +925,7 @@
             try {
                 let deletedCount = 0;
                 const tbody = document.getElementById('prodottiTableBody');
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">Ã°Å¸â€”â€˜Ã¯Â¸Â Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-blue-600">ðŸ—‘ï¸ Eliminazione in corso...<br><span id="deleteProgress">0 / ${total}</span></td></tr>`;
                 const BATCH_DELETE_SIZE = 100;
                 
                 for (let i = 0; i < idsToDelete.length; i += BATCH_DELETE_SIZE) {
@@ -941,11 +942,11 @@
                 updateSelectionBar();
                 await loadAllProdotti();
                 
-                if (deletedCount === total) alert(`Ã¢Å“â€¦ ${deletedCount} prodotti eliminati con successo!`);
-                else alert(`Ã¢Å¡Â Ã¯Â¸Â Eliminati ${deletedCount} su ${total} prodotti`);
+                if (deletedCount === total) alert(`âœ… ${deletedCount} prodotti eliminati con successo!`);
+                else alert(`âš ï¸ Eliminati ${deletedCount} su ${total} prodotti`);
             } catch (err) {
                 console.error('Errore eliminazione:', err);
-                alert(`Ã¢ÂÅ’ Errore durante l'eliminazione: ${err.message}`);
+                alert(`âŒ Errore durante l'eliminazione: ${err.message}`);
                 await loadAllProdotti();
             }
         }
@@ -963,7 +964,7 @@
         // - editTipo, saveEditTipo, deleteTipo, closeEditTipo
         // ecc.]
 
-        // Per brevitÃƒÂ , includerÃƒÂ² solo le funzioni principali essenziali
+        // Per brevitÃ , includerÃ² solo le funzioni principali essenziali
         // Il resto del codice rimane identico al file originale
 
         function populateAggregantiSelect() {
@@ -974,7 +975,7 @@
                 select.innerHTML += `<option value="${agg.id}">${agg.nome}</option>`;
             });
             
-            select.innerHTML += '<option value="__nuovo__">Ã¢Å¾â€¢ Crea nuova categoria</option>';
+            select.innerHTML += '<option value="__nuovo__">âž• Crea nuova categoria</option>';
         }
 
         window.onAggreganteChange = function() {
@@ -1019,13 +1020,13 @@
             tipiOrdinati.forEach(tipo => {
                 const aggNome = allAggreganti.find(a => a.id == tipo.aggregante_id)?.nome || 'Altro';
                 if (aggNome !== currentAgg) {
-                    options.push(`<option value="" disabled class="font-bold">Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ${aggNome} Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬</option>`);
+                    options.push(`<option value="" disabled class="font-bold">â”€â”€â”€ ${aggNome} â”€â”€â”€</option>`);
                     currentAgg = aggNome;
                 }
                 options.push(`<option value="${tipo.id}">&nbsp;&nbsp;${tipo.nome}</option>`);
             });
             
-            options.push('<option value="__nuovo__">Ã¢Å¾â€¢ Crea nuovo tipo</option>');
+            options.push('<option value="__nuovo__">âž• Crea nuovo tipo</option>');
             select.innerHTML = options.join('');
             
             select.onchange = function() {
@@ -1093,14 +1094,14 @@
                     
                     if (esistente) {
                         const conferma = confirm(
-                            `Ã¢Å¡Â Ã¯Â¸Â ATTENZIONE\n\n` +
-                            `La categoria "${nomeAgg}" esiste giÃƒÂ  nel database.\n\n` +
+                            `âš ï¸ ATTENZIONE\n\n` +
+                            `La categoria "${nomeAgg}" esiste giÃ  nel database.\n\n` +
                             `Vuoi usare quella esistente invece di crearne una nuova?`
                         );
                         
                         if (conferma) {
                             aggreganteId = esistente.id;
-                            console.log('Ã¢Å“â€¦ Uso categoria esistente:', esistente);
+                            console.log('âœ… Uso categoria esistente:', esistente);
                         } else {
                             alert('Scegli un nome diverso per la nuova categoria');
                             return;
@@ -1121,7 +1122,7 @@
                         
                         if (aggError) throw aggError;
                         aggreganteId = aggData.id;
-                        console.log('Ã¢Å“â€¦ Creato nuovo aggregante:', aggData);
+                        console.log('âœ… Creato nuovo aggregante:', aggData);
                     }
                 }
                 
@@ -1142,14 +1143,14 @@
                     
                     if (esistente) {
                         const conferma = confirm(
-                            `Ã¢Å¡Â Ã¯Â¸Â ATTENZIONE\n\n` +
-                            `Il tipo "${nomeTipo}" esiste giÃƒÂ  nel database.\n\n` +
+                            `âš ï¸ ATTENZIONE\n\n` +
+                            `Il tipo "${nomeTipo}" esiste giÃ  nel database.\n\n` +
                             `Vuoi usare quello esistente invece di crearne uno nuovo?`
                         );
                         
                         if (conferma) {
                             tipoId = esistente.id;
-                            console.log('Ã¢Å“â€¦ Uso tipo esistente:', esistente);
+                            console.log('âœ… Uso tipo esistente:', esistente);
                         } else {
                             alert('Scegli un nome diverso per il nuovo tipo');
                             return;
@@ -1173,7 +1174,7 @@
                         
                         if (tipoError) throw tipoError;
                         tipoId = tipoData.id;
-                        console.log('Ã¢Å“â€¦ Creato nuovo tipo:', tipoData);
+                        console.log('âœ… Creato nuovo tipo:', tipoData);
                     }
                 } else if (tipoSelect && tipoSelect !== '') {
                     tipoId = tipoSelect;
@@ -1194,20 +1195,20 @@
                 if (id) {
                     const { error } = await supabaseClient.from('prodotti').update(prod).eq('id', id);
                     if (error) throw error;
-                    console.log('Ã¢Å“â€¦ Prodotto aggiornato');
+                    console.log('âœ… Prodotto aggiornato');
                 } else {
                     const { error } = await supabaseClient.from('prodotti').insert([prod]);
                     if (error) throw error;
-                    console.log('Ã¢Å“â€¦ Prodotto creato');
+                    console.log('âœ… Prodotto creato');
                 }
                 
                 closeModal();
                 await loadAllProdotti();
-                alert('Ã¢Å“â€¦ Prodotto salvato con successo!');
+                alert('âœ… Prodotto salvato con successo!');
                 
             } catch (err) {
                 console.error('Errore salvataggio:', err);
-                alert(`Ã¢ÂÅ’ Errore durante il salvataggio: ${err.message}`);
+                alert(`âŒ Errore durante il salvataggio: ${err.message}`);
             }
         }
 
@@ -1251,7 +1252,7 @@
 
         // Inizializza
         loadAllProdotti();
-        console.log('Ã¢Å“â€¦ Prodotti v2.0 - Con modifica massiva categoria/tipo');
+        console.log('âœ… Prodotti v2.0 - Con modifica massiva categoria/tipo');
     </script>
 </body>
 </html>
