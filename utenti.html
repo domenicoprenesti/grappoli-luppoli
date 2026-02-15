@@ -62,39 +62,12 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestione Utenti Autorizzati</h1>
-            <p class="text-gray-600">Visualizza e gestisci tutti gli utenti del sistema</p>
-            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 class="font-semibold text-blue-900 mb-2">📋 Livelli di Autorizzazione:</h3>
-                <div class="grid md:grid-cols-3 gap-4 text-sm">
-                    <div class="flex items-start space-x-2">
-                        <span class="text-lg">👁️</span>
-                        <div>
-                            <p class="font-semibold text-gray-800">Utente semplice</p>
-                            <p class="text-gray-600">Solo visualizzazione dati</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start space-x-2">
-                        <span class="text-lg">✏️</span>
-                        <div>
-                            <p class="font-semibold text-gray-800">Amministratore</p>
-                            <p class="text-gray-600">Può modificare fatture, prodotti e fornitori</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start space-x-2">
-                        <span class="text-lg">🔑</span>
-                        <div>
-                            <p class="font-semibold text-gray-800">Admin</p>
-                            <p class="text-gray-600">Controllo completo inclusa gestione utenti</p>
-                        </div>
-                    </div>
-                </div>
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestione Utenti Autorizzati</h1>
+                <p class="text-gray-600">Visualizza e gestisci tutti gli utenti del sistema</p>
             </div>
-        </div>
-
-        <div class="mb-6">
             <button onclick="window.location.href='crea-utente.html'" class="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -103,68 +76,101 @@
             </button>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Totali</p>
-                        <p id="totalUsers" class="text-3xl font-bold text-blue-600">0</p>
+        <div class="flex gap-6">
+            <!-- Sidebar sinistra -->
+            <div class="w-72 flex-shrink-0 space-y-4">
+                <div class="bg-white rounded-xl shadow-lg p-5">
+                    <h3 class="font-semibold text-gray-800 mb-3">📋 Livelli di Autorizzazione:</h3>
+                    <div class="space-y-4 text-sm">
+                        <div class="flex items-start space-x-2">
+                            <span class="text-lg">👁️</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Utente semplice</p>
+                                <p class="text-gray-500">Solo visualizzazione dati</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <span class="text-lg">✏️</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Amministratore</p>
+                                <p class="text-gray-500">Può modificare fatture, prodotti e fornitori</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <span class="text-lg">🔑</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Admin</p>
+                                <p class="text-gray-500">Controllo completo inclusa gestione utenti</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                        </svg>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Totali</p>
+                            <p id="totalUsers" class="text-3xl font-bold text-blue-600">0</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Attivi</p>
+                            <p id="activeUsers" class="text-3xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Disattivati</p>
+                            <p id="inactiveUsers" class="text-3xl font-bold text-red-600">0</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-full">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Attivi</p>
-                        <p id="activeUsers" class="text-3xl font-bold text-green-600">0</p>
-                    </div>
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Disattivati</p>
-                        <p id="inactiveUsers" class="text-3xl font-bold text-red-600">0</p>
-                    </div>
-                    <div class="bg-red-100 p-3 rounded-full">
-                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                        </svg>
+            <!-- Main content: tabella -->
+            <div class="flex-1 min-w-0">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                                <tr>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold">Nome</th>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold">Cognome</th>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold">Email</th>
+                                    <th class="px-4 py-4 text-left text-sm font-semibold">Password</th>
+                                    <th class="px-4 py-4 text-center text-sm font-semibold">Ruolo</th>
+                                    <th class="px-4 py-4 text-center text-sm font-semibold">Stato</th>
+                                    <th class="px-4 py-4 text-center text-sm font-semibold">Creazione</th>
+                                    <th class="px-4 py-4 text-center text-sm font-semibold">Ultimo Accesso</th>
+                                    <th class="px-4 py-4 text-center text-sm font-semibold">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-gray-200"></tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full table-auto">
-                    <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                        <tr>
-                            <th class="px-4 py-4 text-left text-sm font-semibold w-32">Nome</th>
-                            <th class="px-4 py-4 text-left text-sm font-semibold w-32">Cognome</th>
-                            <th class="px-4 py-4 text-left text-sm font-semibold w-56">Email</th>
-                            <th class="px-4 py-4 text-left text-sm font-semibold w-28">Password</th>
-                            <th class="px-4 py-4 text-center text-sm font-semibold w-40">Ruolo</th>
-                            <th class="px-4 py-4 text-center text-sm font-semibold w-24">Stato</th>
-                            <th class="px-4 py-4 text-center text-sm font-semibold w-28">Creazione</th>
-                            <th class="px-4 py-4 text-center text-sm font-semibold w-40 min-w-[160px]">Ultimo Accesso</th>
-                            <th class="px-4 py-4 text-center text-sm font-semibold w-20">Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody" class="divide-y divide-gray-200"></tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -367,19 +373,14 @@
                             <code class="bg-gray-100 px-2 py-1 rounded text-xs font-mono">${user.password}</code>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <div class="flex flex-col items-center space-y-1.5">
-                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium border ${getRoleBadgeClass(user.ruolo)}">
-                                    ${getRoleIcon(user.ruolo)} ${user.ruolo}
-                                </span>
-                                <select 
-                                    onchange="updateUserRole('${user.id}', this.value)" 
-                                    class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-                                >
-                                    <option value="Admin" ${user.ruolo === 'Admin' ? 'selected' : ''}>🔑 Admin</option>
-                                    <option value="Amministratore" ${user.ruolo === 'Amministratore' ? 'selected' : ''}>✏️ Amministratore</option>
-                                    <option value="Utente semplice" ${user.ruolo === 'Utente semplice' ? 'selected' : ''}>👁️ Utente semplice</option>
-                                </select>
-                            </div>
+                            <select 
+                                onchange="updateUserRole('${user.id}', this.value)" 
+                                class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                            >
+                                <option value="Admin" ${user.ruolo === 'Admin' ? 'selected' : ''}>🔑 Admin</option>
+                                <option value="Amministratore" ${user.ruolo === 'Amministratore' ? 'selected' : ''}>✏️ Amministratore</option>
+                                <option value="Utente semplice" ${user.ruolo === 'Utente semplice' ? 'selected' : ''}>👁️ Utente semplice</option>
+                            </select>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <button onclick="toggleUserStatus('${user.id}', ${user.attivo})" class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
