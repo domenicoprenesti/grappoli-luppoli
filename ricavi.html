@@ -270,6 +270,22 @@
                 </h3>
                 <div class="space-y-2">
                     <select id="filterAnno" onchange="applyFilter()" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white"><option value="">Tutti gli anni</option></select>
+                    <select id="filterMese" onchange="applyFilter()" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white">
+                        <option value="">Tutti i mesi</option>
+                        <option value="1">Gennaio</option>
+                        <option value="2">Febbraio</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Aprile</option>
+                        <option value="5">Maggio</option>
+                        <option value="6">Giugno</option>
+                        <option value="7">Luglio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Settembre</option>
+                        <option value="10">Ottobre</option>
+                        <option value="11">Novembre</option>
+                        <option value="12">Dicembre</option>
+                    </select>
+                    <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">↺ Pulisci filtri</button>
                 </div>
             </div>
 
@@ -380,8 +396,17 @@
 
         function applyFilter(){
             const anno=document.getElementById('filterAnno').value;
-            filteredMonthly=anno?monthlyData.filter(d=>d.anno==anno):[...monthlyData];
+            const mese=document.getElementById('filterMese').value;
+            filteredMonthly=[...monthlyData];
+            if(anno) filteredMonthly=filteredMonthly.filter(d=>d.anno==anno);
+            if(mese) filteredMonthly=filteredMonthly.filter(d=>d.mese==mese);
             renderAll();
+        }
+
+        function clearFilters(){
+            document.getElementById('filterAnno').value='';
+            document.getElementById('filterMese').value='';
+            applyFilter();
         }
 
         // ===== MODAL INSERIMENTO =====
