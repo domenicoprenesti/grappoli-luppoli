@@ -15,6 +15,23 @@
         .day-row:hover { background-color: #f0f9ff !important; cursor: pointer; }
         .day-row-weekend { background-color: #fefce8; }
         .drop-active { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            height: calc(100vh - 64px);
+            position: sticky;
+            top: 64px;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -44,7 +61,7 @@
                         <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
                         <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
                         <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
-                        <a href="ricavi.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Ricavi</a>
+                        <a href="ricavi.html" class="px-3 py-2 rounded-md text-sm font-medium bg-emerald-100 text-emerald-700">Ricavi</a>
                         <a href="fornitori.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Fornitori</a>
                         <a href="utenti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Utenti</a>
                     </div>
@@ -56,6 +73,13 @@
             </div>
         </div>
     </nav>
+
+    <script>
+        (function() {
+            const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
+            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
+        })();
+    </script>
 
     <!-- ==================== MODAL INSERIMENTO GIORNALIERO ==================== -->
     <div id="modalRicavo" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -220,71 +244,71 @@
         </div>
     </div>
 
-    <!-- ==================== MAIN CONTENT ==================== -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">📈 Andamento Ricavi</h1>
-                <p class="mt-2 text-gray-600">Analisi ricavi mensili per tipologia di pagamento</p>
+    <!-- ==================== MAIN LAYOUT ==================== -->
+    <div class="flex pt-16">
+        <aside class="sidebar bg-gradient-to-b from-emerald-600 via-emerald-700 to-emerald-800 text-white p-4 overflow-y-auto">
+            <div class="mb-6">
+                <h1 class="text-xl font-bold flex items-center">📈 Ricavi</h1>
+                <p class="text-emerald-200 text-xs mt-1">Analisi ricavi mensili per tipologia di pagamento</p>
             </div>
-            <div class="mt-4 md:mt-0 flex flex-wrap items-center gap-3">
-                <select id="filterAnno" onchange="if(document.getElementById('filterAnno2'))document.getElementById('filterAnno2').value=this.value;applyFilter()" class="hidden"><option value="">Tutti</option></select>
-                <button onclick="openImportModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium shadow-lg flex items-center space-x-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+
+            <div class="space-y-2 mb-5">
+                <button onclick="openImportModal()" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
                     <span>Importa File</span>
                 </button>
-                <button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg flex items-center space-x-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <button onclick="openModal()" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <span>Nuovo Ricavo</span>
                 </button>
             </div>
-        </div>
 
-        <div id="loadingDiv" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-            <div class="flex items-center justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div><span class="text-gray-600">Caricamento dati da Supabase...</span></div>
-        </div>
-
-        <div id="contentDiv" class="hidden">
-            <div class="flex gap-6">
-                <!-- LEFT SIDEBAR: Filter + KPI Cards -->
-                <div class="w-40 flex-shrink-0 space-y-3">
-                    <div class="flex items-center space-x-2 mb-1">
-                        <label class="text-sm font-medium text-gray-700">Anno:</label>
-                        <select id="filterAnno2" onchange="document.getElementById('filterAnno').value=this.value;applyFilter()" class="px-2 py-1.5 border border-gray-200 rounded-lg text-sm bg-white w-full"><option value="">Tutti</option></select>
-                    </div>
-                    <div id="kpiCards" class="space-y-3"></div>
-                </div>
-
-                <!-- RIGHT: Charts -->
-                <div class="flex-1 min-w-0">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-lg font-bold text-gray-900 mb-4">Ricavi Mensili per Tipologia di Pagamento</h2><div class="relative" style="height:370px"><canvas id="chartStacked"></canvas></div></div>
-                        <div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-lg font-bold text-gray-900 mb-4">Composizione Pagamenti (%)</h2><div class="relative" style="height:370px"><canvas id="chartComposizione"></canvas></div></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6"><h2 class="text-lg font-bold text-gray-900 mb-4">Fatturato Medio Giornaliero</h2><div class="relative" style="height:280px"><canvas id="chartDailyAvg"></canvas></div></div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-lg font-bold text-gray-900 mb-4">Trend Totale Ricavi</h2><div class="relative" style="height:370px"><canvas id="chartTrend"></canvas></div></div>
-                        <div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-lg font-bold text-gray-900 mb-4">Confronto Anno su Anno</h2><div class="relative" style="height:370px"><canvas id="chartYoY"></canvas></div></div>
-                    </div>
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-white/90 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Filtri
+                </h3>
+                <div class="space-y-2">
+                    <select id="filterAnno" onchange="applyFilter()" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white"><option value="">Tutti gli anni</option></select>
                 </div>
             </div>
 
-            <!-- TABLE full width -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mt-6 mb-8 overflow-x-auto">
-                <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-gray-900">Dettaglio Mensile</h2><p class="text-xs text-gray-400">Clicca su un mese per il dettaglio giornaliero</p></div>
-                <table class="w-full text-sm whitespace-nowrap"><thead><tr class="border-b-2 border-gray-200">
-                    <th class="text-left py-3 px-2 font-semibold text-gray-700">Mese</th>
-                    <th class="text-right py-3 px-2 font-semibold text-blue-700">💳 POS</th>
-                    <th class="text-right py-3 px-2 font-semibold text-green-700">💵 Contanti</th>
-                    <th class="text-right py-3 px-2 font-semibold text-purple-700">📱 Satispay</th>
-                    <th class="text-right py-3 px-2 font-semibold text-cyan-700">📄 Fatture</th>
-                    <th class="text-right py-3 px-2 font-semibold text-amber-700">📦 Misc.</th>
-                    <th class="text-right py-3 px-2 font-semibold text-gray-900 bg-gray-100 rounded">Totale</th>
-                    <th class="text-right py-3 px-2 font-semibold text-gray-600">GG</th>
-                    <th class="text-right py-3 px-2 font-semibold text-gray-600">€/GG</th>
-                </tr></thead><tbody id="tableBody"></tbody></table>
+            <div id="kpiCards" class="space-y-3"></div>
+        </aside>
+
+        <main class="main-content p-4">
+            <div id="loadingDiv" class="bg-white rounded-xl shadow-lg p-8 mb-4">
+                <div class="flex items-center justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mr-3"></div><span class="text-gray-600">Caricamento dati da Supabase...</span></div>
             </div>
-        </div>
+
+            <div id="contentDiv" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Ricavi Mensili per Tipologia di Pagamento</h2><div class="relative" style="height:370px"><canvas id="chartStacked"></canvas></div></div>
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Composizione Pagamenti (%)</h2><div class="relative" style="height:370px"><canvas id="chartComposizione"></canvas></div></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-5 mb-4"><h2 class="text-lg font-bold text-gray-900 mb-4">Fatturato Medio Giornaliero</h2><div class="relative" style="height:280px"><canvas id="chartDailyAvg"></canvas></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Trend Totale Ricavi</h2><div class="relative" style="height:370px"><canvas id="chartTrend"></canvas></div></div>
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Confronto Anno su Anno</h2><div class="relative" style="height:370px"><canvas id="chartYoY"></canvas></div></div>
+                </div>
+
+                <!-- TABLE -->
+                <div class="bg-white rounded-xl shadow-lg p-5 mb-4 overflow-x-auto">
+                    <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-gray-900">Dettaglio Mensile</h2><p class="text-xs text-gray-400">Clicca su un mese per il dettaglio giornaliero</p></div>
+                    <table class="w-full text-sm whitespace-nowrap"><thead><tr class="border-b-2 border-gray-200">
+                        <th class="text-left py-3 px-2 font-semibold text-gray-700">Mese</th>
+                        <th class="text-right py-3 px-2 font-semibold text-blue-700">💳 POS</th>
+                        <th class="text-right py-3 px-2 font-semibold text-green-700">💵 Contanti</th>
+                        <th class="text-right py-3 px-2 font-semibold text-purple-700">📱 Satispay</th>
+                        <th class="text-right py-3 px-2 font-semibold text-cyan-700">📄 Fatture</th>
+                        <th class="text-right py-3 px-2 font-semibold text-amber-700">📦 Misc.</th>
+                        <th class="text-right py-3 px-2 font-semibold text-gray-900 bg-gray-100 rounded">Totale</th>
+                        <th class="text-right py-3 px-2 font-semibold text-gray-600">GG</th>
+                        <th class="text-right py-3 px-2 font-semibold text-gray-600">€/GG</th>
+                    </tr></thead><tbody id="tableBody"></tbody></table>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
@@ -294,7 +318,6 @@
         const SESSION_KEY = 'app_authenticated';
 
         function logout() { localStorage.removeItem(SESSION_KEY); window.location.href = 'index.html'; }
-        (function(){ const a = JSON.parse(localStorage.getItem(SESSION_KEY)||'{}'); document.getElementById('userName').textContent = 'Ciao, '+(a.userName||'Utente'); })();
 
         let allDailyData=[], monthlyData=[], filteredMonthly=[], charts={}, editingId=null, deletingId=null;
         let pendingImportRecords = []; // dati parsati in attesa di import
@@ -349,12 +372,10 @@
 
         function populateFilter(){
             const anni=[...new Set(monthlyData.map(d=>d.anno))].sort();
-            ['filterAnno','filterAnno2'].forEach(id=>{
-                const sel=document.getElementById(id);
-                if(!sel) return;
-                sel.innerHTML='<option value="">Tutti</option>';
-                anni.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
-            });
+            const sel=document.getElementById('filterAnno');
+            if(!sel) return;
+            sel.innerHTML='<option value="">Tutti gli anni</option>';
+            anni.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
         }
 
         function applyFilter(){
