@@ -52,7 +52,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">ðŸ“Š Dashboard Analitica</h1>
+            <h1 class="text-3xl font-bold text-gray-900">📊 Dashboard Analitica</h1>
             <p class="mt-2 text-gray-600">Panoramica e storico dei costi basato sui dati reali</p>
         </div>
 
@@ -86,7 +86,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Filtro Anno -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ðŸ“… Anno</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">📅 Anno</label>
                     <select id="filterAnno" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Tutti gli anni</option>
                     </select>
@@ -94,7 +94,7 @@
                 
                 <!-- Filtro Mese -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ðŸ—“ï¸ Mese</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🗓️ Mese</label>
                     <select id="filterMese" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Tutti i mesi</option>
                         <option value="1">Gennaio</option>
@@ -114,7 +114,7 @@
                 
                 <!-- Filtro Categoria -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ðŸ·ï¸ Categoria</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Categoria</label>
                     <select id="filterCategoria" onchange="applyFilters()" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Tutte le categorie</option>
                     </select>
@@ -176,7 +176,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Costo Totale (IVA incl.)</p>
-                        <p id="statCostoTotale" class="text-2xl font-bold text-red-600 mt-2">â‚¬0</p>
+                        <p id="statCostoTotale" class="text-2xl font-bold text-red-600 mt-2">€0</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-lg">
                         <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +191,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Media Mensile</p>
-                        <p id="statMediaMensile" class="text-2xl font-bold text-green-600 mt-2">â‚¬0</p>
+                        <p id="statMediaMensile" class="text-2xl font-bold text-green-600 mt-2">€0</p>
                     </div>
                     <div class="bg-green-100 p-3 rounded-lg">
                         <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,7 +206,7 @@
         <div id="chartsRow" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Grafico Storico Mensile -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">ðŸ“ˆ Storico Costi Mensili</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">📈 Storico Costi Mensili</h2>
                 <div class="h-80">
                     <canvas id="chartMensile"></canvas>
                 </div>
@@ -214,7 +214,7 @@
 
             <!-- Grafico per Categoria / Tipo -->
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 id="chartCategorieTitle" class="text-xl font-bold text-gray-900 mb-4">ðŸ·ï¸ Distribuzione per Categoria</h2>
+                <h2 id="chartCategorieTitle" class="text-xl font-bold text-gray-900 mb-4">🏷️ Distribuzione per Categoria</h2>
                 <div class="h-80">
                     <canvas id="chartCategorie"></canvas>
                 </div>
@@ -223,17 +223,17 @@
 
         <!-- Dettaglio Mensile -->
         <div id="dettaglioMensile" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">ðŸ“… Dettaglio per Mese</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">📅 Dettaglio per Mese</h2>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                         <tr>
                             <th class="px-4 py-3 text-left text-sm font-semibold">Mese</th>
                             <th class="px-4 py-3 text-right text-sm font-semibold">Prodotti</th>
-                            <th class="px-4 py-3 text-right text-sm font-semibold">QuantitÃƒÂ </th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Quantità</th>
                             <th class="px-4 py-3 text-right text-sm font-semibold">Costo (senza IVA)</th>
                             <th class="px-4 py-3 text-right text-sm font-semibold">Costo (con IVA)</th>
-                            <th class="px-4 py-3 text-right text-sm font-semibold">ÃŽâ€ vs Prec.</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Δ vs Prec.</th>
                         </tr>
                     </thead>
                     <tbody id="tabellaDettaglioMensile" class="divide-y divide-gray-200"></tbody>
@@ -243,7 +243,7 @@
 
         <!-- Top Categorie -->
         <div id="topCategorie" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">ðŸ† Top Categorie per Spesa</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">🏆 Top Categorie per Spesa</h2>
             <div id="categorieCards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
         </div>
 
@@ -309,7 +309,7 @@
                         .eq('id', authData.userId);
                 }
 
-                console.log(`âœ… Accesso registrato: ${pagina} - ${azione}`);
+                console.log(`✅ Accesso registrato: ${pagina} - ${azione}`);
             } catch (err) {
                 console.error('Errore tracciamento:', err);
             }
@@ -340,7 +340,7 @@
         let chartMensileInstance = null;
         let chartCategorieInstance = null;
 
-        // ========== FUNZIONI UTILITÃ€ ==========
+        // ========== FUNZIONI UTILITÀ ==========
         function logout() {
             localStorage.removeItem(SESSION_KEY);
             window.location.href = 'index.html';
@@ -530,7 +530,7 @@
 
             dashboardData.categorie = Object.values(byCategoria).sort((a, b) => b.costoIvato - a.costoIvato);
             
-            // Raggruppa per TIPO (usato quando filtro categoria Ã¨ attivo)
+            // Raggruppa per TIPO (usato quando filtro categoria è attivo)
             const byTipo = {};
             prodottiFiltrati.forEach(p => {
                 const tipo = p.tipo_prodotto?.nome || 'Senza tipo';
@@ -558,7 +558,7 @@
         // ========== CARICAMENTO DATI ==========
         async function loadDashboardData() {
             try {
-                console.log('ðŸ“Š Caricamento dati dashboard...');
+                console.log('📊 Caricamento dati dashboard...');
 
                 // 1. Conta e carica fatture
                 const { count: fattureCount } = await supabaseClient
@@ -612,7 +612,7 @@
                     if (data) allProdottiOriginal = [...allProdottiOriginal, ...data];
                 }
 
-                console.log(`âœ… Caricati ${allProdottiOriginal.length} prodotti`);
+                console.log(`✅ Caricati ${allProdottiOriginal.length} prodotti`);
 
                 // 4. Popola i filtri con i valori disponibili
                 populateFilters();
@@ -620,7 +620,7 @@
                 // 5. Calcola dati iniziali (senza filtri)
                 recalculateDashboardData(allProdottiOriginal, '', '');
 
-                console.log('âœ… Dati dashboard elaborati');
+                console.log('✅ Dati dashboard elaborati');
                 
                 // Mostra sezione filtri
                 document.getElementById('filtriSection').classList.remove('hidden');
@@ -628,7 +628,7 @@
                 renderDashboard();
 
             } catch (err) {
-                console.error('âŒ Errore caricamento dashboard:', err);
+                console.error('❌ Errore caricamento dashboard:', err);
                 document.getElementById('loadingDiv').innerHTML = `
                     <div class="text-center text-red-600">
                         <p class="font-bold">Errore nel caricamento</p>
@@ -710,8 +710,8 @@
                 // Calcola totale annuo
                 const totaleAnno = dataPerMese.reduce((sum, val) => sum + (val || 0), 0);
                 const totaleFormattato = totaleAnno >= 1000 
-                    ? 'â‚¬' + (totaleAnno / 1000).toFixed(1) + 'k' 
-                    : 'â‚¬' + totaleAnno.toFixed(0);
+                    ? '€' + (totaleAnno / 1000).toFixed(1) + 'k' 
+                    : '€' + totaleAnno.toFixed(0);
                 
                 const colore = colori[idx % colori.length];
                 
@@ -784,9 +784,9 @@
                                 font: { weight: '500' },
                                 callback: function(value) {
                                     if (value >= 1000) {
-                                        return 'â‚¬' + (value / 1000).toFixed(0) + 'k';
+                                        return '€' + (value / 1000).toFixed(0) + 'k';
                                     }
-                                    return 'â‚¬' + value;
+                                    return '€' + value;
                                 }
                             }
                         }
@@ -805,7 +805,7 @@
             const ctx = document.getElementById('chartCategorie').getContext('2d');
             const titleElement = document.getElementById('chartCategorieTitle');
             
-            // Verifica se il filtro categoria Ã¨ attivo
+            // Verifica se il filtro categoria è attivo
             const filterCategoria = document.getElementById('filterCategoria').value;
             
             // Se filtro categoria attivo -> mostra distribuzione per TIPO
@@ -816,9 +816,9 @@
             // Aggiorna titolo del grafico
             if (titleElement) {
                 if (useTipi) {
-                    titleElement.textContent = `ðŸ“¦ Distribuzione per Tipo (${filterCategoria})`;
+                    titleElement.textContent = `📦 Distribuzione per Tipo (${filterCategoria})`;
                 } else {
-                    titleElement.textContent = 'ðŸ·ï¸ Distribuzione per Categoria';
+                    titleElement.textContent = '🏷️ Distribuzione per Categoria';
                 }
             }
             
@@ -879,7 +879,7 @@
                 return;
             }
             
-            // Ordina dal piÃ¹ recente
+            // Ordina dal più recente
             const storicoReversed = [...dashboardData.storicoMensile].reverse();
 
             tbody.innerHTML = storicoReversed.map((m, idx) => {
@@ -893,10 +893,10 @@
                     delta = ((m.costoConIva - prev.costoConIva) / prev.costoConIva * 100);
                     if (delta > 0) {
                         deltaClass = 'text-red-600';
-                        deltaIcon = 'â†‘';
+                        deltaIcon = '↑';
                     } else if (delta < 0) {
                         deltaClass = 'text-green-600';
-                        deltaIcon = 'â†“';
+                        deltaIcon = '↓';
                     }
                 }
 
@@ -953,7 +953,7 @@
 
         // ========== INIZIALIZZAZIONE ==========
         loadDashboardData();
-        console.log('âœ… Dashboard Analitica con Filtri caricata');
+        console.log('✅ Dashboard Analitica con Filtri caricata');
     </script>
 </body>
 </html>
