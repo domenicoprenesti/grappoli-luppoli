@@ -64,27 +64,27 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">ðŸ‘¥ Gestione Utenti Autorizzati</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestione Utenti Autorizzati</h1>
             <p class="text-gray-600">Visualizza e gestisci tutti gli utenti del sistema</p>
             <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 class="font-semibold text-blue-900 mb-2">ðŸ“‹ Livelli di Autorizzazione:</h3>
+                <h3 class="font-semibold text-blue-900 mb-2">📋 Livelli di Autorizzazione:</h3>
                 <div class="grid md:grid-cols-3 gap-4 text-sm">
                     <div class="flex items-start space-x-2">
-                        <span class="text-lg">ðŸ‘ï¸</span>
+                        <span class="text-lg">👁️</span>
                         <div>
                             <p class="font-semibold text-gray-800">Utente semplice</p>
                             <p class="text-gray-600">Solo visualizzazione dati</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-2">
-                        <span class="text-lg">âœï¸</span>
+                        <span class="text-lg">✏️</span>
                         <div>
                             <p class="font-semibold text-gray-800">Amministratore</p>
-                            <p class="text-gray-600">PuÃ² modificare fatture, prodotti e fornitori</p>
+                            <p class="text-gray-600">Può modificare fatture, prodotti e fornitori</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-2">
-                        <span class="text-lg">ðŸ”</span>
+                        <span class="text-lg">🔑</span>
                         <div>
                             <p class="font-semibold text-gray-800">Admin</p>
                             <p class="text-gray-600">Controllo completo inclusa gestione utenti</p>
@@ -202,7 +202,7 @@
                         .eq('id', authData.userId);
                 }
 
-                console.log(`âœ… Accesso registrato: ${pagina} - ${azione}`);
+                console.log(`✅ Accesso registrato: ${pagina} - ${azione}`);
             } catch (err) {
                 console.error('Errore tracciamento:', err);
             }
@@ -293,9 +293,9 @@
 
                 // Funzione helper per ottenere l'icona del ruolo
                 const getRoleIcon = (ruolo) => {
-                    if (ruolo === 'Admin') return 'ðŸ”';
-                    if (ruolo === 'Amministratore') return 'âœï¸';
-                    return 'ðŸ‘ï¸';
+                    if (ruolo === 'Admin') return '🔑';
+                    if (ruolo === 'Amministratore') return '✏️';
+                    return '👁️';
                 };
 
                 // Funzione helper per formattare l'ultimo accesso
@@ -375,15 +375,15 @@
                                     onchange="updateUserRole('${user.id}', this.value)" 
                                     class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
                                 >
-                                    <option value="Admin" ${user.ruolo === 'Admin' ? 'selected' : ''}>ðŸ” Admin</option>
-                                    <option value="Amministratore" ${user.ruolo === 'Amministratore' ? 'selected' : ''}>âœï¸ Amministratore</option>
-                                    <option value="Utente semplice" ${user.ruolo === 'Utente semplice' ? 'selected' : ''}>ðŸ‘ï¸ Utente semplice</option>
+                                    <option value="Admin" ${user.ruolo === 'Admin' ? 'selected' : ''}>🔑 Admin</option>
+                                    <option value="Amministratore" ${user.ruolo === 'Amministratore' ? 'selected' : ''}>✏️ Amministratore</option>
+                                    <option value="Utente semplice" ${user.ruolo === 'Utente semplice' ? 'selected' : ''}>👁️ Utente semplice</option>
                                 </select>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <button onclick="toggleUserStatus('${user.id}', ${user.attivo})" class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                ${user.attivo ? 'âœ… Attivo' : 'âŒ Disattivo'}
+                                ${user.attivo ? '✅ Attivo' : '❌ Disattivo'}
                             </button>
                         </td>
                         <td class="px-4 py-3 text-center text-xs text-gray-600">
@@ -419,14 +419,14 @@
         // ============================================
         
         const AVAILABLE_PAGES = [
-            { id: 'dashboard.html', nome: 'ðŸ“Š Dashboard', descrizione: 'Visualizza analytics e statistiche' },
-            { id: 'fatture.html', nome: 'ðŸ“„ Fatture', descrizione: 'Gestione fatture e documenti' },
-            { id: 'prodotti.html', nome: 'ðŸ“¦ Prodotti', descrizione: 'Catalogo prodotti' },
-            { id: 'fornitori.html', nome: 'ðŸ¢ Fornitori', descrizione: 'Gestione fornitori' },
-            { id: 'utenti.html', nome: 'ðŸ‘¥ Utenti', descrizione: 'Gestione utenti (solo Admin)' },
-            { id: 'vendite.html', nome: 'ðŸ’° Vendite', descrizione: 'Analisi vendite' },
-            { id: 'ricavi.html', nome: 'ðŸ“ˆ Ricavi', descrizione: 'Analisi ricavi' },
-            { id: 'inserimento-giornaliero.html', nome: 'ðŸ“ Inserimento', descrizione: 'Inserimento ricavi giornalieri' }
+            { id: 'dashboard.html', nome: '📊 Dashboard', descrizione: 'Visualizza analytics e statistiche' },
+            { id: 'fatture.html', nome: '📄 Fatture', descrizione: 'Gestione fatture e documenti' },
+            { id: 'prodotti.html', nome: '📦 Prodotti', descrizione: 'Catalogo prodotti' },
+            { id: 'fornitori.html', nome: '🏢 Fornitori', descrizione: 'Gestione fornitori' },
+            { id: 'utenti.html', nome: '👥 Utenti', descrizione: 'Gestione utenti (solo Admin)' },
+            { id: 'vendite.html', nome: '💰 Vendite', descrizione: 'Analisi vendite' },
+            { id: 'ricavi.html', nome: '📈 Ricavi', descrizione: 'Analisi ricavi' },
+            { id: 'inserimento-giornaliero.html', nome: '📝 Inserimento', descrizione: 'Inserimento ricavi giornalieri' }
         ];
 
         let currentEditingUserId = null;
@@ -510,7 +510,7 @@
 
                 if (error) throw error;
 
-                console.log(`âœ… Permesso ${canAccess ? 'abilitato' : 'disabilitato'} per ${pagina}`);
+                console.log(`✅ Permesso ${canAccess ? 'abilitato' : 'disabilitato'} per ${pagina}`);
             } catch (err) {
                 console.error('Errore aggiornamento permesso:', err);
                 alert('Errore durante l\'aggiornamento del permesso');
@@ -523,7 +523,7 @@
             const userRole = document.getElementById('permUserRole').textContent;
             const permissions = AVAILABLE_PAGES
                 .filter(page => {
-                    // Se non Ã¨ Admin, non puÃ² avere accesso a utenti.html
+                    // Se non è Admin, non può avere accesso a utenti.html
                     if (page.id === 'utenti.html' && userRole !== 'Admin') return false;
                     return true;
                 })
@@ -545,7 +545,7 @@
                 // Ricarica i permessi
                 await loadUserPermissions(currentEditingUserId);
                 
-                alert(`âœ… Tutti i permessi ${enable ? 'abilitati' : 'disabilitati'}`);
+                alert(`✅ Tutti i permessi ${enable ? 'abilitati' : 'disabilitati'}`);
             } catch (err) {
                 console.error('Errore aggiornamento permessi:', err);
                 alert('Errore durante l\'aggiornamento dei permessi');
@@ -553,7 +553,7 @@
         }
 
         loadUsers();
-        console.log('âœ… Pagina utenti caricata con sistema a 3 livelli di permessi');
+        console.log('✅ Pagina utenti caricata con sistema a 3 livelli di permessi');
     </script>
 
     <!-- Modal Gestione Permessi -->
@@ -563,7 +563,7 @@
             <div class="p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">ðŸ” Gestione Permessi</h2>
+                        <h2 class="text-2xl font-bold text-gray-800">🔑 Gestione Permessi</h2>
                         <p class="text-sm text-gray-600 mt-1">
                             Utente: <span id="permUserName" class="font-medium"></span> 
                             (<span id="permUserRole" class="font-medium"></span>)
@@ -583,10 +583,10 @@
                     <span class="text-sm font-medium text-gray-700">Azioni Rapide:</span>
                     <div class="flex space-x-2">
                         <button onclick="setAllPermissions(true)" class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm font-medium">
-                            âœ… Abilita Tutto
+                            ✅ Abilita Tutto
                         </button>
                         <button onclick="setAllPermissions(false)" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium">
-                            âŒ Disabilita Tutto
+                            ❌ Disabilita Tutto
                         </button>
                     </div>
                 </div>
@@ -601,7 +601,7 @@
             <div class="p-6 border-t border-gray-200 bg-gray-50">
                 <div class="flex justify-end space-x-3">
                     <button onclick="closePermissionsModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        âœ… Chiudi
+                        ✅ Chiudi
                     </button>
                 </div>
             </div>
