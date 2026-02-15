@@ -556,12 +556,13 @@
         }
         function hideLoadingUI() { document.getElementById('loadingProgress').classList.add('hidden'); }
         
-        function updateStats() {
-            document.getElementById('totalProdotti').textContent = allProdotti.length.toLocaleString('it-IT');
-            const cats = new Set(allProdotti.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome).map(p => p.tipo_prodotto.aggregante_prodotto.nome));
+        function updateStats(prodotti) {
+            const lista = prodotti || allProdotti;
+            document.getElementById('totalProdotti').textContent = lista.length.toLocaleString('it-IT');
+            const cats = new Set(lista.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome).map(p => p.tipo_prodotto.aggregante_prodotto.nome));
             document.getElementById('totalCategorie').textContent = cats.size;
-            const valNoIva = allProdotti.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
-            const valIva = allProdotti.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
+            const valNoIva = lista.reduce((s, p) => s + ((p.prezzo_scontato || p.prezzo || 0) * (p.quantita || 0)), 0);
+            const valIva = lista.reduce((s, p) => s + ((p.prezzo_ivato || 0) * (p.quantita || 0)), 0);
             document.getElementById('valoreTotale').textContent = `€${valNoIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
             document.getElementById('valoreTotaleIvato').textContent = `€${valIva.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
@@ -585,6 +586,7 @@
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
             if (gruppo) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppo);
             renderTable(filtered);
+            updateStats(filtered);
         }
         
         function clearFilters() { 
