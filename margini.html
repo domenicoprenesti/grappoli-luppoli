@@ -976,9 +976,9 @@
                 let trend = '', tc = 'text-gray-400';
                 if (i > 0) {
                     const diff = r.margine - entries[i - 1][1].margine;
-                    if (diff > 0) { trend = 'â†‘'; tc = 'text-green-600'; }
-                    else if (diff < 0) { trend = 'â†“'; tc = 'text-red-600'; }
-                    else { trend = 'â†’'; }
+                    if (diff > 0) { trend = '↑'; tc = 'text-green-600'; }
+                    else if (diff < 0) { trend = '↓'; tc = 'text-red-600'; }
+                    else { trend = '→'; }
                 }
                 return `<tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 font-medium">${label}</td>
