@@ -6,6 +6,24 @@
     <title>Gestione Utenti - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            height: calc(100vh - 64px);
+            position: sticky;
+            top: 64px;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+            backdrop-filter: blur(10px);
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
@@ -31,6 +49,13 @@
                 window.location.href = 'index.html';
             }
         }
+    </script>
+
+    <script>
+        (function() {
+            const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
+            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
+        })();
     </script>
 
 <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
@@ -62,86 +87,59 @@
         </div>
     </nav>
 
-    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
-        <div class="flex items-start justify-between mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestione Utenti Autorizzati</h1>
-                <p class="text-gray-600">Visualizza e gestisci tutti gli utenti del sistema</p>
+    <div class="flex pt-16">
+        <aside class="sidebar bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 text-white p-4 overflow-y-auto">
+            <div class="mb-6">
+                <h1 class="text-xl font-bold flex items-center">👥 Utenti</h1>
+                <p class="text-gray-300 text-xs mt-1">Gestione utenti autorizzati</p>
             </div>
-            <button onclick="window.location.href='crea-utente.html'" class="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                <span class="font-semibold">Nuovo Utente</span>
-            </button>
-        </div>
 
-        <div class="flex gap-6">
-            <!-- Sidebar sinistra -->
-            <div class="w-72 flex-shrink-0 space-y-4">
-                <div class="bg-white rounded-xl shadow-lg p-5">
-                    <h3 class="font-semibold text-gray-800 mb-3">📋 Livelli di Autorizzazione:</h3>
-                    <div class="space-y-4 text-sm">
-                        <div class="flex items-start space-x-2">
-                            <span class="text-lg">👁️</span>
-                            <div>
-                                <p class="font-semibold text-gray-800">Utente semplice</p>
-                                <p class="text-gray-500">Solo visualizzazione dati</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <span class="text-lg">✏️</span>
-                            <div>
-                                <p class="font-semibold text-gray-800">Amministratore</p>
-                                <p class="text-gray-500">Può modificare fatture, prodotti e fornitori</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <span class="text-lg">🔑</span>
-                            <div>
-                                <p class="font-semibold text-gray-800">Admin</p>
-                                <p class="text-gray-500">Controllo completo inclusa gestione utenti</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="mb-5">
+                <button onclick="window.location.href='crea-utente.html'" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Nuovo Utente</span>
+                </button>
+            </div>
 
-                <div class="bg-white rounded-xl shadow-lg p-5">
+            <div class="space-y-3 mb-6">
+                <div class="stat-card rounded-xl p-4 shadow-lg">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Totali</p>
-                            <p id="totalUsers" class="text-3xl font-bold text-blue-600">0</p>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Totali</p>
+                            <p id="totalUsers" class="text-2xl font-bold text-gray-700">0</p>
                         </div>
-                        <div class="bg-blue-100 p-3 rounded-full">
-                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-blue-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg p-5">
+                <div class="stat-card rounded-xl p-4 shadow-lg">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Attivi</p>
-                            <p id="activeUsers" class="text-3xl font-bold text-green-600">0</p>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Attivi</p>
+                            <p id="activeUsers" class="text-2xl font-bold text-green-600">0</p>
                         </div>
-                        <div class="bg-green-100 p-3 rounded-full">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-green-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg p-5">
+                <div class="stat-card rounded-xl p-4 shadow-lg">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Disattivati</p>
-                            <p id="inactiveUsers" class="text-3xl font-bold text-red-600">0</p>
+                            <p class="text-xs text-gray-500 uppercase tracking-wide">Disattivati</p>
+                            <p id="inactiveUsers" class="text-2xl font-bold text-red-600">0</p>
                         </div>
-                        <div class="bg-red-100 p-3 rounded-full">
-                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-red-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
                             </svg>
                         </div>
@@ -149,30 +147,59 @@
                 </div>
             </div>
 
-            <!-- Main content: tabella -->
-            <div class="flex-1 min-w-0">
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                                <tr>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold">Nome</th>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold">Cognome</th>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold">Email</th>
-                                    <th class="px-4 py-4 text-left text-sm font-semibold">Password</th>
-                                    <th class="px-4 py-4 text-center text-sm font-semibold">Ruolo</th>
-                                    <th class="px-4 py-4 text-center text-sm font-semibold">Stato</th>
-                                    <th class="px-4 py-4 text-center text-sm font-semibold">Creazione</th>
-                                    <th class="px-4 py-4 text-center text-sm font-semibold">Ultimo Accesso</th>
-                                    <th class="px-4 py-4 text-center text-sm font-semibold">Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody" class="divide-y divide-gray-200"></tbody>
-                        </table>
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-white/90 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Livelli di Autorizzazione
+                </h3>
+                <div class="space-y-3">
+                    <div class="bg-white/10 rounded-lg p-3 flex items-start space-x-2">
+                        <span class="text-base">👁️</span>
+                        <div>
+                            <p class="font-semibold text-white text-sm">Utente semplice</p>
+                            <p class="text-gray-300 text-xs">Solo visualizzazione dati</p>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-3 flex items-start space-x-2">
+                        <span class="text-base">✏️</span>
+                        <div>
+                            <p class="font-semibold text-white text-sm">Amministratore</p>
+                            <p class="text-gray-300 text-xs">Può modificare fatture, prodotti e fornitori</p>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-3 flex items-start space-x-2">
+                        <span class="text-base">🔑</span>
+                        <div>
+                            <p class="font-semibold text-white text-sm">Admin</p>
+                            <p class="text-gray-300 text-xs">Controllo completo inclusa gestione utenti</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
+
+        <main class="main-content p-4">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="overflow-auto" style="max-height: calc(100vh - 140px);">
+                    <table class="w-full">
+                        <thead class="bg-gradient-to-r from-gray-600 to-gray-700 text-white sticky top-0 z-10">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Nome</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Cognome</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Email</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Password</th>
+                                <th class="px-4 py-3 text-center text-sm font-semibold">Ruolo</th>
+                                <th class="px-4 py-3 text-center text-sm font-semibold">Stato</th>
+                                <th class="px-4 py-3 text-center text-sm font-semibold">Creazione</th>
+                                <th class="px-4 py-3 text-center text-sm font-semibold">Ultimo Accesso</th>
+                                <th class="px-4 py-3 text-center text-sm font-semibold">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
