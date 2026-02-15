@@ -87,7 +87,7 @@
         <!-- Header -->
         <div class="mb-8 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Ã°Å¸ÂÂ¢ Gestione Fornitori</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">🏢 Gestione Fornitori</h1>
                 <p class="text-gray-600">Anagrafica fornitori con condizioni di pagamento</p>
             </div>
             <button onclick="openNewFornitoreModal()" class="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg">
@@ -129,7 +129,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Fatturato Totale</p>
-                        <p id="fatturatoTotale" class="text-3xl font-bold text-green-600">Ã¢â€šÂ¬0</p>
+                        <p id="fatturatoTotale" class="text-3xl font-bold text-green-600">€0</p>
                     </div>
                     <div class="bg-green-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +143,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Da Pagare</p>
-                        <p id="daPagareTotale" class="text-3xl font-bold text-orange-600">Ã¢â€šÂ¬0</p>
+                        <p id="daPagareTotale" class="text-3xl font-bold text-orange-600">€0</p>
                     </div>
                     <div class="bg-orange-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +157,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Importo Scaduto</p>
-                        <p id="scadutoTotale" class="text-3xl font-bold text-red-600">Ã¢â€šÂ¬0</p>
+                        <p id="scadutoTotale" class="text-3xl font-bold text-red-600">€0</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-full">
                         <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,7 +170,7 @@
 
         <!-- Filtri Ricerca -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="font-bold mb-4">Ã°Å¸â€Â Filtri</h3>
+            <h3 class="font-bold mb-4">🔍 Filtri</h3>
             <div class="grid md:grid-cols-3 gap-4">
                 <input type="text" id="searchRagioneSociale" placeholder="Cerca ragione sociale..." class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onkeyup="applyFilters()">
                 <select id="filterTipoPagamento" class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="applyFilters()">
@@ -299,7 +299,7 @@
                             <input type="text" id="cap" maxlength="10" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">CittÃƒÂ </label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Città</label>
                             <input type="text" id="citta" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div>
@@ -364,7 +364,7 @@
                                 <input type="checkbox" id="fineMese" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
                                 <span class="text-sm font-semibold text-gray-700">Pagamento a Fine Mese</span>
                             </label>
-                            <p class="text-xs text-gray-500 mt-2 ml-8">Se attivo, la scadenza ÃƒÂ¨ alla fine del mese (es: 30gg FM invece di 30gg)</p>
+                            <p class="text-xs text-gray-500 mt-2 ml-8">Se attivo, la scadenza è alla fine del mese (es: 30gg FM invece di 30gg)</p>
                         </div>
                     </div>
                 </div>
@@ -411,7 +411,7 @@
                 <p id="deleteMessage" class="text-gray-600"></p>
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-sm text-yellow-800"><strong>Ã¢Å¡Â Ã¯Â¸Â Attenzione:</strong> Questa azione ÃƒÂ¨ irreversibile!</p>
+                <p class="text-sm text-yellow-800"><strong>⚠️ Attenzione:</strong> Questa azione è irreversibile!</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
@@ -510,9 +510,9 @@
 
         function updateStats() {
             document.getElementById('totalFornitori').textContent = fornitori.length;
-            document.getElementById('fatturatoTotale').textContent = 'Ã¢â€šÂ¬' + fornitori.reduce((s, f) => s + (f.fatturato_totale || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('daPagareTotale').textContent = 'Ã¢â€šÂ¬' + fornitori.reduce((s, f) => s + (f.fatture_da_pagare || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('scadutoTotale').textContent = 'Ã¢â€šÂ¬' + fornitori.reduce((s, f) => s + (f.importo_scaduto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('fatturatoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatturato_totale || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('daPagareTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.fatture_da_pagare || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('scadutoTotale').textContent = '€' + fornitori.reduce((s, f) => s + (f.importo_scaduto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         }
 
         // ===== FILTRI =====
@@ -570,8 +570,8 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-sm">
-                            ${f.telefono ? `<p class="text-gray-700">Ã°Å¸â€œÅ¾ ${f.telefono}</p>` : ''}
-                            ${f.email ? `<p class="text-gray-600">Ã¢Å“â€°Ã¯Â¸Â ${f.email}</p>` : ''}
+                            ${f.telefono ? `<p class="text-gray-700">📞 ${f.telefono}</p>` : ''}
+                            ${f.email ? `<p class="text-gray-600">✉️ ${f.email}</p>` : ''}
                             ${!f.telefono && !f.email ? '<p class="text-gray-400">N/D</p>' : ''}
                         </div>
                     </td>
@@ -610,8 +610,8 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div>
-                            <p class="font-bold text-gray-900">Ã¢â€šÂ¬${(f.fatturato_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-                            ${f.fatture_da_pagare > 0 ? `<p class="text-xs text-orange-600">Ã¢â€šÂ¬${(f.fatture_da_pagare || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} da pagare</p>` : ''}
+                            <p class="font-bold text-gray-900">€${(f.fatturato_totale || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                            ${f.fatture_da_pagare > 0 ? `<p class="text-xs text-orange-600">€${(f.fatture_da_pagare || 0).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} da pagare</p>` : ''}
                         </div>
                     </td>
                     <td class="px-6 py-4 text-center">
@@ -852,7 +852,7 @@
 
         // Inizializzazione
         loadFornitori();
-        console.log('Ã¢Å“â€¦ Gestione Fornitori caricata');
+        console.log('✅ Gestione Fornitori caricata');
     </script>
 </body>
 </html>
