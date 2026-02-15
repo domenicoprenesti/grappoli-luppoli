@@ -51,13 +51,6 @@
         }
     </script>
 
-    <script>
-        (function() {
-            const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
-            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
-        })();
-    </script>
-
 <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -86,6 +79,13 @@
             </div>
         </div>
     </nav>
+
+    <script>
+        (function() {
+            const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
+            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
+        })();
+    </script>
 
     <div class="flex pt-16">
         <aside class="sidebar bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 text-white p-4 overflow-y-auto">
