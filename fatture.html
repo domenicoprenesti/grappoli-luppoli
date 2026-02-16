@@ -24,15 +24,30 @@
             background: rgba(255, 255, 255, 0.25);
             border-color: rgba(255, 255, 255, 0.5);
         }
-        /* Stile per le opzioni del dropdown */
         .filter-input option {
             background: #1e40af;
             color: white;
             padding: 0.5rem;
         }
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            height: calc(100vh - 64px);
+            position: sticky;
+            top: 64px;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
 <nav class="fixed top-0 left-0 right-0 bg-white shadow-lg z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -45,7 +60,7 @@
                 </button>
                 <div class="hidden md:ml-10 md:flex md:space-x-4">
                     <a href="dashboard.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
-                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">Fatture</a>
+                    <a href="fatture.html" class="px-3 py-2 rounded-md text-sm font-medium bg-red-100 text-red-700">Fatture</a>
                     <a href="prodotti.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Prodotti</a>
                     <a href="vendite.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Vendite</a>
                     <a href="margini.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Margini</a>
@@ -62,7 +77,7 @@
     </div>
 </nav>
 
-    <div class="pt-20 pb-12" id="app"></div>
+    <div class="flex pt-16" id="app"></div>
 
     <!-- Modal Conferma Eliminazione -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -1155,7 +1170,7 @@
             const isCurrentMonth = anno === oggi.getFullYear() && mese === (oggi.getMonth() + 1);
             
             return `
-                <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl shadow-lg overflow-hidden mb-4">
                     <!-- HEADER: Titolo + Selettore + Statistiche -->
                     <div class="flex items-center justify-between px-4 py-3 bg-white border-b border-red-200">
                         <!-- Sinistra: Icona + Titolo -->
@@ -2609,136 +2624,148 @@
             const hasActiveFilters = state.filters.invoiceYear !== 'all' || state.filters.invoiceMonth !== 'all' || state.filters.supplier !== 'all' || state.filters.minAmount !== '' || state.filters.maxAmount !== '';
             
             app.innerHTML = `
-                <div class="w-full px-4">
-                <div class="flex gap-4">
-                    <!-- SIDEBAR SINISTRA (STICKY) -->
-                    <div class="w-44 flex-shrink-0">
-                        <div class="sticky top-20">
-                        <!-- Header con titolo -->
-                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-                            <div class="flex items-center space-x-2 mb-4">
-                                <div class="bg-blue-600 p-2 rounded-lg">
-                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
+                <aside class="sidebar bg-gradient-to-b from-red-600 via-orange-600 to-amber-700 text-white p-4 overflow-y-auto">
+                    <div class="mb-5">
+                        <h1 class="text-xl font-bold flex items-center">📄 Fatture</h1>
+                        <p class="text-orange-200 text-xs mt-1">Gestione fatture elettroniche</p>
+                    </div>
+
+                    <div class="space-y-3 mb-5">
+                        <div class="stat-card rounded-xl p-4 shadow-lg">
+                            <div class="flex items-center justify-between">
                                 <div>
-                                    <h1 class="text-base font-bold leading-tight">Gestione Fatture</h1>
-                                    <p class="text-xs text-gray-500">Con estrazione IVA e cancellazione</p>
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">Fatture Totali</p>
+                                    <p class="text-2xl font-bold text-red-600">${filteredFatture.length.toLocaleString('it-IT')}</p>
                                 </div>
-                            </div>
-
-                            <!-- Statistiche in verticale compatte -->
-                            <div class="space-y-2">
-                                <div class="bg-blue-50 px-3 py-2 rounded-lg border-l-3 border-blue-500">
-                                    <p class="text-xs text-gray-600">Fatture totali</p>
-                                    <p class="text-xl font-bold text-blue-600">${filteredFatture.length.toLocaleString('it-IT')}</p>
+                                <div class="bg-red-100 p-2 rounded-lg">
+                                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 </div>
-                                <div class="bg-green-50 px-3 py-2 rounded-lg border-l-3 border-green-500">
-                                    <p class="text-xs text-gray-600">Importo totale</p>
-                                    <p class="text-xl font-bold text-green-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-                                </div>
-                                <div class="bg-purple-50 px-3 py-2 rounded-lg border-l-3 border-purple-500">
-                                    <p class="text-xs text-gray-600">Fornitori</p>
-                                    <p class="text-xl font-bold text-purple-600">${state.stats.fornitori}</p>
-                                </div>
-                            </div>
-
-                            ${state.error ? `<div class="mt-3 text-xs ${state.error.includes('❌') ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'} border px-2 py-1 rounded">${state.error}</div>` : ''}
-                        </div>
-                        
-                        <!-- Pulsanti Upload -->
-                        <div class="bg-white rounded-xl shadow-lg p-4">
-                            <p class="text-xs font-semibold text-gray-600 mb-3">Carica Fatture</p>
-                            <div class="space-y-2">
-                                <button onclick="switchUploadMode('single')" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2 text-xs">
-                                    <span>📄</span>
-                                    <span>Upload Singolo</span>
-                                </button>
-                                <button onclick="switchUploadMode('folder')" class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium transition-all hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 flex items-center space-x-2 text-xs">
-                                    <span>📝</span>
-                                    <span>Upload Cartella</span>
-                                </button>
-                                <button onclick="openModalFatturaManuale()" class="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium transition-all hover:from-orange-600 hover:to-amber-600 flex items-center space-x-2 shadow-sm text-xs">
-                                    <span>✏️</span>
-                                    <span>Inserimento Manuale</span>
-                                </button>
                             </div>
                         </div>
+
+                        <div class="stat-card rounded-xl p-4 shadow-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">Importo Totale</p>
+                                    <p class="text-xl font-bold text-orange-600">€${(hasActiveFilters ? filteredTotal : state.stats.importo).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                </div>
+                                <div class="bg-orange-100 p-2 rounded-lg">
+                                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card rounded-xl p-4 shadow-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">Fornitori</p>
+                                    <p class="text-2xl font-bold text-amber-600">${state.stats.fornitori}</p>
+                                </div>
+                                <div class="bg-amber-100 p-2 rounded-lg">
+                                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- AREA PRINCIPALE -->
-                    <div class="flex-1 min-w-0">
-                        <!-- Contenitore flex: contenuto a sinistra, pulsanti a destra -->
-                        <div class="flex gap-3">
-                            <!-- CONTENUTO PRINCIPALE (tutto allineato) -->
-                            <div class="flex-1 min-w-0" style="overflow: visible;">
-                                <!-- Report Scadenze -->
-                                ${renderReportScadenze()}
+                    ${state.error ? `<div class="mb-4 text-xs ${state.error.includes('❌') ? 'bg-red-900/40 border-red-300 text-red-100' : 'bg-green-900/40 border-green-300 text-green-100'} border px-3 py-2 rounded-lg">${state.error}</div>` : ''}
 
-                                ${state.loadingProgress.isLoading ? `
-                                    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                        <div class="flex justify-between mb-2"><span class="text-sm font-medium text-blue-900">Caricamento...</span><span class="text-sm text-blue-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span></div>
-                                        <div class="w-full bg-blue-200 rounded-full h-3"><div class="bg-blue-600 h-3 rounded-full" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div></div>
-                                    </div>
-                                ` : ''}
-
-                        <!-- SEZIONE FATTURE MANUALI -->
-                        ${state.fattureManuali.length > 0 ? `
-                        <div class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl shadow-lg p-5 mb-6">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-base font-bold text-orange-800 flex items-center">
-                                    <span class="mr-2">✏️</span>
-                                    Fatture Inserite Manualmente (${state.fattureManuali.length})
-                                </h3>
-                                <span class="text-sm text-orange-600">Totale: €${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            </div>
-                            <p class="text-xs text-orange-700 mb-3">Fatture pagate ma non ancora importate come XML. Eliminale quando importi la fattura corrispondente.</p>
-                            <div class="grid gap-2">
-                                ${state.fattureManuali.map(fm => `
-                                    <div class="bg-white rounded-lg p-3 flex items-center justify-between shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
-                                        <div class="flex items-center space-x-4">
-                                            <div class="bg-orange-100 p-2 rounded-lg">
-                                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="font-semibold text-gray-900 text-sm">${fm.ragione_sociale}</p>
-                                                <p class="text-xs text-gray-500">Pagata il ${new Date(fm.data_pagamento).toLocaleDateString('it-IT')}${fm.note ? ` • ${fm.note}` : ''}</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <span class="text-lg font-bold text-orange-600">€${parseFloat(fm.importo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                            <button onclick="deleteFatturaManuale('${fm.id}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Elimina fattura manuale">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
+                    <div class="mb-4">
+                        <h3 class="text-sm font-bold text-white/90 mb-3 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                            Filtri
+                        </h3>
+                        <div class="space-y-2">
+                            <select onchange="applyFilter('invoiceYear', this.value)" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white">
+                                <option value="all">Tutti gli anni</option>
+                                ${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}
+                            </select>
+                            <select onchange="applyFilter('invoiceMonth', this.value)" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white">
+                                <option value="all">Tutti i mesi</option>
+                                ${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}
+                            </select>
+                            <select onchange="applyFilter('supplier', this.value)" class="w-full px-3 py-2 text-sm bg-white/90 text-gray-800 rounded-lg border-0 focus:ring-2 focus:ring-white">
+                                <option value="all">Tutti i fornitori</option>
+                                ${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}
+                            </select>
+                            <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">↺ Pulisci filtri</button>
                         </div>
-                        ` : ''}
+                    </div>
 
-                        <!-- Filtri -->
-                        <div class="bg-white rounded-lg shadow p-4 mb-4 relative z-10" style="overflow: visible;">
-                            <h3 class="font-bold mb-2 text-sm">Filtri</h3>
-                            <div class="grid grid-cols-4 gap-2">
-                                <select onchange="applyFilter('invoiceYear', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti gli anni</option>${invoiceYears.map(y => `<option value="${y}"${state.filters.invoiceYear === y.toString() ? ' selected' : ''}>${y}</option>`).join('')}</select>
-                                <select onchange="applyFilter('invoiceMonth', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti i mesi</option>${['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].map((m,i) => `<option value="${i+1}"${state.filters.invoiceMonth === (i+1).toString() ? ' selected' : ''}>${m}</option>`).join('')}</select>
-                                <select onchange="applyFilter('supplier', this.value)" class="px-2 py-1.5 border rounded text-sm cursor-pointer"><option value="all">Tutti i fornitori</option>${suppliers.map(s => `<option value="${s}"${state.filters.supplier === s ? ' selected' : ''}>${s}</option>`).join('')}</select>
-                                <button onclick="clearFilters()" class="px-3 py-1.5 bg-gray-200 rounded hover:bg-gray-300 text-sm">Pulisci</button>
-                            </div>
+                    <div class="mb-4">
+                        <h3 class="text-sm font-bold text-white/90 mb-3 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            Carica Fatture
+                        </h3>
+                        <div class="space-y-2">
+                            <button onclick="switchUploadMode('single')" class="w-full px-3 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors flex items-center space-x-2 text-sm">
+                                <span>📄</span><span>Upload Singolo</span>
+                            </button>
+                            <button onclick="switchUploadMode('folder')" class="w-full px-3 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors flex items-center space-x-2 text-sm">
+                                <span>📁</span><span>Upload Cartella</span>
+                            </button>
+                            <button onclick="openModalFatturaManuale()" class="w-full px-3 py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-colors flex items-center space-x-2 text-sm font-medium">
+                                <span>✏️</span><span>Inserimento Manuale</span>
+                            </button>
                         </div>
+                    </div>
+                </aside>
 
-                        <!-- Tabella Fatture -->
-                        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <main class="main-content p-4">
+                    ${state.loadingProgress.isLoading ? `
+                        <div class="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div class="flex justify-between mb-2"><span class="text-sm font-medium text-orange-900">Caricamento...</span><span class="text-sm text-orange-700">${state.loadingProgress.loaded} / ${state.loadingProgress.total}</span></div>
+                            <div class="w-full bg-orange-200 rounded-full h-3"><div class="bg-orange-600 h-3 rounded-full" style="width: ${(state.loadingProgress.loaded / state.loadingProgress.total * 100).toFixed(1)}%"></div></div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Report Scadenze -->
+                    ${renderReportScadenze()}
+
+                    <!-- Fatture Manuali -->
+                    ${state.fattureManuali.length > 0 ? `
+                    <div class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl shadow-lg p-5 mb-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-base font-bold text-orange-800 flex items-center">
+                                <span class="mr-2">✏️</span>
+                                Fatture Inserite Manualmente (${state.fattureManuali.length})
+                            </h3>
+                            <span class="text-sm text-orange-600">Totale: €${state.fattureManuali.reduce((sum, f) => sum + parseFloat(f.importo), 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <p class="text-xs text-orange-700 mb-3">Fatture pagate ma non ancora importate come XML. Eliminale quando importi la fattura corrispondente.</p>
+                        <div class="grid gap-2">
+                            ${state.fattureManuali.map(fm => `
+                                <div class="bg-white rounded-lg p-3 flex items-center justify-between shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="bg-orange-100 p-2 rounded-lg">
+                                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-900 text-sm">${fm.ragione_sociale}</p>
+                                            <p class="text-xs text-gray-500">Pagata il ${new Date(fm.data_pagamento).toLocaleDateString('it-IT')}${fm.note ? ` • ${fm.note}` : ''}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-lg font-bold text-orange-600">€${parseFloat(fm.importo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <button onclick="deleteFatturaManuale('${fm.id}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Elimina fattura manuale">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Tabella Fatture -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         ${state.selectedIds.size > 0 ? `
-                            <div class="bg-blue-50 border-b px-6 py-4 flex justify-between items-center">
-                                <span class="text-sm font-medium text-blue-900">${state.selectedIds.size} fatture selezionate</span>
+                            <div class="bg-red-50 border-b px-6 py-4 flex justify-between items-center">
+                                <span class="text-sm font-medium text-red-900">${state.selectedIds.size} fatture selezionate</span>
                                 <button onclick="deleteSelected()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     <span>Elimina Selezionate</span>
@@ -2759,8 +2786,9 @@
                             </div>
                         ` : ''}
                         
+                        <div class="overflow-auto" style="max-height: calc(100vh - 140px);">
                         <table class="w-full">
-                            <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                            <thead class="bg-gradient-to-r from-red-600 to-orange-600 text-white sticky top-0 z-10">
                                 <tr>
                                     <th class="w-8 px-2 py-2"><input type="checkbox" onchange="toggleSelectAll()" ${state.selectedIds.size === filteredFatture.length && filteredFatture.length > 0 ? 'checked' : ''} class="w-4 h-4"></th>
                                     <th class="px-2 py-2 text-left">
@@ -2780,7 +2808,7 @@
                                         <input type="text" placeholder="Filtra..." value="${state.filters.importo}" onkeyup="applyColumnFilter('importo', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
                                     <th class="px-2 py-2 text-right">
-                                        <div class="text-xs font-semibold mb-1">Î” Delta</div>
+                                        <div class="text-xs font-semibold mb-1">Δ Delta</div>
                                         <input type="text" placeholder="Filtra..." value="${state.filters.delta}" onkeyup="applyColumnFilter('delta', this.value)" class="filter-input" onclick="event.stopPropagation()">
                                     </th>
                                     <th class="px-2 py-2 text-center">
@@ -2802,13 +2830,13 @@
                                 const delta = datiProdotti ? datiProdotti.delta : 0;
                                 const deltaClass = Math.abs(delta) < 1 ? 'text-green-600' : Math.abs(delta) < 50 ? 'text-orange-600' : 'text-red-600';
                                 return `
-                                <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-blue-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
+                                <tr class="hover:bg-gray-50 border-b${state.selectedIds.has(f.id) ? ' bg-red-50' : ''}${state.pagatoChanges.has(f.id) ? ' bg-orange-50' : ''}">
                                     <td class="px-2 py-2"><input type="checkbox" ${state.selectedIds.has(f.id) ? 'checked' : ''} onchange="toggleSelect('${f.id}')" class="w-4 h-4"></td>
                                     <td class="px-2 py-2 text-xs">${new Date(f.dt).toLocaleDateString('it-IT')}</td>
                                     <td class="px-2 py-2 text-xs font-medium truncate" title="${f.num}">${f.num}</td>
                                     <td class="px-2 py-2 text-xs truncate" title="${f.ced.nm}">${f.ced.nm}</td>
                                     <td class="px-2 py-2 text-xs font-bold text-right">€${f.tot.toFixed(2)}</td>
-                                    <td class="px-2 py-2 text-xs font-bold text-right ${deltaClass}" title="Totale Fattura - Î£(Prezzo Ã— QtÃ  Ã— (1+IVA%))">
+                                    <td class="px-2 py-2 text-xs font-bold text-right ${deltaClass}" title="Totale Fattura - Σ(Prezzo × Qtà × (1+IVA%))">
                                         €${delta.toFixed(2)}
                                     </td>
                                     <td class="px-2 py-2 text-center">
@@ -2828,12 +2856,9 @@
                             `;
                             }).join('')}</tbody>
                         </table>
-                    </div>
-                            </div>
                         </div>
                     </div>
-                </div>
-                </div>
+                </main>
             `;
         }
 
