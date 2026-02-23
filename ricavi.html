@@ -316,20 +316,20 @@
 
             <div id="contentDiv" class="hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Ricavi Mensili per Tipologia di Pagamento</h2><div class="relative" style="height:370px"><canvas id="chartStacked"></canvas></div></div>
-                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Composizione Pagamenti (%)</h2><div class="relative" style="height:370px"><canvas id="chartComposizione"></canvas></div></div>
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 id="titleStacked" class="text-lg font-bold text-gray-900 mb-4">Ricavi Mensili per Tipologia di Pagamento</h2><div class="relative" style="height:370px"><canvas id="chartStacked"></canvas></div></div>
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 id="titleComposizione" class="text-lg font-bold text-gray-900 mb-4">Composizione Pagamenti (%)</h2><div class="relative" style="height:370px"><canvas id="chartComposizione"></canvas></div></div>
                 </div>
-                <div class="bg-white rounded-xl shadow-lg p-5 mb-4"><h2 class="text-lg font-bold text-gray-900 mb-4">Fatturato Medio Giornaliero</h2><div class="relative" style="height:280px"><canvas id="chartDailyAvg"></canvas></div></div>
+                <div class="bg-white rounded-xl shadow-lg p-5 mb-4"><h2 id="titleDailyAvg" class="text-lg font-bold text-gray-900 mb-4">Fatturato Medio Giornaliero</h2><div class="relative" style="height:280px"><canvas id="chartDailyAvg"></canvas></div></div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Trend Totale Ricavi</h2><div class="relative" style="height:370px"><canvas id="chartTrend"></canvas></div></div>
-                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 class="text-lg font-bold text-gray-900 mb-4">Confronto Anno su Anno</h2><div class="relative" style="height:370px"><canvas id="chartYoY"></canvas></div></div>
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 id="titleTrend" class="text-lg font-bold text-gray-900 mb-4">Trend Totale Ricavi</h2><div class="relative" style="height:370px"><canvas id="chartTrend"></canvas></div></div>
+                    <div class="bg-white rounded-xl shadow-lg p-5"><h2 id="titleYoY" class="text-lg font-bold text-gray-900 mb-4">Confronto Anno su Anno</h2><div class="relative" style="height:370px"><canvas id="chartYoY"></canvas></div></div>
                 </div>
 
                 <!-- TABLE -->
                 <div class="bg-white rounded-xl shadow-lg p-5 mb-4 overflow-x-auto">
-                    <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-gray-900">Dettaglio Mensile</h2><p class="text-xs text-gray-400">Clicca su un mese per il dettaglio giornaliero</p></div>
+                    <div class="flex items-center justify-between mb-4"><h2 id="titleTable" class="text-lg font-bold text-gray-900">Dettaglio Mensile</h2><p id="titleTableSub" class="text-xs text-gray-400">Clicca su un mese per il dettaglio giornaliero</p></div>
                     <table class="w-full text-sm whitespace-nowrap"><thead><tr class="border-b-2 border-gray-200">
-                        <th class="text-left py-3 px-2 font-semibold text-gray-700">Mese</th>
+                        <th id="thPeriodo" class="text-left py-3 px-2 font-semibold text-gray-700">Mese</th>
                         <th class="text-right py-3 px-2 font-semibold text-blue-700">💳 POS</th>
                         <th class="text-right py-3 px-2 font-semibold text-green-700">💵 Contanti</th>
                         <th class="text-right py-3 px-2 font-semibold text-purple-700">📱 Satispay</th>
@@ -352,7 +352,7 @@
 
         function logout() { localStorage.removeItem(SESSION_KEY); window.location.href = 'index.html'; }
 
-        let allDailyData=[], monthlyData=[], filteredMonthly=[], charts={}, editingId=null, deletingId=null, existingRecordId=null;
+        let allDailyData=[], monthlyData=[], filteredMonthly=[], filteredDaily=[], charts={}, editingId=null, deletingId=null, existingRecordId=null;
         let pendingImportRecords = []; // dati parsati in attesa di import
 
         const COLORS = { pos:{bg:'rgba(59,130,246,0.8)',border:'rgba(59,130,246,1)'}, contanti:{bg:'rgba(34,197,94,0.8)',border:'rgba(34,197,94,1)'}, satispay:{bg:'rgba(168,85,247,0.8)',border:'rgba(168,85,247,1)'}, fatture:{bg:'rgba(6,182,212,0.8)',border:'rgba(6,182,212,1)'}, miscellaneo:{bg:'rgba(245,158,11,0.8)',border:'rgba(245,158,11,1)'} };
@@ -417,6 +417,13 @@
             filteredMonthly=[...monthlyData];
             if(anno) filteredMonthly=filteredMonthly.filter(d=>d.anno==anno);
             if(mese) filteredMonthly=filteredMonthly.filter(d=>d.mese==mese);
+            // Popola filteredDaily per la vista mensile dettagliata
+            filteredDaily=allDailyData.filter(r=>{
+                const d=new Date(r.data);
+                if(anno && d.getFullYear()!=anno) return false;
+                if(mese && (d.getMonth()+1)!=mese) return false;
+                return true;
+            }).sort((a,b)=>a.data.localeCompare(b.data));
             renderAll();
         }
 
@@ -868,42 +875,135 @@
         // ===== CHARTS =====
         function dc(k){if(charts[k]){charts[k].destroy();charts[k]=null;}}
 
+        function isSingleMonth(){ return filteredMonthly.length===1; }
+
+        function dayLabel(r){ const d=new Date(r.data+'T00:00:00'); return d.getDate()+' '+GN[d.getDay()]; }
+
+        function setTitle(id, text){ const el=document.getElementById(id); if(el) el.textContent=text; }
+
         function renderStacked(){
             dc('stacked');
-            const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
-            charts.stacked=new Chart(document.getElementById('chartStacked').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredMonthly.map(d=>d[t]),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1,borderRadius:2}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw),footer:i=>'Totale: '+fmt2(i.reduce((s,x)=>s+x.raw,0))}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
+            if(isSingleMonth()){
+                const m=filteredMonthly[0];
+                setTitle('titleStacked','Ricavi Giornalieri — '+m.meseNome+' '+m.anno);
+                const lb=filteredDaily.map(dayLabel);
+                charts.stacked=new Chart(document.getElementById('chartStacked').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredDaily.map(r=>pf(r[t])),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1,borderRadius:2}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw),footer:i=>'Totale: '+fmt2(i.reduce((s,x)=>s+x.raw,0))}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,ticks:{callback:v=>'€'+v}}}}});
+            } else {
+                setTitle('titleStacked','Ricavi Mensili per Tipologia di Pagamento');
+                const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
+                charts.stacked=new Chart(document.getElementById('chartStacked').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredMonthly.map(d=>d[t]),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1,borderRadius:2}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw),footer:i=>'Totale: '+fmt2(i.reduce((s,x)=>s+x.raw,0))}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
+            }
         }
+
         function renderTrend(){
             dc('trend');
-            const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
-            charts.trend=new Chart(document.getElementById('chartTrend').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'Totale',data:filteredMonthly.map(d=>d.totale),borderColor:'rgba(55,65,81,1)',backgroundColor:'rgba(55,65,81,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2.5},{label:'POS',data:filteredMonthly.map(d=>d.pos),borderColor:COLORS.pos.border,borderDash:[5,5],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'},{label:'Miscellaneo',data:filteredMonthly.map(d=>d.miscellaneo),borderColor:COLORS.miscellaneo.border,borderDash:[3,3],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw)}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
+            if(isSingleMonth()){
+                const m=filteredMonthly[0];
+                setTitle('titleTrend','Trend Giornaliero — '+m.meseNome+' '+m.anno);
+                const lb=filteredDaily.map(dayLabel);
+                charts.trend=new Chart(document.getElementById('chartTrend').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'Totale',data:filteredDaily.map(r=>rowTot(r)),borderColor:'rgba(55,65,81,1)',backgroundColor:'rgba(55,65,81,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2.5},{label:'POS',data:filteredDaily.map(r=>pf(r.pos)),borderColor:COLORS.pos.border,borderDash:[5,5],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'},{label:'Miscellaneo',data:filteredDaily.map(r=>pf(r.miscellaneo)),borderColor:COLORS.miscellaneo.border,borderDash:[3,3],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw)}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'€'+v}}}}});
+            } else {
+                setTitle('titleTrend','Trend Totale Ricavi');
+                const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
+                charts.trend=new Chart(document.getElementById('chartTrend').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'Totale',data:filteredMonthly.map(d=>d.totale),borderColor:'rgba(55,65,81,1)',backgroundColor:'rgba(55,65,81,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2.5},{label:'POS',data:filteredMonthly.map(d=>d.pos),borderColor:COLORS.pos.border,borderDash:[5,5],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'},{label:'Miscellaneo',data:filteredMonthly.map(d=>d.miscellaneo),borderColor:COLORS.miscellaneo.border,borderDash:[3,3],tension:0.3,pointRadius:2,borderWidth:1.5,backgroundColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw)}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
+            }
         }
+
         function renderComposizione(){
             dc('composizione');
-            const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
-            charts.composizione=new Chart(document.getElementById('chartComposizione').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredMonthly.map(d=>d.totale>0?((d[t]/d.totale)*100):0),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw.toFixed(1)+'%'}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+            if(isSingleMonth()){
+                const m=filteredMonthly[0];
+                setTitle('titleComposizione','Composizione Giornaliera (%) — '+m.meseNome+' '+m.anno);
+                const lb=filteredDaily.map(dayLabel);
+                charts.composizione=new Chart(document.getElementById('chartComposizione').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredDaily.map(r=>{const tot=rowTot(r);return tot>0?(pf(r[t])/tot*100):0;}),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw.toFixed(1)+'%'}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+            } else {
+                setTitle('titleComposizione','Composizione Pagamenti (%)');
+                const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
+                charts.composizione=new Chart(document.getElementById('chartComposizione').getContext('2d'),{type:'bar',data:{labels:lb,datasets:TY.map(t=>({label:TL[t],data:filteredMonthly.map(d=>d.totale>0?((d[t]/d.totale)*100):0),backgroundColor:COLORS[t].bg,borderColor:COLORS[t].border,borderWidth:1}))},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw.toFixed(1)+'%'}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+            }
         }
+
         function renderYoY(){
             dc('yoy');
-            const anni=[...new Set(monthlyData.map(d=>d.anno))].sort(), yc=['rgba(156,163,175,0.9)','rgba(59,130,246,0.9)','rgba(16,185,129,0.9)','rgba(245,158,11,0.9)','rgba(239,68,68,0.9)'];
-            charts.yoy=new Chart(document.getElementById('chartYoY').getContext('2d'),{type:'line',data:{labels:MS,datasets:anni.map((a,i)=>{const m={};monthlyData.filter(d=>d.anno===a).forEach(d=>m[d.mese]=d.totale);return{label:String(a),data:Array.from({length:12},(_,x)=>m[x+1]||null),borderColor:yc[i%yc.length],backgroundColor:'transparent',tension:0.3,pointRadius:3,borderWidth:2,spanGaps:false};})},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.raw?c.dataset.label+': '+fmt2(c.raw):''}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
+            if(isSingleMonth()){
+                // Confronto stesso mese anno per anno
+                const meseNum=filteredMonthly[0].mese;
+                const meseNome=filteredMonthly[0].meseNome;
+                setTitle('titleYoY','Confronto '+meseNome+' — Anno su Anno');
+                const anni=[...new Set(monthlyData.map(d=>d.anno))].sort();
+                const yc=['rgba(156,163,175,0.9)','rgba(59,130,246,0.9)','rgba(16,185,129,0.9)','rgba(245,158,11,0.9)','rgba(239,68,68,0.9)'];
+                // Labels = giorni 1..31 (massimo giorni del mese per ogni anno)
+                const maxDays=Math.max(...anni.map(a=>{
+                    return allDailyData.filter(r=>{const d=new Date(r.data);return d.getFullYear()===a&&(d.getMonth()+1)===meseNum;}).length;
+                }),0);
+                const lb=Array.from({length:maxDays},(_,i)=>String(i+1));
+                charts.yoy=new Chart(document.getElementById('chartYoY').getContext('2d'),{type:'line',data:{labels:lb,datasets:anni.map((a,i)=>{
+                    const days=allDailyData.filter(r=>{const d=new Date(r.data);return d.getFullYear()===a&&(d.getMonth()+1)===meseNum;}).sort((x,y)=>x.data.localeCompare(y.data));
+                    return{label:String(a),data:days.map(r=>rowTot(r)),borderColor:yc[i%yc.length],backgroundColor:'transparent',tension:0.3,pointRadius:3,borderWidth:2,spanGaps:false};
+                })},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.raw?c.dataset.label+': '+fmt2(c.raw):''}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{callback:v=>'€'+v}}}}});
+            } else {
+                setTitle('titleYoY','Confronto Anno su Anno');
+                const anni=[...new Set(monthlyData.map(d=>d.anno))].sort(), yc=['rgba(156,163,175,0.9)','rgba(59,130,246,0.9)','rgba(16,185,129,0.9)','rgba(245,158,11,0.9)','rgba(239,68,68,0.9)'];
+                charts.yoy=new Chart(document.getElementById('chartYoY').getContext('2d'),{type:'line',data:{labels:MS,datasets:anni.map((a,i)=>{const m={};monthlyData.filter(d=>d.anno===a).forEach(d=>m[d.mese]=d.totale);return{label:String(a),data:Array.from({length:12},(_,x)=>m[x+1]||null),borderColor:yc[i%yc.length],backgroundColor:'transparent',tension:0.3,pointRadius:3,borderWidth:2,spanGaps:false};})},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.raw?c.dataset.label+': '+fmt2(c.raw):''}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k'}}}}});
+            }
         }
+
         function renderDailyAvg(){
             dc('dailyAvg');
-            const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
-            charts.dailyAvg=new Chart(document.getElementById('chartDailyAvg').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'€/Giorno',data:filteredMonthly.map(d=>d.fattGg),borderColor:'rgba(139,92,246,1)',backgroundColor:'rgba(139,92,246,0.1)',fill:true,tension:0.3,pointRadius:4,borderWidth:2.5,pointBackgroundColor:filteredMonthly.map(d=>d.fattGg>=1000?'#10b981':d.fattGg>=700?'#3b82f6':'#ef4444')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>'€/giorno: '+fmt2(c.raw)}},legend:{display:false}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'€'+v}}}}});
+            if(isSingleMonth()){
+                const m=filteredMonthly[0];
+                const avg=m.fattGg;
+                setTitle('titleDailyAvg','Ricavo Giornaliero — '+m.meseNome+' '+m.anno+' (media: '+fmt2(avg)+')');
+                const lb=filteredDaily.map(dayLabel);
+                const totals=filteredDaily.map(r=>rowTot(r));
+                charts.dailyAvg=new Chart(document.getElementById('chartDailyAvg').getContext('2d'),{type:'bar',data:{labels:lb,datasets:[
+                    {label:'Totale giornaliero',data:totals,backgroundColor:totals.map(v=>v>=avg?'rgba(16,185,129,0.75)':'rgba(239,68,68,0.65)'),borderColor:totals.map(v=>v>=avg?'#10b981':'#ef4444'),borderWidth:1,borderRadius:3,order:2},
+                    {label:'Media mensile',data:Array(lb.length).fill(avg),type:'line',borderColor:'rgba(139,92,246,1)',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false,order:1}
+                ]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt2(c.raw)}},legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'€'+v}}}}});
+            } else {
+                setTitle('titleDailyAvg','Fatturato Medio Giornaliero');
+                const lb=filteredMonthly.map(d=>MS[d.mese-1]+' '+d.anno);
+                charts.dailyAvg=new Chart(document.getElementById('chartDailyAvg').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'€/Giorno',data:filteredMonthly.map(d=>d.fattGg),borderColor:'rgba(139,92,246,1)',backgroundColor:'rgba(139,92,246,0.1)',fill:true,tension:0.3,pointRadius:4,borderWidth:2.5,pointBackgroundColor:filteredMonthly.map(d=>d.fattGg>=1000?'#10b981':d.fattGg>=700?'#3b82f6':'#ef4444')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>'€/giorno: '+fmt2(c.raw)}},legend:{display:false}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>'€'+v}}}}});
+            }
         }
 
         // ===== TABLE =====
         function renderTable(){
             const tb=document.getElementById('tableBody');
-            let tP=0,tC=0,tS=0,tF=0,tM=0,tT=0,tG=0;
-            tb.innerHTML=filteredMonthly.map(d=>{
-                tP+=d.pos;tC+=d.contanti;tS+=d.satispay;tF+=d.fatture;tM+=d.miscellaneo;tT+=d.totale;tG+=d.ggLav;
-                return '<tr class="border-b border-gray-100 hover:bg-blue-50 cursor-pointer '+(d.ggLav<15?'bg-yellow-50':'')+'" onclick="openMeseDetail('+d.anno+','+d.mese+')"><td class="py-2.5 px-2 font-medium text-gray-800">'+d.meseNome+' '+d.anno+'</td><td class="py-2.5 px-2 text-right text-blue-700 font-medium">'+fmt2(d.pos)+'</td><td class="py-2.5 px-2 text-right text-green-700 font-medium">'+fmt2(d.contanti)+'</td><td class="py-2.5 px-2 text-right text-purple-700 font-medium">'+fmt2(d.satispay)+'</td><td class="py-2.5 px-2 text-right text-cyan-700 font-medium">'+fmt2(d.fatture)+'</td><td class="py-2.5 px-2 text-right text-amber-700 font-medium">'+fmt2(d.miscellaneo)+'</td><td class="py-2.5 px-2 text-right text-gray-900 font-bold bg-gray-100">'+fmt2(d.totale)+'</td><td class="py-2.5 px-2 text-right text-gray-600">'+d.ggLav+'</td><td class="py-2.5 px-2 text-right text-gray-600">'+fmt2(d.fattGg)+'</td></tr>';
-            }).join('');
-            const ag=tG>0?tT/tG:0;
-            tb.innerHTML+='<tr class="border-t-2 border-gray-300 bg-gray-50 font-bold"><td class="py-3 px-2 text-gray-900">TOTALE</td><td class="py-3 px-2 text-right text-blue-800">'+fmt2(tP)+'</td><td class="py-3 px-2 text-right text-green-800">'+fmt2(tC)+'</td><td class="py-3 px-2 text-right text-purple-800">'+fmt2(tS)+'</td><td class="py-3 px-2 text-right text-cyan-800">'+fmt2(tF)+'</td><td class="py-3 px-2 text-right text-amber-800">'+fmt2(tM)+'</td><td class="py-3 px-2 text-right text-gray-900 bg-gray-200">'+fmt2(tT)+'</td><td class="py-3 px-2 text-right text-gray-700">'+tG+'</td><td class="py-3 px-2 text-right text-gray-700">'+fmt2(ag)+'</td></tr>';
+            if(isSingleMonth()){
+                const m=filteredMonthly[0];
+                setTitle('titleTable','Dettaglio Giornaliero — '+m.meseNome+' '+m.anno);
+                document.getElementById('titleTableSub').textContent='';
+                document.getElementById('thPeriodo').textContent='Giorno';
+                let tP=0,tC=0,tS=0,tF=0,tM=0,tT=0;
+                tb.innerHTML=filteredDaily.map(r=>{
+                    const d=new Date(r.data+'T00:00:00'), isWe=d.getDay()===0||d.getDay()===6, tot=rowTot(r);
+                    tP+=pf(r.pos);tC+=pf(r.contanti);tS+=pf(r.satispay);tF+=pf(r.fatture);tM+=pf(r.miscellaneo);tT+=tot;
+                    return '<tr class="border-b border-gray-100 hover:bg-blue-50 '+(isWe?'bg-yellow-50':'')+'">'
+                        +'<td class="py-2.5 px-2 font-medium text-gray-800">'+d.getDate()+' '+GN[d.getDay()]+'</td>'
+                        +'<td class="py-2.5 px-2 text-right text-blue-700 font-medium">'+fmt2(r.pos)+'</td>'
+                        +'<td class="py-2.5 px-2 text-right text-green-700 font-medium">'+fmt2(r.contanti)+'</td>'
+                        +'<td class="py-2.5 px-2 text-right text-purple-700 font-medium">'+fmt2(r.satispay)+'</td>'
+                        +'<td class="py-2.5 px-2 text-right text-cyan-700 font-medium">'+fmt2(r.fatture)+'</td>'
+                        +'<td class="py-2.5 px-2 text-right text-amber-700 font-medium">'+fmt2(r.miscellaneo)+'</td>'
+                        +'<td class="py-2.5 px-2 text-right text-gray-900 font-bold bg-gray-100">'+fmt2(tot)+'</td>'
+                        +'<td class="py-2.5 px-2 text-right text-gray-500 text-xs" colspan="2">'+(r.note||'')+'</td>'
+                        +'</tr>';
+                }).join('');
+                const gg=filteredDaily.filter(r=>rowTot(r)>0).length, avg=gg>0?tT/gg:0;
+                tb.innerHTML+='<tr class="border-t-2 border-gray-300 bg-gray-50 font-bold"><td class="py-3 px-2 text-gray-900">TOTALE</td><td class="py-3 px-2 text-right text-blue-800">'+fmt2(tP)+'</td><td class="py-3 px-2 text-right text-green-800">'+fmt2(tC)+'</td><td class="py-3 px-2 text-right text-purple-800">'+fmt2(tS)+'</td><td class="py-3 px-2 text-right text-cyan-800">'+fmt2(tF)+'</td><td class="py-3 px-2 text-right text-amber-800">'+fmt2(tM)+'</td><td class="py-3 px-2 text-right text-gray-900 bg-gray-200">'+fmt2(tT)+'</td><td class="py-3 px-2 text-right text-gray-700 text-xs" colspan="2">media: '+fmt2(avg)+'/gg</td></tr>';
+            } else {
+                setTitle('titleTable','Dettaglio Mensile');
+                document.getElementById('titleTableSub').textContent='Clicca su un mese per il dettaglio giornaliero';
+                document.getElementById('thPeriodo').textContent='Mese';
+                let tP=0,tC=0,tS=0,tF=0,tM=0,tT=0,tG=0;
+                tb.innerHTML=filteredMonthly.map(d=>{
+                    tP+=d.pos;tC+=d.contanti;tS+=d.satispay;tF+=d.fatture;tM+=d.miscellaneo;tT+=d.totale;tG+=d.ggLav;
+                    return '<tr class="border-b border-gray-100 hover:bg-blue-50 cursor-pointer '+(d.ggLav<15?'bg-yellow-50':'')+'" onclick="openMeseDetail('+d.anno+','+d.mese+')"><td class="py-2.5 px-2 font-medium text-gray-800">'+d.meseNome+' '+d.anno+'</td><td class="py-2.5 px-2 text-right text-blue-700 font-medium">'+fmt2(d.pos)+'</td><td class="py-2.5 px-2 text-right text-green-700 font-medium">'+fmt2(d.contanti)+'</td><td class="py-2.5 px-2 text-right text-purple-700 font-medium">'+fmt2(d.satispay)+'</td><td class="py-2.5 px-2 text-right text-cyan-700 font-medium">'+fmt2(d.fatture)+'</td><td class="py-2.5 px-2 text-right text-amber-700 font-medium">'+fmt2(d.miscellaneo)+'</td><td class="py-2.5 px-2 text-right text-gray-900 font-bold bg-gray-100">'+fmt2(d.totale)+'</td><td class="py-2.5 px-2 text-right text-gray-600">'+d.ggLav+'</td><td class="py-2.5 px-2 text-right text-gray-600">'+fmt2(d.fattGg)+'</td></tr>';
+                }).join('');
+                const ag=tG>0?tT/tG:0;
+                tb.innerHTML+='<tr class="border-t-2 border-gray-300 bg-gray-50 font-bold"><td class="py-3 px-2 text-gray-900">TOTALE</td><td class="py-3 px-2 text-right text-blue-800">'+fmt2(tP)+'</td><td class="py-3 px-2 text-right text-green-800">'+fmt2(tC)+'</td><td class="py-3 px-2 text-right text-purple-800">'+fmt2(tS)+'</td><td class="py-3 px-2 text-right text-cyan-800">'+fmt2(tF)+'</td><td class="py-3 px-2 text-right text-amber-800">'+fmt2(tM)+'</td><td class="py-3 px-2 text-right text-gray-900 bg-gray-200">'+fmt2(tT)+'</td><td class="py-3 px-2 text-right text-gray-700">'+tG+'</td><td class="py-3 px-2 text-right text-gray-700">'+fmt2(ag)+'</td></tr>';
+            }
         }
 
         function renderAll(){renderKPI();renderStacked();renderTrend();renderComposizione();renderYoY();renderDailyAvg();renderTable();}
