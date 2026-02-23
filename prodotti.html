@@ -627,9 +627,30 @@
             if (gruppo) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppo);
             // column filters
             if (colNome) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(colNome));
-            if (colCat) filtered = filtered.filter(p => (p.tipo_prodotto?.aggregante_prodotto?.nome || '').toLowerCase().includes(colCat));
-            if (colGruppo) filtered = filtered.filter(p => (p.gruppo_vendita?.nome || '').toLowerCase().includes(colGruppo));
-            if (colForn) filtered = filtered.filter(p => (p.fornitore || '').toLowerCase().includes(colForn));
+            if (colCat) {
+                const isNonCat = 'non cat.'.includes(colCat);
+                filtered = filtered.filter(p => {
+                    const val = p.tipo_prodotto?.aggregante_prodotto?.nome;
+                    if (!val) return isNonCat;
+                    return val.toLowerCase().includes(colCat);
+                });
+            }
+            if (colGruppo) {
+                const isDash = '-'.includes(colGruppo);
+                filtered = filtered.filter(p => {
+                    const val = p.gruppo_vendita?.nome;
+                    if (!val) return isDash;
+                    return val.toLowerCase().includes(colGruppo);
+                });
+            }
+            if (colForn) {
+                const isDash = '-'.includes(colForn);
+                filtered = filtered.filter(p => {
+                    const val = p.fornitore;
+                    if (!val) return isDash;
+                    return val.toLowerCase().includes(colForn);
+                });
+            }
             if (colPrezzoBase !== null) filtered = filtered.filter(p => (p.prezzo || 0) >= colPrezzoBase);
             if (colPrezzoScontato !== null) filtered = filtered.filter(p => (p.prezzo_scontato || p.prezzo || 0) >= colPrezzoScontato);
             if (colIva) filtered = filtered.filter(p => String((p.aliquota_iva || 0).toFixed(0)).includes(colIva.replace('%','')));
@@ -645,13 +666,14 @@
             function fill(id, values) {
                 const dl = document.getElementById(id);
                 if (!dl) return;
-                dl.innerHTML = [...new Set(values.filter(Boolean))].sort((a,b) => String(a).localeCompare(String(b), 'it', {numeric: true}))
+                dl.innerHTML = [...new Set(values)].filter(v => v !== null && v !== undefined && v !== '')
+                    .sort((a,b) => String(a).localeCompare(String(b), 'it', {numeric: true}))
                     .map(v => `<option value="${v}">`).join('');
             }
             fill('dlNome',           allProdotti.map(p => p.nome));
-            fill('dlCategoria',      allProdotti.map(p => p.tipo_prodotto?.aggregante_prodotto?.nome));
-            fill('dlGruppo',         allProdotti.map(p => p.gruppo_vendita?.nome));
-            fill('dlFornitore',      allProdotti.map(p => p.fornitore));
+            fill('dlCategoria',      allProdotti.map(p => p.tipo_prodotto?.aggregante_prodotto?.nome || 'Non cat.'));
+            fill('dlGruppo',         allProdotti.map(p => p.gruppo_vendita?.nome || '-'));
+            fill('dlFornitore',      allProdotti.map(p => p.fornitore || '-'));
             fill('dlPrezzoBase',     allProdotti.map(p => p.prezzo != null ? p.prezzo.toFixed(2) : null));
             fill('dlPrezzoScontato', allProdotti.map(p => { const v = p.prezzo_scontato || p.prezzo; return v != null ? v.toFixed(2) : null; }));
             fill('dlIva',            allProdotti.map(p => p.aliquota_iva != null ? (p.aliquota_iva).toFixed(0) + '%' : null));
