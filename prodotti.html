@@ -212,16 +212,16 @@
                             </tr>
                             <tr class="bg-blue-700/60">
                                 <th></th>
-                                <th class="col-nome py-1 px-1"><input type="text" id="colFilterNome" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
-                                <th class="col-categoria py-1 px-1"><input type="text" id="colFilterCategoria" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
-                                <th class="col-categoria py-1 px-1"><input type="text" id="colFilterGruppo" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
-                                <th class="col-fornitore py-1 px-1"><input type="text" id="colFilterFornitore" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
-                                <th class="col-prezzo py-1 px-1"><input type="text" id="colFilterPrezzoBase" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
-                                <th class="col-prezzo py-1 px-1"><input type="text" id="colFilterPrezzoScontato" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
-                                <th class="col-iva py-1 px-1"><input type="text" id="colFilterIva" placeholder="%" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-center"></th>
-                                <th class="col-prezzo-ivato py-1 px-1"><input type="text" id="colFilterPrezzoIvato" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
-                                <th class="col-qta py-1 px-1"><input type="text" id="colFilterQta" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
-                                <th class="col-stato py-1 px-1"><input type="text" id="colFilterUm" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-center"></th>
+                                <th class="col-nome py-1 px-1"><input type="text" id="colFilterNome" list="dlNome" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-categoria py-1 px-1"><input type="text" id="colFilterCategoria" list="dlCategoria" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-categoria py-1 px-1"><input type="text" id="colFilterGruppo" list="dlGruppo" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-fornitore py-1 px-1"><input type="text" id="colFilterFornitore" list="dlFornitore" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-prezzo py-1 px-1"><input type="text" id="colFilterPrezzoBase" list="dlPrezzoBase" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-prezzo py-1 px-1"><input type="text" id="colFilterPrezzoScontato" list="dlPrezzoScontato" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-iva py-1 px-1"><input type="text" id="colFilterIva" list="dlIva" placeholder="%" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-center"></th>
+                                <th class="col-prezzo-ivato py-1 px-1"><input type="text" id="colFilterPrezzoIvato" list="dlPrezzoIvato" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-qta py-1 px-1"><input type="text" id="colFilterQta" list="dlQta" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-stato py-1 px-1"><input type="text" id="colFilterUm" list="dlUm" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-center"></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -231,6 +231,18 @@
             </div>
         </main>
     </div>
+
+    <!-- Datalist per filtri colonna tabella -->
+    <datalist id="dlNome"></datalist>
+    <datalist id="dlCategoria"></datalist>
+    <datalist id="dlGruppo"></datalist>
+    <datalist id="dlFornitore"></datalist>
+    <datalist id="dlPrezzoBase"></datalist>
+    <datalist id="dlPrezzoScontato"></datalist>
+    <datalist id="dlIva"></datalist>
+    <datalist id="dlPrezzoIvato"></datalist>
+    <datalist id="dlQta"></datalist>
+    <datalist id="dlUm"></datalist>
 
     <div id="modalBulkEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
@@ -559,6 +571,7 @@
             
             loadingProgress.isLoading = false;
             updateStats(); updateFilters(); applyFilters(); hideLoadingUI();
+            updateColumnFilterLists();
         }
 
         function updateLoadingUI() {
@@ -628,6 +641,25 @@
             updateStats(filtered);
         }
         
+        function updateColumnFilterLists() {
+            function fill(id, values) {
+                const dl = document.getElementById(id);
+                if (!dl) return;
+                dl.innerHTML = [...new Set(values.filter(Boolean))].sort((a,b) => String(a).localeCompare(String(b), 'it', {numeric: true}))
+                    .map(v => `<option value="${v}">`).join('');
+            }
+            fill('dlNome',           allProdotti.map(p => p.nome));
+            fill('dlCategoria',      allProdotti.map(p => p.tipo_prodotto?.aggregante_prodotto?.nome));
+            fill('dlGruppo',         allProdotti.map(p => p.gruppo_vendita?.nome));
+            fill('dlFornitore',      allProdotti.map(p => p.fornitore));
+            fill('dlPrezzoBase',     allProdotti.map(p => p.prezzo != null ? p.prezzo.toFixed(2) : null));
+            fill('dlPrezzoScontato', allProdotti.map(p => { const v = p.prezzo_scontato || p.prezzo; return v != null ? v.toFixed(2) : null; }));
+            fill('dlIva',            allProdotti.map(p => p.aliquota_iva != null ? (p.aliquota_iva).toFixed(0) + '%' : null));
+            fill('dlPrezzoIvato',    allProdotti.map(p => p.prezzo_ivato != null ? p.prezzo_ivato.toFixed(2) : null));
+            fill('dlQta',            allProdotti.map(p => p.quantita != null ? String(p.quantita) : null));
+            fill('dlUm',             allProdotti.map(p => p.unita_misura || 'pz'));
+        }
+
         function clearFilters() { 
             document.getElementById('searchNome').value = ''; 
             document.getElementById('filterCategoria').value = ''; 
