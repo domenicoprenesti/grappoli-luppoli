@@ -91,9 +91,17 @@
                 </div>
             </div>
             <div class="p-6">
+                <!-- Banner dati esistenti -->
+                <div id="existingBanner" class="hidden mb-4 bg-amber-50 border-2 border-amber-400 rounded-xl p-3 flex items-center space-x-3">
+                    <span class="text-amber-500 text-xl">⚠️</span>
+                    <div>
+                        <p class="text-sm font-bold text-amber-800">Dati già presenti per questo giorno</p>
+                        <p class="text-xs text-amber-700">I campi sono stati precompilati con i valori salvati. Le modifiche sovrascriveranno i dati esistenti.</p>
+                    </div>
+                </div>
                 <div class="mb-5">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">📅 Data</label>
-                    <input type="date" id="inputData" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg">
+                    <input type="date" id="inputData" onchange="onDateChange()" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg">
                 </div>
                 <div class="grid grid-cols-1 gap-4 mb-5">
                     <div><label class="block text-sm font-semibold text-blue-700 mb-1">💳 POS / Bancomat</label><input type="number" id="inputPos" step="0.01" min="0" placeholder="0.00" class="input-currency w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-blue-50 text-lg"></div>
@@ -105,6 +113,15 @@
                 <div class="bg-gray-100 rounded-lg p-4 mb-5"><div class="flex justify-between items-center"><span class="text-sm font-semibold text-gray-700">TOTALE GIORNALIERO</span><span id="modalTotale" class="text-2xl font-bold text-gray-900">€ 0,00</span></div></div>
                 <div class="mb-5"><label class="block text-sm font-semibold text-gray-700 mb-1">📝 Note (opzionale)</label><input type="text" id="inputNote" placeholder="Es: evento speciale..." class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"></div>
                 <div id="modalError" class="hidden mb-4 bg-red-50 border-l-4 border-red-500 p-3 rounded"><p id="modalErrorText" class="text-sm text-red-700"></p></div>
+
+                <!-- Sezione conferma password (solo per non-Admin su record esistenti) -->
+                <div id="confirmPasswordSection" class="hidden mb-5 bg-red-50 border-2 border-red-300 rounded-xl p-4">
+                    <p class="text-sm font-bold text-red-800 mb-1">🔒 Conferma modifica</p>
+                    <p class="text-xs text-red-700 mb-3">Stai modificando un ricavo già salvato. Inserisci la tua password per confermare.</p>
+                    <input type="password" id="inputConfirmPassword" placeholder="La tua password..." 
+                           class="w-full px-4 py-2 border-2 border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm">
+                </div>
+
                 <div class="flex space-x-3">
                     <button onclick="closeModal()" class="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
                     <button onclick="saveRicavo()" id="btnSave" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">💾 Salva</button>
@@ -335,7 +352,7 @@
 
         function logout() { localStorage.removeItem(SESSION_KEY); window.location.href = 'index.html'; }
 
-        let allDailyData=[], monthlyData=[], filteredMonthly=[], charts={}, editingId=null, deletingId=null;
+        let allDailyData=[], monthlyData=[], filteredMonthly=[], charts={}, editingId=null, deletingId=null, existingRecordId=null;
         let pendingImportRecords = []; // dati parsati in attesa di import
 
         const COLORS = { pos:{bg:'rgba(59,130,246,0.8)',border:'rgba(59,130,246,1)'}, contanti:{bg:'rgba(34,197,94,0.8)',border:'rgba(34,197,94,1)'}, satispay:{bg:'rgba(168,85,247,0.8)',border:'rgba(168,85,247,1)'}, fatture:{bg:'rgba(6,182,212,0.8)',border:'rgba(6,182,212,1)'}, miscellaneo:{bg:'rgba(245,158,11,0.8)',border:'rgba(245,158,11,1)'} };
@@ -410,32 +427,75 @@
         }
 
         // ===== MODAL INSERIMENTO =====
+        function isAdmin(){
+            try { return JSON.parse(localStorage.getItem(SESSION_KEY)||'{}').userRole === 'Admin'; } catch(e){ return false; }
+        }
+
+        function prefillFromRow(row){
+            document.getElementById('inputPos').value       = pf(row.pos)||'';
+            document.getElementById('inputContanti').value  = pf(row.contanti)||'';
+            document.getElementById('inputSatispay').value  = pf(row.satispay)||'';
+            document.getElementById('inputFatture').value   = pf(row.fatture)||'';
+            document.getElementById('inputMiscellaneo').value = pf(row.miscellaneo)||'';
+            document.getElementById('inputNote').value      = row.note||'';
+            updateModalTotal();
+        }
+
+        function showExistingBanner(show){
+            document.getElementById('existingBanner').classList.toggle('hidden', !show);
+            const needsPwd = show && !isAdmin();
+            document.getElementById('confirmPasswordSection').classList.toggle('hidden', !needsPwd);
+            if(needsPwd) document.getElementById('inputConfirmPassword').value='';
+        }
+
+        function onDateChange(){
+            if(editingId) return; // già in modalità modifica diretta, non interferire
+            const dateVal = document.getElementById('inputData').value;
+            const existing = allDailyData.find(r => r.data === dateVal);
+            if(existing){
+                existingRecordId = existing.id;
+                prefillFromRow(existing);
+                showExistingBanner(true);
+            } else {
+                existingRecordId = null;
+                ['inputPos','inputContanti','inputSatispay','inputFatture','inputMiscellaneo'].forEach(id=>document.getElementById(id).value='');
+                document.getElementById('inputNote').value='';
+                showExistingBanner(false);
+                updateModalTotal();
+            }
+        }
+
         function openModal(row){
-            editingId=null;
+            editingId=null; existingRecordId=null;
             document.getElementById('modalTitle').textContent='Inserisci Ricavo Giornaliero';
             document.getElementById('btnSave').textContent='💾 Salva';
             document.getElementById('modalError').classList.add('hidden');
+            showExistingBanner(false);
             if(row){
+                // Apertura da dettaglio mese: modifica diretta, nessuna password richiesta
                 editingId=row.id;
                 document.getElementById('modalTitle').textContent='Modifica Ricavo';
                 document.getElementById('btnSave').textContent='💾 Aggiorna';
                 document.getElementById('inputData').value=row.data;
-                document.getElementById('inputPos').value=pf(row.pos)||'';
-                document.getElementById('inputContanti').value=pf(row.contanti)||'';
-                document.getElementById('inputSatispay').value=pf(row.satispay)||'';
-                document.getElementById('inputFatture').value=pf(row.fatture)||'';
-                document.getElementById('inputMiscellaneo').value=pf(row.miscellaneo)||'';
-                document.getElementById('inputNote').value=row.note||'';
+                prefillFromRow(row);
             } else {
-                document.getElementById('inputData').value=new Date().toISOString().split('T')[0];
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('inputData').value=today;
                 ['inputPos','inputContanti','inputSatispay','inputFatture','inputMiscellaneo'].forEach(id=>document.getElementById(id).value='');
                 document.getElementById('inputNote').value='';
+                updateModalTotal();
+                // Controlla se oggi ha già dati
+                const existing = allDailyData.find(r => r.data === today);
+                if(existing){
+                    existingRecordId = existing.id;
+                    prefillFromRow(existing);
+                    showExistingBanner(true);
+                }
             }
-            updateModalTotal();
             document.getElementById('modalRicavo').classList.remove('hidden');
             setTimeout(()=>document.getElementById('inputPos').focus(),100);
         }
-        function closeModal(){document.getElementById('modalRicavo').classList.add('hidden');editingId=null;}
+        function closeModal(){document.getElementById('modalRicavo').classList.add('hidden');editingId=null;existingRecordId=null;}
 
         function updateModalTotal(){
             const t=pf(document.getElementById('inputPos').value)+pf(document.getElementById('inputContanti').value)+pf(document.getElementById('inputSatispay').value)+pf(document.getElementById('inputFatture').value)+pf(document.getElementById('inputMiscellaneo').value);
@@ -446,14 +506,33 @@
         async function saveRicavo(){
             const data=document.getElementById('inputData').value;
             if(!data){showModalError('Seleziona una data');return;}
+
+            const isOverwrite = !editingId && existingRecordId !== null;
+
+            // Se sovrascrittura e non admin → verifica password
+            if(isOverwrite && !isAdmin()){
+                const pwd = document.getElementById('inputConfirmPassword').value.trim();
+                if(!pwd){showModalError('Inserisci la tua password per confermare la modifica');return;}
+                // Verifica password sul DB
+                try {
+                    const authData = JSON.parse(localStorage.getItem(SESSION_KEY)||'{}');
+                    const {data: utente, error} = await supabaseClient.from('utenti').select('password').eq('email', authData.userEmail).single();
+                    if(error || !utente){showModalError('Errore verifica credenziali');return;}
+                    if(utente.password !== pwd){showModalError('❌ Password errata. Modifica non autorizzata.');return;}
+                } catch(e){showModalError('Errore durante la verifica password');return;}
+            }
+
             const rec={data, pos:pf(document.getElementById('inputPos').value), contanti:pf(document.getElementById('inputContanti').value), satispay:pf(document.getElementById('inputSatispay').value), fatture:pf(document.getElementById('inputFatture').value), miscellaneo:pf(document.getElementById('inputMiscellaneo').value), note:document.getElementById('inputNote').value.trim()};
             const btn=document.getElementById('btnSave'); btn.disabled=true; btn.textContent='⏳ Salvataggio...';
             try {
                 if(editingId){
                     const {error}=await supabaseClient.from('ricavi_giornalieri').update(rec).eq('id',editingId);
                     if(error) throw error;
+                } else if(existingRecordId){
+                    const {error}=await supabaseClient.from('ricavi_giornalieri').update(rec).eq('id',existingRecordId);
+                    if(error) throw error;
                 } else {
-                    const {error}=await supabaseClient.from('ricavi_giornalieri').upsert(rec,{onConflict:'data'});
+                    const {error}=await supabaseClient.from('ricavi_giornalieri').insert(rec);
                     if(error) throw error;
                 }
                 closeModal(); await loadData();
