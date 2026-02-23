@@ -210,6 +210,20 @@
                                 <th class="col-stato text-sm">U.M.</th>
                                 <th class="col-azioni text-sm">Azioni</th>
                             </tr>
+                            <tr class="bg-blue-700/60">
+                                <th></th>
+                                <th class="col-nome py-1 px-1"><input type="text" id="colFilterNome" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-categoria py-1 px-1"><input type="text" id="colFilterCategoria" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-categoria py-1 px-1"><input type="text" id="colFilterGruppo" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-fornitore py-1 px-1"><input type="text" id="colFilterFornitore" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-prezzo py-1 px-1"><input type="text" id="colFilterPrezzoBase" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-prezzo py-1 px-1"><input type="text" id="colFilterPrezzoScontato" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-iva py-1 px-1"><input type="text" id="colFilterIva" placeholder="%" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-center"></th>
+                                <th class="col-prezzo-ivato py-1 px-1"><input type="text" id="colFilterPrezzoIvato" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-qta py-1 px-1"><input type="text" id="colFilterQta" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
+                                <th class="col-stato py-1 px-1"><input type="text" id="colFilterUm" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-center"></th>
+                                <th></th>
+                            </tr>
                         </thead>
                         <tbody id="prodottiTableBody"></tbody>
                     </table>
@@ -581,11 +595,35 @@
             const cat = document.getElementById('filterCategoria').value;
             const forn = document.getElementById('filterFornitore').value;
             const gruppo = document.getElementById('filterGruppoVendita').value;
+            // inline column filters
+            const colNome = document.getElementById('colFilterNome')?.value.toLowerCase() || '';
+            const colCat = document.getElementById('colFilterCategoria')?.value.toLowerCase() || '';
+            const colGruppo = document.getElementById('colFilterGruppo')?.value.toLowerCase() || '';
+            const colForn = document.getElementById('colFilterFornitore')?.value.toLowerCase() || '';
+            const colPrezzoBase = parseFloat(document.getElementById('colFilterPrezzoBase')?.value) || null;
+            const colPrezzoScontato = parseFloat(document.getElementById('colFilterPrezzoScontato')?.value) || null;
+            const colIva = document.getElementById('colFilterIva')?.value.toLowerCase() || '';
+            const colPrezzoIvato = parseFloat(document.getElementById('colFilterPrezzoIvato')?.value) || null;
+            const colQta = parseFloat(document.getElementById('colFilterQta')?.value) || null;
+            const colUm = document.getElementById('colFilterUm')?.value.toLowerCase() || '';
+
             let filtered = allProdotti;
             if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
             if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
             if (forn) filtered = filtered.filter(p => p.fornitore === forn);
             if (gruppo) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppo);
+            // column filters
+            if (colNome) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(colNome));
+            if (colCat) filtered = filtered.filter(p => (p.tipo_prodotto?.aggregante_prodotto?.nome || '').toLowerCase().includes(colCat));
+            if (colGruppo) filtered = filtered.filter(p => (p.gruppo_vendita?.nome || '').toLowerCase().includes(colGruppo));
+            if (colForn) filtered = filtered.filter(p => (p.fornitore || '').toLowerCase().includes(colForn));
+            if (colPrezzoBase !== null) filtered = filtered.filter(p => (p.prezzo || 0) >= colPrezzoBase);
+            if (colPrezzoScontato !== null) filtered = filtered.filter(p => (p.prezzo_scontato || p.prezzo || 0) >= colPrezzoScontato);
+            if (colIva) filtered = filtered.filter(p => String((p.aliquota_iva || 0).toFixed(0)).includes(colIva.replace('%','')));
+            if (colPrezzoIvato !== null) filtered = filtered.filter(p => (p.prezzo_ivato || 0) >= colPrezzoIvato);
+            if (colQta !== null) filtered = filtered.filter(p => (p.quantita || 0) >= colQta);
+            if (colUm) filtered = filtered.filter(p => (p.unita_misura || 'pz').toLowerCase().includes(colUm));
+
             renderTable(filtered);
             updateStats(filtered);
         }
@@ -595,6 +633,11 @@
             document.getElementById('filterCategoria').value = ''; 
             document.getElementById('filterFornitore').value = ''; 
             document.getElementById('filterGruppoVendita').value = ''; 
+            ['colFilterNome','colFilterCategoria','colFilterGruppo','colFilterFornitore',
+             'colFilterPrezzoBase','colFilterPrezzoScontato','colFilterIva',
+             'colFilterPrezzoIvato','colFilterQta','colFilterUm'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.value = '';
+            });
             applyFilters(); 
         }
         
