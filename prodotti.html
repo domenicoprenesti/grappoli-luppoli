@@ -386,6 +386,12 @@
                 <div class="flex items-center space-x-3">
                     <input type="text" id="anagraficaSearch" placeholder="🔍 Cerca prodotto..." 
                            class="px-4 py-2 border rounded-lg text-sm w-64" onkeyup="filterAnagrafica()">
+                    <select id="anagraficaFilterCategoria" class="px-4 py-2 border rounded-lg text-sm" onchange="filterAnagrafica()">
+                        <option value="">Tutte le categorie</option>
+                    </select>
+                    <select id="anagraficaFilterGruppo" class="px-4 py-2 border rounded-lg text-sm" onchange="filterAnagrafica()">
+                        <option value="">Tutti i gruppi</option>
+                    </select>
                     <select id="anagraficaFilterStato" class="px-4 py-2 border rounded-lg text-sm" onchange="filterAnagrafica()">
                         <option value="">Tutti</option>
                         <option value="configurato">Configurati</option>
@@ -981,8 +987,12 @@
         // Carica conteggio anagrafica all'avvio
         loadAnagraficaCount();
 
-        function openAnagraficaModal() {
+        async function openAnagraficaModal() {
             document.getElementById('modalAnagrafica').classList.remove('hidden');
+            // Assicura che allTipi e allGruppiVendita siano caricati prima di arricchire l'anagrafica
+            if (allTipi.length === 0 || allGruppiVendita.length === 0) {
+                await loadAnagrafiche();
+            }
             loadAnagraficaData();
         }
 
@@ -1002,7 +1012,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('anagrafica_prodotti')
-                    .select('*, tipo_prodotto(id, nome, aggregante_prodotto(id, nome, colore)), gruppo_vendita(id, nome, colore)')
+                    .select('*')
                     .order('descrizione');
 
                 loading.classList.add('hidden');
@@ -1013,6 +1023,20 @@
                     empty.querySelector('p').textContent = 'Errore: ' + error.message;
                     return;
                 }
+                
+                // Arricchisci con tipo/categoria/gruppo dalla memoria (evita join PostgREST su FK nuove)
+                if (data) {
+                    data.forEach(p => {
+                        if (p.tipo_id) {
+                            const tipo = allTipi.find(t => t.id == p.tipo_id);
+                            if (tipo) p.tipo_prodotto = tipo;
+                        }
+                        if (p.gruppo_vendita_id) {
+                            const gv = allGruppiVendita.find(g => g.id == p.gruppo_vendita_id);
+                            if (gv) p.gruppo_vendita = gv;
+                        }
+                    });
+                }
 
                 if (!data || data.length === 0) {
                     empty.classList.remove('hidden');
@@ -1022,6 +1046,7 @@
                 anagraficaData = data;
                 anagraficaFiltered = [...data];
                 
+                populateAnagraficaFilters();
                 updateAnagraficaStats();
                 renderAnagraficaTable();
                 
@@ -1048,6 +1073,8 @@
         function filterAnagrafica() {
             const search = document.getElementById('anagraficaSearch').value.toLowerCase();
             const stato = document.getElementById('anagraficaFilterStato').value;
+            const catFilter = document.getElementById('anagraficaFilterCategoria').value;
+            const gvFilter = document.getElementById('anagraficaFilterGruppo').value;
 
             anagraficaFiltered = anagraficaData.filter(p => {
                 const matchSearch = !search || 
@@ -1055,16 +1082,32 @@
                     p.fornitore_principale?.toLowerCase().includes(search);
                 
                 let matchStato = true;
-                if (stato === 'configurato') {
-                    matchStato = p.unita_misura_vendita != null;
-                } else if (stato === 'da_configurare') {
-                    matchStato = p.unita_misura_vendita == null;
-                }
+                if (stato === 'configurato') matchStato = p.unita_misura_vendita != null;
+                else if (stato === 'da_configurare') matchStato = p.unita_misura_vendita == null;
 
-                return matchSearch && matchStato;
+                const matchCat = !catFilter || 
+                    (p.tipo_prodotto?.aggregante_prodotto?.id == catFilter);
+                
+                const matchGv = !gvFilter || 
+                    (p.gruppo_vendita_id == gvFilter);
+
+                return matchSearch && matchStato && matchCat && matchGv;
             });
 
             renderAnagraficaTable();
+        }
+
+        function populateAnagraficaFilters() {
+            const catSel = document.getElementById('anagraficaFilterCategoria');
+            const gvSel = document.getElementById('anagraficaFilterGruppo');
+            if (catSel) {
+                catSel.innerHTML = '<option value="">Tutte le categorie</option>' + 
+                    allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+            }
+            if (gvSel) {
+                gvSel.innerHTML = '<option value="">Tutti i gruppi</option>' + 
+                    allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
+            }
         }
 
         function renderAnagraficaTable() {
@@ -1152,6 +1195,8 @@
         function refreshAnagrafica() {
             document.getElementById('anagraficaSearch').value = '';
             document.getElementById('anagraficaFilterStato').value = '';
+            document.getElementById('anagraficaFilterCategoria').value = '';
+            document.getElementById('anagraficaFilterGruppo').value = '';
             loadAnagraficaData();
         }
 
