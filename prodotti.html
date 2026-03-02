@@ -1025,33 +1025,47 @@
             tbody.innerHTML = '';
 
             try {
-                const { data, error } = await supabaseClient
-                    .from('anagrafica_prodotti')
-                    .select('*')
-                    .order('descrizione');
+                // Carica in batch da 1000 (Supabase limita a 1000 per query)
+                let allData = [];
+                let from = 0;
+                const batchSize = 1000;
+                
+                while (true) {
+                    const { data: batch, error } = await supabaseClient
+                        .from('anagrafica_prodotti')
+                        .select('*')
+                        .order('descrizione')
+                        .range(from, from + batchSize - 1);
+
+                    if (error) {
+                        loading.classList.add('hidden');
+                        console.error('Errore caricamento anagrafica:', error);
+                        empty.classList.remove('hidden');
+                        empty.querySelector('p').textContent = 'Errore: ' + error.message;
+                        return;
+                    }
+
+                    if (!batch || batch.length === 0) break;
+                    allData = [...allData, ...batch];
+                    if (batch.length < batchSize) break; // ultimo batch
+                    from += batchSize;
+                }
 
                 loading.classList.add('hidden');
-
-                if (error) {
-                    console.error('Errore caricamento anagrafica:', error);
-                    empty.classList.remove('hidden');
-                    empty.querySelector('p').textContent = 'Errore: ' + error.message;
-                    return;
-                }
                 
                 // Arricchisci con tipo/categoria/gruppo dalla memoria (evita join PostgREST su FK nuove)
-                if (data) {
-                    data.forEach(p => {
-                        if (p.tipo_id) {
-                            const tipo = allTipi.find(t => t.id == p.tipo_id);
-                            if (tipo) p.tipo_prodotto = tipo;
-                        }
-                        if (p.gruppo_vendita_id) {
-                            const gv = allGruppiVendita.find(g => g.id == p.gruppo_vendita_id);
-                            if (gv) p.gruppo_vendita = gv;
-                        }
-                    });
-                }
+                allData.forEach(p => {
+                    if (p.tipo_id) {
+                        const tipo = allTipi.find(t => t.id == p.tipo_id);
+                        if (tipo) p.tipo_prodotto = tipo;
+                    }
+                    if (p.gruppo_vendita_id) {
+                        const gv = allGruppiVendita.find(g => g.id == p.gruppo_vendita_id);
+                        if (gv) p.gruppo_vendita = gv;
+                    }
+                });
+
+                const data = allData;
 
                 if (!data || data.length === 0) {
                     empty.classList.remove('hidden');
