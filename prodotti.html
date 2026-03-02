@@ -760,7 +760,11 @@
 
             renderTable(filtered);
             updateStats(filtered);
+            lastFiltered = filtered; // salva per toggleSelectAll
         }
+        
+        // Tiene traccia degli ultimi prodotti visibili dopo i filtri
+        let lastFiltered = [];
         
         function updateColumnFilterLists() {
             function fill(id, values) {
@@ -807,17 +811,11 @@
         function toggleSelectAll() {
             const cb = document.getElementById('selectAllCheckbox');
             if (cb.checked) {
-                let filtered = allProdotti;
-                const search = document.getElementById('searchNome').value.toLowerCase();
-                const cat = document.getElementById('filterCategoria').value;
-                const forn = document.getElementById('filterFornitore').value;
-                const gruppo = document.getElementById('filterGruppoVendita').value;
-                if (search) filtered = filtered.filter(p => p.nome?.toLowerCase().includes(search));
-                if (cat) filtered = filtered.filter(p => p.tipo_prodotto?.aggregante_prodotto?.nome === cat);
-                if (forn) filtered = filtered.filter(p => p.fornitore === forn);
-                if (gruppo) filtered = filtered.filter(p => p.gruppo_vendita_id == gruppo);
-                selectedIds = new Set(filtered.map(p => p.id));
-            } else { selectedIds.clear(); }
+                // Seleziona SOLO i prodotti attualmente visibili (rispetta tutti i filtri)
+                selectedIds = new Set(lastFiltered.map(p => p.id));
+            } else {
+                selectedIds.clear();
+            }
             updateSelectionBar(); applyFilters();
         }
 
