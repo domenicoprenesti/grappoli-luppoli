@@ -2471,6 +2471,88 @@
             if (errori > 0) {
                 throw new Error(`Errore nel salvataggio di ${errori} prodotti. Controlla la console per i dettagli.`);
             }
+
+            // ===== SYNC ANAGRAFICA PRODOTTI =====
+            try {
+                console.log('🗂️ Sincronizzazione anagrafica prodotti...');
+                await syncAnagraficaProdotti(fornitore);
+                console.log('✅ Anagrafica sincronizzata!');
+            } catch (syncErr) {
+                // Non blocca il caricamento fattura se la sync fallisce
+                console.warn('⚠️ Sync anagrafica fallita (non bloccante):', syncErr.message);
+            }
+        }
+
+        // ===== SYNC ANAGRAFICA PRODOTTI =====
+        // Per ogni prodotto della fattura: inserisce se nuovo, aggiorna statistiche se già esistente
+        async function syncAnagraficaProdotti(fornitore) {
+            // Leggi tutti i prodotti del fornitore appena caricato
+            const { data: prodotti, error } = await supabaseClient
+                .from('prodotti')
+                .select('nome, fornitore, prezzo_ivato, unita_misura, quantita')
+                .eq('fornitore', fornitore);
+
+            if (error || !prodotti || prodotti.length === 0) return;
+
+            // Raggruppa per nome descrizione univoca
+            const grouped = {};
+            prodotti.forEach(p => {
+                const key = p.nome?.trim();
+                if (!key) return;
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        descrizione: key,
+                        fornitore_principale: p.fornitore || fornitore,
+                        prezzi: [],
+                        quantita_totale: 0,
+                        occorrenze: 0,
+                        unita_misura: p.unita_misura || 'pz'
+                    };
+                }
+                if (p.prezzo_ivato && p.prezzo_ivato > 0) grouped[key].prezzi.push(p.prezzo_ivato);
+                grouped[key].quantita_totale += (p.quantita || 0);
+                grouped[key].occorrenze++;
+            });
+
+            // Upsert: aggiorna esistenti, inserisce nuovi
+            for (const [descrizione, dati] of Object.entries(grouped)) {
+                const prezzoMedio = dati.prezzi.length > 0
+                    ? dati.prezzi.reduce((a, b) => a + b, 0) / dati.prezzi.length
+                    : 0;
+
+                const { data: existing } = await supabaseClient
+                    .from('anagrafica_prodotti')
+                    .select('id, numero_acquisti, quantita_acquistate_udf')
+                    .eq('descrizione', descrizione)
+                    .maybeSingle();
+
+                if (existing) {
+                    // Aggiorna statistiche
+                    await supabaseClient
+                        .from('anagrafica_prodotti')
+                        .update({
+                            numero_acquisti: (existing.numero_acquisti || 0) + dati.occorrenze,
+                            quantita_acquistate_udf: (existing.quantita_acquistate_udf || 0) + dati.quantita_totale,
+                            prezzo_medio_ivato: parseFloat(prezzoMedio.toFixed(4)),
+                            fornitore_principale: dati.fornitore_principale,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existing.id);
+                } else {
+                    // Nuovo prodotto in anagrafica
+                    await supabaseClient
+                        .from('anagrafica_prodotti')
+                        .insert({
+                            descrizione: descrizione,
+                            fornitore_principale: dati.fornitore_principale,
+                            prezzo_medio_ivato: parseFloat(prezzoMedio.toFixed(4)),
+                            unita_misura_fattura: dati.unita_misura,
+                            quantita_acquistate_udf: dati.quantita_totale,
+                            numero_acquisti: dati.occorrenze
+                        });
+                    console.log(`➕ Anagrafica: nuovo prodotto "${descrizione}"`);
+                }
+            }
         }
 
         // ===== GESTIONE ELIMINAZIONE =====
