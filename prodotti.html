@@ -1428,7 +1428,7 @@
             const tipoSel = document.getElementById('editAnagraficaTipo');
             if (aggId) {
                 tipoSel.disabled = false;
-                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.filter(t => t.aggregante_id === aggId).map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.filter(t => t.aggregante_id == aggId).map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
             } else {
                 tipoSel.disabled = true;
                 tipoSel.innerHTML = '<option value="">Seleziona categoria prima</option>';
