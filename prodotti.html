@@ -200,6 +200,7 @@
                                 <th class="col-checkbox"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4"></th>
                                 <th class="col-nome text-left text-sm">Nome</th>
                                 <th class="col-categoria text-left text-sm">Categoria</th>
+                                <th class="col-categoria text-left text-sm">Tipo</th>
                                 <th class="col-categoria text-left text-sm">Gruppo Vendita</th>
                                 <th class="col-fornitore text-left text-sm">Fornitore</th>
                                 <th class="col-prezzo text-sm">€ base</th>
@@ -214,6 +215,7 @@
                                 <th></th>
                                 <th class="col-nome py-1 px-1"><input type="text" id="colFilterNome" list="dlNome" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
                                 <th class="col-categoria py-1 px-1"><input type="text" id="colFilterCategoria" list="dlCategoria" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
+                                <th class="col-categoria py-1 px-1"><input type="text" id="colFilterTipo" list="dlTipo" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
                                 <th class="col-categoria py-1 px-1"><input type="text" id="colFilterGruppo" list="dlGruppo" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
                                 <th class="col-fornitore py-1 px-1"><input type="text" id="colFilterFornitore" list="dlFornitore" placeholder="Filtra..." oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30"></th>
                                 <th class="col-prezzo py-1 px-1"><input type="text" id="colFilterPrezzoBase" list="dlPrezzoBase" placeholder="≥" oninput="applyFilters()" class="w-full px-2 py-1 text-xs rounded bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:outline-none focus:bg-white/30 text-right"></th>
@@ -235,6 +237,7 @@
     <!-- Datalist per filtri colonna tabella -->
     <datalist id="dlNome"></datalist>
     <datalist id="dlCategoria"></datalist>
+    <datalist id="dlTipo"></datalist>
     <datalist id="dlGruppo"></datalist>
     <datalist id="dlFornitore"></datalist>
     <datalist id="dlPrezzoBase"></datalist>
@@ -399,7 +402,9 @@
                 <table class="w-full text-sm">
                     <thead class="bg-gray-100 sticky top-0">
                         <tr>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-1/4">Descrizione</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-1/5">Descrizione</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-24">Categoria</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-28">Gruppo Vendita</th>
                             <th class="px-3 py-3 text-right font-semibold text-gray-700 w-20">€ Medio</th>
                             <th class="px-3 py-3 text-center font-semibold text-gray-700 w-20">UDF</th>
                             <th class="px-3 py-3 text-center font-semibold text-gray-700 w-24">UDV</th>
@@ -407,7 +412,7 @@
                             <th class="px-3 py-3 text-right font-semibold text-gray-700 w-20">Qtà UDF</th>
                             <th class="px-3 py-3 text-right font-semibold text-gray-700 w-20">Qtà UDV</th>
                             <th class="px-3 py-3 text-right font-semibold text-gray-700 w-24">Costo UDV</th>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-32">Fornitore</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-28">Fornitore</th>
                             <th class="px-3 py-3 text-center font-semibold text-gray-700 w-24">Stato</th>
                             <th class="px-3 py-3 text-center font-semibold text-gray-700 w-20">Azioni</th>
                         </tr>
@@ -463,6 +468,32 @@
             <input type="hidden" id="editAnagraficaId">
             
             <div class="space-y-4">
+                <!-- Categorizzazione -->
+                <div class="border rounded-lg p-4 bg-purple-50">
+                    <h4 class="text-sm font-bold text-purple-800 mb-3">🏷️ Categorizzazione</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                            <select id="editAnagraficaAggregante" class="w-full px-3 py-2 border rounded-lg text-sm" onchange="onEditAnagraficaAggreganteChange()">
+                                <option value="">Non categorizzato</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                            <select id="editAnagraficaTipo" class="w-full px-3 py-2 border rounded-lg text-sm" disabled>
+                                <option value="">Seleziona categoria</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gruppo Vendita -->
+                <div class="border rounded-lg p-4 bg-green-50">
+                    <h4 class="text-sm font-bold text-green-800 mb-3">🛒 Gruppo Vendita</h4>
+                    <select id="editAnagraficaGruppoVendita" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        <option value="">Nessun gruppo</option>
+                    </select>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Unità Fattura (UDF)</label>
@@ -611,6 +642,7 @@
             // inline column filters
             const colNome = document.getElementById('colFilterNome')?.value.toLowerCase() || '';
             const colCat = document.getElementById('colFilterCategoria')?.value.toLowerCase() || '';
+            const colTipo = document.getElementById('colFilterTipo')?.value.toLowerCase() || '';
             const colGruppo = document.getElementById('colFilterGruppo')?.value.toLowerCase() || '';
             const colForn = document.getElementById('colFilterFornitore')?.value.toLowerCase() || '';
             const colPrezzoBase = parseFloat(document.getElementById('colFilterPrezzoBase')?.value) || null;
@@ -633,6 +665,14 @@
                     const val = p.tipo_prodotto?.aggregante_prodotto?.nome;
                     if (!val) return isNonCat;
                     return val.toLowerCase().includes(colCat);
+                });
+            }
+            if (colTipo) {
+                const isDash = '-'.includes(colTipo);
+                filtered = filtered.filter(p => {
+                    const val = p.tipo_prodotto?.nome;
+                    if (!val) return isDash;
+                    return val.toLowerCase().includes(colTipo);
                 });
             }
             if (colGruppo) {
@@ -672,6 +712,7 @@
             }
             fill('dlNome',           allProdotti.map(p => p.nome));
             fill('dlCategoria',      allProdotti.map(p => p.tipo_prodotto?.aggregante_prodotto?.nome || 'Non cat.'));
+            fill('dlTipo',           allProdotti.map(p => p.tipo_prodotto?.nome || '-'));
             fill('dlGruppo',         allProdotti.map(p => p.gruppo_vendita?.nome || '-'));
             fill('dlFornitore',      allProdotti.map(p => p.fornitore || '-'));
             fill('dlPrezzoBase',     allProdotti.map(p => p.prezzo != null ? p.prezzo.toFixed(2) : null));
@@ -687,7 +728,7 @@
             document.getElementById('filterCategoria').value = ''; 
             document.getElementById('filterFornitore').value = ''; 
             document.getElementById('filterGruppoVendita').value = ''; 
-            ['colFilterNome','colFilterCategoria','colFilterGruppo','colFilterFornitore',
+            ['colFilterNome','colFilterCategoria','colFilterTipo','colFilterGruppo','colFilterFornitore',
              'colFilterPrezzoBase','colFilterPrezzoScontato','colFilterIva',
              'colFilterPrezzoIvato','colFilterQta','colFilterUm'].forEach(id => {
                 const el = document.getElementById(id); if (el) el.value = '';
@@ -722,8 +763,8 @@
 
         function renderTable(prodotti) {
             const tbody = document.getElementById('prodottiTableBody');
-            if (loadingProgress.isLoading) { tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; return; }
-            if (!prodotti.length) { tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; return; }
+            if (loadingProgress.isLoading) { tbody.innerHTML = `<tr><td colspan="13" class="px-6 py-12 text-center text-gray-400">Caricamento...</td></tr>`; return; }
+            if (!prodotti.length) { tbody.innerHTML = `<tr><td colspan="13" class="px-6 py-12 text-center text-gray-400">Nessun prodotto</td></tr>`; return; }
             document.getElementById('selectAllCheckbox').checked = prodotti.every(p => selectedIds.has(p.id)) && prodotti.length > 0;
             
             tbody.innerHTML = prodotti.map(p => {
@@ -739,6 +780,7 @@
                     <td class="col-checkbox"><input type="checkbox" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelect('${p.id}')" class="w-4 h-4"></td>
                     <td class="col-nome truncate-cell" title="${p.nome}">${p.nome}</td>
                     <td class="col-categoria"><span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${catColor}20; border: 1px solid ${catColor}40; color: ${catColor}">${catDisplay}</span></td>
+                    <td class="col-categoria">${p.tipo_prodotto ? `<span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">${p.tipo_prodotto.nome}</span>` : '<span class="text-gray-300 text-xs">-</span>'}</td>
                     <td class="col-categoria">${gv ? `<span class="inline-flex px-2 py-1 rounded-full text-xs font-medium" style="background-color: ${gvColor}20; border: 1px solid ${gvColor}40; color: ${gvColor}">${gvDisplay}</span>` : '<span class="text-gray-400">-</span>'}</td>
                     <td class="col-fornitore truncate-cell text-sm">${p.fornitore || '-'}</td>
                     <td class="col-prezzo text-sm ${hasSconto ? 'text-gray-400 line-through' : ''}">€${(p.prezzo || 0).toFixed(2)}</td>
@@ -960,7 +1002,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('anagrafica_prodotti')
-                    .select('*')
+                    .select('*, tipo_prodotto(id, nome, aggregante_prodotto(id, nome, colore)), gruppo_vendita(id, nome, colore)')
                     .order('descrizione');
 
                 loading.classList.add('hidden');
@@ -1031,7 +1073,7 @@
             if (anagraficaFiltered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="11" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="13" class="px-6 py-8 text-center text-gray-500">
                             Nessun prodotto trovato con i filtri selezionati
                         </td>
                     </tr>
@@ -1043,6 +1085,19 @@
                 const isConfigurato = p.unita_misura_vendita != null;
                 const statoClass = isConfigurato ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800';
                 const statoText = isConfigurato ? 'Configurato' : 'Da configurare';
+                
+                const agg = p.tipo_prodotto?.aggregante_prodotto;
+                const catColor = agg?.colore || '#6B7280';
+                const catDisplay = agg ? escapeHtml(agg.nome) : '<span class="text-gray-300">-</span>';
+                const catBadge = agg 
+                    ? `<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium" style="background-color:${catColor}20;border:1px solid ${catColor}40;color:${catColor}">${catDisplay}</span>`
+                    : '<span class="text-gray-300 text-xs">-</span>';
+                
+                const gv = p.gruppo_vendita;
+                const gvColor = gv?.colore || '#6B7280';
+                const gvBadge = gv
+                    ? `<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium" style="background-color:${gvColor}20;border:1px solid ${gvColor}40;color:${gvColor}">${escapeHtml(gv.nome)}</span>`
+                    : '<span class="text-gray-300 text-xs">-</span>';
 
                 return `
                     <tr class="hover:bg-gray-50 transition-colors">
@@ -1052,6 +1107,8 @@
                             </div>
                             <div class="text-xs text-gray-400">${p.numero_acquisti || 0} acquisti</div>
                         </td>
+                        <td class="px-3 py-2">${catBadge}</td>
+                        <td class="px-3 py-2">${gvBadge}</td>
                         <td class="px-3 py-2 text-right font-medium">€${(p.prezzo_medio_ivato || 0).toFixed(2)}</td>
                         <td class="px-3 py-2 text-center">
                             <span class="px-2 py-1 bg-gray-100 rounded text-xs">${escapeHtml(p.unita_misura_fattura || 'pz')}</span>
@@ -1111,6 +1168,27 @@
             document.getElementById('editAnagraficaUDF').value = item.unita_misura_fattura || 'pz';
             document.getElementById('editAnagraficaQtaUDF').value = (item.quantita_acquistate_udf || 0).toFixed(2);
 
+            // Popola select Aggregante (Categoria)
+            const aggSel = document.getElementById('editAnagraficaAggregante');
+            aggSel.innerHTML = '<option value="">Non categorizzato</option>' + allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+            
+            // Popola select Gruppo Vendita
+            const gvSel = document.getElementById('editAnagraficaGruppoVendita');
+            gvSel.innerHTML = '<option value="">Nessun gruppo</option>' + allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
+            
+            // Imposta valori correnti categoria/tipo
+            const currentAggId = item.tipo_prodotto?.aggregante_prodotto?.id || '';
+            aggSel.value = currentAggId;
+            if (currentAggId) {
+                onEditAnagraficaAggreganteChange();
+                setTimeout(() => {
+                    document.getElementById('editAnagraficaTipo').value = item.tipo_prodotto?.id || '';
+                }, 0);
+            }
+            
+            // Imposta valore corrente gruppo vendita
+            gvSel.value = item.gruppo_vendita_id || '';
+
             // Reset select UDV
             const udvSelect = document.getElementById('editAnagraficaUDV');
             const udvCustom = document.getElementById('editAnagraficaUDVCustom');
@@ -1135,6 +1213,18 @@
             calcolaPreviewUDV();
 
             document.getElementById('modalEditAnagrafica').classList.remove('hidden');
+        }
+
+        function onEditAnagraficaAggreganteChange() {
+            const aggId = document.getElementById('editAnagraficaAggregante').value;
+            const tipoSel = document.getElementById('editAnagraficaTipo');
+            if (aggId) {
+                tipoSel.disabled = false;
+                tipoSel.innerHTML = '<option value="">Nessun tipo</option>' + allTipi.filter(t => t.aggregante_id === aggId).map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+            } else {
+                tipoSel.disabled = true;
+                tipoSel.innerHTML = '<option value="">Seleziona categoria prima</option>';
+            }
         }
 
         function closeEditAnagraficaModal() {
@@ -1173,6 +1263,8 @@
             const udvSelect = document.getElementById('editAnagraficaUDV');
             const udvCustom = document.getElementById('editAnagraficaUDVCustom');
             const rapporto = parseFloat(document.getElementById('editAnagraficaRapporto').value) || 1;
+            const tipoId = document.getElementById('editAnagraficaTipo').value || null;
+            const gruppoVenditaId = document.getElementById('editAnagraficaGruppoVendita').value || null;
 
             let udv = udvSelect.value;
             if (udv === '__custom__') {
@@ -1203,6 +1295,8 @@
                         rapporto_udv_udf: rapporto,
                         quantita_acquistate_udv: qtaUDV,
                         costo_medio_udv: costoUDV,
+                        tipo_id: tipoId,
+                        gruppo_vendita_id: gruppoVenditaId,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', id);
