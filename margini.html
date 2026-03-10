@@ -361,6 +361,36 @@
                 }
                 console.log('Prodotti caricati:', allProdotti.length);
 
+                // 4. Carica anagrafica_prodotti e arricchisci i prodotti con gruppo_vendita_id corretto
+                updateProgress(92, 'Caricamento anagrafica...');
+                let anagraficaMap = new Map();
+                let anaOffset = 0;
+                let anaHasMore = true;
+                while (anaHasMore) {
+                    const { data: anaData, error: anaError } = await supabaseClient
+                        .from('anagrafica_prodotti')
+                        .select('descrizione, gruppo_vendita_id')
+                        .range(anaOffset, anaOffset + BATCH_SIZE - 1);
+                    if (anaError) { console.warn('Anagrafica non disponibile:', anaError); break; }
+                    if (anaData && anaData.length > 0) {
+                        anaData.forEach(r => {
+                            if (r.descrizione) anagraficaMap.set(r.descrizione.trim(), r);
+                        });
+                        anaOffset += BATCH_SIZE;
+                    }
+                    if (!anaData || anaData.length < BATCH_SIZE) anaHasMore = false;
+                }
+                console.log('Anagrafica caricata:', anagraficaMap.size, 'record');
+
+                // Sovrascrivi gruppo_vendita_id nei prodotti usando l'anagrafica come fonte di verità
+                allProdotti.forEach(p => {
+                    const ana = anagraficaMap.get(p.nome?.trim());
+                    if (ana && ana.gruppo_vendita_id != null) {
+                        p.gruppo_vendita_id = ana.gruppo_vendita_id;
+                    }
+                });
+                console.log('Prodotti arricchiti con anagrafica');
+
                 updateProgress(95, 'Elaborazione...');
                 
                 if (allVendite.length > 0) {
