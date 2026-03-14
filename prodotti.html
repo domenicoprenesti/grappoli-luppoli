@@ -878,14 +878,29 @@
 
         window.saveBulkEdit = async function(e) {
             e.preventDefault();
-            const aggId = document.getElementById('bulkAggregate').value;
+            const aggId  = document.getElementById('bulkAggregate').value;
             const tipoId = document.getElementById('bulkType').value;
-            const gvId = document.getElementById('bulkGruppoVendita').value;
+            const gvId   = document.getElementById('bulkGruppoVendita').value;
             if (!aggId && !tipoId && !gvId) { alert('Seleziona una modifica'); return; }
-            if (!confirm(`Modificare ${selectedIds.size} prodotti?`)) return;
+
+            // Descrizione leggibile delle modifiche
+            const righe = [];
+            if (aggId === '__remove__' || tipoId === '__remove__') {
+                righe.push('• Categoria/Tipo: rimosso');
+            } else {
+                if (aggId) righe.push(`• Categoria: "${allAggreganti.find(a => a.id == aggId)?.nome || aggId}"`);
+                if (tipoId) righe.push(`• Tipo: "${allTipi.find(t => t.id == tipoId)?.nome || tipoId}"`);
+            }
+            if (gvId === '__remove__') righe.push('• Gruppo vendita: rimosso');
+            else if (gvId) righe.push(`• Gruppo vendita: "${allGruppiVendita.find(g => g.id == gvId)?.nome || gvId}"`);
+
+            if (!confirm(`Modificare ${selectedIds.size} prodotti?\n\n${righe.join('\n')}`)) return;
             closeBulkEditModal();
+
             const tbody = document.getElementById('prodottiTableBody');
             tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-12 text-center text-blue-600">Modifica in corso...</td></tr>`;
+
+            // Costruisci updateData per tabella prodotti
             let updateData = {};
             if (aggId === '__remove__') updateData.tipo_id = null;
             else if (tipoId === '__remove__') updateData.tipo_id = null;
@@ -893,10 +908,57 @@
             else if (aggId) updateData.tipo_id = null;
             if (gvId === '__remove__') updateData.gruppo_vendita_id = null;
             else if (gvId) updateData.gruppo_vendita_id = gvId;
+
+            // Salva su prodotti
             const ids = Array.from(selectedIds);
             for (let i = 0; i < ids.length; i += 100) {
                 await supabaseClient.from('prodotti').update(updateData).in('id', ids.slice(i, i + 100));
             }
+
+            // ── Propaga su anagrafica_prodotti ──
+            const msgAnagrafica = `Vuoi aggiornare anche l'Anagrafica Prodotti per i ${selectedIds.size} prodotti?\n\n${righe.join('\n')}\n\nSe non aggiorni, le modifiche non saranno visibili nei Margini e nelle altre pagine.`;
+            if (confirm(msgAnagrafica)) {
+                try {
+                    // Raccogli i nomi dei prodotti selezionati
+                    const nomiProdotti = ids
+                        .map(id => allProdotti.find(p => p.id === id)?.nome)
+                        .filter(Boolean);
+
+                    // Cerca i record in anagrafica per nome (in batch da 50 nomi)
+                    let anagIds = [];
+                    for (let i = 0; i < nomiProdotti.length; i += 50) {
+                        const batch = nomiProdotti.slice(i, i + 50);
+                        const { data: recs, error } = await supabaseClient
+                            .from('anagrafica_prodotti')
+                            .select('id')
+                            .in('descrizione', batch);
+                        if (error) throw error;
+                        if (recs) anagIds = anagIds.concat(recs.map(r => r.id));
+                    }
+
+                    if (anagIds.length > 0) {
+                        const anagUpdateData = { updated_at: new Date().toISOString() };
+                        if ('tipo_id' in updateData) anagUpdateData.tipo_id = updateData.tipo_id ? parseInt(updateData.tipo_id) : null;
+                        if ('gruppo_vendita_id' in updateData) anagUpdateData.gruppo_vendita_id = updateData.gruppo_vendita_id ? parseInt(updateData.gruppo_vendita_id) : null;
+
+                        for (let i = 0; i < anagIds.length; i += 100) {
+                            const { error } = await supabaseClient
+                                .from('anagrafica_prodotti')
+                                .update(anagUpdateData)
+                                .in('id', anagIds.slice(i, i + 100));
+                            if (error) throw error;
+                        }
+                        console.log(`✅ Anagrafica aggiornata per ${anagIds.length} record`);
+                    } else {
+                        console.warn('⚠️ Nessun record trovato in anagrafica_prodotti per i prodotti selezionati');
+                    }
+                } catch (err) {
+                    console.error('Errore aggiornamento anagrafica:', err);
+                    alert('⚠️ Prodotti salvati, ma aggiornamento anagrafica fallito:\n' + err.message);
+                }
+            }
+            // ───────────────────────────────────
+
             selectedIds.clear(); updateSelectionBar(); await loadAllProdotti();
             alert('✅ Prodotti aggiornati!');
         };
