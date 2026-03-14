@@ -969,6 +969,8 @@
                 const { data } = await supabaseClient.from('tipo_prodotto').insert([{ nome, aggregante_id: aggId, keywords: document.getElementById('nuovoTipoKeywords').value.split(',').map(k => k.trim().toLowerCase()) }]).select().single();
                 tipoId = data.id;
             } else if (tipoVal) tipoId = tipoVal;
+
+            const nuovoGruppoVenditaId = document.getElementById('prodottoGruppoVendita').value || null;
             const prod = {
                 nome: document.getElementById('prodottoNome').value,
                 fornitore: document.getElementById('prodottoFornitore').value || null,
@@ -979,10 +981,85 @@
                 unita_misura: document.getElementById('prodottoUnitaMisura').value || 'pz',
                 attivo: document.getElementById('prodottoAttivo').checked,
                 tipo_id: tipoId,
-                gruppo_vendita_id: document.getElementById('prodottoGruppoVendita').value || null
+                gruppo_vendita_id: nuovoGruppoVenditaId
             };
+
+            // Salva su tabella prodotti
             if (id) await supabaseClient.from('prodotti').update(prod).eq('id', id);
             else await supabaseClient.from('prodotti').insert([prod]);
+
+            // ── Propaga su anagrafica_prodotti (solo per prodotti esistenti) ──
+            if (id) {
+                const vecchio = allProdotti.find(pr => pr.id === id);
+
+                // Valori vecchi
+                const vecchioTipoId    = vecchio?.tipo_prodotto?.id ?? null;
+                const vecchioAggId     = vecchio?.tipo_prodotto?.aggregante_prodotto?.id ?? null;
+                const vecchioGruppoId  = vecchio?.gruppo_vendita_id ?? null;
+
+                // Valori nuovi
+                const nuovoTipoIdInt   = tipoId ? parseInt(tipoId) : null;
+                const nuovoAggIdInt    = (aggId && aggId !== '__nuovo__') ? parseInt(aggId) : null;
+                const nuovoGruppoIdInt = nuovoGruppoVenditaId ? parseInt(nuovoGruppoVenditaId) : null;
+
+                const tipoChanged      = String(vecchioTipoId)   !== String(nuovoTipoIdInt);
+                const categoriaChanged = String(vecchioAggId)    !== String(nuovoAggIdInt);
+                const gruppoChanged    = String(vecchioGruppoId) !== String(nuovoGruppoIdInt);
+
+                if (tipoChanged || categoriaChanged || gruppoChanged) {
+                    // Costruisci messaggio di conferma descrittivo
+                    const righe = [];
+                    if (categoriaChanged) {
+                        const nomeVecchio = vecchio?.tipo_prodotto?.aggregante_prodotto?.nome || 'nessuna';
+                        const nomeNuovo   = nuovoAggIdInt ? (allAggreganti.find(a => a.id == nuovoAggIdInt)?.nome || nuovoAggIdInt) : 'nessuna';
+                        righe.push(`• Categoria: "${nomeVecchio}" → "${nomeNuovo}"`);
+                    }
+                    if (tipoChanged) {
+                        const nomeVecchio = vecchio?.tipo_prodotto?.nome || 'nessuno';
+                        const nomeNuovo   = nuovoTipoIdInt ? (allTipi.find(t => t.id == nuovoTipoIdInt)?.nome || nuovoTipoIdInt) : 'nessuno';
+                        righe.push(`• Tipo: "${nomeVecchio}" → "${nomeNuovo}"`);
+                    }
+                    if (gruppoChanged) {
+                        const nomeVecchio = vecchio?.gruppo_vendita?.nome || 'nessuno';
+                        const nomeNuovo   = nuovoGruppoIdInt ? (allGruppiVendita.find(g => g.id == nuovoGruppoIdInt)?.nome || nuovoGruppoIdInt) : 'nessuno';
+                        righe.push(`• Gruppo vendita: "${nomeVecchio}" → "${nomeNuovo}"`);
+                    }
+                    const msg = `Vuoi aggiornare anche l'Anagrafica Prodotti per "${prod.nome}"?\n\n${righe.join('\n')}\n\nSe non aggiorni, le modifiche saranno visibili solo nella tabella Prodotti ma non nei Margini e nelle altre pagine.`;
+                    if (confirm(msg)) {
+                        try {
+                            // Cerca il record in anagrafica per nome prodotto
+                            const { data: anagRecs, error: anagErr } = await supabaseClient
+                                .from('anagrafica_prodotti')
+                                .select('id')
+                                .ilike('descrizione', prod.nome.trim());
+
+                            if (anagErr) throw anagErr;
+
+                            if (anagRecs && anagRecs.length > 0) {
+                                // tipo_id porta con sé implicitamente la categoria (via join tipo_prodotto → aggregante_prodotto)
+                                const anagUpdateData = { updated_at: new Date().toISOString() };
+                                if (tipoChanged || categoriaChanged) anagUpdateData.tipo_id = nuovoTipoIdInt;
+                                if (gruppoChanged) anagUpdateData.gruppo_vendita_id = nuovoGruppoIdInt;
+
+                                const anagIds = anagRecs.map(r => r.id);
+                                const { error: updErr } = await supabaseClient
+                                    .from('anagrafica_prodotti')
+                                    .update(anagUpdateData)
+                                    .in('id', anagIds);
+                                if (updErr) throw updErr;
+                                console.log(`✅ Anagrafica aggiornata per ${anagIds.length} record di "${prod.nome}"`);
+                            } else {
+                                console.warn(`⚠️ Nessun record trovato in anagrafica_prodotti per "${prod.nome}"`);
+                            }
+                        } catch (err) {
+                            console.error('Errore aggiornamento anagrafica:', err);
+                            alert('⚠️ Prodotto salvato, ma aggiornamento anagrafica fallito:\n' + err.message);
+                        }
+                    }
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────
+
             closeModal(); await loadAllProdotti(); alert('✅ Salvato!');
         }
 
