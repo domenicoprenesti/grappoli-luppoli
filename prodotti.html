@@ -393,6 +393,9 @@
                     <select id="anagraficaFilterGruppo" class="px-4 py-2 border rounded-lg text-sm" onchange="filterAnagrafica()">
                         <option value="">Tutti i gruppi</option>
                     </select>
+                    <select id="anagraficaFilterFornitore" class="px-4 py-2 border rounded-lg text-sm" onchange="filterAnagrafica()">
+                        <option value="">Tutti i fornitori</option>
+                    </select>
                     <select id="anagraficaFilterStato" class="px-4 py-2 border rounded-lg text-sm" onchange="filterAnagrafica()">
                         <option value="">Tutti</option>
                         <option value="configurato">Configurati</option>
@@ -426,6 +429,7 @@
                             <th class="px-3 py-3 w-8"><input type="checkbox" id="anagraficaSelectAll" onchange="toggleAnagraficaSelectAll()" class="w-4 h-4"></th>
                             <th class="px-3 py-3 text-left font-semibold text-gray-700 w-1/5">Descrizione</th>
                             <th class="px-3 py-3 text-left font-semibold text-gray-700 w-24">Categoria</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-700 w-28">Tipo</th>
                             <th class="px-3 py-3 text-left font-semibold text-gray-700 w-28">Gruppo Vendita</th>
                             <th class="px-3 py-3 text-right font-semibold text-gray-700 w-20">€ Medio</th>
                             <th class="px-3 py-3 text-center font-semibold text-gray-700 w-20">UDF</th>
@@ -1302,6 +1306,7 @@
             const stato = document.getElementById('anagraficaFilterStato').value;
             const catFilter = document.getElementById('anagraficaFilterCategoria').value;
             const gvFilter = document.getElementById('anagraficaFilterGruppo').value;
+            const fornFilter = document.getElementById('anagraficaFilterFornitore').value;
 
             anagraficaFiltered = anagraficaData.filter(p => {
                 const matchSearch = !search || 
@@ -1318,7 +1323,10 @@
                 const matchGv = !gvFilter || 
                     (p.gruppo_vendita_id == gvFilter);
 
-                return matchSearch && matchStato && matchCat && matchGv;
+                const matchForn = !fornFilter || 
+                    (p.fornitore_principale === fornFilter);
+
+                return matchSearch && matchStato && matchCat && matchGv && matchForn;
             });
 
             renderAnagraficaTable();
@@ -1327,6 +1335,7 @@
         function populateAnagraficaFilters() {
             const catSel = document.getElementById('anagraficaFilterCategoria');
             const gvSel = document.getElementById('anagraficaFilterGruppo');
+            const fornSel = document.getElementById('anagraficaFilterFornitore');
             if (catSel) {
                 catSel.innerHTML = '<option value="">Tutte le categorie</option>' + 
                     allAggreganti.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
@@ -1334,6 +1343,11 @@
             if (gvSel) {
                 gvSel.innerHTML = '<option value="">Tutti i gruppi</option>' + 
                     allGruppiVendita.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
+            }
+            if (fornSel) {
+                const fornitori = [...new Set(anagraficaData.map(p => p.fornitore_principale).filter(Boolean))].sort();
+                fornSel.innerHTML = '<option value="">Tutti i fornitori</option>' + 
+                    fornitori.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
             }
         }
 
@@ -1348,7 +1362,7 @@
             if (anagraficaFiltered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="13" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="15" class="px-6 py-8 text-center text-gray-500">
                             Nessun prodotto trovato con i filtri selezionati
                         </td>
                     </tr>
@@ -1367,6 +1381,11 @@
                 const catBadge = agg 
                     ? `<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium" style="background-color:${catColor}20;border:1px solid ${catColor}40;color:${catColor}">${catDisplay}</span>`
                     : '<span class="text-gray-300 text-xs">-</span>';
+
+                const tipo = p.tipo_prodotto;
+                const tipoBadge = (tipo && tipo.nome)
+                    ? `<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">${escapeHtml(tipo.nome)}</span>`
+                    : '<span class="text-gray-300 text-xs">-</span>';
                 
                 const gv = p.gruppo_vendita;
                 const gvColor = gv?.colore || '#6B7280';
@@ -1384,6 +1403,7 @@
                             <div class="text-xs text-gray-400">${p.numero_acquisti || 0} acquisti</div>
                         </td>
                         <td class="px-3 py-2">${catBadge}</td>
+                        <td class="px-3 py-2">${tipoBadge}</td>
                         <td class="px-3 py-2">${gvBadge}</td>
                         <td class="px-3 py-2 text-right font-medium">€${(p.prezzo_medio_ivato || 0).toFixed(2)}</td>
                         <td class="px-3 py-2 text-center">
