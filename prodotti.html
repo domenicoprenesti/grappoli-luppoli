@@ -1945,6 +1945,14 @@
                 
                 const reasonHtml = p.ai_reason ? `<div class="mt-2 text-xs text-red-700 bg-red-50 p-1.5 rounded border border-red-200">${p.ai_reason}</div>` : '';
 
+                const actualCat = allAggreganti.find(a => a.id == (p.tipo_prodotto?.aggregante_prodotto?.id || p.cat_id))?.nome || '-';
+                const actualTipo = allTipi.find(t => t.id == p.tipo_id)?.nome || '-';
+                const actualGruppo = allGruppiVendita.find(g => g.id == p.gruppo_vendita_id)?.nome || '-';
+
+                const catCurrentHtml = (aiMode === 'coherence') ? `<div class="text-[10px] text-gray-500 mb-1">Attuale: <span class="font-semibold text-gray-700">${escapeHtml(actualCat)}</span></div>` : '';
+                const tipoCurrentHtml = (aiMode === 'coherence') ? `<div class="text-[10px] text-gray-500 mb-1">Attuale: <span class="font-semibold text-gray-700">${escapeHtml(actualTipo)}</span></div>` : '';
+                const gruppoCurrentHtml = (aiMode === 'coherence') ? `<div class="text-[10px] text-gray-500 mb-1">Attuale: <span class="font-semibold text-gray-700">${escapeHtml(actualGruppo)}</span></div>` : '';
+
                 return `
                     <tr class="border-b ${rowClass} hover:bg-gray-50">
                         <td class="px-3 py-3">
@@ -1953,22 +1961,27 @@
                             ${reasonHtml}
                         </td>
                         <td class="px-3 py-3">
+                            ${catCurrentHtml}
                             <select id="aiCat_${index}" onchange="onAiCatChange(${index})" class="w-full px-2 py-1 text-xs border rounded bg-white font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 ${catOptions}
                             </select>
                         </td>
                         <td class="px-3 py-3">
-                            <select id="aiTipo_${index}" class="w-full px-2 py-1 text-xs border rounded bg-white font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none" ${!pred.cat_id ? 'disabled' : ''}>
+                            ${tipoCurrentHtml}
+                            <select id="aiTipo_${index}" class="w-full px-2 py-1 text-xs border rounded bg-white font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none" ${!predictedCatId ? 'disabled' : ''}>
                                 ${tipoOptions}
                             </select>
                         </td>
                         <td class="px-3 py-3">
+                            ${gruppoCurrentHtml}
                             <select id="aiGruppo_${index}" class="w-full px-2 py-1 text-xs border rounded bg-white font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 ${gruppoOptions}
                             </select>
                         </td>
-                        <td class="px-3 py-3 text-center">
-                            <a href="${searchLink}" target="_blank" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100 text-xs shadow-sm inline-flex items-center transition-colors">
+                        <td class="px-3 py-3 text-center space-y-1">
+                            <button onclick="saveSingleAiRow(${index})" class="px-2 py-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs w-full font-medium transition-colors">Applica</button>
+                            ${aiMode === 'coherence' ? `<button onclick="ignoreAiRow(${index})" class="px-2 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs w-full font-medium transition-colors">Ignora</button>` : ''}
+                            <a href="${searchLink}" target="_blank" class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100 text-xs shadow-sm w-full inline-block mt-1 transition-colors">
                                 🔍 Cerca
                             </a>
                         </td>
@@ -1977,63 +1990,54 @@
             }).join('');
         }
 
-        async function saveAssistenteAI() {
-            const updates = [];
+        async function saveSingleAiRow(index) {
+            const item = aiItemsToClassify[index];
+            const tipoId = document.getElementById('aiTipo_' + index).value;
+            const gruppoId = document.getElementById('aiGruppo_' + index).value;
             
-            for (let i = 0; i < aiItemsToClassify.length; i++) {
-                const item = aiItemsToClassify[i];
-                const tipoId = document.getElementById('aiTipo_' + i).value;
-                const gruppoId = document.getElementById('aiGruppo_' + i).value;
-                
-                const newTipo = tipoId ? parseInt(tipoId) : null;
-                const newGruppo = gruppoId ? parseInt(gruppoId) : null;
-                
-                if (newTipo !== item.tipo_id || newGruppo !== item.gruppo_vendita_id) {
-                    updates.push({
-                        id: item.id,
+            const newTipo = tipoId ? parseInt(tipoId) : null;
+            const newGruppo = gruppoId ? parseInt(gruppoId) : null;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('anagrafica_prodotti')
+                    .update({
                         tipo_id: newTipo,
                         gruppo_vendita_id: newGruppo,
                         updated_at: new Date().toISOString()
-                    });
+                    })
+                    .eq('id', item.id);
+                    
+                if (error) throw error;
+                
+                // Rimuove la riga dalla lista visiva
+                aiItemsToClassify.splice(index, 1);
+                
+                // Aggiorna contatore
+                document.getElementById('aiCountLabel').textContent = aiItemsToClassify.length;
+                
+                // Ricarichiamo la tabella senza ricaricare i <select> di chi non abbiamo sfiorato
+                renderAssistenteTable();
+                
+                // Ricarichiamo Anagrafica in background affinchè l'AI "impari" subito
+                loadAnagraficaData().then(() => trainCategorizer());
+                
+                if (aiItemsToClassify.length === 0) {
+                    alert("Tutte le righe sono state processate!");
+                    closeAssistenteAI();
                 }
-            }
-            
-            if (updates.length === 0) {
-                alert("Non hai selezionato categorie per nessun prodotto.");
-                return;
-            }
-
-            if (!confirm(`Salvare le categorizzazioni per ${updates.length} prodotti?`)) return;
-
-            document.getElementById('aiSaveBtn').disabled = true;
-            document.getElementById('aiSaveBtn').innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Salvataggio...';
-
-            try {
-                // Batch updates
-                for (let i = 0; i < updates.length; i += 100) {
-                    const batch = updates.slice(i, i + 100);
-                    for (const u of batch) {
-                        const { error } = await supabaseClient
-                            .from('anagrafica_prodotti')
-                            .update({
-                                tipo_id: u.tipo_id,
-                                gruppo_vendita_id: u.gruppo_vendita_id,
-                                updated_at: u.updated_at
-                            })
-                            .eq('id', u.id);
-                        if (error) throw error;
-                    }
-                }
-                alert(`✅ ${updates.length} prodotti aggiornati con successo!`);
-                closeAssistenteAI();
-                await loadAnagraficaData(); // Ricarica tabella anagrafica principale
             } catch (err) {
-                console.error('Errore salvataggio Assistant AI:', err);
+                console.error('Errore durante il salvataggio riga AI:', err);
                 alert("❌ Errore durante il salvataggio: " + err.message);
-            } finally {
-                const btn = document.getElementById('aiSaveBtn');
-                btn.disabled = false;
-                btn.innerHTML = '💾 Applica e Salva le righe impostate';
+            }
+        }
+
+        function ignoreAiRow(index) {
+            aiItemsToClassify.splice(index, 1);
+            document.getElementById('aiCountLabel').textContent = aiItemsToClassify.length;
+            renderAssistenteTable();
+            if (aiItemsToClassify.length === 0) {
+                closeAssistenteAI();
             }
         }
     </script>
@@ -2149,10 +2153,7 @@
 
             <div class="bg-gray-50 border-t px-6 py-4 rounded-b-2xl flex items-center justify-between">
                 <button onclick="closeAssistenteAI()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors">
-                    Chiudi senza salvare
-                </button>
-                <button id="aiSaveBtn" onclick="saveAssistenteAI()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-md transition-colors flex items-center">
-                    💾 Applica e Salva le righe impostate
+                    Chiudi
                 </button>
             </div>
         </div>
