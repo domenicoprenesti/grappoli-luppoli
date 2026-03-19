@@ -1773,14 +1773,16 @@
                 // Estrae parole dal nome (lower, no punteggiatura, no numeri brevi)
                 const parole = (p.descrizione || '').toLowerCase().replace(/[^a-z0-9àèéìòù]/g, ' ').split(/\s+/).filter(w => w.length > 2);
                 
+                const multiplier = p.ai_verified ? 10 : 1; // BOOST per quelli verificati dall'utente
+                
                 parole.forEach(w => {
                     if (tipo) {
                         aiKeywordWeights.tipi[w] = aiKeywordWeights.tipi[w] || {};
-                        aiKeywordWeights.tipi[w][tipo] = (aiKeywordWeights.tipi[w][tipo] || 0) + 1;
+                        aiKeywordWeights.tipi[w][tipo] = (aiKeywordWeights.tipi[w][tipo] || 0) + multiplier;
                     }
                     if (gruppo) {
                         aiKeywordWeights.gruppi[w] = aiKeywordWeights.gruppi[w] || {};
-                        aiKeywordWeights.gruppi[w][gruppo] = (aiKeywordWeights.gruppi[w][gruppo] || 0) + 1;
+                        aiKeywordWeights.gruppi[w][gruppo] = (aiKeywordWeights.gruppi[w][gruppo] || 0) + multiplier;
                     }
                 });
             });
@@ -1849,6 +1851,7 @@
             let anomalies = [];
             anagraficaData.forEach(p => {
                 if (!p.tipo_id && !p.gruppo_vendita_id) return;
+                if (p.ai_verified) return; // Salta i prodotti già verificati o ignorati in passato
                 
                 let pred = predictCategories(p.descrizione);
                 
@@ -2004,6 +2007,7 @@
                     .update({
                         tipo_id: newTipo,
                         gruppo_vendita_id: newGruppo,
+                        ai_verified: true,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', item.id);
@@ -2032,10 +2036,28 @@
             }
         }
 
-        function ignoreAiRow(index) {
+        async function ignoreAiRow(index) {
+            const item = aiItemsToClassify[index];
+            try {
+                // Non salviamo cambi di categoria, ma registriamo che è verificato dal DB e va ignorato
+                await supabaseClient
+                    .from('anagrafica_prodotti')
+                    .update({
+                        ai_verified: true,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', item.id);
+            } catch(e) {
+                console.error("Errore salvataggio ignore:", e);
+            }
+
             aiItemsToClassify.splice(index, 1);
             document.getElementById('aiCountLabel').textContent = aiItemsToClassify.length;
             renderAssistenteTable();
+            
+            // Ricarichiamo in background affinchè l'AI impari subito l'eccezione
+            loadAnagraficaData().then(() => trainCategorizer());
+            
             if (aiItemsToClassify.length === 0) {
                 closeAssistenteAI();
             }
