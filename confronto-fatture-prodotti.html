@@ -6,8 +6,10 @@
     <title>Confronto Fatture-Prodotti</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
 </head>
 <body class="bg-gray-50 p-8">
+    <script>(async () => { await requireAuth('confronto-fatture-prodotti.html'); })();</script>
     <div class="max-w-7xl mx-auto">
         <h1 class="text-3xl font-bold mb-8">🔍 Confronto Fatture ↔ Prodotti</h1>
 
@@ -104,9 +106,7 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // supabaseClient e chiavi da auth.js
 
         let risultatiAnalisi = [];
         let tuttiIProdotti = [];

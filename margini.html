@@ -7,6 +7,7 @@
     <title>Analisi Margini - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .gradient-card {
@@ -36,8 +37,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        const SESSION_KEY = 'app_authenticated';
-        if (!localStorage.getItem(SESSION_KEY)) window.location.href = 'index.html';
+        (async () => { await requireAuth('margini.html'); })();
     </script>
 
     <!-- Navbar -->
@@ -274,15 +274,8 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // supabaseClient e chiavi da auth.js
         const BATCH_SIZE = 1000;
-
-        function logout() {
-            localStorage.removeItem('app_authenticated');
-            window.location.href = 'index.html';
-        }
 
         (function() {
             const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');

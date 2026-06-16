@@ -7,6 +7,7 @@
     <title>Grappoli & Luppoli - Dashboard Analitica</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .sidebar {
@@ -29,12 +30,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        (function() {
-            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
-            if (!a) { window.location.href = 'index.html'; return; }
-            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
-            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
-        })();
+        (async () => { await requireAuth('dashboard.html'); })();
     </script>
 
     <!-- Navbar -->
@@ -68,10 +64,7 @@
     </nav>
 
     <script>
-        (function() {
-            const auth = JSON.parse(localStorage.getItem('app_authenticated') || '{}');
-            document.getElementById('userName').textContent = `Ciao, ${auth.userName || 'Utente'}`;
-        })();
+        // Il nome utente viene impostato da requireAuth (auth.js)
     </script>
 
     <!-- Main Layout -->
@@ -246,15 +239,12 @@
     </div>
 
     <script>
-        // ========== CONFIGURAZIONE SUPABASE ==========
-        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase client (supabaseClient) e chiavi arrivano da auth.js
 
         // ============================================
         // TRACCIAMENTO ACCESSI
         // ============================================
-        async function registraAccesso(pagina, azione = 'visualizzazione') {
+        async function registraAccesso_OLD_NON_USATA(pagina, azione = 'visualizzazione') {
             try {
                 const auth = localStorage.getItem('app_authenticated');
                 if (!auth) return;
@@ -311,10 +301,7 @@
         let chartCategorieInstance = null;
 
         // ========== FUNZIONI UTILITÀ ==========
-        function logout() {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.href = 'index.html';
-        }
+        // logout() è fornita da auth.js (esegue supabase signOut)
 
         function formatCurrency(value) {
             return new Intl.NumberFormat('it-IT', {

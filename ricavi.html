@@ -7,6 +7,7 @@
     <title>Grappoli &amp; Luppoli - Andamento Ricavi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -37,12 +38,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        (function() {
-            const SK = 'app_authenticated', SD = 86400000, a = localStorage.getItem(SK);
-            if (!a) { window.location.href = 'index.html'; return; }
-            try { if (new Date().getTime() - JSON.parse(a).timestamp >= SD) { localStorage.removeItem(SK); window.location.href = 'index.html'; } }
-            catch(e) { localStorage.removeItem(SK); window.location.href = 'index.html'; }
-        })();
+        (async () => { await requireAuth('ricavi.html'); })();
     </script>
 
     <!-- Navbar -->
@@ -346,12 +342,9 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const SESSION_KEY = 'app_authenticated';
+        // supabaseClient e chiavi da auth.js
 
-        function logout() { localStorage.removeItem(SESSION_KEY); window.location.href = 'index.html'; }
+        // logout() da auth.js
 
         let allDailyData=[], monthlyData=[], filteredMonthly=[], filteredDaily=[], charts={}, editingId=null, deletingId=null, existingRecordId=null;
         let pendingImportRecords = []; // dati parsati in attesa di import
@@ -435,9 +428,7 @@
         }
 
         // ===== MODAL INSERIMENTO =====
-        function isAdmin(){
-            try { return JSON.parse(localStorage.getItem(SESSION_KEY)||'{}').userRole === 'Admin'; } catch(e){ return false; }
-        }
+        // isAdmin() fornita da auth.js
 
         function prefillFromRow(row){
             document.getElementById('inputPos').value       = pf(row.pos)||'';
@@ -451,7 +442,7 @@
 
         function showExistingBanner(show){
             document.getElementById('existingBanner').classList.toggle('hidden', !show);
-            const needsPwd = show && !isAdmin();
+            const needsPwd = false; // modifica di record salvati consentita solo agli Admin
             document.getElementById('confirmPasswordSection').classList.toggle('hidden', !needsPwd);
             if(needsPwd) document.getElementById('inputConfirmPassword').value='';
         }
@@ -519,9 +510,7 @@
 
             // Se sovrascrittura e non admin → verifica password
             if(isOverwrite && !isAdmin()){
-                const pwd = document.getElementById('inputConfirmPassword').value.trim();
-                if(!pwd){showModalError('Inserisci la tua password per confermare la modifica');return;}
-                if(pwd !== 'Grappoli&Luppoli'){showModalError('❌ Password master errata. Modifica non autorizzata.');return;}
+                showModalError('❌ Solo un Admin può modificare un ricavo già salvato.');return;
             }
 
             const rec={data, pos:pf(document.getElementById('inputPos').value), contanti:pf(document.getElementById('inputContanti').value), satispay:pf(document.getElementById('inputSatispay').value), fatture:pf(document.getElementById('inputFatture').value), miscellaneo:pf(document.getElementById('inputMiscellaneo').value), note:document.getElementById('inputNote').value.trim()};

@@ -7,24 +7,11 @@
     <title>Crea Nuova Utenza - Grappoli & Luppoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        const SESSION_KEY = 'app_authenticated';
-        const auth = localStorage.getItem(SESSION_KEY);
-        if (!auth) {
-            window.location.href = 'index.html';
-        } else {
-            try {
-                const authData = JSON.parse(auth);
-                if (authData.userRole !== 'Admin') {
-                    alert('Accesso negato.');
-                    window.location.href = 'dashboard.html';
-                }
-            } catch (e) {
-                window.location.href = 'index.html';
-            }
-        }
+        (async () => { await requireAuth('crea-utente.html', { adminOnly: true }); })();
     </script>
 
     <nav class="bg-white shadow-lg mb-8">
@@ -120,14 +107,24 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // supabaseClient e chiavi da auth.js
+
+        async function callAdminUsers(payload) {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-users`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${session.access_token}`, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const out = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(out.error || 'Errore operazione');
+          return out;
+        }
 
         // ============================================
         // TRACCIAMENTO ACCESSI
         // ============================================
-        async function registraAccesso(pagina, azione = 'visualizzazione') {
+        async function registraAccesso_OLD_NON_USATA(pagina, azione = 'visualizzazione') {
             try {
                 const auth = localStorage.getItem('app_authenticated');
                 if (!auth) return;
@@ -166,10 +163,7 @@
             await registraAccesso('crea-utente.html', azione);
         }
 
-        function logout() {
-            localStorage.removeItem('app_authenticated');
-            window.location.href = 'index.html';
-        }
+        // logout() da auth.js
 
         function showMessage(text, type) {
             const messageDiv = document.getElementById('message');
@@ -201,16 +195,15 @@
             }
             
             try {
-                const { data: existing } = await supabaseClient.from('utenti').select('email').eq('email', email).single();
+                const { data: existing } = await supabaseClient.from('utenti').select('email').eq('email', email).maybeSingle();
                 
                 if (existing) {
                     showMessage('Email già utilizzata da un altro utente', 'error');
                     return;
                 }
                 
-                const { error } = await supabaseClient.from('utenti').insert([{
-                    nome, cognome, email, password, ruolo, attivo
-                }]);
+                await callAdminUsers({ action: 'create', nome, cognome, email, password, ruolo, attivo });
+                const error = null;
                 
                 if (error) throw error;
                 
