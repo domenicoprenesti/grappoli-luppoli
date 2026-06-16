@@ -58,9 +58,7 @@ async function registraAccesso(pagina, azione = 'visualizzazione') {
       user_ruolo: currentProfile.ruolo,
       pagina, azione, timestamp: new Date().toISOString()
     }]);
-    await supabaseClient.from('utenti')
-      .update({ ultimo_accesso: new Date().toISOString() })
-      .eq('id', currentProfile.id);
+    await supabaseClient.rpc('tocca_ultimo_accesso');
   } catch (e) { console.error('Errore tracciamento:', e); }
 }
 
