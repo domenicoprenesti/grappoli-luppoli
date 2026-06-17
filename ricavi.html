@@ -275,6 +275,9 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <span>Nuovo Ricavo</span>
                 </button>
+                <button onclick="openAutoconsumoModal()" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm">
+                    <span>🍽️</span><span>Autoconsumo</span>
+                </button>
             </div>
 
             <div class="mb-4">
@@ -311,6 +314,7 @@
                 <div class="flex items-center justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mr-3"></div><span class="text-gray-600">Caricamento dati da Supabase...</span></div>
             </div>
 
+            <div id="autoconsumoBox" class="hidden bg-white rounded-xl shadow-lg p-4 mb-4"></div>
             <div id="contentDiv" class="hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                     <div class="bg-white rounded-xl shadow-lg p-5"><h2 id="titleStacked" class="text-lg font-bold text-gray-900 mb-4">Ricavi Mensili per Tipologia di Pagamento</h2><div class="relative" style="height:370px"><canvas id="chartStacked"></canvas></div></div>
@@ -419,6 +423,7 @@
                 return true;
             }).sort((a,b)=>a.data.localeCompare(b.data));
             renderAll();
+            if (typeof renderAutoconsumoSummary === 'function') renderAutoconsumoSummary();
         }
 
         function clearFilters(){
@@ -999,6 +1004,334 @@
         function renderAll(){renderKPI();renderStacked();renderTrend();renderComposizione();renderYoY();renderDailyAvg();renderTable();}
         document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeMeseModal();closeDeleteModal();closeImportModal();}});
         loadData();
+    </script>
+
+    <!-- ===== MODAL AUTOCONSUMO ===== -->
+    <div id="autoconsumoModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+        <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
+          <h3 id="acModalTitle" class="text-lg font-bold">🍽️ Registra Autoconsumo</h3>
+          <button onclick="closeAutoconsumoModal()" class="hover:bg-white/20 rounded-lg p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div class="p-5 overflow-y-auto space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+            <input type="date" id="acData" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cerca prodotto</label>
+            <input type="text" id="acSearch" oninput="acSearchProducts()" placeholder="Digita il nome del prodotto..." autocomplete="off" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg">
+            <div id="acResults" class="mt-1 border border-gray-200 rounded-lg divide-y max-h-44 overflow-y-auto hidden"></div>
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-gray-700 mb-2">Consumi</div>
+            <div id="acRighe" class="space-y-2"></div>
+            <p id="acVuoto" class="text-sm text-gray-400">Nessun prodotto aggiunto.</p>
+          </div>
+          <div class="flex items-center justify-between border-t pt-3">
+            <span class="text-sm text-gray-600">Totale suggerito (metà prezzo):</span>
+            <span id="acTotaleSugg" class="text-lg font-bold text-emerald-700">€0,00</span>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Importo pagato</label>
+            <input type="number" step="0.01" id="acPagato" oninput="this.dataset.touched='1'" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg">
+            <p class="text-xs text-gray-400 mt-1">Precompilato col totale suggerito. Modificabile.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Note (facoltative)</label>
+            <input type="text" id="acNote" class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg">
+          </div>
+          <div id="acError" class="hidden text-sm text-red-600"></div>
+        </div>
+        <div class="p-4 border-t flex gap-2">
+          <button onclick="closeAutoconsumoModal()" class="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Annulla</button>
+          <button onclick="saveAutoconsumo()" id="acBtnSave" class="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">💾 Salva</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL ELENCO AUTOCONSUMO ===== -->
+    <div id="autoconsumoListModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+        <div class="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
+          <h3 class="text-lg font-bold">🍽️ Autoconsumi registrati</h3>
+          <button onclick="closeAutoconsumoList()" class="hover:bg-white/20 rounded-lg p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div id="acListInfo" class="p-3 text-xs text-gray-500 border-b"></div>
+        <div class="flex-1 overflow-y-auto p-3"><div id="acList" class="space-y-2"></div></div>
+        <div class="p-4 border-t flex justify-end"><button onclick="closeAutoconsumoList()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">Chiudi</button></div>
+      </div>
+    </div>
+
+    <script>
+      // ===== AUTOCONSUMO =====
+      let allAutoconsumo = [];
+      let acRighe = []; // { prodotto, prezzo_vendita, quantita }
+      let acSearchTimer = null;
+      let editingAutoconsumoId = null;
+
+      function acFmt(v){ return '€' + (parseFloat(v)||0).toFixed(2).replace('.', ','); }
+
+      async function loadAutoconsumo() {
+        try {
+          const { data, error } = await supabaseClient.from('autoconsumo').select('*');
+          if (error) throw error;
+          allAutoconsumo = data || [];
+        } catch (e) { console.error('Errore autoconsumo:', e); allAutoconsumo = []; }
+        renderAutoconsumoSummary();
+      }
+
+      function openAutoconsumoModal() {
+        acRighe = [];
+        editingAutoconsumoId = null;
+        const tt = document.getElementById('acModalTitle'); if (tt) tt.textContent = '🍽️ Registra Autoconsumo';
+        const t = new Date();
+        document.getElementById('acData').value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+        document.getElementById('acSearch').value = '';
+        document.getElementById('acResults').classList.add('hidden');
+        document.getElementById('acNote').value = '';
+        document.getElementById('acError').classList.add('hidden');
+        const pag = document.getElementById('acPagato'); pag.value = ''; pag.dataset.touched = '';
+        renderACRighe();
+        document.getElementById('autoconsumoModal').classList.remove('hidden');
+      }
+      function closeAutoconsumoModal(){ document.getElementById('autoconsumoModal').classList.add('hidden'); }
+
+      function acSearchProducts() {
+        const term = document.getElementById('acSearch').value.trim();
+        const box = document.getElementById('acResults');
+        if (acSearchTimer) clearTimeout(acSearchTimer);
+        if (term.length < 2) { box.classList.add('hidden'); box.replaceChildren(); return; }
+        acSearchTimer = setTimeout(async () => {
+          const { data, error } = await supabaseClient.from('vendite')
+            .select('nome_univoco, prezzo, mese')
+            .ilike('nome_univoco', '%' + term + '%')
+            .order('mese', { ascending: false })
+            .limit(100);
+          box.replaceChildren();
+          if (error || !data || !data.length) {
+            const d = document.createElement('div'); d.className = 'p-2 text-sm text-gray-400';
+            d.textContent = 'Nessun prodotto trovato'; box.appendChild(d); box.classList.remove('hidden'); return;
+          }
+          const seen = new Set(), uniq = [];
+          data.forEach(r => { if (!seen.has(r.nome_univoco)) { seen.add(r.nome_univoco); uniq.push(r); } });
+          uniq.slice(0, 30).forEach(r => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'w-full text-left p-2 hover:bg-emerald-50 flex justify-between items-center';
+            const left = document.createElement('span'); left.className = 'text-sm text-gray-800'; left.textContent = r.nome_univoco;
+            const right = document.createElement('span'); right.className = 'text-xs text-gray-500'; right.textContent = acFmt(r.prezzo);
+            item.append(left, right);
+            item.addEventListener('click', () => acAddRiga(r.nome_univoco, parseFloat(r.prezzo)||0));
+            box.appendChild(item);
+          });
+          box.classList.remove('hidden');
+        }, 250);
+      }
+
+      function acAddRiga(prodotto, prezzo) {
+        acRighe.push({ prodotto, prezzo_vendita: prezzo, quantita: 1 });
+        document.getElementById('acSearch').value = '';
+        document.getElementById('acResults').classList.add('hidden');
+        renderACRighe();
+      }
+      function acRemoveRiga(i){ acRighe.splice(i,1); renderACRighe(); }
+      function acSetQty(i, val){ const q = parseFloat(val); acRighe[i].quantita = (isNaN(q)||q<=0)?1:q; renderACRighe(); }
+
+      function renderACRighe() {
+        const box = document.getElementById('acRighe');
+        box.replaceChildren();
+        document.getElementById('acVuoto').style.display = acRighe.length ? 'none' : 'block';
+        let tot = 0;
+        acRighe.forEach((r, i) => {
+          const sugg = (r.prezzo_vendita/2) * r.quantita; tot += sugg;
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-2 bg-gray-50 rounded-lg p-2';
+          const nome = document.createElement('div'); nome.className = 'flex-1 text-sm text-gray-800'; nome.textContent = r.prodotto;
+          const qty = document.createElement('input');
+          qty.type = 'number'; qty.min = '0'; qty.step = '1'; qty.value = r.quantita;
+          qty.className = 'w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center';
+          qty.addEventListener('change', () => acSetQty(i, qty.value));
+          const prezzo = document.createElement('div'); prezzo.className = 'w-16 text-right text-xs text-gray-500'; prezzo.textContent = acFmt(r.prezzo_vendita);
+          const suggSpan = document.createElement('div'); suggSpan.className = 'w-20 text-right text-sm font-semibold text-emerald-700'; suggSpan.textContent = acFmt(sugg);
+          const del = document.createElement('button'); del.type='button'; del.className='text-red-500 hover:text-red-700 px-1'; del.textContent='✕';
+          del.addEventListener('click', () => acRemoveRiga(i));
+          row.append(nome, qty, prezzo, suggSpan, del);
+          box.appendChild(row);
+        });
+        document.getElementById('acTotaleSugg').textContent = acFmt(tot);
+        const pag = document.getElementById('acPagato');
+        if (!pag.dataset.touched) pag.value = tot.toFixed(2);
+      }
+
+      async function saveAutoconsumo() {
+        const err = document.getElementById('acError'); err.classList.add('hidden');
+        const data = document.getElementById('acData').value;
+        if (!data) { err.textContent = 'Seleziona una data.'; err.classList.remove('hidden'); return; }
+        if (!acRighe.length) { err.textContent = 'Aggiungi almeno un prodotto.'; err.classList.remove('hidden'); return; }
+        const importo_suggerito = acRighe.reduce((a,r)=>a+(r.prezzo_vendita/2)*r.quantita, 0);
+        const pagatoVal = parseFloat(document.getElementById('acPagato').value);
+        const note = document.getElementById('acNote').value.trim();
+        const u = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        const btn = document.getElementById('acBtnSave'); btn.disabled = true; btn.textContent = '⏳ Salvataggio...';
+        try {
+          const pagato = isNaN(pagatoVal) ? importo_suggerito : pagatoVal;
+          let acId;
+          if (editingAutoconsumoId) {
+            // Modifica: non tocca il proprietario (user_id/user_nome restano originali)
+            const { error: eu } = await supabaseClient.from('autoconsumo')
+              .update({ data, importo_suggerito, importo_pagato: pagato, note })
+              .eq('id', editingAutoconsumoId);
+            if (eu) throw eu;
+            acId = editingAutoconsumoId;
+            await supabaseClient.from('autoconsumo_righe').delete().eq('autoconsumo_id', acId);
+          } else {
+            const { data: testata, error: e1 } = await supabaseClient.from('autoconsumo').insert({
+              data,
+              user_id: u ? u.id : null,
+              user_nome: u ? `${u.nome||''} ${u.cognome||''}`.trim() : null,
+              importo_suggerito,
+              importo_pagato: pagato,
+              note
+            }).select().single();
+            if (e1) throw e1;
+            acId = testata.id;
+          }
+          const righe = acRighe.map(r => ({ autoconsumo_id: acId, prodotto: r.prodotto, prezzo_vendita: r.prezzo_vendita, quantita: r.quantita, prezzo_suggerito: (r.prezzo_vendita/2)*r.quantita }));
+          const { error: e2 } = await supabaseClient.from('autoconsumo_righe').insert(righe);
+          if (e2) throw e2;
+          const wasEdit = !!editingAutoconsumoId;
+          editingAutoconsumoId = null;
+          closeAutoconsumoModal();
+          await loadAutoconsumo();
+          alert(wasEdit ? '✅ Autoconsumo aggiornato.' : '✅ Autoconsumo registrato.');
+        } catch (e) {
+          console.error(e); err.textContent = 'Errore: ' + (e.message || e); err.classList.remove('hidden');
+        }
+        btn.disabled = false; btn.textContent = '💾 Salva';
+      }
+
+      function renderAutoconsumoSummary() {
+        const annoEl = document.getElementById('filterAnno'), meseEl = document.getElementById('filterMese');
+        const anno = annoEl ? annoEl.value : '', mese = meseEl ? meseEl.value : '';
+        const filt = allAutoconsumo.filter(a => {
+          const d = new Date(a.data + 'T00:00:00');
+          if (anno && d.getFullYear() != anno) return false;
+          if (mese && (d.getMonth()+1) != mese) return false;
+          return true;
+        });
+        const totale = filt.reduce((a,r)=>a+(parseFloat(r.importo_pagato)||0), 0);
+
+        // Card KPI nella barra laterale (sempre presente, anche a 0)
+        const cards = document.getElementById('kpiCards');
+        if (cards) {
+          const old = document.getElementById('kpiAutoconsumo'); if (old) old.remove();
+          const card = document.createElement('div');
+          card.id = 'kpiAutoconsumo';
+          card.className = 'bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-3 text-white shadow-lg';
+          const inner = document.createElement('div'); inner.className = 'flex items-center justify-between';
+          const wrap = document.createElement('div');
+          const lbl = document.createElement('p'); lbl.className = 'text-[10px] uppercase tracking-wide opacity-80 mb-0.5'; lbl.textContent = '🍽️ AUTOCONSUMO';
+          const val = document.createElement('p'); val.className = 'text-base font-bold leading-tight'; val.textContent = acFmt(totale);
+          wrap.append(lbl, val); inner.append(wrap); card.appendChild(inner);
+          card.style.cursor = 'pointer'; card.title = 'Vedi / modifica autoconsumi';
+          card.addEventListener('click', openAutoconsumoList);
+          cards.appendChild(card);
+        }
+
+        // Box riepilogo nel contenuto (solo se ci sono registrazioni nel periodo)
+        const box = document.getElementById('autoconsumoBox');
+        if (!box) return;
+        box.replaceChildren();
+        if (!filt.length) { box.classList.add('hidden'); return; }
+        const head = document.createElement('div'); head.className = 'flex items-center justify-between mb-2';
+        const left = document.createElement('div');
+        const h = document.createElement('div'); h.className = 'text-sm font-bold text-gray-700'; h.textContent = '🍽️ Autoconsumo (da sommare ai ricavi)';
+        const sub = document.createElement('div'); sub.className = 'text-xs text-gray-400'; sub.textContent = filt.length + ' registrazioni nel periodo selezionato';
+        left.append(h, sub);
+        const tot = document.createElement('div'); tot.className = 'text-xl font-bold text-emerald-700'; tot.textContent = acFmt(totale);
+        head.append(left, tot);
+        box.appendChild(head);
+        const perUser = {};
+        filt.forEach(r => { const k = r.user_nome || 'Sconosciuto'; perUser[k] = (perUser[k]||0) + (parseFloat(r.importo_pagato)||0); });
+        const chips = document.createElement('div'); chips.className = 'flex flex-wrap gap-2 mt-1';
+        Object.keys(perUser).sort().forEach(k => {
+          const chip = document.createElement('span'); chip.className = 'text-xs bg-emerald-50 text-emerald-800 px-2 py-1 rounded';
+          chip.textContent = k + ': ' + acFmt(perUser[k]);
+          chips.appendChild(chip);
+        });
+        box.appendChild(chips);
+        box.classList.remove('hidden');
+      }
+
+      function acDateIt(s){ if(!s) return ''; const p=String(s).split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : s; }
+
+      function openAutoconsumoList() {
+        const annoEl = document.getElementById('filterAnno'), meseEl = document.getElementById('filterMese');
+        const anno = annoEl ? annoEl.value : '', mese = meseEl ? meseEl.value : '';
+        const filt = allAutoconsumo.filter(a => {
+          const d = new Date(a.data + 'T00:00:00');
+          if (anno && d.getFullYear() != anno) return false;
+          if (mese && (d.getMonth()+1) != mese) return false;
+          return true;
+        }).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+        const me = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        const admin = (typeof isAdmin === 'function') && isAdmin();
+        document.getElementById('acListInfo').textContent = filt.length + ' registrazioni nel periodo selezionato';
+        const list = document.getElementById('acList'); list.replaceChildren();
+        if (!filt.length) {
+          const e = document.createElement('p'); e.className = 'text-sm text-gray-400'; e.textContent = 'Nessun autoconsumo nel periodo.'; list.appendChild(e);
+        }
+        filt.forEach(rec => {
+          const editable = admin || (me && rec.user_id === me.id);
+          const row = document.createElement('div'); row.className = 'flex items-center gap-3 bg-gray-50 rounded-lg p-3';
+          const info = document.createElement('div'); info.className = 'flex-1';
+          const l1 = document.createElement('div'); l1.className = 'text-sm font-medium text-gray-800'; l1.textContent = acDateIt(rec.data) + ' — ' + (rec.user_nome || '?');
+          const l2 = document.createElement('div'); l2.className = 'text-xs text-gray-500'; l2.textContent = 'Pagato ' + acFmt(rec.importo_pagato) + ' (suggerito ' + acFmt(rec.importo_suggerito) + ')';
+          info.append(l1, l2); row.appendChild(info);
+          if (editable) {
+            const bE = document.createElement('button'); bE.type = 'button'; bE.className = 'px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200'; bE.textContent = '✏️ Modifica';
+            bE.addEventListener('click', () => editAutoconsumo(rec.id));
+            const bD = document.createElement('button'); bD.type = 'button'; bD.className = 'px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200'; bD.textContent = '🗑️';
+            bD.addEventListener('click', () => deleteAutoconsumo(rec.id));
+            row.append(bE, bD);
+          } else {
+            const ro = document.createElement('span'); ro.className = 'text-xs text-gray-400'; ro.textContent = 'sola lettura'; row.appendChild(ro);
+          }
+          list.appendChild(row);
+        });
+        document.getElementById('autoconsumoListModal').classList.remove('hidden');
+      }
+      function closeAutoconsumoList(){ document.getElementById('autoconsumoListModal').classList.add('hidden'); }
+
+      async function editAutoconsumo(id) {
+        const rec = allAutoconsumo.find(a => a.id === id);
+        if (!rec) return;
+        const { data: righe, error } = await supabaseClient.from('autoconsumo_righe').select('*').eq('autoconsumo_id', id);
+        if (error) { alert('Errore caricamento righe: ' + error.message); return; }
+        editingAutoconsumoId = id;
+        acRighe = (righe || []).map(r => ({ prodotto: r.prodotto, prezzo_vendita: parseFloat(r.prezzo_vendita)||0, quantita: parseFloat(r.quantita)||1 }));
+        closeAutoconsumoList();
+        const tt = document.getElementById('acModalTitle'); if (tt) tt.textContent = '✏️ Modifica Autoconsumo';
+        document.getElementById('acData').value = rec.data;
+        document.getElementById('acSearch').value = '';
+        document.getElementById('acResults').classList.add('hidden');
+        document.getElementById('acNote').value = rec.note || '';
+        document.getElementById('acError').classList.add('hidden');
+        const pag = document.getElementById('acPagato'); pag.dataset.touched = '1'; pag.value = (parseFloat(rec.importo_pagato)||0).toFixed(2);
+        renderACRighe();
+        document.getElementById('autoconsumoModal').classList.remove('hidden');
+      }
+
+      async function deleteAutoconsumo(id) {
+        if (!confirm('Eliminare questo autoconsumo? L\'operazione non è reversibile.')) return;
+        const { error } = await supabaseClient.from('autoconsumo').delete().eq('id', id);
+        if (error) { alert('Errore eliminazione: ' + error.message); return; }
+        await loadAutoconsumo();
+        openAutoconsumoList();
+      }
+
+      loadAutoconsumo();
     </script>
 </body>
 </html>

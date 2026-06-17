@@ -86,6 +86,12 @@
                 </button>
             </div>
 
+            <div class="mb-5">
+                <button onclick="openMatrixModal()" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium text-sm">
+                    <span>🔑</span><span>Gestione Permessi</span>
+                </button>
+            </div>
+
             <div class="space-y-3 mb-6">
                 <div class="stat-card rounded-xl p-4 shadow-lg">
                     <div class="flex items-center justify-between">
@@ -407,9 +413,7 @@
                                 onchange="updateUserRole('${user.id}', this.value)" 
                                 class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
                             >
-                                <option value="Admin" ${user.ruolo === 'Admin' ? 'selected' : ''}>🔑 Admin</option>
-                                <option value="Amministratore" ${user.ruolo === 'Amministratore' ? 'selected' : ''}>✏️ Amministratore</option>
-                                <option value="Utente semplice" ${user.ruolo === 'Utente semplice' ? 'selected' : ''}>👁️ Utente semplice</option>
+                                ${buildRoleOptions(user.ruolo)}
                             </select>
                         </td>
                         <td class="px-4 py-3 text-center">
@@ -425,11 +429,7 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center space-x-2">
-                                <button onclick="openPermissionsModal('${user.id}', '${user.nome} ${user.cognome}', '${user.ruolo}')" class="text-blue-600 hover:text-blue-800 transition-colors" title="Gestisci Permessi">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                    </svg>
-                                </button>
+                                <!-- permessi ora gestiti per profilo (pulsante "Gestione Permessi") -->
                                 <button onclick="deleteUser('${user.auth_id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Elimina">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -583,8 +583,147 @@
             }
         }
 
-        loadUsers();
-        console.log('✅ Pagina utenti caricata con sistema a 3 livelli di permessi');
+        // ===== MATRICE PERMESSI PER PROFILO =====
+        const PAGINE_MATRICE = [
+          { id: 'fatture.html', nome: '📄 Fatture' },
+          { id: 'prodotti.html', nome: '📦 Prodotti' },
+          { id: 'vendite.html', nome: '💰 Vendite' },
+          { id: 'margini.html', nome: '📊 Margini' },
+          { id: 'ricavi.html', nome: '📈 Ricavi' },
+          { id: 'fornitori.html', nome: '🏢 Fornitori' },
+          { id: 'scadenze.html', nome: '⏰ Scadenze' },
+          { id: 'analisi-delta.html', nome: '🔺 Analisi Delta' },
+          { id: 'confronto-fatture-prodotti.html', nome: '🔍 Confronto Fatture/Prodotti' }
+        ];
+        let PROFILI = [];
+        let PERMESSI = {};
+
+        function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+        async function loadProfili() {
+          const { data, error } = await supabaseClient.from('profili').select('nome').order('nome');
+          if (error) { console.error(error); return; }
+          PROFILI = data.map(p => p.nome);
+        }
+
+        function buildRoleOptions(current) {
+          return PROFILI.map(r => `<option value="${escapeHtml(r)}" ${r === current ? 'selected' : ''}>${escapeHtml(r)}</option>`).join('');
+        }
+
+        async function openMatrixModal() {
+          await loadProfili();
+          const { data, error } = await supabaseClient.from('permessi_profili').select('*');
+          if (error) { alert('Errore caricamento permessi: ' + error.message); return; }
+          PERMESSI = {};
+          (data || []).forEach(r => { (PERMESSI[r.profilo] = PERMESSI[r.profilo] || {})[r.pagina] = r.can_access; });
+          renderMatrix();
+          document.getElementById('matrixModal').classList.remove('hidden');
+        }
+        function closeMatrixModal() {
+          document.getElementById('matrixModal').classList.add('hidden');
+          loadUsers();
+        }
+
+        function renderMatrix() {
+          const colonne = PROFILI.filter(p => p !== 'Admin');
+          const head = document.getElementById('matrixHead');
+          head.replaceChildren();
+          const thPage = document.createElement('th');
+          thPage.className = 'px-3 py-2 text-left text-sm font-semibold sticky left-0 bg-gray-700';
+          thPage.textContent = 'Pagina';
+          head.appendChild(thPage);
+          colonne.forEach(prof => {
+            const th = document.createElement('th');
+            th.className = 'px-3 py-2 text-center text-sm font-semibold whitespace-nowrap';
+            const nameDiv = document.createElement('div');
+            nameDiv.textContent = prof;
+            const actions = document.createElement('div');
+            actions.className = 'mt-1 space-x-1';
+            const bRen = document.createElement('button');
+            bRen.className = 'text-xs opacity-80 hover:opacity-100'; bRen.title = 'Rinomina'; bRen.textContent = '✏️';
+            bRen.addEventListener('click', () => rinominaProfilo(prof));
+            const bDel = document.createElement('button');
+            bDel.className = 'text-xs opacity-80 hover:opacity-100'; bDel.title = 'Elimina'; bDel.textContent = '🗑️';
+            bDel.addEventListener('click', () => eliminaProfilo(prof));
+            actions.append(bRen, bDel);
+            th.append(nameDiv, actions);
+            head.appendChild(th);
+          });
+          const body = document.getElementById('matrixBody');
+          body.replaceChildren();
+          PAGINE_MATRICE.forEach(pg => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-t border-gray-200';
+            const tdName = document.createElement('td');
+            tdName.className = 'px-3 py-2 text-sm font-medium text-gray-800 sticky left-0 bg-white';
+            tdName.textContent = pg.nome;
+            tr.appendChild(tdName);
+            colonne.forEach(prof => {
+              const td = document.createElement('td');
+              td.className = 'px-3 py-2 text-center';
+              const label = document.createElement('label');
+              label.className = 'relative inline-flex items-center cursor-pointer';
+              const input = document.createElement('input');
+              input.type = 'checkbox'; input.className = 'sr-only peer';
+              input.checked = !!(PERMESSI[prof] && PERMESSI[prof][pg.id] === true);
+              input.addEventListener('change', () => toggleProfilePermission(prof, pg.id, input.checked));
+              const knob = document.createElement('div');
+              knob.className = "w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full";
+              label.append(input, knob);
+              td.appendChild(label);
+              tr.appendChild(td);
+            });
+            body.appendChild(tr);
+          });
+        }
+
+        async function toggleProfilePermission(profilo, pagina, canAccess) {
+          try {
+            const { error } = await supabaseClient.from('permessi_profili')
+              .upsert({ profilo, pagina, can_access: canAccess }, { onConflict: 'profilo,pagina' });
+            if (error) throw error;
+            (PERMESSI[profilo] = PERMESSI[profilo] || {})[pagina] = canAccess;
+          } catch (err) { console.error(err); alert('Errore salvataggio permesso: ' + err.message); }
+        }
+
+        async function nuovoProfilo() {
+          const nome = (prompt('Nome del nuovo profilo:') || '').trim();
+          if (!nome) return;
+          if (PROFILI.includes(nome)) { alert('Esiste già un profilo con questo nome.'); return; }
+          try {
+            const { error } = await supabaseClient.from('profili').insert({ nome });
+            if (error) throw error;
+            const righe = PAGINE_MATRICE.map(pg => ({ profilo: nome, pagina: pg.id, can_access: false }));
+            await supabaseClient.from('permessi_profili').insert(righe);
+            await openMatrixModal();
+          } catch (err) { console.error(err); alert('Errore creazione profilo: ' + err.message); }
+        }
+
+        async function rinominaProfilo(profilo) {
+          const nuovo = (prompt(`Nuovo nome per il profilo "${profilo}":`, profilo) || '').trim();
+          if (!nuovo || nuovo === profilo) return;
+          if (PROFILI.includes(nuovo)) { alert('Esiste già un profilo con questo nome.'); return; }
+          try {
+            const { error } = await supabaseClient.from('profili').update({ nome: nuovo }).eq('nome', profilo);
+            if (error) throw error;
+            await openMatrixModal();
+          } catch (err) { console.error(err); alert('Errore rinomina: ' + err.message); }
+        }
+
+        async function eliminaProfilo(profilo) {
+          if (!confirm(`Eliminare il profilo "${profilo}"?\n(consentito solo se nessun utente lo sta usando)`)) return;
+          try {
+            const { error } = await supabaseClient.from('profili').delete().eq('nome', profilo);
+            if (error) throw error;
+            await openMatrixModal();
+          } catch (err) {
+            console.error(err);
+            alert('Impossibile eliminare: probabilmente ci sono utenti con questo profilo. Riassegnali a un altro profilo e riprova.');
+          }
+        }
+
+        loadProfili().then(() => loadUsers());
+        console.log('✅ Pagina utenti: permessi per profilo');
     </script>
 
     <!-- Modal Gestione Permessi -->
@@ -637,6 +776,32 @@
                 </div>
             </div>
         </div>
+    </div>
+    <!-- Modal Matrice Permessi per Profilo -->
+    <div id="matrixModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+        <div class="p-5 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">🔑 Permessi per Profilo</h2>
+            <p class="text-sm text-gray-600 mt-1">Pagine sulle righe, profili sulle colonne. L'Admin ha sempre accesso a tutto. La Dashboard è sempre accessibile.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="nuovoProfilo()" class="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm font-medium whitespace-nowrap">➕ Nuovo profilo</button>
+            <button onclick="closeMatrixModal()" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-auto p-5">
+          <table class="w-full border-collapse">
+            <thead class="bg-gray-700 text-white"><tr id="matrixHead"></tr></thead>
+            <tbody id="matrixBody"></tbody>
+          </table>
+        </div>
+        <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+          <button onclick="closeMatrixModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Chiudi</button>
+        </div>
+      </div>
     </div>
 </body>
 </html>
