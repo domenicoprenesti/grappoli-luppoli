@@ -179,6 +179,73 @@
                 </div>
             </div>
 
+            <!-- Andamento Costi Prodotto -->
+            <div class="bg-white rounded-xl shadow-lg p-5 mb-4">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">📈 Andamento Costi Prodotto</h2>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <select id="costFiltCategoria" onchange="costSearchProducts()" class="px-3 py-2 text-sm border-2 border-gray-200 rounded-lg"><option value="">Tutte le categorie</option></select>
+                    <select id="costFiltTipo" onchange="costSearchProducts()" class="px-3 py-2 text-sm border-2 border-gray-200 rounded-lg"><option value="">Tutti i tipi</option></select>
+                    <select id="costFiltGruppo" onchange="costSearchProducts()" class="px-3 py-2 text-sm border-2 border-gray-200 rounded-lg"><option value="">Tutti i gruppi vendita</option></select>
+                </div>
+                <div class="relative max-w-xl">
+                    <input type="text" id="costSearch" oninput="costSearchProducts()" autocomplete="off" placeholder="🔎 Cerca un prodotto..." class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg">
+                    <div id="costResults" class="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg divide-y max-h-60 overflow-y-auto hidden shadow-lg"></div>
+                </div>
+                <div class="mt-2 text-sm flex items-center gap-2 flex-wrap">
+                    <span class="text-gray-500">oppure scegli un prodotto unificato:</span>
+                    <select id="costUnifPick" onchange="costPickUnified(this.value)" class="px-3 py-2 text-sm border-2 border-gray-200 rounded-lg"><option value="">—</option></select>
+                </div>
+                <div id="costDetail" class="hidden mt-4">
+                    <div id="costConfigRow" class="flex flex-wrap items-end gap-3 bg-gray-50 rounded-lg p-3 mb-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="text-sm font-bold text-gray-800" id="costProdNome"></div>
+                            <div class="text-xs text-gray-500" id="costProdMeta"></div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-gray-500">Rapporto (UDM per UDF)</label>
+                            <input type="number" step="0.0001" min="0" id="costRapporto" oninput="if(costCurrent) renderCost()" class="w-28 px-2 py-1 border border-gray-300 rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-gray-500">UDM (etichetta)</label>
+                            <input type="text" id="costUdm" list="costUdmOptions" oninput="if(costCurrent) renderCost()" placeholder="es. bottiglia" class="w-32 px-2 py-1 border border-gray-300 rounded text-sm">
+                            <datalist id="costUdmOptions"></datalist>
+                        </div>
+                        <button onclick="saveCostUnit()" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">💾 Salva</button>
+                    </div>
+                    <div id="costUnifRow" class="flex flex-wrap items-end gap-3 bg-indigo-50 rounded-lg p-3 mb-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="text-[11px] uppercase text-gray-500">Prodotto unificato</div>
+                            <div class="text-sm font-semibold text-indigo-800" id="costUnifCurrent">—</div>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-[11px] uppercase text-gray-500">Collega a…</label>
+                            <input type="text" id="costUnifSearch" oninput="costUnifSearchFn()" autocomplete="off" placeholder="cerca o crea…" class="w-56 px-2 py-1 border border-gray-300 rounded text-sm">
+                            <div id="costUnifResults" class="absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg divide-y max-h-48 overflow-y-auto hidden shadow-lg"></div>
+                        </div>
+                        <button onclick="unlinkUnif()" id="costUnifUnlink" class="hidden px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Scollega</button>
+                        <button onclick="toggleUnified()" id="costUnifToggle" class="hidden px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">👁 Vista unificata</button>
+                    </div>
+                    <div id="costUnifManage" class="hidden bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4"></div>
+                    <div id="costKpis" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4"></div>
+                    <div class="h-80 mb-4"><canvas id="chartCosti"></canvas></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100 text-gray-700">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Data</th>
+                                    <th class="px-3 py-2 text-left">Fornitore</th>
+                                    <th class="px-3 py-2 text-right">Prezzo UDF (netto)</th>
+                                    <th class="px-3 py-2 text-right">Rapporto</th>
+                                    <th class="px-3 py-2 text-right">€/UDM</th>
+                                    <th class="px-3 py-2 text-right">Quantità</th>
+                                </tr>
+                            </thead>
+                            <tbody id="costTable" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Charts Row -->
             <div id="chartsRow" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                 <div class="bg-white rounded-xl shadow-lg p-5">
@@ -899,6 +966,412 @@
         // ========== INIZIALIZZAZIONE ==========
         loadDashboardData();
         console.log('✅ Dashboard Analitica con Filtri caricata');
+    </script>
+
+    <script>
+      // ===== ANDAMENTO COSTI PRODOTTO =====
+      let costChart = null, costCurrent = null, costPurchases = [], costSearchTimer = null;
+
+      function costEuro(n){ return '€' + (Number(n)||0).toFixed(2).replace('.', ','); }
+      function costDateIt(s){ if(!s) return ''; const p=String(s).split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0].slice(2) : s; }
+
+      function costSearchProducts(){
+        const term = document.getElementById('costSearch').value.trim();
+        const cat = document.getElementById('costFiltCategoria').value;
+        const tipo = document.getElementById('costFiltTipo').value;
+        const gruppo = document.getElementById('costFiltGruppo').value;
+        const hasFilter = !!(cat || tipo || gruppo);
+        const box = document.getElementById('costResults');
+        if (costSearchTimer) clearTimeout(costSearchTimer);
+        if (term.length < 2 && !hasFilter){ box.classList.add('hidden'); box.replaceChildren(); return; }
+        costSearchTimer = setTimeout(async () => {
+          let q = supabaseClient.from('anagrafica_prodotti')
+            .select('id, descrizione, categoria, unita_misura_fattura, unita_misura_vendita, rapporto_udv_udf, prodotto_unificato_id');
+          if (term) q = q.ilike('descrizione', '%'+term+'%');
+          if (cat) q = q.eq('categoria', cat);
+          if (tipo) q = q.eq('tipo_id', tipo);
+          if (gruppo) q = q.eq('gruppo_vendita_id', gruppo);
+          const { data, error } = await q.order('descrizione').limit(50);
+          box.replaceChildren();
+          if (error || !data || !data.length){
+            const d=document.createElement('div'); d.className='p-2 text-sm text-gray-400'; d.textContent='Nessun prodotto trovato'; box.appendChild(d); box.classList.remove('hidden'); return;
+          }
+          data.forEach(p => {
+            const it=document.createElement('button'); it.type='button'; it.className='w-full text-left p-2 hover:bg-indigo-50';
+            const t=document.createElement('div'); t.className='text-sm text-gray-800'; t.textContent=p.descrizione;
+            const linkNome = p.prodotto_unificato_id ? unifNome(p.prodotto_unificato_id) : null;
+            const s=document.createElement('div'); s.className='text-xs '+(p.prodotto_unificato_id?'text-indigo-600 font-medium':'text-gray-400');
+            s.textContent=(p.categoria||'—')+' · UDF: '+(p.unita_misura_fattura||'?')+' · '+(p.prodotto_unificato_id?('🔗 '+(linkNome||'unificato')):'⚪ non collegato');
+            it.append(t,s);
+            it.addEventListener('click', ()=>costSelect(p));
+            box.appendChild(it);
+          });
+          box.classList.remove('hidden');
+        }, 250);
+      }
+
+      async function costSelect(p){
+        costCurrent = p;
+        document.getElementById('costSearch').value = p.descrizione;
+        document.getElementById('costResults').classList.add('hidden');
+        document.getElementById('costProdNome').textContent = p.descrizione;
+        document.getElementById('costProdMeta').textContent = (p.categoria||'—') + ' · UDF: ' + (p.unita_misura_fattura||'?');
+        document.getElementById('costRapporto').value = (p.rapporto_udv_udf!=null ? p.rapporto_udv_udf : 1);
+        document.getElementById('costUdm').value = p.unita_misura_vendita || '';
+        document.getElementById('costDetail').classList.remove('hidden');
+        document.getElementById('costConfigRow').classList.remove('hidden');
+        document.getElementById('costUnifRow').classList.remove('hidden');
+        document.getElementById('costUnifPick').value = '';
+        document.getElementById('costUnifManage').classList.add('hidden');
+        costUnifiedMode = false;
+        document.getElementById('costUnifSearch').value = '';
+        document.getElementById('costUnifResults').classList.add('hidden');
+        refreshUnifUI();
+        await loadCostPurchases(p.descrizione);
+        renderCost();
+      }
+
+      async function loadCostPurchases(descr){
+        let { data, error } = await supabaseClient.from('prodotti')
+          .select('prezzo, fornitore, data_fattura, quantita, unita_misura')
+          .eq('descrizione', descr).order('data_fattura', { ascending: true });
+        if (!error && (!data || !data.length)){
+          const r = await supabaseClient.from('prodotti')
+            .select('prezzo, fornitore, data_fattura, quantita, unita_misura')
+            .ilike('descrizione', descr).order('data_fattura', { ascending: true });
+          data = r.data;
+        }
+        costPurchases = (data||[]).filter(r => r.data_fattura);
+      }
+
+      function renderCost(){
+        if (!costCurrent) return;
+        const rap = parseFloat(document.getElementById('costRapporto').value);
+        const useRap = rap && rap > 1;
+        const udm = document.getElementById('costUdm').value.trim();
+        const udf = costCurrent.unita_misura_fattura || 'unità';
+        const yLabel = '€ / ' + (useRap ? (udm || 'UDM') : udf);
+        const unit = pz => useRap ? (Number(pz)||0)/rap : (Number(pz)||0);
+
+        const rows = costPurchases.slice().sort((a,b)=>String(a.data_fattura).localeCompare(String(b.data_fattura)));
+        const vals = rows.map(r => unit(r.prezzo));
+        const suppliers = [...new Set(rows.map(r=>r.fornitore||'?'))];
+        const palette = ['#6366f1','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899','#84cc16'];
+        const colorOf = s => palette[suppliers.indexOf(s) % palette.length];
+
+        const kpis = document.getElementById('costKpis'); kpis.replaceChildren();
+        if (vals.length){
+          const min=Math.min(...vals), max=Math.max(...vals), avg=vals.reduce((a,b)=>a+b,0)/vals.length, last=vals[vals.length-1], first=vals[0];
+          const varp = first ? ((last-first)/first*100) : 0;
+          [['Minimo',costEuro(min)],['Massimo',costEuro(max)],['Medio',costEuro(avg)],['Ultimo',costEuro(last)],['Variazione',(varp>=0?'+':'')+varp.toFixed(1)+'%']].forEach(([l,v])=>{
+            const c=document.createElement('div'); c.className='bg-gray-50 rounded-lg p-2 text-center';
+            const ll=document.createElement('div'); ll.className='text-[10px] uppercase text-gray-500'; ll.textContent=l;
+            const vv=document.createElement('div'); vv.className='text-sm font-bold text-gray-800'; vv.textContent=v;
+            c.append(ll,vv); kpis.appendChild(c);
+          });
+        }
+
+        if (costChart){ costChart.destroy(); costChart=null; }
+        const ctx = document.getElementById('chartCosti').getContext('2d');
+        costChart = new Chart(ctx, {
+          type:'line',
+          data:{ labels: rows.map(r=>costDateIt(r.data_fattura)),
+            datasets:[{ label: yLabel, data: vals, borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.1)',
+              tension:0.25, fill:true, pointRadius:5, pointBackgroundColor: rows.map(r=>colorOf(r.fornitore||'?')) }] },
+          options:{ responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>{
+              const r=rows[c.dataIndex]; return [yLabel.replace('€ / ','')+': '+costEuro(c.raw), 'Fornitore: '+(r.fornitore||'?'), 'Prezzo UDF: '+costEuro(r.prezzo)]; } } } },
+            scales:{ y:{ ticks:{ callback:v=>'€'+v } } } }
+        });
+
+        const tb = document.getElementById('costTable'); tb.replaceChildren();
+        rows.forEach(r=>{
+          const tr=document.createElement('tr');
+          const td=(txt,cls)=>{ const d=document.createElement('td'); d.className='px-3 py-2 '+(cls||''); d.textContent=txt; return d; };
+          tr.append(
+            td(costDateIt(r.data_fattura)),
+            td(r.fornitore||'?'),
+            td(costEuro(r.prezzo),'text-right'),
+            td(useRap?String(rap):'—','text-right'),
+            td(costEuro(unit(r.prezzo)),'text-right font-semibold text-indigo-700'),
+            td((Number(r.quantita)||0).toString(),'text-right')
+          );
+          tb.appendChild(tr);
+        });
+      }
+
+      async function saveCostUnit(){
+        if (!costCurrent) return;
+        const rap = parseFloat(document.getElementById('costRapporto').value);
+        const udm = document.getElementById('costUdm').value.trim() || null;
+        const { error } = await supabaseClient.from('anagrafica_prodotti')
+          .update({ rapporto_udv_udf: isNaN(rap)?1:rap, unita_misura_vendita: udm })
+          .eq('id', costCurrent.id);
+        if (error){ alert('Errore salvataggio: '+error.message); return; }
+        costCurrent.rapporto_udv_udf = isNaN(rap)?1:rap;
+        costCurrent.unita_misura_vendita = udm;
+        renderCost();
+        loadUdmOptions();
+        alert('✅ Salvato.');
+      }
+
+      // ----- Unificazione prodotti -----
+      let costUnifList = [];
+      let costUnifiedMode = false;
+
+      async function loadUnif(){
+        const { data } = await supabaseClient.from('prodotti_unificati').select('id, nome, udm').order('nome');
+        costUnifList = data || [];
+        refreshUnifPick();
+      }
+      function refreshUnifPick(){
+        const sel = document.getElementById('costUnifPick'); if (!sel) return;
+        const val = sel.value;
+        costFillSel('costUnifPick', costUnifList.map(u=>[u.id, u.nome]), '—');
+        sel.value = val;
+      }
+      function costPickUnified(id){ if (id) selectUnified(id); }
+      function selectUnified(id){
+        costCurrent = null;
+        costUnifiedMode = true;
+        document.getElementById('costSearch').value = '';
+        document.getElementById('costResults').classList.add('hidden');
+        document.getElementById('costDetail').classList.remove('hidden');
+        document.getElementById('costConfigRow').classList.add('hidden');
+        document.getElementById('costUnifRow').classList.add('hidden');
+        renderCostUnified(id);
+        renderUnifManage(id);
+      }
+      function unifNome(id){ const u = costUnifList.find(x=>x.id===id); return u ? u.nome : null; }
+
+      function refreshUnifUI(){
+        const linked = !!(costCurrent && costCurrent.prodotto_unificato_id);
+        const cur = document.getElementById('costUnifCurrent');
+        if (linked){
+          const id = costCurrent.prodotto_unificato_id;
+          cur.textContent = unifNome(id) || '(prodotto unificato)';
+          cur.className = 'text-sm font-semibold text-indigo-700 cursor-pointer hover:underline';
+          cur.title = 'Apri la vista unificata';
+          cur.onclick = () => selectUnified(id);
+        } else {
+          cur.textContent = '—';
+          cur.className = 'text-sm font-semibold text-indigo-800';
+          cur.title = '';
+          cur.onclick = null;
+        }
+        document.getElementById('costUnifUnlink').classList.toggle('hidden', !linked);
+        const tgl = document.getElementById('costUnifToggle');
+        tgl.classList.toggle('hidden', !linked);
+        tgl.textContent = costUnifiedMode ? '👁 Vista singola' : '👁 Vista unificata';
+      }
+
+      function costUnifSearchFn(){
+        const term = document.getElementById('costUnifSearch').value.trim();
+        const box = document.getElementById('costUnifResults');
+        box.replaceChildren();
+        if (!term){ box.classList.add('hidden'); return; }
+        costUnifList.filter(u => u.nome.toLowerCase().includes(term.toLowerCase())).slice(0,20).forEach(u => {
+          const it=document.createElement('button'); it.type='button'; it.className='w-full text-left p-2 hover:bg-indigo-50 text-sm'; it.textContent=u.nome;
+          it.addEventListener('click', ()=>linkUnif(u.id));
+          box.appendChild(it);
+        });
+        const create=document.createElement('button'); create.type='button'; create.className='w-full text-left p-2 hover:bg-green-50 text-sm text-green-700';
+        create.textContent = '➕ Crea «' + term + '»';
+        create.addEventListener('click', ()=>createAndLinkUnif(term));
+        box.appendChild(create);
+        box.classList.remove('hidden');
+      }
+
+      async function linkUnif(id){
+        if (!costCurrent) return;
+        const { error } = await supabaseClient.from('anagrafica_prodotti').update({ prodotto_unificato_id: id }).eq('id', costCurrent.id);
+        if (error){ alert('Errore: '+error.message); return; }
+        costCurrent.prodotto_unificato_id = id;
+        document.getElementById('costUnifSearch').value = '';
+        document.getElementById('costUnifResults').classList.add('hidden');
+        refreshUnifUI();
+      }
+
+      async function createAndLinkUnif(nome){
+        const udm = document.getElementById('costUdm').value.trim() || null;
+        const { data, error } = await supabaseClient.from('prodotti_unificati').insert({ nome, udm }).select().single();
+        if (error){ alert('Errore creazione: '+error.message); return; }
+        costUnifList.push({ id:data.id, nome:data.nome, udm:data.udm });
+        refreshUnifPick();
+        await linkUnif(data.id);
+      }
+
+      async function unlinkUnif(){
+        if (!costCurrent) return;
+        const { error } = await supabaseClient.from('anagrafica_prodotti').update({ prodotto_unificato_id: null }).eq('id', costCurrent.id);
+        if (error){ alert('Errore: '+error.message); return; }
+        costCurrent.prodotto_unificato_id = null;
+        costUnifiedMode = false;
+        refreshUnifUI();
+        document.getElementById('costProdNome').textContent = costCurrent.descrizione;
+        renderCost();
+      }
+
+      function toggleUnified(){
+        costUnifiedMode = !costUnifiedMode;
+        refreshUnifUI();
+        if (costUnifiedMode) { renderCostUnified(); if (costCurrent) renderUnifManage(costCurrent.prodotto_unificato_id); }
+        else { document.getElementById('costUnifManage').classList.add('hidden'); document.getElementById('costProdNome').textContent = costCurrent.descrizione; renderCost(); }
+      }
+
+      async function renderCostUnified(unifIdArg){
+        const unifId = unifIdArg || (costCurrent && costCurrent.prodotto_unificato_id);
+        if (!unifId) { return; }
+        const { data: entries } = await supabaseClient.from('anagrafica_prodotti')
+          .select('descrizione, rapporto_udv_udf')
+          .eq('prodotto_unificato_id', unifId);
+        const unif = costUnifList.find(u=>u.id===unifId);
+        const udmLabel = (unif && unif.udm) ? unif.udm : 'UDM';
+        let rows = [];
+        for (const e of (entries||[])){
+          const rap = parseFloat(e.rapporto_udv_udf);
+          const useRap = rap && rap > 1;
+          const { data } = await supabaseClient.from('prodotti')
+            .select('prezzo, fornitore, data_fattura, quantita')
+            .eq('descrizione', e.descrizione).order('data_fattura', { ascending: true });
+          (data||[]).filter(r=>r.data_fattura).forEach(r=>{
+            rows.push({ data_fattura:r.data_fattura, fornitore:r.fornitore||'?', descrizione:e.descrizione,
+              prezzo:Number(r.prezzo)||0, quantita:Number(r.quantita)||0,
+              unit: useRap ? (Number(r.prezzo)||0)/rap : (Number(r.prezzo)||0), rapporto: useRap?rap:1 });
+          });
+        }
+        rows.sort((a,b)=>String(a.data_fattura).localeCompare(String(b.data_fattura)));
+        costDrawUnified(rows, '€ / ' + udmLabel, unif ? unif.nome : 'Prodotto unificato');
+      }
+
+      function costDrawUnified(rows, yLabel, titolo){
+        document.getElementById('costProdNome').textContent = '🔗 ' + titolo + ' (vista unificata)';
+        const descrs = [...new Set(rows.map(r=>r.descrizione))];
+        const palette = ['#6366f1','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899','#84cc16'];
+        const colorOf = d => palette[descrs.indexOf(d) % palette.length];
+        const vals = rows.map(r=>r.unit);
+        const kpis = document.getElementById('costKpis'); kpis.replaceChildren();
+        if (vals.length){
+          const min=Math.min(...vals),max=Math.max(...vals),avg=vals.reduce((a,b)=>a+b,0)/vals.length,last=vals[vals.length-1],first=vals[0];
+          const varp=first?((last-first)/first*100):0;
+          [['Minimo',costEuro(min)],['Massimo',costEuro(max)],['Medio',costEuro(avg)],['Ultimo',costEuro(last)],['Variazione',(varp>=0?'+':'')+varp.toFixed(1)+'%']].forEach(([l,v])=>{
+            const c=document.createElement('div'); c.className='bg-gray-50 rounded-lg p-2 text-center';
+            const ll=document.createElement('div'); ll.className='text-[10px] uppercase text-gray-500'; ll.textContent=l;
+            const vv=document.createElement('div'); vv.className='text-sm font-bold text-gray-800'; vv.textContent=v;
+            c.append(ll,vv); kpis.appendChild(c);
+          });
+        }
+        if (costChart){ costChart.destroy(); costChart=null; }
+        const ctx=document.getElementById('chartCosti').getContext('2d');
+        costChart=new Chart(ctx,{ type:'line',
+          data:{ labels: rows.map(r=>costDateIt(r.data_fattura)),
+            datasets:[{ label:yLabel, data:vals, borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.08)',
+              tension:0.25, fill:true, pointRadius:5, pointBackgroundColor: rows.map(r=>colorOf(r.descrizione)) }] },
+          options:{ responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>{ const r=rows[c.dataIndex];
+              return [yLabel.replace('€ / ','')+': '+costEuro(c.raw), r.descrizione, 'Fornitore: '+r.fornitore, 'Prezzo UDF: '+costEuro(r.prezzo)]; } } } },
+            scales:{ y:{ ticks:{ callback:v=>'€'+v } } } }
+        });
+        const tb=document.getElementById('costTable'); tb.replaceChildren();
+        rows.forEach(r=>{
+          const tr=document.createElement('tr');
+          const td=(t,cls)=>{ const d=document.createElement('td'); d.className='px-3 py-2 '+(cls||''); d.textContent=t; return d; };
+          tr.append(td(costDateIt(r.data_fattura)), td(r.fornitore), td(costEuro(r.prezzo),'text-right'), td(r.rapporto>1?String(r.rapporto):'—','text-right'), td(costEuro(r.unit),'text-right font-semibold text-indigo-700'), td(String(r.quantita),'text-right'));
+          tb.appendChild(tr);
+        });
+      }
+
+      function costFillSel(id, pairs, allLabel){
+        const s = document.getElementById(id); s.replaceChildren();
+        const o0=document.createElement('option'); o0.value=''; o0.textContent=allLabel; s.appendChild(o0);
+        pairs.forEach(([v,l])=>{ const o=document.createElement('option'); o.value=v; o.textContent=l; s.appendChild(o); });
+      }
+
+      async function loadCostFilters(){
+        const gv = await supabaseClient.from('gruppo_vendita').select('id, nome').order('nome');
+        costFillSel('costFiltGruppo', (gv.data||[]).map(g=>[g.id, g.nome]), 'Tutti i gruppi vendita');
+        const tp = await supabaseClient.from('tipo_prodotto').select('id, nome').order('nome');
+        costFillSel('costFiltTipo', (tp.data||[]).map(t=>[t.id, t.nome]), 'Tutti i tipi');
+        // categorie: distinte, con paginazione per coprire tutte le righe
+        const cats = new Set(); let from = 0;
+        while (true){
+          const { data, error } = await supabaseClient.from('anagrafica_prodotti').select('categoria').range(from, from+999);
+          if (error || !data || !data.length) break;
+          data.forEach(r => { if (r.categoria) cats.add(r.categoria); });
+          if (data.length < 1000) break;
+          from += 1000;
+        }
+        costFillSel('costFiltCategoria', [...cats].sort().map(c=>[c,c]), 'Tutte le categorie');
+      }
+
+      async function renderUnifManage(id){
+        const box = document.getElementById('costUnifManage');
+        if (!box || !id) { if (box) box.classList.add('hidden'); return; }
+        box.replaceChildren();
+        const unif = costUnifList.find(u=>u.id===id);
+        const header = document.createElement('div'); header.className='flex items-center justify-between mb-2 gap-2';
+        const title = document.createElement('div'); title.className='text-sm font-bold text-indigo-800'; title.textContent='🔗 ' + (unif ? unif.nome : 'Prodotto unificato') + ' — prodotti collegati';
+        const del = document.createElement('button'); del.type='button'; del.className='px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 whitespace-nowrap'; del.textContent='🗑️ Elimina prodotto unificato';
+        del.addEventListener('click', ()=>deleteUnified(id));
+        header.append(title, del);
+        box.appendChild(header);
+        const { data: members } = await supabaseClient.from('anagrafica_prodotti').select('id, descrizione, categoria, unita_misura_fattura, unita_misura_vendita, rapporto_udv_udf, prodotto_unificato_id').eq('prodotto_unificato_id', id).order('descrizione');
+        const list = document.createElement('div'); list.className='space-y-1';
+        if (!members || !members.length){ const p=document.createElement('p'); p.className='text-xs text-gray-400'; p.textContent='Nessun prodotto collegato.'; list.appendChild(p); }
+        (members||[]).forEach(m=>{
+          const row=document.createElement('div'); row.className='flex items-center justify-between bg-white border border-gray-200 rounded px-2 py-1 gap-2';
+          const t=document.createElement('button'); t.type='button'; t.className='text-xs text-indigo-700 hover:underline text-left flex-1'; t.title='Apri per modificare RAPPORTO / UDM'; t.textContent=m.descrizione;
+          t.addEventListener('click', ()=>costSelect(m));
+          const b=document.createElement('button'); b.type='button'; b.className='text-xs text-red-500 hover:text-red-700 whitespace-nowrap'; b.textContent='✕ scollega';
+          b.addEventListener('click', ()=>unlinkMember(m.id, id));
+          row.append(t,b); list.appendChild(row);
+        });
+        box.appendChild(list);
+        box.classList.remove('hidden');
+      }
+
+      async function unlinkMember(anagId, unifId){
+        const { error } = await supabaseClient.from('anagrafica_prodotti').update({ prodotto_unificato_id: null }).eq('id', anagId);
+        if (error){ alert('Errore: '+error.message); return; }
+        if (costCurrent && costCurrent.id === anagId) costCurrent.prodotto_unificato_id = null;
+        renderCostUnified(unifId);
+        renderUnifManage(unifId);
+      }
+
+      async function deleteUnified(id){
+        if (!confirm('Eliminare questo prodotto unificato?\nI prodotti collegati verranno scollegati (i dati d\'acquisto restano).')) return;
+        const { error } = await supabaseClient.from('prodotti_unificati').delete().eq('id', id);
+        if (error){ alert('Errore eliminazione: '+error.message); return; }
+        costUnifList = costUnifList.filter(u=>u.id!==id);
+        if (costCurrent && costCurrent.prodotto_unificato_id === id) costCurrent.prodotto_unificato_id = null;
+        costUnifiedMode = false;
+        refreshUnifPick();
+        document.getElementById('costUnifManage').classList.add('hidden');
+        document.getElementById('costDetail').classList.add('hidden');
+        document.getElementById('costUnifPick').value = '';
+        alert('✅ Prodotto unificato eliminato.');
+      }
+
+      async function loadUdmOptions(){
+        const udms = new Set();
+        let from = 0;
+        while (true){
+          const { data, error } = await supabaseClient.from('anagrafica_prodotti').select('unita_misura_vendita').not('unita_misura_vendita','is',null).range(from, from+999);
+          if (error || !data || !data.length) break;
+          data.forEach(r=>{ if (r.unita_misura_vendita) udms.add(String(r.unita_misura_vendita).trim()); });
+          if (data.length < 1000) break;
+          from += 1000;
+        }
+        const pu = await supabaseClient.from('prodotti_unificati').select('udm').not('udm','is',null);
+        (pu.data||[]).forEach(r=>{ if (r.udm) udms.add(String(r.udm).trim()); });
+        const dl = document.getElementById('costUdmOptions'); if (!dl) return;
+        dl.replaceChildren();
+        [...udms].filter(Boolean).sort((a,b)=>a.localeCompare(b)).forEach(v=>{ const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
+      }
+
+      loadUnif();
+      loadCostFilters();
+      loadUdmOptions();
     </script>
 </body>
 </html>
