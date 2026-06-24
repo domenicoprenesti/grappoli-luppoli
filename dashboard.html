@@ -225,6 +225,17 @@
                         <button onclick="unlinkUnif()" id="costUnifUnlink" class="hidden px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Scollega</button>
                         <button onclick="toggleUnified()" id="costUnifToggle" class="hidden px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">👁 Vista unificata</button>
                     </div>
+                    <div id="costSimili" class="hidden bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm font-bold text-amber-800">🪄 Prodotti simili da collegare</div>
+                            <button onclick="loadSuggestions()" class="text-xs text-amber-700 hover:underline">↻ aggiorna</button>
+                        </div>
+                        <div id="costSimiliList" class="space-y-1 max-h-56 overflow-y-auto"></div>
+                        <div class="mt-2 flex items-center gap-2 flex-wrap">
+                            <button onclick="linkSelectedSimili()" id="costSimiliBtn" class="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50">Collega selezionati</button>
+                            <span id="costSimiliHint" class="text-xs text-amber-700"></span>
+                        </div>
+                    </div>
                     <div id="costUnifManage" class="hidden bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4"></div>
                     <div id="costKpis" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4"></div>
                     <div class="h-80 mb-4"><canvas id="chartCosti"></canvas></div>
@@ -1029,6 +1040,7 @@
         refreshUnifUI();
         await loadCostPurchases(p.descrizione);
         renderCost();
+        loadSuggestions();
       }
 
       async function loadCostPurchases(descr){
@@ -1139,6 +1151,7 @@
         document.getElementById('costDetail').classList.remove('hidden');
         document.getElementById('costConfigRow').classList.add('hidden');
         document.getElementById('costUnifRow').classList.add('hidden');
+        document.getElementById('costSimili').classList.add('hidden');
         renderCostUnified(id);
         renderUnifManage(id);
       }
@@ -1190,6 +1203,7 @@
         document.getElementById('costUnifSearch').value = '';
         document.getElementById('costUnifResults').classList.add('hidden');
         refreshUnifUI();
+        loadSuggestions();
       }
 
       async function createAndLinkUnif(nome){
@@ -1210,6 +1224,7 @@
         refreshUnifUI();
         document.getElementById('costProdNome').textContent = costCurrent.descrizione;
         renderCost();
+        loadSuggestions();
       }
 
       function toggleUnified(){
@@ -1367,6 +1382,45 @@
         const dl = document.getElementById('costUdmOptions'); if (!dl) return;
         dl.replaceChildren();
         [...udms].filter(Boolean).sort((a,b)=>a.localeCompare(b)).forEach(v=>{ const o=document.createElement('option'); o.value=v; dl.appendChild(o); });
+      }
+
+      async function loadSuggestions(){
+        const box = document.getElementById('costSimili');
+        if (!costCurrent){ box.classList.add('hidden'); return; }
+        const list = document.getElementById('costSimiliList'); list.replaceChildren();
+        const { data, error } = await supabaseClient.rpc('suggerisci_prodotti_simili', { p_descr: costCurrent.descrizione, p_soglia: 0.3, p_limit: 15 });
+        let rows = (data||[]).filter(r => r.id !== costCurrent.id);
+        if (costCurrent.prodotto_unificato_id) rows = rows.filter(r => r.prodotto_unificato_id !== costCurrent.prodotto_unificato_id);
+        if (error || !rows.length){
+          const p=document.createElement('p'); p.className='text-xs text-gray-400'; p.textContent = error ? 'Errore nel calcolo dei simili.' : 'Nessun prodotto simile trovato.'; list.appendChild(p);
+        } else {
+          rows.forEach(r=>{
+            const row=document.createElement('label'); row.className='flex items-center gap-2 bg-white border border-gray-200 rounded px-2 py-1 cursor-pointer';
+            const cb=document.createElement('input'); cb.type='checkbox'; cb.value=r.id; cb.dataset.linked = r.prodotto_unificato_id || '';
+            const t=document.createElement('span'); t.className='text-xs text-gray-700 flex-1'; t.textContent=r.descrizione;
+            const sim=document.createElement('span'); sim.className='text-[10px] text-amber-700 font-semibold whitespace-nowrap'; sim.textContent=Math.round((r.similarita||0)*100)+'%';
+            const st=document.createElement('span'); st.className='text-[10px] whitespace-nowrap '+(r.prodotto_unificato_id?'text-indigo-600':'text-gray-400');
+            st.textContent = r.prodotto_unificato_id ? ('🔗 '+(unifNome(r.prodotto_unificato_id)||'altrove')) : '⚪';
+            row.append(cb, t, sim, st); list.appendChild(row);
+          });
+        }
+        const btn=document.getElementById('costSimiliBtn'); const hint=document.getElementById('costSimiliHint');
+        if (costCurrent.prodotto_unificato_id){ btn.disabled=false; hint.textContent='→ verranno collegati a «'+(unifNome(costCurrent.prodotto_unificato_id)||'')+'»'; }
+        else { btn.disabled=true; hint.textContent='Collega prima questo prodotto a un prodotto unificato (sopra).'; }
+        box.classList.remove('hidden');
+      }
+
+      async function linkSelectedSimili(){
+        if (!costCurrent || !costCurrent.prodotto_unificato_id) return;
+        const checks = [...document.querySelectorAll('#costSimiliList input[type=checkbox]:checked')];
+        if (!checks.length){ alert('Seleziona almeno un prodotto.'); return; }
+        const elsewhere = checks.filter(c => c.dataset.linked);
+        if (elsewhere.length && !confirm(elsewhere.length+' dei selezionati sono già collegati ad un altro prodotto unificato. Spostarli qui?')) return;
+        const ids = checks.map(c => parseInt(c.value, 10));
+        const { error } = await supabaseClient.from('anagrafica_prodotti').update({ prodotto_unificato_id: costCurrent.prodotto_unificato_id }).in('id', ids);
+        if (error){ alert('Errore: '+error.message); return; }
+        await loadSuggestions();
+        alert('✅ '+ids.length+' prodotti collegati.');
       }
 
       loadUnif();
