@@ -7,6 +7,7 @@
     <title>Gestione Fatture Elettroniche</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="auth.js"></script>
     <style>
         .filter-input {
@@ -122,6 +123,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
+            </div>
+
+            <!-- Aggiorna fatture da cartella Drive (DBfatture) -->
+            <div class="mb-6 border-2 border-emerald-300 rounded-xl p-5 bg-emerald-50">
+                <p class="text-lg font-bold text-emerald-800 mb-1">🔄 Aggiorna fatture da cartella</p>
+                <p class="text-sm text-gray-600 mb-3">Legge la cartella <strong>DBfatture</strong> (su Google Drive) e importa i nuovi XML/ZIP, saltando i duplicati. La prima volta scegli la cartella, poi viene ricordata.</p>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <button onclick="aggiornaFattureDaCartella()" class="px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">🔄 Aggiorna fatture</button>
+                    <button onclick="collegaCartellaFatture()" class="px-3 py-2.5 bg-white border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-100 text-sm">📁 Scegli/Cambia cartella</button>
+                    <span id="cartellaFattureInfo" class="text-xs text-gray-500"></span>
+                </div>
             </div>
 
             <!-- Area Upload Singolo -->
@@ -2127,6 +2139,63 @@
                 render();
             }
         }
+
+        // ===== AGGIORNA FATTURE DA CARTELLA (Google Drive: DBfatture) =====
+        const FATT_DIR_DB = 'gl_fatture_db', FATT_DIR_STORE = 'handles', FATT_DIR_KEY = 'dbfatture';
+        function fattIdb(){ return new Promise((res,rej)=>{ const r=indexedDB.open(FATT_DIR_DB,1); r.onupgradeneeded=()=>r.result.createObjectStore(FATT_DIR_STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+        async function fattDirGet(){ try{ const db=await fattIdb(); return await new Promise((res)=>{ const t=db.transaction(FATT_DIR_STORE,'readonly').objectStore(FATT_DIR_STORE).get(FATT_DIR_KEY); t.onsuccess=()=>res(t.result||null); t.onerror=()=>res(null); }); }catch(e){ return null; } }
+        async function fattDirSet(h){ try{ const db=await fattIdb(); return await new Promise((res)=>{ const t=db.transaction(FATT_DIR_STORE,'readwrite').objectStore(FATT_DIR_STORE).put(h,FATT_DIR_KEY); t.onsuccess=()=>res(true); t.onerror=()=>res(false); }); }catch(e){ return false; } }
+
+        async function collegaCartellaFatture(){
+            if (!window.showDirectoryPicker){ alert('Questa funzione richiede Google Chrome.\nIn alternativa usa "Carica Cartella Completa".'); return null; }
+            try {
+                const h = await window.showDirectoryPicker({ id:'dbfatture', mode:'read' });
+                await fattDirSet(h);
+                const info=document.getElementById('cartellaFattureInfo'); if(info) info.textContent='Cartella collegata: '+h.name;
+                return h;
+            } catch(e){ return null; }
+        }
+
+        async function fattEnsurePerm(h){
+            const opts={ mode:'read' };
+            if ((await h.queryPermission(opts))==='granted') return true;
+            return (await h.requestPermission(opts))==='granted';
+        }
+
+        async function aggiornaFattureDaCartella(){
+            if (!window.showDirectoryPicker){ alert('Questa funzione richiede Google Chrome.\nIn alternativa usa "Carica Cartella Completa".'); return; }
+            let h = await fattDirGet();
+            if (!h){ h = await collegaCartellaFatture(); if(!h) return; }
+            if (!(await fattEnsurePerm(h))){ alert('Permesso sulla cartella negato.'); return; }
+            const files = [];
+            try {
+                for await (const entry of h.values()){
+                    if (entry.kind !== 'file') continue;
+                    const nome = entry.name.toLowerCase();
+                    if (nome.endsWith('.xml') || nome.endsWith('.p7m')){
+                        files.push(await entry.getFile());
+                    } else if (nome.endsWith('.zip')){
+                        const zf = await entry.getFile();
+                        const zip = await JSZip.loadAsync(await zf.arrayBuffer());
+                        for (const zn of Object.keys(zip.files)){
+                            if (zip.files[zn].dir) continue;
+                            const low = zn.toLowerCase();
+                            if (low.endsWith('.xml') || low.endsWith('.p7m')){
+                                const content = await zip.files[zn].async('string');
+                                files.push({ name: zn.split('/').pop(), text: async()=>content });
+                            }
+                        }
+                    }
+                }
+            } catch(e){ alert('Errore lettura cartella: '+e.message); return; }
+            const info=document.getElementById('cartellaFattureInfo');
+            if (!files.length){ if(info) info.textContent='Cartella "'+h.name+'": nessun XML/ZIP trovato'; alert('Nessun file XML/ZIP trovato nella cartella.'); return; }
+            if(info) info.textContent='Cartella "'+h.name+'": '+files.length+' file trovati';
+            await processFiles(files);
+        }
+
+        // All'apertura, mostra se c'è già una cartella collegata
+        (async()=>{ const h=await fattDirGet(); const info=document.getElementById('cartellaFattureInfo'); if(h&&info) info.textContent='Cartella collegata: '+h.name; })();
 
         async function processFiles(files) {
             // Verifica che il database sia pronto
