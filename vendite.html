@@ -1331,12 +1331,12 @@
 
         async function confirmDelete() {
             if (!deleteAction) return;
-            
+            const ids = deleteAction.ids;
+
             closeDeleteModal();
             showLoading(true, 0, 'Eliminazione...');
-            
+
             try {
-                const ids = deleteAction.ids;
                 const BATCH_DELETE = 100;
                 
                 for (let i = 0; i < ids.length; i += BATCH_DELETE) {
