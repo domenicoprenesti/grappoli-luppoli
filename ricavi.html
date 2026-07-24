@@ -38,7 +38,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <script>
-        (async () => { await requireAuth('ricavi.html'); })();
+        (async () => { await requireAuth('ricavi.html'); if (typeof loadRicaviSerali === 'function') loadRicaviSerali(); })();
     </script>
 
     <!-- Navbar -->
