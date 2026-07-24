@@ -85,11 +85,11 @@
     <div id="tabInserisci" class="wrap">
       <label>📅 Data</label>
       <button type="button" id="mDataBtn" class="datebtn" onclick="openCal()">—</button>
-      <div class="field-pos"><label>💳 POS / Bancomat</label><input type="text" id="mPos" inputmode="text" placeholder="0,00  (anche 120+45)" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-cont"><label>💵 Contanti</label><input type="text" id="mContanti" inputmode="text" placeholder="0,00  (anche 120+45)" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-sat"><label>📱 Satispay</label><input type="text" id="mSatispay" inputmode="text" placeholder="0,00  (anche 120+45)" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-fat"><label>🧾 Fatture</label><input type="text" id="mFatture" inputmode="text" placeholder="0,00  (anche 120+45)" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-misc"><label>📦 Miscellaneo</label><input type="text" id="mMisc" inputmode="text" placeholder="0,00  (anche 120+45)" oninput="calcTot()" onblur="applyCalc(this)"></div>
+      <div class="field-pos"><label>💳 POS / Bancomat</label><input type="text" id="mPos" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
+      <div class="field-cont"><label>💵 Contanti</label><input type="text" id="mContanti" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
+      <div class="field-sat"><label>📱 Satispay</label><input type="text" id="mSatispay" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
+      <div class="field-fat"><label>🧾 Fatture</label><input type="text" id="mFatture" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
+      <div class="field-misc"><label>📦 Miscellaneo</label><input type="text" id="mMisc" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
       <div class="totale"><span>TOTALE GIORNALIERO</span><span class="v" id="mTot">0,00 €</span></div>
       <label>📝 Note (opzionale)</label>
       <textarea id="mNote" rows="2" placeholder="Es: evento speciale..."></textarea>
