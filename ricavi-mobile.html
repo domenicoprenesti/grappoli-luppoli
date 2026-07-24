@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#092A37">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="icon" href="logo.png">
+  <title>Ricavi G&L</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;padding-bottom:72px}
+    .hidden{display:none!important}
+    .topbar{background:linear-gradient(135deg,#092A37,#0a3d4f);color:#fff;padding:16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+    .topbar h1{font-size:18px;font-weight:700}
+    .topbar button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:13px}
+    .wrap{max-width:480px;margin:0 auto;padding:16px}
+    label{display:block;font-size:13px;font-weight:600;color:#334155;margin:14px 2px 6px}
+    input,textarea{width:100%;padding:14px;border:2px solid #e2e8f0;border-radius:12px;font-size:17px;background:#fff}
+    input:focus,textarea:focus{outline:none;border-color:#2563eb}
+    .field-pos label{color:#0369a1}.field-cont label{color:#15803d}.field-sat label{color:#7c3aed}
+    .field-fat label{color:#0e7490}.field-misc label{color:#b45309}
+    .totale{display:flex;justify-content:space-between;align-items:center;background:#0f172a;color:#fff;border-radius:12px;padding:16px;margin:18px 0;font-weight:700}
+    .totale .v{font-size:22px}
+    .btn{display:block;width:100%;border:0;border-radius:12px;padding:16px;font-size:17px;font-weight:700;color:#fff;background:#2563eb;margin-top:6px}
+    .btn:active{opacity:.85}
+    .btn-lg{padding:18px}
+    .msg{margin-top:14px;padding:14px;border-radius:12px;font-size:15px;font-weight:600;text-align:center}
+    .msg.ok{background:#dcfce7;color:#166534}.msg.wait{background:#fef9c3;color:#854d0e}.msg.err{background:#fee2e2;color:#991b1b}
+    .bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e2e8f0;display:flex;z-index:20}
+    .bottomnav button{flex:1;background:none;border:0;padding:12px;font-size:12px;color:#64748b;display:flex;flex-direction:column;align-items:center;gap:3px}
+    .bottomnav button.active{color:#2563eb;font-weight:700}
+    .bottomnav .ico{font-size:20px}
+    .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+    .logo{width:64px;height:64px;border-radius:16px;margin:0 auto 12px;display:block}
+    .step{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:10px;font-size:14px;line-height:1.5}
+    .muted{color:#64748b;font-size:13px;text-align:center;margin-top:8px}
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginView">
+    <div class="topbar"><h1>🍇 Ricavi G&amp;L</h1></div>
+    <div class="wrap">
+      <div class="card" style="margin-top:24px">
+        <img src="logo.png" class="logo" alt="">
+        <h2 style="text-align:center;font-size:20px;margin-bottom:4px">Accedi</h2>
+        <p class="muted" style="margin-bottom:8px">Usa le credenziali del gestionale</p>
+        <label>Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" inputmode="email" placeholder="tua@email.it">
+        <label>Password</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" placeholder="Password">
+        <div id="loginMsg" class="msg err hidden"></div>
+        <button class="btn btn-lg" style="margin-top:16px" onclick="doLogin()">Accedi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="appView" class="hidden">
+    <div class="topbar">
+      <h1>Inserisci Ricavo</h1>
+      <button onclick="doLogout()">Esci</button>
+    </div>
+
+    <!-- TAB INSERISCI -->
+    <div id="tabInserisci" class="wrap">
+      <label>📅 Data</label>
+      <input type="date" id="mData">
+      <div class="field-pos"><label>💳 POS / Bancomat</label><input type="text" id="mPos" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
+      <div class="field-cont"><label>💵 Contanti</label><input type="text" id="mContanti" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
+      <div class="field-sat"><label>📱 Satispay</label><input type="text" id="mSatispay" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
+      <div class="field-fat"><label>🧾 Fatture</label><input type="text" id="mFatture" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
+      <div class="field-misc"><label>📦 Miscellaneo</label><input type="text" id="mMisc" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
+      <div class="totale"><span>TOTALE GIORNALIERO</span><span class="v" id="mTot">0,00 €</span></div>
+      <label>📝 Note (opzionale)</label>
+      <textarea id="mNote" rows="2" placeholder="Es: evento speciale..."></textarea>
+      <div id="saveMsg" class="msg hidden"></div>
+      <button class="btn btn-lg" id="btnSalva" onclick="salvaRicavo()">💾 Salva</button>
+    </div>
+
+    <!-- TAB DOWNLOAD -->
+    <div id="tabDownload" class="wrap hidden">
+      <div class="card" style="margin-top:16px">
+        <img src="logo.png" class="logo" alt="">
+        <h2 style="text-align:center;font-size:19px;margin-bottom:12px">📲 Installa l'app</h2>
+        <div id="installAndroid" class="hidden">
+          <p class="step">Tocca il pulsante qui sotto per installare l'app sulla schermata Home.</p>
+          <button class="btn" onclick="doInstall()">⬇️ Installa app</button>
+        </div>
+        <div id="installIos" class="hidden">
+          <div class="step">1) Tocca l'icona <strong>Condividi</strong> ⬆️ in basso (Safari).</div>
+          <div class="step">2) Scorri e tocca <strong>"Aggiungi a Home"</strong>.</div>
+          <div class="step">3) Conferma con <strong>"Aggiungi"</strong>. L'icona comparirà tra le app.</div>
+        </div>
+        <div id="installOther" class="hidden">
+          <p class="step">Dal menù del browser scegli <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong>.</p>
+        </div>
+        <p class="muted">L'app si aggiorna da sola quando pubblichiamo novità.</p>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottomnav">
+      <button id="navInserisci" class="active" onclick="showTab('inserisci')"><span class="ico">➕</span>Inserisci</button>
+      <button id="navDownload" onclick="showTab('download')"><span class="ico">⬇️</span>Download app</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://fqnzoxttbzzlgjxefelx.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxbnpveHR0Ynp6bGdqeGVmZWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzE4NTksImV4cCI6MjA4Mjk0Nzg1OX0.PLsZsBkac_Pjd8irfOXSwGlM5mg7B6X-5HRSQOfaFnk';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function num(id){ return parseFloat((document.getElementById(id).value||'').replace(',','.')) || 0; }
+    function eur(n){ return (Number(n)||0).toFixed(2).replace('.', ',') + ' €'; }
+    function itDate(s){ if(!s) return ''; const p=s.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : s; }
+
+    function calcTot(){
+      const t = num('mPos')+num('mContanti')+num('mSatispay')+num('mFatture')+num('mMisc');
+      document.getElementById('mTot').textContent = eur(t);
+    }
+
+    async function checkSession(){
+      const { data:{ session } } = await supabaseClient.auth.getSession();
+      if (session) showApp(); else showLogin();
+    }
+    function showLogin(){ document.getElementById('loginView').classList.remove('hidden'); document.getElementById('appView').classList.add('hidden'); }
+    function showApp(){
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('appView').classList.remove('hidden');
+      const t=new Date();
+      document.getElementById('mData').value = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+      calcTot();
+    }
+
+    async function doLogin(){
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+      const msg = document.getElementById('loginMsg');
+      msg.classList.add('hidden');
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error){ msg.textContent='Email o password errati.'; msg.classList.remove('hidden'); return; }
+      showApp();
+    }
+    async function doLogout(){ await supabaseClient.auth.signOut(); showLogin(); }
+
+    async function salvaRicavo(){
+      const data = document.getElementById('mData').value;
+      const msg = document.getElementById('saveMsg');
+      msg.className = 'msg hidden';
+      if (!data){ msg.className='msg err'; msg.textContent='Seleziona la data.'; return; }
+      const btn = document.getElementById('btnSalva'); btn.disabled=true; btn.textContent='⏳ Salvataggio...';
+      try {
+        const { data:{ user } } = await supabaseClient.auth.getUser();
+        let uid=null, nome=null;
+        if (user){
+          const { data: prof } = await supabaseClient.from('utenti').select('id, nome, cognome').eq('auth_id', user.id).maybeSingle();
+          if (prof){ uid=prof.id; nome=((prof.nome||'')+' '+(prof.cognome||'')).trim(); }
+        }
+        const row = { data, pos:num('mPos'), contanti:num('mContanti'), satispay:num('mSatispay'),
+          fatture:num('mFatture'), miscellaneo:num('mMisc'), note:document.getElementById('mNote').value.trim(),
+          user_id:uid, user_nome:nome };
+        const { data: ins, error } = await supabaseClient.from('ricavi_serali').insert(row).select().single();
+        if (error) throw error;
+        if (ins.stato === 'approvato_auto'){
+          msg.className='msg ok'; msg.textContent='✅ Salvato e registrato per il '+itDate(data)+'.';
+        } else {
+          msg.className='msg wait'; msg.textContent='⏳ Salvato. Esiste già un ricavo per il '+itDate(data)+': in attesa di approvazione dell\'Admin.';
+        }
+        ['mPos','mContanti','mSatispay','mFatture','mMisc','mNote'].forEach(id=>document.getElementById(id).value='');
+        calcTot();
+      } catch(e){
+        msg.className='msg err'; msg.textContent='Errore: '+(e.message||e);
+      }
+      btn.disabled=false; btn.textContent='💾 Salva';
+    }
+
+    function showTab(t){
+      document.getElementById('tabInserisci').classList.toggle('hidden', t!=='inserisci');
+      document.getElementById('tabDownload').classList.toggle('hidden', t!=='download');
+      document.getElementById('navInserisci').classList.toggle('active', t==='inserisci');
+      document.getElementById('navDownload').classList.toggle('active', t==='download');
+    }
+
+    // ===== Installazione PWA =====
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; setupInstall(); });
+    function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+    function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+    function setupInstall(){
+      document.getElementById('installAndroid').classList.add('hidden');
+      document.getElementById('installIos').classList.add('hidden');
+      document.getElementById('installOther').classList.add('hidden');
+      if (isStandalone()){ document.getElementById('installOther').classList.remove('hidden'); document.querySelector('#installOther .step').textContent='✅ L\'app è già installata su questo dispositivo.'; return; }
+      if (isIos()) document.getElementById('installIos').classList.remove('hidden');
+      else if (deferredPrompt) document.getElementById('installAndroid').classList.remove('hidden');
+      else document.getElementById('installOther').classList.remove('hidden');
+    }
+    async function doInstall(){ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
+
+    // Service worker
+    if ('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+
+    setupInstall();
+    checkSession();
+  </script>
+</body>
+</html>
