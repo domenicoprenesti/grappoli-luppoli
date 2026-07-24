@@ -51,8 +51,26 @@ async function requireAuth(pageName, opts = {}) {
   if (el) el.textContent = `Ciao, ${profile.nome || 'Utente'}`;
 
   await applyMenuPermissions();
+  checkRicaviSerali();
   registraAccesso(pageName, 'visualizzazione');
   return profile;
+}
+
+// Badge Admin: numero di ricavi serali (da PWA) in attesa di approvazione, sulla voce Ricavi
+async function checkRicaviSerali() {
+  try {
+    if (!currentProfile || currentProfile.ruolo !== 'Admin') return;
+    const { count } = await supabaseClient.from('ricavi_serali').select('*', { count: 'exact', head: true }).eq('stato', 'in_attesa');
+    if (!count) return;
+    document.querySelectorAll('a[href$="ricavi.html"]').forEach(a => {
+      if (a.querySelector('.serali-badge')) return;
+      const b = document.createElement('span');
+      b.className = 'serali-badge';
+      b.textContent = count;
+      b.style.cssText = 'display:inline-block;min-width:18px;height:18px;line-height:18px;text-align:center;background:#dc2626;color:#fff;border-radius:9px;font-size:11px;font-weight:700;margin-left:6px;padding:0 5px;';
+      a.appendChild(b);
+    });
+  } catch (e) {}
 }
 
 // Calcola le pagine vietate al profilo, le memorizza in cache di sessione e le nasconde via CSS
