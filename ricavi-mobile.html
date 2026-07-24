@@ -52,6 +52,12 @@
     #calDays button.today{box-shadow:inset 0 0 0 2px #2563eb}
     #calDays button.empty{background:transparent}
     .cal-close{width:100%;margin-top:12px;padding:14px;border:0;border-radius:12px;background:#e2e8f0;font-weight:600;color:#334155}
+    .keypad{position:fixed;left:0;right:0;bottom:0;background:#cbd5e1;padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;z-index:60;box-shadow:0 -4px 14px rgba(0,0,0,.2)}
+    .keypad button{padding:18px 0;font-size:22px;font-weight:700;border:0;border-radius:12px;background:#fff;color:#1e293b}
+    .keypad button:active{background:#e2e8f0}
+    .keypad button.op{background:#c7d2fe;color:#1e3a8a}
+    .keypad button.eq{background:#2563eb;color:#fff}
+    .keypad button.ok{background:#16a34a;color:#fff}
   </style>
 </head>
 <body>
@@ -85,14 +91,14 @@
     <div id="tabInserisci" class="wrap">
       <label>📅 Data</label>
       <button type="button" id="mDataBtn" class="datebtn" onclick="openCal()">—</button>
-      <div class="field-pos"><label>💳 POS / Bancomat</label><input type="text" id="mPos" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-cont"><label>💵 Contanti</label><input type="text" id="mContanti" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-sat"><label>📱 Satispay</label><input type="text" id="mSatispay" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-fat"><label>🧾 Fatture</label><input type="text" id="mFatture" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
-      <div class="field-misc"><label>📦 Miscellaneo</label><input type="text" id="mMisc" inputmode="decimal" placeholder="0,00" oninput="calcTot()" onblur="applyCalc(this)"></div>
+      <div class="field-pos"><label>💳 POS / Bancomat</label><input type="text" id="mPos" inputmode="none" readonly placeholder="0,00" onfocus="kpShow(this)" onclick="kpShow(this)"></div>
+      <div class="field-cont"><label>💵 Contanti</label><input type="text" id="mContanti" inputmode="none" readonly placeholder="0,00" onfocus="kpShow(this)" onclick="kpShow(this)"></div>
+      <div class="field-sat"><label>📱 Satispay</label><input type="text" id="mSatispay" inputmode="none" readonly placeholder="0,00" onfocus="kpShow(this)" onclick="kpShow(this)"></div>
+      <div class="field-fat"><label>🧾 Fatture</label><input type="text" id="mFatture" inputmode="none" readonly placeholder="0,00" onfocus="kpShow(this)" onclick="kpShow(this)"></div>
+      <div class="field-misc"><label>📦 Miscellaneo</label><input type="text" id="mMisc" inputmode="none" readonly placeholder="0,00" onfocus="kpShow(this)" onclick="kpShow(this)"></div>
       <div class="totale"><span>TOTALE GIORNALIERO</span><span class="v" id="mTot">0,00 €</span></div>
       <label>📝 Note (opzionale)</label>
-      <textarea id="mNote" rows="2" placeholder="Es: evento speciale..."></textarea>
+      <textarea id="mNote" rows="2" onfocus="kpHide()" placeholder="Es: evento speciale..."></textarea>
       <div id="saveMsg" class="msg hidden"></div>
       <button class="btn btn-lg" id="btnSalva" onclick="salvaRicavo()">💾 Salva</button>
     </div>
@@ -144,6 +150,14 @@
       </div>
     </div>
 
+    <!-- TASTIERINO CALCOLATRICE -->
+    <div id="keypad" class="keypad hidden">
+      <button type="button" onclick="kpIns('7')">7</button><button type="button" onclick="kpIns('8')">8</button><button type="button" onclick="kpIns('9')">9</button><button type="button" class="op" onclick="kpBack()">⌫</button>
+      <button type="button" onclick="kpIns('4')">4</button><button type="button" onclick="kpIns('5')">5</button><button type="button" onclick="kpIns('6')">6</button><button type="button" class="op" onclick="kpIns('+')">+</button>
+      <button type="button" onclick="kpIns('1')">1</button><button type="button" onclick="kpIns('2')">2</button><button type="button" onclick="kpIns('3')">3</button><button type="button" class="op" onclick="kpIns('-')">−</button>
+      <button type="button" onclick="kpIns(',')">,</button><button type="button" onclick="kpIns('0')">0</button><button type="button" class="eq" onclick="kpEq()">=</button><button type="button" class="ok" onclick="kpClose()">OK</button>
+    </div>
+
     <!-- BOTTOM NAV -->
     <div class="bottomnav">
       <button id="navInserisci" class="active" onclick="showTab('inserisci')"><span class="ico">➕</span>Inserisci</button>
@@ -180,6 +194,23 @@
       calcTot();
     }
 
+    // ===== Tastierino calcolatrice interno (i campi importo sono readonly: si scrive solo da qui) =====
+    let activeAmt = null;
+    function kpShow(el){
+      if (activeAmt && activeAmt!==el) applyCalc(activeAmt);
+      if (activeAmt) activeAmt.style.borderColor='';
+      activeAmt = el; el.style.borderColor='#2563eb';
+      document.getElementById('keypad').classList.remove('hidden');
+    }
+    function kpHide(){
+      if (activeAmt){ applyCalc(activeAmt); activeAmt.style.borderColor=''; activeAmt=null; }
+      document.getElementById('keypad').classList.add('hidden');
+    }
+    function kpIns(ch){ if(!activeAmt) return; activeAmt.value += ch; calcTot(); }
+    function kpBack(){ if(!activeAmt) return; activeAmt.value = activeAmt.value.slice(0,-1); calcTot(); }
+    function kpEq(){ if(activeAmt) applyCalc(activeAmt); }
+    function kpClose(){ kpHide(); }
+
     // ===== Calendario custom (tocca il giorno = selezionato, niente conferma) =====
     let mSelISO = null, calY, calM;
     const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -188,7 +219,7 @@
     function isoToday(){ const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
     function fmtBtn(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-').map(Number); const dt=new Date(y,m-1,d); return GGdow[dt.getDay()]+' '+String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y; }
     function setData(iso){ mSelISO=iso; document.getElementById('mDataBtn').textContent=fmtBtn(iso); }
-    function openCal(){ const b=mSelISO?mSelISO.split('-').map(Number):null; const t=new Date(); calY=b?b[0]:t.getFullYear(); calM=b?b[1]-1:t.getMonth(); renderCal(); document.getElementById('calOverlay').classList.remove('hidden'); }
+    function openCal(){ kpHide(); const b=mSelISO?mSelISO.split('-').map(Number):null; const t=new Date(); calY=b?b[0]:t.getFullYear(); calM=b?b[1]-1:t.getMonth(); renderCal(); document.getElementById('calOverlay').classList.remove('hidden'); }
     function closeCal(){ document.getElementById('calOverlay').classList.add('hidden'); }
 
     // Se cambi data con importi già inseriti, chiedi cosa fare
@@ -251,6 +282,7 @@
     async function doLogout(){ await supabaseClient.auth.signOut(); showLogin(); }
 
     async function salvaRicavo(){
+      kpHide();
       const data = mSelISO;
       const msg = document.getElementById('saveMsg');
       msg.className = 'msg hidden';
