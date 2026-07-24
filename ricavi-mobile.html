@@ -39,6 +39,19 @@
     .logo{width:64px;height:64px;border-radius:16px;margin:0 auto 12px;display:block}
     .step{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:10px;font-size:14px;line-height:1.5}
     .muted{color:#64748b;font-size:13px;text-align:center;margin-top:8px}
+    .datebtn{width:100%;padding:14px;border:2px solid #e2e8f0;border-radius:12px;font-size:17px;background:#fff;text-align:left;color:#1e293b}
+    .cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+    .cal{background:#fff;border-radius:16px;padding:16px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+    .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .cal-head button{background:#f1f5f9;border:0;border-radius:10px;width:44px;height:44px;font-size:22px;color:#334155}
+    .cal-head div{font-weight:700;font-size:16px}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+    #calDow div{text-align:center;font-size:11px;color:#94a3b8;padding:4px 0}
+    #calDays button{aspect-ratio:1;border:0;border-radius:12px;background:#f8fafc;font-size:16px;color:#1e293b}
+    #calDays button.sel{background:#2563eb;color:#fff;font-weight:700}
+    #calDays button.today{box-shadow:inset 0 0 0 2px #2563eb}
+    #calDays button.empty{background:transparent}
+    .cal-close{width:100%;margin-top:12px;padding:14px;border:0;border-radius:12px;background:#e2e8f0;font-weight:600;color:#334155}
   </style>
 </head>
 <body>
@@ -71,7 +84,7 @@
     <!-- TAB INSERISCI -->
     <div id="tabInserisci" class="wrap">
       <label>📅 Data</label>
-      <input type="date" id="mData">
+      <button type="button" id="mDataBtn" class="datebtn" onclick="openCal()">—</button>
       <div class="field-pos"><label>💳 POS / Bancomat</label><input type="text" id="mPos" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
       <div class="field-cont"><label>💵 Contanti</label><input type="text" id="mContanti" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
       <div class="field-sat"><label>📱 Satispay</label><input type="text" id="mSatispay" inputmode="decimal" placeholder="0,00" oninput="calcTot()"></div>
@@ -105,6 +118,20 @@
       </div>
     </div>
 
+    <!-- CALENDARIO CUSTOM -->
+    <div id="calOverlay" class="cal-overlay hidden" onclick="if(event.target===this)closeCal()">
+      <div class="cal">
+        <div class="cal-head">
+          <button type="button" onclick="calNav(-1)">‹</button>
+          <div id="calTitle"></div>
+          <button type="button" onclick="calNav(1)">›</button>
+        </div>
+        <div class="cal-grid" id="calDow"></div>
+        <div class="cal-grid" id="calDays" style="margin-top:5px"></div>
+        <button type="button" class="cal-close" onclick="closeCal()">Chiudi</button>
+      </div>
+    </div>
+
     <!-- BOTTOM NAV -->
     <div class="bottomnav">
       <button id="navInserisci" class="active" onclick="showTab('inserisci')"><span class="ico">➕</span>Inserisci</button>
@@ -126,6 +153,35 @@
       document.getElementById('mTot').textContent = eur(t);
     }
 
+    // ===== Calendario custom (tocca il giorno = selezionato, niente conferma) =====
+    let mSelISO = null, calY, calM;
+    const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+    const GG = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+    const GGdow = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+    function isoToday(){ const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
+    function fmtBtn(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-').map(Number); const dt=new Date(y,m-1,d); return GGdow[dt.getDay()]+' '+String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y; }
+    function setData(iso){ mSelISO=iso; document.getElementById('mDataBtn').textContent=fmtBtn(iso); }
+    function openCal(){ const b=mSelISO?mSelISO.split('-').map(Number):null; const t=new Date(); calY=b?b[0]:t.getFullYear(); calM=b?b[1]-1:t.getMonth(); renderCal(); document.getElementById('calOverlay').classList.remove('hidden'); }
+    function closeCal(){ document.getElementById('calOverlay').classList.add('hidden'); }
+    function calNav(d){ calM+=d; if(calM<0){calM=11;calY--;} if(calM>11){calM=0;calY++;} renderCal(); }
+    function renderCal(){
+      document.getElementById('calTitle').textContent=MESI[calM]+' '+calY;
+      const dow=document.getElementById('calDow'); dow.replaceChildren();
+      GG.forEach(g=>{ const d=document.createElement('div'); d.textContent=g; dow.appendChild(d); });
+      const days=document.getElementById('calDays'); days.replaceChildren();
+      const start=(new Date(calY,calM,1).getDay()+6)%7; // Lunedì=0
+      const dim=new Date(calY,calM+1,0).getDate();
+      for(let i=0;i<start;i++){ const b=document.createElement('button'); b.type='button'; b.className='empty'; b.disabled=true; days.appendChild(b); }
+      for(let d=1;d<=dim;d++){
+        const iso=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+        const b=document.createElement('button'); b.type='button'; b.textContent=d;
+        if(iso===mSelISO) b.classList.add('sel');
+        if(iso===isoToday()) b.classList.add('today');
+        b.addEventListener('click',()=>{ setData(iso); closeCal(); });
+        days.appendChild(b);
+      }
+    }
+
     async function checkSession(){
       const { data:{ session } } = await supabaseClient.auth.getSession();
       if (session) showApp(); else showLogin();
@@ -134,8 +190,7 @@
     function showApp(){
       document.getElementById('loginView').classList.add('hidden');
       document.getElementById('appView').classList.remove('hidden');
-      const t=new Date();
-      document.getElementById('mData').value = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+      setData(isoToday());
       calcTot();
     }
 
@@ -151,7 +206,7 @@
     async function doLogout(){ await supabaseClient.auth.signOut(); showLogin(); }
 
     async function salvaRicavo(){
-      const data = document.getElementById('mData').value;
+      const data = mSelISO;
       const msg = document.getElementById('saveMsg');
       msg.className = 'msg hidden';
       if (!data){ msg.className='msg err'; msg.textContent='Seleziona la data.'; return; }
