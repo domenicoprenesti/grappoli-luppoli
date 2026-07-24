@@ -132,6 +132,18 @@
       </div>
     </div>
 
+    <!-- CONFERMA CAMBIO DATA (con importi già inseriti) -->
+    <div id="dateConfirm" class="cal-overlay hidden">
+      <div class="cal" style="text-align:center">
+        <div style="font-size:34px;margin-bottom:6px">📅</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:6px">Stai cambiando data</div>
+        <p id="dateConfirmMsg" style="font-size:14px;color:#475569;line-height:1.5;margin-bottom:14px"></p>
+        <button type="button" class="btn" style="background:#2563eb" onclick="confirmKeep()">✔️ Tieni gli importi</button>
+        <button type="button" class="btn" style="background:#dc2626;margin-top:8px" onclick="confirmClear()">🗑️ Azzera gli importi</button>
+        <button type="button" class="cal-close" onclick="closeDateConfirm()">Annulla</button>
+      </div>
+    </div>
+
     <!-- BOTTOM NAV -->
     <div class="bottomnav">
       <button id="navInserisci" class="active" onclick="showTab('inserisci')"><span class="ico">➕</span>Inserisci</button>
@@ -178,6 +190,24 @@
     function setData(iso){ mSelISO=iso; document.getElementById('mDataBtn').textContent=fmtBtn(iso); }
     function openCal(){ const b=mSelISO?mSelISO.split('-').map(Number):null; const t=new Date(); calY=b?b[0]:t.getFullYear(); calM=b?b[1]-1:t.getMonth(); renderCal(); document.getElementById('calOverlay').classList.remove('hidden'); }
     function closeCal(){ document.getElementById('calOverlay').classList.add('hidden'); }
+
+    // Se cambi data con importi già inseriti, chiedi cosa fare
+    let pendingISO = null;
+    function hasAmounts(){ return ['mPos','mContanti','mSatispay','mFatture','mMisc'].some(id=>{ const v=(document.getElementById(id).value||'').trim(); return v!=='' && (parseFloat(v.replace(',','.'))||0)!==0; }); }
+    function clearAmounts(){ ['mPos','mContanti','mSatispay','mFatture','mMisc'].forEach(id=>document.getElementById(id).value=''); calcTot(); }
+    function chooseDate(iso){
+      if (iso===mSelISO){ closeCal(); return; }
+      if (hasAmounts()){ pendingISO=iso; closeCal(); openDateConfirm(); }
+      else { setData(iso); closeCal(); }
+    }
+    function openDateConfirm(){
+      document.getElementById('dateConfirmMsg').textContent =
+        'Avevi già inserito degli importi per il '+fmtBtn(mSelISO)+'. Passando al '+fmtBtn(pendingISO)+', vuoi tenerli per il nuovo giorno o azzerarli e ripartire da zero?';
+      document.getElementById('dateConfirm').classList.remove('hidden');
+    }
+    function closeDateConfirm(){ document.getElementById('dateConfirm').classList.add('hidden'); pendingISO=null; }
+    function confirmKeep(){ if(pendingISO) setData(pendingISO); document.getElementById('dateConfirm').classList.add('hidden'); pendingISO=null; }
+    function confirmClear(){ if(pendingISO){ clearAmounts(); setData(pendingISO); } document.getElementById('dateConfirm').classList.add('hidden'); pendingISO=null; }
     function calNav(d){ calM+=d; if(calM<0){calM=11;calY--;} if(calM>11){calM=0;calY++;} renderCal(); }
     function renderCal(){
       document.getElementById('calTitle').textContent=MESI[calM]+' '+calY;
@@ -192,7 +222,7 @@
         const b=document.createElement('button'); b.type='button'; b.textContent=d;
         if(iso===mSelISO) b.classList.add('sel');
         if(iso===isoToday()) b.classList.add('today');
-        b.addEventListener('click',()=>{ setData(iso); closeCal(); });
+        b.addEventListener('click',()=>{ chooseDate(iso); });
         days.appendChild(b);
       }
     }
