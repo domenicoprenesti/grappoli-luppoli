@@ -314,6 +314,7 @@
                 <div class="flex items-center justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mr-3"></div><span class="text-gray-600">Caricamento dati da Supabase...</span></div>
             </div>
 
+            <div id="ricaviSeraliBox" class="hidden bg-amber-50 border border-amber-200 rounded-xl shadow-lg p-4 mb-4"></div>
             <div id="autoconsumoBox" class="hidden bg-white rounded-xl shadow-lg p-4 mb-4"></div>
             <div id="contentDiv" class="hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
@@ -1331,7 +1332,56 @@
         openAutoconsumoList();
       }
 
+      // ===== RICAVI SERALI (da PWA) — approvazione Admin =====
+      function seDate(s){ const p=String(s).split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s; }
+      function seEur(n){ return '€'+(Number(n)||0).toFixed(2).replace('.',','); }
+
+      async function loadRicaviSerali(){
+        const box = document.getElementById('ricaviSeraliBox');
+        if (!box) return;
+        const admin = (typeof isAdmin==='function') && isAdmin();
+        if (!admin){ box.classList.add('hidden'); return; }
+        const { data } = await supabaseClient.from('ricavi_serali').select('*').eq('stato','in_attesa').order('data',{ascending:false});
+        box.replaceChildren();
+        if (!data || !data.length){ box.classList.add('hidden'); return; }
+        const h=document.createElement('div'); h.className='text-sm font-bold text-amber-800 mb-2'; h.textContent='⏳ Ricavi serali da approvare ('+data.length+')';
+        box.appendChild(h);
+        data.forEach(r=>{
+          const tot=(Number(r.pos)||0)+(Number(r.contanti)||0)+(Number(r.satispay)||0)+(Number(r.fatture)||0)+(Number(r.miscellaneo)||0);
+          const row=document.createElement('div'); row.className='flex items-center justify-between gap-2 bg-white rounded-lg p-2 mb-1 border border-amber-100';
+          const info=document.createElement('div'); info.className='flex-1 text-sm';
+          const l1=document.createElement('div'); l1.className='font-medium text-gray-800'; l1.textContent=seDate(r.data)+' — '+seEur(tot)+(r.user_nome?(' · '+r.user_nome):'');
+          const l2=document.createElement('div'); l2.className='text-xs text-gray-500'; l2.textContent='POS '+seEur(r.pos)+' · Cont '+seEur(r.contanti)+' · Sat '+seEur(r.satispay)+' · Fatt '+seEur(r.fatture)+' · Misc '+seEur(r.miscellaneo);
+          info.append(l1,l2); row.appendChild(info);
+          const bA=document.createElement('button'); bA.type='button'; bA.className='px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 whitespace-nowrap'; bA.textContent='✅ Approva (sovrascrivi)'; bA.addEventListener('click',()=>approvaSerale(r));
+          const bR=document.createElement('button'); bR.type='button'; bR.className='px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 whitespace-nowrap'; bR.textContent='✕ Rifiuta'; bR.addEventListener('click',()=>rifiutaSerale(r.id));
+          row.append(bA,bR); box.appendChild(row);
+        });
+        box.classList.remove('hidden');
+      }
+
+      async function approvaSerale(r){
+        if(!confirm('Approvare e SOVRASCRIVERE il ricavo del '+seDate(r.data)+' con questi valori?')) return;
+        try{
+          const { error:e1 } = await supabaseClient.from('ricavi_giornalieri').update({ pos:r.pos, contanti:r.contanti, satispay:r.satispay, fatture:r.fatture, miscellaneo:r.miscellaneo, note:r.note }).eq('data', r.data);
+          if(e1) throw e1;
+          const { error:e2 } = await supabaseClient.from('ricavi_serali').update({ stato:'approvato' }).eq('id', r.id);
+          if(e2) throw e2;
+          await loadRicaviSerali();
+          if(typeof loadData==='function') await loadData();
+          alert('✅ Approvato.');
+        }catch(e){ alert('Errore: '+e.message); }
+      }
+
+      async function rifiutaSerale(id){
+        if(!confirm('Rifiutare questo inserimento serale?')) return;
+        const { error } = await supabaseClient.from('ricavi_serali').update({ stato:'rifiutato' }).eq('id', id);
+        if(error){ alert('Errore: '+error.message); return; }
+        loadRicaviSerali();
+      }
+
       loadAutoconsumo();
+      loadRicaviSerali();
     </script>
 </body>
 </html>
