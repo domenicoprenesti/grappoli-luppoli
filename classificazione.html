@@ -14,9 +14,11 @@
         .node-row { display:flex; align-items:center; gap:4px; padding:2px 4px; border-radius:6px; cursor:pointer; }
         .node-row:hover { background: rgba(255,255,255,.08); }
         .node-row.sel { background: rgba(59,130,246,.35); }
+        .node-row.drop-hover { outline:2px solid #60a5fa; background: rgba(59,130,246,.30); }
         .twisty { width:16px; text-align:center; flex:0 0 16px; opacity:.8; }
         .node-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .node-meta { font-size:10px; opacity:.65; flex:0 0 auto; }
+        tr.drag { cursor:grab; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -58,6 +60,7 @@
                 <h1 class="text-lg font-bold flex items-center">🗂️ Classificazione</h1>
                 <input id="search" oninput="renderTree()" placeholder="Filtra…"
                        class="mt-2 w-full text-sm text-gray-800 rounded px-2 py-1">
+                <p class="text-[11px] text-gray-400 mt-2 leading-snug">Trascina un articolo su una Macro / Famiglia / Tipo per smistarlo. Sulla Famiglia/Macro finisce in un contenitore <b>"Da sistemare"</b>.</p>
             </div>
             <div id="tree" class="flex-1 overflow-y-auto p-2 text-sm"></div>
         </aside>
@@ -93,14 +96,44 @@
         }
 
         function toggle(key){ expanded.has(key) ? expanded.delete(key) : expanded.add(key); }
-
-        // Espande un tipo: assicura il caricamento delle descrizioni prima di ridisegnare
         async function toggleTipo(key, tipoId){
           if (!expanded.has(key)) await loadAnag(tipoId);
           toggle(key); renderTree();
         }
 
-        function row(depth, key, hasChildren, isOpen, icon, label, meta, onClick, onToggle){
+        // Ricarica albero + descrizioni dei tipi aperti mantenendo vista e selezione
+        async function afterChange(){
+          const openTipos = [...expanded].filter(k=>k[0]==='t').map(k=>parseInt(k.slice(1)));
+          for (const k in anagCache) delete anagCache[k];
+          const { data, error } = await supabaseClient.rpc('get_classificazione_tree');
+          if (!error) TREE = data || [];
+          await Promise.all(openTipos.map(loadAnag));
+          renderTree();
+          if (selectedKey && selectedKey[0]==='t'){
+            const f = findTipo(parseInt(selectedKey.slice(1)));
+            if (f) showDetail({type:'tipo', data:f.t, macro:f.m, famiglia:f.f});
+          }
+        }
+
+        function findTipo(id){
+          for (const m of TREE){
+            if (m.is_merce){ for (const f of (m.famiglie||[])) for (const t of (f.tipi||[])) if (t.id===id) return {t,m,f}; }
+            else { for (const t of (m.voci||[])) if (t.id===id) return {t,m,f:null}; }
+          }
+          return null;
+        }
+
+        async function onDrop(e, kind, targetId){
+          e.preventDefault();
+          const anagId = parseInt(e.dataTransfer.getData('text/plain'));
+          if (!anagId) return;
+          const { error } = await supabaseClient.rpc('smista_articolo', {p_anag:anagId, p_kind:kind, p_target:targetId});
+          if (error){ alert('Errore: '+error.message); return; }
+          await afterChange();
+        }
+
+        // row: hasChildren/onToggle per l'albero; dropTarget={kind,id} per accettare drop; dragAnagId per rendere trascinabile
+        function row(depth, key, hasChildren, isOpen, icon, label, meta, onClick, onToggle, dropTarget, dragAnagId){
           const r = document.createElement('div');
           r.className = 'node-row' + (selectedKey===key?' sel':'');
           r.style.paddingLeft = (depth*14+4)+'px';
@@ -112,6 +145,15 @@
           const mt = document.createElement('span'); mt.className='node-meta'; mt.textContent = meta||'';
           r.appendChild(tw); r.appendChild(lab); r.appendChild(mt);
           r.onclick = onClick;
+          if (dragAnagId != null){
+            r.draggable = true;
+            r.ondragstart = e => { e.dataTransfer.setData('text/plain', String(dragAnagId)); e.dataTransfer.effectAllowed='move'; e.stopPropagation(); };
+          }
+          if (dropTarget){
+            r.ondragover = e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; r.classList.add('drop-hover'); };
+            r.ondragleave = () => r.classList.remove('drop-hover');
+            r.ondrop = e => { r.classList.remove('drop-hover'); onDrop(e, dropTarget.kind, dropTarget.id); };
+          }
           return r;
         }
 
@@ -123,13 +165,11 @@
             box.appendChild(row(0, key, true, open, (m.is_merce?'🟢':'•'), m.nome,
               `${m.n_prod}·${eur(m.spesa)}`,
               ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'macro',data:m}); },
-              ()=>{ toggle(key); renderTree(); }));
+              ()=>{ toggle(key); renderTree(); },
+              {kind:'macro', id:m.id}, null));
             if(!open) return;
-            if(m.is_merce){
-              (m.famiglie||[]).forEach(f => renderFamiglia(box,f,m,q));
-            } else {
-              (m.voci||[]).forEach(t => renderTipo(box,t,m,null,q,1));
-            }
+            if(m.is_merce) (m.famiglie||[]).forEach(f => renderFamiglia(box,f,m,q));
+            else (m.voci||[]).forEach(t => renderTipo(box,t,m,null,q,1));
           });
         }
 
@@ -137,7 +177,8 @@
           const key='f'+f.id, open=expanded.has(key);
           box.appendChild(row(1, key, (f.tipi||[]).length>0, open, '📁', f.nome, '',
             ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'famiglia',data:f,macro:m}); },
-            ()=>{ toggle(key); renderTree(); }));
+            ()=>{ toggle(key); renderTree(); },
+            {kind:'famiglia', id:f.id}, null));
           if(open) (f.tipi||[]).forEach(t => renderTipo(box,t,m,f,q,2));
         }
 
@@ -150,7 +191,8 @@
           box.appendChild(row(depth, key, hasChildren, open, '🏷️', t.nome,
             `${t.n_prod}·${eur(t.spesa)}`,
             ()=>{ selectedKey=key; toggleTipo(key,t.id); showDetail({type:'tipo',data:t,macro:m,famiglia:f}); },
-            ()=> toggleTipo(key,t.id) ));
+            ()=> toggleTipo(key,t.id),
+            {kind:'tipo', id:t.id}, null));
           if(open && anag){
             (t.prodotti||[]).forEach(p => renderProdotto(box,p,t,depth+1));
             loose.forEach(a => renderDescr(box,a,depth+1));
@@ -162,7 +204,7 @@
           const membri = (anagCache[t.id]||[]).filter(a=>a.pu_id===p.id);
           box.appendChild(row(depth, key, membri.length>0, open, '🔗', p.nome+(p.udm?(' ('+p.udm+')'):''), '',
             ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'prodotto',data:p,tipo:t,membri}); },
-            ()=>{ toggle(key); renderTree(); }));
+            ()=>{ toggle(key); renderTree(); }, null, null));
           if(open) membri.forEach(a => renderDescr(box,a,depth+1));
         }
 
@@ -170,7 +212,8 @@
           const key='d'+a.id;
           box.appendChild(row(depth, key, false, false, '•', a.descrizione,
             a.prezzo!=null?eur2(a.prezzo):'',
-            ()=>{ selectedKey=key; renderTree(); showDetail({type:'descr',data:a}); }, null));
+            ()=>{ selectedKey=key; renderTree(); showDetail({type:'descr',data:a}); }, null,
+            null, a.id));
         }
 
         function nodeMatches(t,q){
@@ -212,7 +255,7 @@
             <h2 class="text-2xl font-bold mb-1">🏷️ ${esc(t.nome)}</h2>
             <p class="text-sm text-gray-500 mb-3">${t.n_prod} prodotti · ${eur(t.spesa)}</p>`));
           if(isAdmin()){
-            const bar=document.createElement('div'); bar.className='flex gap-2 mb-4';
+            const bar=document.createElement('div'); bar.className='flex gap-2 mb-4 flex-wrap';
             const mk=(txt,cls,fn)=>{const b=document.createElement('button');b.textContent=txt;b.className='px-3 py-1.5 rounded text-sm '+cls;b.onclick=fn;return b;};
             bar.appendChild(mk('✏️ Rinomina','bg-gray-100 hover:bg-gray-200',()=>azRinomina(t.id,t.nome)));
             bar.appendChild(mk('↔️ Sposta','bg-gray-100 hover:bg-gray-200',()=>azSposta(t.id)));
@@ -229,7 +272,8 @@
             });
           }
           const loose = anag.filter(a=>!a.pu_id);
-          d.appendChild(h(`<h3 class="font-semibold text-sm mt-3 mb-1">Articoli acquistati ${loose.length?('non collegati ('+loose.length+')'):''}</h3>`));
+          d.appendChild(h(`<h3 class="font-semibold text-sm mt-3 mb-1">Articoli acquistati ${loose.length?('non collegati ('+loose.length+')'):('('+anag.length+')')}</h3>
+            <p class="text-xs text-gray-400 mb-1">Trascina una riga su una voce dell'albero per spostarla.</p>`));
           d.appendChild(tabellaDescr(loose.length?loose:anag));
         }
 
@@ -257,9 +301,11 @@
           const tb=document.createElement('tbody');
           if(!rows.length){ tb.innerHTML='<tr><td class="py-2 text-gray-400" colspan="4">Nessun articolo.</td></tr>'; }
           rows.forEach(a=>{
-            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 cursor-pointer';
+            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 drag';
+            tr.draggable=true;
+            tr.ondragstart=e=>{ e.dataTransfer.setData('text/plain', String(a.id)); e.dataTransfer.effectAllowed='move'; };
             tr.onclick=()=>{ selectedKey='d'+a.id; renderTree(); showDetail({type:'descr',data:a}); };
-            tr.innerHTML=`<td class="py-1">${esc(a.descrizione)}</td><td class="text-gray-600">${esc(a.fornitore||'—')}</td>
+            tr.innerHTML=`<td class="py-1">⠿ ${esc(a.descrizione)}</td><td class="text-gray-600">${esc(a.fornitore||'—')}</td>
               <td class="text-right">${a.prezzo!=null?eur2(a.prezzo):'—'}${a.udf?(' /'+esc(a.udf)):''}</td>
               <td class="text-right text-gray-500">${esc(a.ultimo||'—')}</td>`;
             tb.appendChild(tr);
@@ -272,7 +318,7 @@
         async function azRinomina(id, nome){
           const nuovo = prompt('Nuovo nome del tipo:', nome); if(!nuovo || nuovo===nome) return;
           const { error } = await supabaseClient.rpc('rinomina_tipo', {p_tipo:id, p_nome:nuovo});
-          if(error) return alert(error.message); carica();
+          if(error) return alert(error.message); afterChange();
         }
         async function azSposta(id){
           const macro = parseInt(prompt('Sposta sotto quale Macro?\n'+elencoMacro())); if(!macro) return;
@@ -282,18 +328,18 @@
             fam = parseInt(prompt('In quale Famiglia?\n'+fams)) || null;
           }
           const { error } = await supabaseClient.rpc('sposta_tipo', {p_tipo:id, p_macro:macro, p_famiglia:fam});
-          if(error) return alert(error.message); carica();
+          if(error) return alert(error.message); afterChange();
         }
         async function azUnisci(id){
           const dest = parseInt(prompt('Unisci questo tipo DENTRO quale tipo? (id destinazione)')); if(!dest) return;
           if(!confirm('I prodotti e le righe verranno spostati e questo tipo disattivato. Procedere?')) return;
           const { error } = await supabaseClient.rpc('unisci_tipo', {p_da:id, p_a:dest});
-          if(error) return alert(error.message); carica();
+          if(error) return alert(error.message); afterChange();
         }
         async function azElimina(id){
           if(!confirm('Disattivare questo tipo? (consentito solo se vuoto)')) return;
           const { error } = await supabaseClient.rpc('elimina_tipo', {p_tipo:id});
-          if(error) return alert(error.message); carica();
+          if(error) return alert(error.message); afterChange();
         }
     </script>
 </body>
