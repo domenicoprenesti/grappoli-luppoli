@@ -60,7 +60,7 @@
                 <h1 class="text-lg font-bold flex items-center">🗂️ Classificazione</h1>
                 <input id="search" oninput="renderTree()" placeholder="Filtra…"
                        class="mt-2 w-full text-sm text-gray-800 rounded px-2 py-1">
-                <p class="text-[11px] text-gray-400 mt-2 leading-snug">Seleziona una Macro o Famiglia per creare nuovi raggruppamenti. Trascina un articolo su un nodo per smistarlo.</p>
+                <p class="text-[11px] text-gray-400 mt-2 leading-snug">Trascina articoli, Tipi o Famiglie su un nodo per spostarli. Con le checkbox nella tabella sposti più articoli insieme. Su Macro/Famiglia crei nuovi raggruppamenti.</p>
             </div>
             <div id="tree" class="flex-1 overflow-y-auto p-2 text-sm"></div>
         </aside>
@@ -74,6 +74,7 @@
         let TREE = [];
         const anagCache = {};
         const expanded = new Set();
+        const selArt = new Set();   // articoli selezionati (id anagrafica)
         let selectedKey = null;
 
         const eur = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
@@ -128,16 +129,33 @@
           else if(kind==='t'){ const r=findTipo(id); if(r) showDetail({type:'tipo',data:r.t,macro:r.m,famiglia:r.f}); }
         }
 
-        async function onDrop(e, kind, targetId){
+        // Un drop: pl = {t:'art',ids:[]} | {t:'tipo',id} | {t:'fam',id} ; target = {kind,id,macroId,isMerce}
+        async function onDrop(e, target){
           e.preventDefault();
-          const anagId = parseInt(e.dataTransfer.getData('text/plain'));
-          if (!anagId) return;
-          const { error } = await supabaseClient.rpc('smista_articolo', {p_anag:anagId, p_kind:kind, p_target:targetId});
+          const raw = e.dataTransfer.getData('text/plain'); if(!raw) return;
+          let pl; try { pl = JSON.parse(raw); } catch(_) { return; }
+          let error = null;
+          if (pl.t==='art'){
+            if(!pl.ids || !pl.ids.length) return;
+            ({ error } = await supabaseClient.rpc('smista_articoli', {p_anag:pl.ids, p_kind:target.kind, p_target:target.id}));
+          } else if (pl.t==='tipo'){
+            if (target.kind==='famiglia'){
+              ({ error } = await supabaseClient.rpc('sposta_tipo', {p_tipo:pl.id, p_macro:target.macroId, p_famiglia:target.id}));
+            } else if (target.kind==='macro'){
+              if (target.isMerce){ alert('Per la Merce in vendita, trascina il tipo dentro una Famiglia (non sulla macro).'); return; }
+              ({ error } = await supabaseClient.rpc('sposta_tipo', {p_tipo:pl.id, p_macro:target.id, p_famiglia:null}));
+            } else { return; } // su un altro tipo: ignora
+          } else if (pl.t==='fam'){
+            if (target.kind==='macro'){
+              ({ error } = await supabaseClient.rpc('sposta_famiglia', {p_fam:pl.id, p_macro:target.id}));
+            } else { alert('Una Famiglia si può spostare solo su una Macro.'); return; }
+          }
           if (error){ alert('Errore: '+error.message); return; }
+          selArt.clear();
           await afterChange();
         }
 
-        function row(depth, key, hasChildren, isOpen, icon, label, meta, onClick, onToggle, dropTarget, dragAnagId){
+        function row(depth, key, hasChildren, isOpen, icon, label, meta, onClick, onToggle, dropTarget, dragPayload){
           const r = document.createElement('div');
           r.className = 'node-row' + (selectedKey===key?' sel':'');
           r.style.paddingLeft = (depth*14+4)+'px';
@@ -149,14 +167,15 @@
           const mt = document.createElement('span'); mt.className='node-meta'; mt.textContent = meta||'';
           r.appendChild(tw); r.appendChild(lab); r.appendChild(mt);
           r.onclick = onClick;
-          if (dragAnagId != null){
+          if (dragPayload){
             r.draggable = true;
-            r.ondragstart = e => { e.dataTransfer.setData('text/plain', String(dragAnagId)); e.dataTransfer.effectAllowed='move'; e.stopPropagation(); };
+            r.ondragstart = e => { const p = typeof dragPayload==='function'?dragPayload():dragPayload;
+              e.dataTransfer.setData('text/plain', JSON.stringify(p)); e.dataTransfer.effectAllowed='move'; e.stopPropagation(); };
           }
           if (dropTarget){
             r.ondragover = e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; r.classList.add('drop-hover'); };
             r.ondragleave = () => r.classList.remove('drop-hover');
-            r.ondrop = e => { r.classList.remove('drop-hover'); onDrop(e, dropTarget.kind, dropTarget.id); };
+            r.ondrop = e => { r.classList.remove('drop-hover'); onDrop(e, dropTarget); };
           }
           return r;
         }
@@ -170,7 +189,7 @@
               `${m.n_prod}·${eur(m.spesa)}`,
               ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'macro',data:m}); },
               ()=>{ toggle(key); renderTree(); },
-              {kind:'macro', id:m.id}, null));
+              {kind:'macro', id:m.id, isMerce:m.is_merce}, null));
             if(!open) return;
             (m.famiglie||[]).forEach(f => renderFamiglia(box,f,m,q));
             (m.voci||[]).forEach(t => renderTipo(box,t,m,null,q,1));
@@ -182,7 +201,7 @@
           box.appendChild(row(1, key, (f.tipi||[]).length>0, open, '📁', f.nome, '',
             ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'famiglia',data:f,macro:m}); },
             ()=>{ toggle(key); renderTree(); },
-            {kind:'famiglia', id:f.id}, null));
+            {kind:'famiglia', id:f.id, macroId:m.id, isMerce:m.is_merce}, {t:'fam', id:f.id}));
           if(open) (f.tipi||[]).forEach(t => renderTipo(box,t,m,f,q,2));
         }
 
@@ -196,7 +215,7 @@
             `${t.n_prod}·${eur(t.spesa)}`,
             ()=>{ selectedKey=key; toggleTipo(key,t.id); showDetail({type:'tipo',data:t,macro:m,famiglia:f}); },
             ()=> toggleTipo(key,t.id),
-            {kind:'tipo', id:t.id}, null));
+            {kind:'tipo', id:t.id}, {t:'tipo', id:t.id}));
           if(open && anag){
             (t.prodotti||[]).forEach(p => renderProdotto(box,p,t,depth+1));
             loose.forEach(a => renderDescr(box,a,depth+1));
@@ -217,7 +236,7 @@
           box.appendChild(row(depth, key, false, false, '•', a.descrizione,
             a.prezzo!=null?eur2(a.prezzo):'',
             ()=>{ selectedKey=key; renderTree(); showDetail({type:'descr',data:a}); }, null,
-            null, a.id));
+            null, ()=>({t:'art', ids: (selArt.size && selArt.has(a.id)) ? [...selArt] : [a.id]})));
         }
 
         function nodeMatches(t,q){
@@ -285,6 +304,7 @@
 
         async function detailTipo(d, sel){
           const t=sel.data;
+          selArt.clear();
           const path=[sel.macro?sel.macro.nome:'', sel.famiglia?sel.famiglia.nome:'', t.nome].filter(Boolean).join(' › ');
           d.appendChild(h(`<div class="text-xs text-gray-400">${esc(path)}</div>
             <h2 class="text-2xl font-bold mb-1">🏷️ ${esc(t.nome)}</h2>
@@ -306,9 +326,11 @@
             });
           }
           const loose = anag.filter(a=>!a.pu_id);
-          d.appendChild(h(`<h3 class="font-semibold text-sm mt-3 mb-1">Articoli acquistati ${loose.length?('non collegati ('+loose.length+')'):('('+anag.length+')')}</h3>
-            <p class="text-xs text-gray-400 mb-1">Trascina una riga su una voce dell'albero per spostarla.</p>`));
+          d.appendChild(h(`<h3 class="font-semibold text-sm mt-3 mb-1">Articoli acquistati ${loose.length?('non collegati ('+loose.length+')'):('('+anag.length+')')}</h3>`));
+          const selbar=document.createElement('div'); selbar.id='selbar'; selbar.className='my-1'; d.appendChild(selbar);
+          d.appendChild(h(`<p class="text-xs text-gray-400 mb-1">Spunta più righe e trascinane una sull'albero per spostarle insieme.</p>`));
           d.appendChild(tabellaDescr(loose.length?loose:anag));
+          updateSelBar();
         }
 
         function detailProdotto(d, sel){
@@ -329,19 +351,42 @@
             </div>`));
         }
 
+        function updateSelBar(){
+          const el=document.getElementById('selbar'); if(!el) return;
+          if(selArt.size){
+            el.innerHTML = `<div class="bg-blue-50 border border-blue-200 rounded p-2 text-sm flex items-center gap-2">
+              <b>${selArt.size} selezionati</b><span class="text-gray-500">— trascina una riga spuntata su un nodo dell'albero</span>
+              <button onclick="deselezionaTutti()" class="ml-auto text-blue-700 underline">deseleziona</button></div>`;
+          } else { el.innerHTML=''; }
+        }
+        function deselezionaTutti(){
+          selArt.clear();
+          document.querySelectorAll('input.selchk').forEach(c=>c.checked=false);
+          document.querySelectorAll('tr.selrow').forEach(r=>{ r.classList.remove('selrow'); r.classList.remove('bg-blue-100'); });
+          updateSelBar();
+        }
+
         function tabellaDescr(rows){
           const tbl=document.createElement('table'); tbl.className='w-full text-sm mt-1';
-          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Articolo (nome in fattura)</th><th>Fornitore</th><th class="text-right">Prezzo medio</th><th class="text-right">Ultimo</th></tr></thead>';
+          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1 w-6"></th><th>Articolo (nome in fattura)</th><th>Fornitore</th><th class="text-right">Prezzo medio</th><th class="text-right">Ultimo</th></tr></thead>';
           const tb=document.createElement('tbody');
-          if(!rows.length){ tb.innerHTML='<tr><td class="py-2 text-gray-400" colspan="4">Nessun articolo.</td></tr>'; }
+          if(!rows.length){ tb.innerHTML='<tr><td class="py-2 text-gray-400" colspan="5">Nessun articolo.</td></tr>'; }
           rows.forEach(a=>{
             const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 drag';
             tr.draggable=true;
-            tr.ondragstart=e=>{ e.dataTransfer.setData('text/plain', String(a.id)); e.dataTransfer.effectAllowed='move'; };
+            tr.ondragstart=e=>{ const ids=(selArt.size && selArt.has(a.id))?[...selArt]:[a.id];
+              e.dataTransfer.setData('text/plain', JSON.stringify({t:'art', ids})); e.dataTransfer.effectAllowed='move'; };
+            const cb=document.createElement('input'); cb.type='checkbox'; cb.className='selchk'; cb.checked=selArt.has(a.id);
+            cb.onclick=e=>e.stopPropagation();
+            cb.onchange=()=>{ if(cb.checked){ selArt.add(a.id); tr.classList.add('selrow','bg-blue-100'); } else { selArt.delete(a.id); tr.classList.remove('selrow','bg-blue-100'); } updateSelBar(); };
+            const tdc=document.createElement('td'); tdc.className='py-1'; tdc.appendChild(cb);
+            tr.appendChild(tdc);
+            const c1=document.createElement('td'); c1.className='py-1'; c1.innerHTML='⠿ '+esc(a.descrizione);
+            const c2=document.createElement('td'); c2.className='text-gray-600'; c2.textContent=a.fornitore||'—';
+            const c3=document.createElement('td'); c3.className='text-right'; c3.textContent=(a.prezzo!=null?eur2(a.prezzo):'—')+(a.udf?(' /'+a.udf):'');
+            const c4=document.createElement('td'); c4.className='text-right text-gray-500'; c4.textContent=a.ultimo||'—';
+            tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3); tr.appendChild(c4);
             tr.onclick=()=>{ selectedKey='d'+a.id; renderTree(); showDetail({type:'descr',data:a}); };
-            tr.innerHTML=`<td class="py-1">⠿ ${esc(a.descrizione)}</td><td class="text-gray-600">${esc(a.fornitore||'—')}</td>
-              <td class="text-right">${a.prezzo!=null?eur2(a.prezzo):'—'}${a.udf?(' /'+esc(a.udf)):''}</td>
-              <td class="text-right text-gray-500">${esc(a.ultimo||'—')}</td>`;
             tb.appendChild(tr);
           });
           tbl.appendChild(tb); return tbl;
