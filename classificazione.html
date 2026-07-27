@@ -76,6 +76,7 @@
         const expanded = new Set();
         const selArt = new Set();   // articoli selezionati (id anagrafica)
         let selectedKey = null;
+        let tipoRows = [];          // righe articoli del tipo aperto (per i filtri)
 
         const eur = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
         const eur2 = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',minimumFractionDigits:2});
@@ -326,10 +327,16 @@
             });
           }
           const loose = anag.filter(a=>!a.pu_id);
+          tipoRows = loose.length?loose:anag;
           d.appendChild(h(`<h3 class="font-semibold text-sm mt-3 mb-1">Articoli acquistati ${loose.length?('non collegati ('+loose.length+')'):('('+anag.length+')')}</h3>`));
           const selbar=document.createElement('div'); selbar.id='selbar'; selbar.className='my-1'; d.appendChild(selbar);
-          d.appendChild(h(`<p class="text-xs text-gray-400 mb-1">Spunta più righe e trascinane una sull'albero per spostarle insieme.</p>`));
-          d.appendChild(tabellaDescr(loose.length?loose:anag));
+          const fbar=document.createElement('div'); fbar.className='flex gap-2 my-2';
+          fbar.innerHTML=`<input id="fArt" oninput="renderTabella()" placeholder="Filtra articolo…" class="border rounded px-2 py-1 text-sm flex-1">
+            <input id="fForn" oninput="renderTabella()" placeholder="Filtra fornitore…" class="border rounded px-2 py-1 text-sm flex-1">`;
+          d.appendChild(fbar);
+          d.appendChild(h(`<p class="text-xs text-gray-400 mb-1">Clicca una riga per selezionarla · 👁 apre il dettaglio · trascina una riga selezionata sull'albero per spostarle.</p>`));
+          const wrap=document.createElement('div'); wrap.id='tabWrap'; d.appendChild(wrap);
+          renderTabella();
           updateSelBar();
         }
 
@@ -366,30 +373,66 @@
           updateSelBar();
         }
 
+        function renderTabella(){
+          const wrap=document.getElementById('tabWrap'); if(!wrap) return;
+          const fa=(document.getElementById('fArt')?.value||'').toLowerCase();
+          const ff=(document.getElementById('fForn')?.value||'').toLowerCase();
+          const rows=tipoRows.filter(a =>
+            (!fa || (a.descrizione||'').toLowerCase().includes(fa)) &&
+            (!ff || (a.fornitore||'').toLowerCase().includes(ff)));
+          wrap.innerHTML=''; wrap.appendChild(tabellaDescr(rows));
+        }
+
+        function toggleSel(id, tr, cb){
+          if(selArt.has(id)) selArt.delete(id); else selArt.add(id);
+          const on=selArt.has(id);
+          if(cb) cb.checked=on;
+          tr.classList.toggle('bg-blue-100', on);
+          updateSelBar();
+        }
+
         function tabellaDescr(rows){
           const tbl=document.createElement('table'); tbl.className='w-full text-sm mt-1';
-          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1 w-6"></th><th>Articolo (nome in fattura)</th><th>Fornitore</th><th class="text-right">Prezzo medio</th><th class="text-right">Ultimo</th></tr></thead>';
+          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1 w-6"></th><th>Articolo (nome in fattura)</th><th>Fornitore</th><th class="text-right">Prezzo medio</th><th class="text-right">Ultimo</th><th class="w-8"></th></tr></thead>';
           const tb=document.createElement('tbody');
-          if(!rows.length){ tb.innerHTML='<tr><td class="py-2 text-gray-400" colspan="5">Nessun articolo.</td></tr>'; }
+          if(!rows.length){ tb.innerHTML='<tr><td class="py-2 text-gray-400" colspan="6">Nessun articolo.</td></tr>'; }
           rows.forEach(a=>{
-            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 drag';
+            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 drag cursor-pointer'+(selArt.has(a.id)?' bg-blue-100':'');
             tr.draggable=true;
             tr.ondragstart=e=>{ const ids=(selArt.size && selArt.has(a.id))?[...selArt]:[a.id];
               e.dataTransfer.setData('text/plain', JSON.stringify({t:'art', ids})); e.dataTransfer.effectAllowed='move'; };
-            const cb=document.createElement('input'); cb.type='checkbox'; cb.className='selchk'; cb.checked=selArt.has(a.id);
-            cb.onclick=e=>e.stopPropagation();
-            cb.onchange=()=>{ if(cb.checked){ selArt.add(a.id); tr.classList.add('selrow','bg-blue-100'); } else { selArt.delete(a.id); tr.classList.remove('selrow','bg-blue-100'); } updateSelBar(); };
+            const cb=document.createElement('input'); cb.type='checkbox'; cb.className='selchk'; cb.checked=selArt.has(a.id); cb.style.pointerEvents='none';
             const tdc=document.createElement('td'); tdc.className='py-1'; tdc.appendChild(cb);
-            tr.appendChild(tdc);
             const c1=document.createElement('td'); c1.className='py-1'; c1.innerHTML='⠿ '+esc(a.descrizione);
             const c2=document.createElement('td'); c2.className='text-gray-600'; c2.textContent=a.fornitore||'—';
             const c3=document.createElement('td'); c3.className='text-right'; c3.textContent=(a.prezzo!=null?eur2(a.prezzo):'—')+(a.udf?(' /'+a.udf):'');
             const c4=document.createElement('td'); c4.className='text-right text-gray-500'; c4.textContent=a.ultimo||'—';
-            tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3); tr.appendChild(c4);
-            tr.onclick=()=>{ selectedKey='d'+a.id; renderTree(); showDetail({type:'descr',data:a}); };
+            const c5=document.createElement('td'); c5.className='text-right';
+            const eye=document.createElement('button'); eye.className='eye px-1'; eye.title='Vedi dettaglio'; eye.textContent='👁';
+            eye.onclick=e=>{ e.stopPropagation(); openArticolo(a); };
+            c5.appendChild(eye);
+            tr.appendChild(tdc); tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3); tr.appendChild(c4); tr.appendChild(c5);
+            tr.onclick=e=>{ if(e.target.closest('.eye')) return; toggleSel(a.id, tr, cb); };
             tb.appendChild(tr);
           });
           tbl.appendChild(tb); return tbl;
+        }
+
+        function openArticolo(a){
+          const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4';
+          ov.onclick=()=>ov.remove();
+          const card=document.createElement('div'); card.className='bg-white rounded-lg p-5 max-w-md w-full shadow-xl';
+          card.onclick=e=>e.stopPropagation();
+          card.innerHTML=`<h3 class="text-lg font-bold mb-3">${esc(a.descrizione)}</h3>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="bg-gray-50 rounded p-3"><div class="text-gray-400 text-xs">Prezzo medio</div><div class="font-bold">${a.prezzo!=null?eur2(a.prezzo):'—'} ${a.udf?('/'+esc(a.udf)):''}</div></div>
+              <div class="bg-gray-50 rounded p-3"><div class="text-gray-400 text-xs">Fornitore</div><div class="font-bold">${esc(a.fornitore||'—')}</div></div>
+              <div class="bg-gray-50 rounded p-3"><div class="text-gray-400 text-xs">Ultimo acquisto</div><div class="font-bold">${esc(a.ultimo||'—')}</div></div>
+              <div class="bg-gray-50 rounded p-3"><div class="text-gray-400 text-xs">N. acquisti</div><div class="font-bold">${a.n_acq??'—'}</div></div>
+            </div>
+            <div class="text-right mt-4"><button id="closeArt" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm">Chiudi</button></div>`;
+          card.querySelector('#closeArt').onclick=()=>ov.remove();
+          ov.appendChild(card); document.body.appendChild(ov);
         }
 
         // ---------- AZIONI ADMIN ----------
