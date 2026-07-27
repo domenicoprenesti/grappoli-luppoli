@@ -316,6 +316,7 @@
             bar.appendChild(btn('↔️ Sposta','bg-gray-100 hover:bg-gray-200',()=>azSposta(t.id)));
             bar.appendChild(btn('🔀 Unisci in…','bg-gray-100 hover:bg-gray-200',()=>azUnisci(t.id)));
             bar.appendChild(btn('🗑️ Elimina','bg-red-50 text-red-700 hover:bg-red-100',()=>azElimina(t.id)));
+            bar.appendChild(btn('💶 + Costo manuale','bg-indigo-50 text-indigo-700 hover:bg-indigo-100',()=>openCostoForm(t.id)));
             d.appendChild(bar);
           }
           const anag = await loadAnag(t.id);
@@ -338,6 +339,8 @@
           const wrap=document.createElement('div'); wrap.id='tabWrap'; d.appendChild(wrap);
           renderTabella();
           updateSelBar();
+          const cmBox=document.createElement('div'); cmBox.id='costiManuali'; cmBox.className='mt-6'; d.appendChild(cmBox);
+          renderCostiManuali(t.id);
         }
 
         function detailProdotto(d, sel){
@@ -433,6 +436,112 @@
             <div class="text-right mt-4"><button id="closeArt" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm">Chiudi</button></div>`;
           card.querySelector('#closeArt').onclick=()=>ov.remove();
           ov.appendChild(card); document.body.appendChild(ov);
+        }
+
+        // ---------- COSTI MANUALI ----------
+        function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+        async function renderCostiManuali(tipoId){
+          const box=document.getElementById('costiManuali'); if(!box) return;
+          box.innerHTML='<h3 class="font-semibold text-sm mb-1">💶 Costi manuali</h3><p class="text-xs text-gray-400">Caricamento…</p>';
+          const { data, error } = await supabaseClient.from('costo_manuale')
+            .select('id,causale,data,ricorrente,righe:costo_manuale_riga(descrizione,importo)')
+            .eq('tipo_id', tipoId).order('data', { ascending:false });
+          box.innerHTML=''; box.appendChild(h('<h3 class="font-semibold text-sm mb-1">💶 Costi manuali</h3>'));
+          if(error){ box.appendChild(h('<p class="text-red-600 text-sm">'+esc(error.message)+'</p>')); return; }
+          const list=data||[];
+          if(!list.length){ box.appendChild(h('<p class="text-gray-400 text-sm">Nessun costo manuale. Usa “💶 + Costo manuale”.</p>')); return; }
+          const somma = list.reduce((s,c)=>s+(c.righe||[]).reduce((x,r)=>x+Number(r.importo||0),0),0);
+          const tbl=document.createElement('table'); tbl.className='w-full text-sm';
+          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Causale</th><th>Data</th><th class="text-right">Totale</th><th></th></tr></thead>';
+          const tb=document.createElement('tbody');
+          list.forEach(c=>{
+            const t=(c.righe||[]).reduce((x,r)=>x+Number(r.importo||0),0);
+            const tr=document.createElement('tr'); tr.className='border-b hover:bg-indigo-50';
+            const c0=document.createElement('td'); c0.className='py-1'; c0.textContent=(c.ricorrente?'🔁 ':'')+(c.causale||'—');
+            const c1=document.createElement('td'); c1.textContent=c.data||'—';
+            const c2=document.createElement('td'); c2.className='text-right font-medium'; c2.textContent=eur2(t);
+            const c3=document.createElement('td'); c3.className='text-right whitespace-nowrap';
+            const be=document.createElement('button'); be.textContent='✏️'; be.title='Modifica'; be.className='px-1'; be.onclick=()=>openCostoForm(tipoId,c);
+            const bdup=document.createElement('button'); bdup.textContent='🔁'; bdup.title='Duplica in un altro mese'; bdup.className='px-1'; bdup.onclick=()=>duplicaCosto(c.id,tipoId);
+            const bx=document.createElement('button'); bx.textContent='🗑️'; bx.title='Elimina'; bx.className='px-1'; bx.onclick=()=>eliminaCosto(c.id,tipoId);
+            c3.appendChild(be); c3.appendChild(bdup); c3.appendChild(bx);
+            tr.appendChild(c0); tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3);
+            tb.appendChild(tr);
+          });
+          const trt=document.createElement('tr'); trt.className='font-bold border-t';
+          trt.innerHTML=`<td class="py-1">Totale costi manuali</td><td></td><td class="text-right">${eur2(somma)}</td><td></td>`;
+          tb.appendChild(trt);
+          tbl.appendChild(tb); box.appendChild(tbl);
+        }
+
+        function openCostoForm(tipoId, costo){
+          const isEdit=!!costo;
+          const righeIniziali = isEdit ? (costo.righe||[]).map(r=>({descrizione:r.descrizione, importo:r.importo})) : [{descrizione:'',importo:''}];
+          const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4'; ov.onclick=()=>ov.remove();
+          const card=document.createElement('div'); card.className='bg-white rounded-lg p-5 max-w-lg w-full shadow-xl max-h-[90vh] overflow-y-auto'; card.onclick=e=>e.stopPropagation();
+          card.innerHTML=`<h3 class="text-lg font-bold mb-3">${isEdit?'Modifica':'Nuovo'} costo manuale</h3>
+            <div class="space-y-2 text-sm">
+              <label class="block">Causale<input id="cCaus" class="w-full border rounded px-2 py-1" value="${isEdit?esc(costo.causale||''):''}"></label>
+              <div class="flex gap-2 items-end">
+                <label class="flex-1">Data<input id="cData" type="date" class="w-full border rounded px-2 py-1" value="${isEdit?esc(costo.data||''):todayISO()}"></label>
+                <label class="flex items-center gap-1 pb-2"><input id="cRic" type="checkbox" ${isEdit&&costo.ricorrente?'checked':''}> mensile</label>
+              </div>
+            </div>
+            <h4 class="font-semibold text-sm mt-3 mb-1">Righe <span class="text-gray-400 font-normal">(descrizione obbligatoria)</span></h4>
+            <div id="cRighe" class="space-y-1"></div>
+            <button id="cAdd" class="text-indigo-700 text-sm mt-1">➕ Aggiungi riga</button>
+            <div class="flex justify-between items-center mt-3 border-t pt-2">
+              <span class="font-bold">Totale: <span id="cTot">€ 0,00</span></span>
+              <span><button id="cAnn" class="px-3 py-1.5 rounded bg-gray-100 text-sm mr-2">Annulla</button>
+              <button id="cSave" class="px-3 py-1.5 rounded bg-indigo-600 text-white text-sm">Salva</button></span>
+            </div>`;
+          const righeBox=card.querySelector('#cRighe');
+          function recalc(){
+            let t=0; [...righeBox.children].forEach(row=>{ if(row._get) t+=Number(row._get().importo||0); });
+            card.querySelector('#cTot').textContent=eur2(t);
+          }
+          function addRigaRow(r){
+            const row=document.createElement('div'); row.className='flex gap-1';
+            const di=document.createElement('input'); di.placeholder='Descrizione*'; di.className='flex-1 border rounded px-2 py-1 text-sm'; di.value=r.descrizione||'';
+            const ii=document.createElement('input'); ii.type='number'; ii.step='0.01'; ii.placeholder='Importo'; ii.className='w-28 border rounded px-2 py-1 text-sm text-right'; ii.value=(r.importo!==''&&r.importo!=null)?r.importo:'';
+            const rm=document.createElement('button'); rm.textContent='✕'; rm.className='px-2 text-gray-400'; rm.onclick=()=>{ row.remove(); recalc(); };
+            di.oninput=recalc; ii.oninput=recalc;
+            row.appendChild(di); row.appendChild(ii); row.appendChild(rm);
+            row._get=()=>({descrizione:di.value, importo:ii.value});
+            righeBox.appendChild(row);
+          }
+          righeIniziali.forEach(addRigaRow); recalc();
+          card.querySelector('#cAdd').onclick=()=>addRigaRow({descrizione:'',importo:''});
+          card.querySelector('#cAnn').onclick=()=>ov.remove();
+          card.querySelector('#cSave').onclick=async()=>{
+            const causale=card.querySelector('#cCaus').value.trim();
+            const data=card.querySelector('#cData').value;
+            const ric=card.querySelector('#cRic').checked;
+            const rows=[...righeBox.children].map(r=>r._get())
+              .filter(r=>r.descrizione.trim()!=='')
+              .map(r=>({descrizione:r.descrizione.trim(), importo:Number(r.importo||0)}));
+            if(!data){ alert('Inserisci la data.'); return; }
+            if(!rows.length){ alert('Serve almeno una riga con descrizione.'); return; }
+            const { error } = await supabaseClient.rpc('salva_costo_manuale',
+              {p_id: isEdit?costo.id:null, p_tipo:tipoId, p_causale:causale, p_data:data, p_ricorrente:ric, p_righe:rows});
+            if(error){ alert(error.message); return; }
+            ov.remove(); renderCostiManuali(tipoId); afterChange();
+          };
+          ov.appendChild(card); document.body.appendChild(ov);
+        }
+
+        async function duplicaCosto(id, tipoId){
+          const d=prompt('Duplica l\'imputazione in quale data? (AAAA-MM-GG)', todayISO()); if(!d) return;
+          const { error } = await supabaseClient.rpc('duplica_costo_manuale', {p_id:id, p_data:d});
+          if(error){ alert(error.message); return; }
+          renderCostiManuali(tipoId); afterChange();
+        }
+        async function eliminaCosto(id, tipoId){
+          if(!confirm('Eliminare questa imputazione e le sue righe?')) return;
+          const { error } = await supabaseClient.rpc('elimina_costo_manuale', {p_id:id});
+          if(error){ alert(error.message); return; }
+          renderCostiManuali(tipoId); afterChange();
         }
 
         // ---------- AZIONI ADMIN ----------
