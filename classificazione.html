@@ -9,18 +9,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
     <style>
-        .sidebar {
-            width: 280px;
-            min-width: 280px;
-            height: calc(100vh - 64px);
-            position: sticky;
-            top: 64px;
-        }
-        .main-content {
-            flex: 1;
-            min-width: 0;
-            overflow-x: auto;
-        }
+        .sidebar { width: 380px; min-width: 380px; height: calc(100vh - 64px); position: sticky; top: 64px; }
+        .main-content { flex: 1; min-width: 0; overflow-x: auto; }
+        .node-row { display:flex; align-items:center; gap:4px; padding:2px 4px; border-radius:6px; cursor:pointer; }
+        .node-row:hover { background: rgba(255,255,255,.08); }
+        .node-row.sel { background: rgba(59,130,246,.35); }
+        .twisty { width:16px; text-align:center; flex:0 0 16px; opacity:.8; }
+        .node-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .node-meta { font-size:10px; opacity:.65; flex:0 0 auto; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -57,105 +53,222 @@
     </nav>
 
     <div class="flex pt-16">
-        <aside class="sidebar bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 text-white p-4 overflow-y-auto">
-            <div class="mb-6">
-                <h1 class="text-xl font-bold flex items-center">🗂️ Classificazione</h1>
-                <p class="text-gray-300 text-xs mt-1">Gerarchia prodotti (Admin)</p>
+        <aside class="sidebar bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900 text-white flex flex-col">
+            <div class="p-3 border-b border-white/10">
+                <h1 class="text-lg font-bold flex items-center">🗂️ Classificazione</h1>
+                <input id="search" oninput="renderTree()" placeholder="Filtra…"
+                       class="mt-2 w-full text-sm text-gray-800 rounded px-2 py-1">
             </div>
+            <div id="tree" class="flex-1 overflow-y-auto p-2 text-sm"></div>
         </aside>
 
         <main class="main-content p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-2xl font-bold">Gerarchia prodotti</h2>
-              <div class="flex gap-2">
-                <input id="search" oninput="render()" placeholder="Cerca tipo/prodotto…" class="border rounded px-3 py-2 text-sm">
-                <button onclick="carica()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm">↻ Aggiorna</button>
-              </div>
-            </div>
-            <div id="inbox" class="mb-4"></div>
-            <div id="tree" class="space-y-2"></div>
+            <div id="detail" class="text-gray-500">Seleziona una voce nell'albero a sinistra.</div>
         </main>
     </div>
 
     <script>
         let TREE = [];
+        const anagCache = {};              // tipoId -> [descrizioni]
+        const expanded = new Set();        // chiavi nodo espanse
+        let selectedKey = null;
+
         const eur = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+        const eur2 = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',minimumFractionDigits:2});
+        const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; };
 
         async function carica(){
           const { data, error } = await supabaseClient.rpc('get_classificazione_tree');
           if (error){ console.error(error); alert('Errore caricamento: '+error.message); return; }
           TREE = data || [];
-          render();
+          renderTree();
         }
 
-        function render(){
+        async function loadAnag(tipoId){
+          if (anagCache[tipoId]) return anagCache[tipoId];
+          const { data, error } = await supabaseClient.rpc('get_anagrafica_tipo', { p_tipo: tipoId });
+          if (error){ console.error(error); alert(error.message); return []; }
+          anagCache[tipoId] = data || [];
+          return anagCache[tipoId];
+        }
+
+        function toggle(key){ expanded.has(key) ? expanded.delete(key) : expanded.add(key); }
+
+        // Espande un tipo: assicura il caricamento delle descrizioni prima di ridisegnare
+        async function toggleTipo(key, tipoId){
+          if (!expanded.has(key)) await loadAnag(tipoId);
+          toggle(key); renderTree();
+        }
+
+        function row(depth, key, hasChildren, isOpen, icon, label, meta, onClick, onToggle){
+          const r = document.createElement('div');
+          r.className = 'node-row' + (selectedKey===key?' sel':'');
+          r.style.paddingLeft = (depth*14+4)+'px';
+          const tw = document.createElement('span'); tw.className='twisty';
+          tw.textContent = hasChildren ? (isOpen?'▾':'▸') : '';
+          if (hasChildren && onToggle){ tw.onclick = e => { e.stopPropagation(); onToggle(); }; }
+          const lab = document.createElement('span'); lab.className='node-label';
+          lab.innerHTML = (icon?icon+' ':'') + esc(label);
+          const mt = document.createElement('span'); mt.className='node-meta'; mt.textContent = meta||'';
+          r.appendChild(tw); r.appendChild(lab); r.appendChild(mt);
+          r.onclick = onClick;
+          return r;
+        }
+
+        function renderTree(){
           const q = (document.getElementById('search').value||'').toLowerCase();
-          renderInbox();
-          const root = document.getElementById('tree');
-          root.innerHTML = '';
+          const box = document.getElementById('tree'); box.innerHTML='';
           TREE.forEach(m => {
-            const box = document.createElement('div');
-            box.className = 'bg-white rounded-lg shadow p-3';
-            box.innerHTML = `<div class="flex justify-between items-center">
-              <h3 class="font-bold">${m.is_merce?'🟢':'•'} ${m.nome}</h3>
-              <span class="text-xs text-gray-500">${m.n_prod} prod · ${eur(m.spesa)}</span></div>`;
-            const body = document.createElement('div');
-            body.className = 'mt-2 pl-3 space-y-1';
-            if (m.is_merce) (m.famiglie||[]).forEach(f => body.appendChild(renderFamiglia(f, q)));
-            else (m.voci||[]).forEach(v => { const el=renderVoce(v,q); if(el) body.appendChild(el); });
-            box.appendChild(body);
-            root.appendChild(box);
+            const key='m'+m.id, open=expanded.has(key);
+            box.appendChild(row(0, key, true, open, (m.is_merce?'🟢':'•'), m.nome,
+              `${m.n_prod}·${eur(m.spesa)}`,
+              ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'macro',data:m}); },
+              ()=>{ toggle(key); renderTree(); }));
+            if(!open) return;
+            if(m.is_merce){
+              (m.famiglie||[]).forEach(f => renderFamiglia(box,f,m,q));
+            } else {
+              (m.voci||[]).forEach(t => renderTipo(box,t,m,null,q,1));
+            }
           });
         }
 
-        function renderVoce(v, q){
-          if (q && !v.nome.toLowerCase().includes(q)) return null;
-          const d = document.createElement('div');
-          d.className = 'flex justify-between items-center text-sm py-0.5 '+(v.attivo?'':'opacity-40 line-through');
-          const left = document.createElement('span'); left.textContent = v.nome;
-          const right = document.createElement('span'); right.className='text-gray-400 ml-2 shrink-0';
-          right.textContent = `${v.n_prod} · ${eur(v.spesa)}`;
-          d.appendChild(left); d.appendChild(right);
-          if (isAdmin()){
-            const act = document.createElement('span'); act.className='ml-2 space-x-1 shrink-0';
-            const mk = (label,title,fn)=>{ const b=document.createElement('button'); b.textContent=label; b.title=title; b.onclick=fn; b.className='hover:opacity-70'; return b; };
-            act.appendChild(mk('✏️','Rinomina',()=>azRinomina(v.id, v.nome)));
-            act.appendChild(mk('↔️','Sposta',()=>azSposta(v.id)));
-            act.appendChild(mk('🔀','Unisci in…',()=>azUnisci(v.id)));
-            act.appendChild(mk('🗑️','Elimina',()=>azElimina(v.id)));
-            d.appendChild(act);
+        function renderFamiglia(box,f,m,q){
+          const key='f'+f.id, open=expanded.has(key);
+          box.appendChild(row(1, key, (f.tipi||[]).length>0, open, '📁', f.nome, '',
+            ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'famiglia',data:f,macro:m}); },
+            ()=>{ toggle(key); renderTree(); }));
+          if(open) (f.tipi||[]).forEach(t => renderTipo(box,t,m,f,q,2));
+        }
+
+        function renderTipo(box,t,m,f,q,depth){
+          if (q && !nodeMatches(t,q)) return;
+          const key='t'+t.id, open=expanded.has(key);
+          const anag = anagCache[t.id];
+          const loose = anag ? anag.filter(a=>!a.pu_id) : [];
+          const hasChildren = (t.prodotti&&t.prodotti.length>0) || !anag || loose.length>0 || t.n_prod>0;
+          box.appendChild(row(depth, key, hasChildren, open, '🏷️', t.nome,
+            `${t.n_prod}·${eur(t.spesa)}`,
+            ()=>{ selectedKey=key; toggleTipo(key,t.id); showDetail({type:'tipo',data:t,macro:m,famiglia:f}); },
+            ()=> toggleTipo(key,t.id) ));
+          if(open && anag){
+            (t.prodotti||[]).forEach(p => renderProdotto(box,p,t,depth+1));
+            loose.forEach(a => renderDescr(box,a,depth+1));
           }
-          return d;
         }
 
-        function renderFamiglia(f, q){
-          const wrap = document.createElement('div');
-          const h = document.createElement('div'); h.className='font-semibold text-sm text-gray-700'; h.textContent=f.nome;
-          wrap.appendChild(h);
-          const ul = document.createElement('div'); ul.className='pl-3';
-          (f.tipi||[]).forEach(t => { const el=renderVoce(t,q); if(el) ul.appendChild(el); });
-          wrap.appendChild(ul);
-          return wrap;
+        function renderProdotto(box,p,t,depth){
+          const key='p'+p.id, open=expanded.has(key);
+          const membri = (anagCache[t.id]||[]).filter(a=>a.pu_id===p.id);
+          box.appendChild(row(depth, key, membri.length>0, open, '🔗', p.nome+(p.udm?(' ('+p.udm+')'):''), '',
+            ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'prodotto',data:p,tipo:t,membri}); },
+            ()=>{ toggle(key); renderTree(); }));
+          if(open) membri.forEach(a => renderDescr(box,a,depth+1));
         }
 
-        function renderInbox(){
-          const daSmistare = TREE.find(m=>m.id===9);
-          const vuoti = [];
-          TREE.forEach(m=>{
-            const raccogli = t => { if((t.n_prod||0)===0 && t.attivo) vuoti.push(t.nome); };
-            if(m.is_merce) (m.famiglie||[]).forEach(f=>(f.tipi||[]).forEach(raccogli));
-            else (m.voci||[]).forEach(raccogli);
+        function renderDescr(box,a,depth){
+          const key='d'+a.id;
+          box.appendChild(row(depth, key, false, false, '•', a.descrizione,
+            a.prezzo!=null?eur2(a.prezzo):'',
+            ()=>{ selectedKey=key; renderTree(); showDetail({type:'descr',data:a}); }, null));
+        }
+
+        function nodeMatches(t,q){
+          if (t.nome.toLowerCase().includes(q)) return true;
+          const anag = anagCache[t.id]||[];
+          return anag.some(a => (a.descrizione||'').toLowerCase().includes(q));
+        }
+
+        // ---------- PANNELLO DETTAGLIO ----------
+        function showDetail(sel){
+          const d = document.getElementById('detail'); d.className=''; d.innerHTML='';
+          if(sel.type==='macro') return detailLista(d, sel.data.nome, (sel.data.is_merce?sel.data.famiglie:sel.data.voci)||[], sel.data.is_merce?'famiglia':'voce');
+          if(sel.type==='famiglia') return detailLista(d, sel.macro.nome+' › '+sel.data.nome, sel.data.tipi||[], 'tipo');
+          if(sel.type==='tipo') return detailTipo(d, sel);
+          if(sel.type==='prodotto') return detailProdotto(d, sel);
+          if(sel.type==='descr') return detailDescr(d, sel.data);
+        }
+
+        function h(html){ const w=document.createElement('div'); w.innerHTML=html; return w; }
+
+        function detailLista(d, titolo, figli, tipoFiglio){
+          d.appendChild(h(`<h2 class="text-2xl font-bold mb-3">${esc(titolo)}</h2>
+            <p class="text-sm text-gray-500 mb-3">${figli.length} ${tipoFiglio}</p>`));
+          const tbl = document.createElement('table'); tbl.className='w-full text-sm';
+          tbl.innerHTML = '<thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Nome</th><th class="text-right">Prodotti</th><th class="text-right">Spesa</th></tr></thead>';
+          const tb=document.createElement('tbody');
+          figli.slice().sort((a,b)=>(b.spesa||0)-(a.spesa||0)).forEach(f=>{
+            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50';
+            tr.innerHTML=`<td class="py-1">${esc(f.nome)}</td><td class="text-right">${f.n_prod??''}</td><td class="text-right">${eur(f.spesa)}</td>`;
+            tb.appendChild(tr);
           });
-          const el = document.getElementById('inbox');
-          el.innerHTML =
-            `<div class="bg-amber-50 border border-amber-200 rounded p-3 text-sm">`+
-            `❓ <b>Da smistare</b>: ${daSmistare? (daSmistare.n_prod+' prodotti · '+eur(daSmistare.spesa)) : '—'} `+
-            `<span class="text-gray-500">(Consumabili/Miscellaneo → verranno spacchettati in Fase 2)</span></div>`+
-            `<div class="bg-gray-50 border rounded p-3 text-sm mt-2">🫙 <b>Tipi vuoti</b> (${vuoti.length}): ${vuoti.join(', ')||'nessuno'}</div>`;
+          tbl.appendChild(tb); d.appendChild(tbl);
         }
 
-        function elencoMacro(){ return TREE.map(m=>`${m.id}=${m.nome}`).join('\n'); }
+        async function detailTipo(d, sel){
+          const t=sel.data;
+          const path=[sel.macro?sel.macro.nome:'', sel.famiglia?sel.famiglia.nome:'', t.nome].filter(Boolean).join(' › ');
+          d.appendChild(h(`<div class="text-xs text-gray-400">${esc(path)}</div>
+            <h2 class="text-2xl font-bold mb-1">🏷️ ${esc(t.nome)}</h2>
+            <p class="text-sm text-gray-500 mb-3">${t.n_prod} prodotti · ${eur(t.spesa)}</p>`));
+          if(isAdmin()){
+            const bar=document.createElement('div'); bar.className='flex gap-2 mb-4';
+            const mk=(txt,cls,fn)=>{const b=document.createElement('button');b.textContent=txt;b.className='px-3 py-1.5 rounded text-sm '+cls;b.onclick=fn;return b;};
+            bar.appendChild(mk('✏️ Rinomina','bg-gray-100 hover:bg-gray-200',()=>azRinomina(t.id,t.nome)));
+            bar.appendChild(mk('↔️ Sposta','bg-gray-100 hover:bg-gray-200',()=>azSposta(t.id)));
+            bar.appendChild(mk('🔀 Unisci in…','bg-gray-100 hover:bg-gray-200',()=>azUnisci(t.id)));
+            bar.appendChild(mk('🗑️ Elimina','bg-red-50 text-red-700 hover:bg-red-100',()=>azElimina(t.id)));
+            d.appendChild(bar);
+          }
+          const anag = await loadAnag(t.id);
+          if((t.prodotti||[]).length){
+            d.appendChild(h('<h3 class="font-semibold text-sm mt-2 mb-1">Prodotti unificati</h3>'));
+            (t.prodotti||[]).forEach(p=>{
+              const n=anag.filter(a=>a.pu_id===p.id).length;
+              d.appendChild(h(`<div class="text-sm py-0.5">🔗 ${esc(p.nome)} <span class="text-gray-400">(${n} articoli)</span></div>`));
+            });
+          }
+          const loose = anag.filter(a=>!a.pu_id);
+          d.appendChild(h(`<h3 class="font-semibold text-sm mt-3 mb-1">Articoli acquistati ${loose.length?('non collegati ('+loose.length+')'):''}</h3>`));
+          d.appendChild(tabellaDescr(loose.length?loose:anag));
+        }
 
+        function detailProdotto(d, sel){
+          const p=sel.data;
+          d.appendChild(h(`<div class="text-xs text-gray-400">${esc(sel.tipo.nome)}</div>
+            <h2 class="text-2xl font-bold mb-1">🔗 ${esc(p.nome)}${p.udm?(' <span class=\"text-base text-gray-400\">('+esc(p.udm)+')</span>'):''}</h2>
+            <p class="text-sm text-gray-500 mb-3">${sel.membri.length} articoli collegati</p>`));
+          d.appendChild(tabellaDescr(sel.membri));
+        }
+
+        function detailDescr(d, a){
+          d.appendChild(h(`<h2 class="text-xl font-bold mb-3">${esc(a.descrizione)}</h2>
+            <div class="grid grid-cols-2 gap-3 max-w-lg text-sm">
+              <div class="bg-white rounded p-3 shadow"><div class="text-gray-400 text-xs">Prezzo medio</div><div class="font-bold">${a.prezzo!=null?eur2(a.prezzo):'—'} ${a.udf?('/'+esc(a.udf)):''}</div></div>
+              <div class="bg-white rounded p-3 shadow"><div class="text-gray-400 text-xs">Fornitore</div><div class="font-bold">${esc(a.fornitore||'—')}</div></div>
+              <div class="bg-white rounded p-3 shadow"><div class="text-gray-400 text-xs">Ultimo acquisto</div><div class="font-bold">${esc(a.ultimo||'—')}</div></div>
+              <div class="bg-white rounded p-3 shadow"><div class="text-gray-400 text-xs">N. acquisti</div><div class="font-bold">${a.n_acq??'—'}</div></div>
+            </div>`));
+        }
+
+        function tabellaDescr(rows){
+          const tbl=document.createElement('table'); tbl.className='w-full text-sm mt-1';
+          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Articolo (nome in fattura)</th><th>Fornitore</th><th class="text-right">Prezzo medio</th><th class="text-right">Ultimo</th></tr></thead>';
+          const tb=document.createElement('tbody');
+          if(!rows.length){ tb.innerHTML='<tr><td class="py-2 text-gray-400" colspan="4">Nessun articolo.</td></tr>'; }
+          rows.forEach(a=>{
+            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 cursor-pointer';
+            tr.onclick=()=>{ selectedKey='d'+a.id; renderTree(); showDetail({type:'descr',data:a}); };
+            tr.innerHTML=`<td class="py-1">${esc(a.descrizione)}</td><td class="text-gray-600">${esc(a.fornitore||'—')}</td>
+              <td class="text-right">${a.prezzo!=null?eur2(a.prezzo):'—'}${a.udf?(' /'+esc(a.udf)):''}</td>
+              <td class="text-right text-gray-500">${esc(a.ultimo||'—')}</td>`;
+            tb.appendChild(tr);
+          });
+          tbl.appendChild(tb); return tbl;
+        }
+
+        // ---------- AZIONI ADMIN ----------
+        function elencoMacro(){ return TREE.map(m=>`${m.id}=${m.nome}`).join('\n'); }
         async function azRinomina(id, nome){
           const nuovo = prompt('Nuovo nome del tipo:', nome); if(!nuovo || nuovo===nome) return;
           const { error } = await supabaseClient.rpc('rinomina_tipo', {p_tipo:id, p_nome:nuovo});
@@ -163,8 +276,7 @@
         }
         async function azSposta(id){
           const macro = parseInt(prompt('Sposta sotto quale Macro?\n'+elencoMacro())); if(!macro) return;
-          let fam = null;
-          const m = TREE.find(x=>x.id===macro);
+          let fam = null; const m = TREE.find(x=>x.id===macro);
           if (m && m.is_merce){
             const fams=(m.famiglie||[]).map(f=>`${f.id}=${f.nome}`).join('\n');
             fam = parseInt(prompt('In quale Famiglia?\n'+fams)) || null;
