@@ -60,7 +60,7 @@
                 <h1 class="text-lg font-bold flex items-center">🗂️ Classificazione</h1>
                 <input id="search" oninput="renderTree()" placeholder="Filtra…"
                        class="mt-2 w-full text-sm text-gray-800 rounded px-2 py-1">
-                <p class="text-[11px] text-gray-400 mt-2 leading-snug">Trascina un articolo su una Macro / Famiglia / Tipo per smistarlo. Sulla Famiglia/Macro finisce in un contenitore <b>"Da sistemare"</b>.</p>
+                <p class="text-[11px] text-gray-400 mt-2 leading-snug">Seleziona una Macro o Famiglia per creare nuovi raggruppamenti. Trascina un articolo su un nodo per smistarlo.</p>
             </div>
             <div id="tree" class="flex-1 overflow-y-auto p-2 text-sm"></div>
         </aside>
@@ -72,8 +72,8 @@
 
     <script>
         let TREE = [];
-        const anagCache = {};              // tipoId -> [descrizioni]
-        const expanded = new Set();        // chiavi nodo espanse
+        const anagCache = {};
+        const expanded = new Set();
         let selectedKey = null;
 
         const eur = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
@@ -101,7 +101,6 @@
           toggle(key); renderTree();
         }
 
-        // Ricarica albero + descrizioni dei tipi aperti mantenendo vista e selezione
         async function afterChange(){
           const openTipos = [...expanded].filter(k=>k[0]==='t').map(k=>parseInt(k.slice(1)));
           for (const k in anagCache) delete anagCache[k];
@@ -109,18 +108,24 @@
           if (!error) TREE = data || [];
           await Promise.all(openTipos.map(loadAnag));
           renderTree();
-          if (selectedKey && selectedKey[0]==='t'){
-            const f = findTipo(parseInt(selectedKey.slice(1)));
-            if (f) showDetail({type:'tipo', data:f.t, macro:f.m, famiglia:f.f});
-          }
+          reselect();
         }
 
+        function findMacro(id){ return TREE.find(m=>m.id===id); }
+        function findFamiglia(id){ for(const m of TREE){ for(const f of (m.famiglie||[])) if(f.id===id) return {f,m}; } return null; }
         function findTipo(id){
           for (const m of TREE){
-            if (m.is_merce){ for (const f of (m.famiglie||[])) for (const t of (f.tipi||[])) if (t.id===id) return {t,m,f}; }
-            else { for (const t of (m.voci||[])) if (t.id===id) return {t,m,f:null}; }
+            for (const f of (m.famiglie||[])) for (const t of (f.tipi||[])) if (t.id===id) return {t,m,f};
+            for (const t of (m.voci||[])) if (t.id===id) return {t,m,f:null};
           }
           return null;
+        }
+        function reselect(){
+          if(!selectedKey) return;
+          const kind=selectedKey[0], id=parseInt(selectedKey.slice(1));
+          if(kind==='m'){ const m=findMacro(id); if(m) showDetail({type:'macro',data:m}); }
+          else if(kind==='f'){ const r=findFamiglia(id); if(r) showDetail({type:'famiglia',data:r.f,macro:r.m}); }
+          else if(kind==='t'){ const r=findTipo(id); if(r) showDetail({type:'tipo',data:r.t,macro:r.m,famiglia:r.f}); }
         }
 
         async function onDrop(e, kind, targetId){
@@ -132,7 +137,6 @@
           await afterChange();
         }
 
-        // row: hasChildren/onToggle per l'albero; dropTarget={kind,id} per accettare drop; dragAnagId per rendere trascinabile
         function row(depth, key, hasChildren, isOpen, icon, label, meta, onClick, onToggle, dropTarget, dragAnagId){
           const r = document.createElement('div');
           r.className = 'node-row' + (selectedKey===key?' sel':'');
@@ -168,8 +172,8 @@
               ()=>{ toggle(key); renderTree(); },
               {kind:'macro', id:m.id}, null));
             if(!open) return;
-            if(m.is_merce) (m.famiglie||[]).forEach(f => renderFamiglia(box,f,m,q));
-            else (m.voci||[]).forEach(t => renderTipo(box,t,m,null,q,1));
+            (m.famiglie||[]).forEach(f => renderFamiglia(box,f,m,q));
+            (m.voci||[]).forEach(t => renderTipo(box,t,m,null,q,1));
           });
         }
 
@@ -222,30 +226,61 @@
           return anag.some(a => (a.descrizione||'').toLowerCase().includes(q));
         }
 
-        // ---------- PANNELLO DETTAGLIO ----------
+        // ---------- DETTAGLIO ----------
+        function h(html){ const w=document.createElement('div'); w.innerHTML=html; return w; }
+        function btn(txt,cls,fn){ const b=document.createElement('button'); b.textContent=txt; b.className='px-3 py-1.5 rounded text-sm '+cls; b.onclick=fn; return b; }
+
         function showDetail(sel){
           const d = document.getElementById('detail'); d.className=''; d.innerHTML='';
-          if(sel.type==='macro') return detailLista(d, sel.data.nome, (sel.data.is_merce?sel.data.famiglie:sel.data.voci)||[], sel.data.is_merce?'famiglia':'voce');
-          if(sel.type==='famiglia') return detailLista(d, sel.macro.nome+' › '+sel.data.nome, sel.data.tipi||[], 'tipo');
+          if(sel.type==='macro') return detailMacro(d, sel.data);
+          if(sel.type==='famiglia') return detailFamiglia(d, sel);
           if(sel.type==='tipo') return detailTipo(d, sel);
           if(sel.type==='prodotto') return detailProdotto(d, sel);
           if(sel.type==='descr') return detailDescr(d, sel.data);
         }
 
-        function h(html){ const w=document.createElement('div'); w.innerHTML=html; return w; }
-
-        function detailLista(d, titolo, figli, tipoFiglio){
-          d.appendChild(h(`<h2 class="text-2xl font-bold mb-3">${esc(titolo)}</h2>
-            <p class="text-sm text-gray-500 mb-3">${figli.length} ${tipoFiglio}</p>`));
-          const tbl = document.createElement('table'); tbl.className='w-full text-sm';
-          tbl.innerHTML = '<thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Nome</th><th class="text-right">Prodotti</th><th class="text-right">Spesa</th></tr></thead>';
+        function listaNodi(items, kind, m){
+          const tbl=document.createElement('table'); tbl.className='w-full text-sm';
+          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Nome</th><th class="text-right">Prodotti</th><th class="text-right">Spesa</th></tr></thead>';
           const tb=document.createElement('tbody');
-          figli.slice().sort((a,b)=>(b.spesa||0)-(a.spesa||0)).forEach(f=>{
-            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50';
-            tr.innerHTML=`<td class="py-1">${esc(f.nome)}</td><td class="text-right">${f.n_prod??''}</td><td class="text-right">${eur(f.spesa)}</td>`;
+          items.slice().sort((a,b)=>(b.spesa||0)-(a.spesa||0)).forEach(it=>{
+            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 cursor-pointer';
+            tr.onclick=()=>{
+              if(kind==='famiglia'){ selectedKey='f'+it.id; renderTree(); showDetail({type:'famiglia',data:it,macro:m}); }
+              else { selectedKey='t'+it.id; renderTree(); showDetail({type:'tipo',data:it,macro:m,famiglia:null}); }
+            };
+            tr.innerHTML=`<td class="py-1">${kind==='famiglia'?'📁':'🏷️'} ${esc(it.nome)}</td><td class="text-right">${it.n_prod??''}</td><td class="text-right">${eur(it.spesa)}</td>`;
             tb.appendChild(tr);
           });
-          tbl.appendChild(tb); d.appendChild(tbl);
+          tbl.appendChild(tb); return tbl;
+        }
+
+        function detailMacro(d, m){
+          d.appendChild(h(`<h2 class="text-2xl font-bold mb-1">${m.is_merce?'🟢':'•'} ${esc(m.nome)}</h2>
+            <p class="text-sm text-gray-500 mb-3">${m.n_prod} prodotti · ${eur(m.spesa)}</p>`));
+          if(isAdmin()){
+            const bar=document.createElement('div'); bar.className='flex gap-2 mb-4 flex-wrap';
+            bar.appendChild(btn('➕ Nuova famiglia','bg-emerald-50 text-emerald-700 hover:bg-emerald-100',()=>azNuovaFamiglia(m.id)));
+            if(!m.is_merce) bar.appendChild(btn('➕ Nuovo tipo','bg-emerald-50 text-emerald-700 hover:bg-emerald-100',()=>azNuovoTipo(m.id,null)));
+            d.appendChild(bar);
+          }
+          const fam=m.famiglie||[], voci=m.voci||[];
+          if(fam.length){ d.appendChild(h('<h3 class="font-semibold text-sm mb-1">Famiglie</h3>')); d.appendChild(listaNodi(fam,'famiglia',m)); }
+          if(voci.length){ d.appendChild(h('<h3 class="font-semibold text-sm mt-4 mb-1">'+(m.is_merce?'Tipi':'Voci')+'</h3>')); d.appendChild(listaNodi(voci,'tipo',m)); }
+          if(!fam.length && !voci.length) d.appendChild(h('<p class="text-gray-400 text-sm">Vuoto. Crea una famiglia o un tipo, oppure trascina qui degli articoli.</p>'));
+        }
+
+        function detailFamiglia(d, sel){
+          const f=sel.data;
+          d.appendChild(h(`<div class="text-xs text-gray-400">${esc(sel.macro.nome)}</div>
+            <h2 class="text-2xl font-bold mb-3">📁 ${esc(f.nome)}</h2>`));
+          if(isAdmin()){
+            const bar=document.createElement('div'); bar.className='mb-4';
+            bar.appendChild(btn('➕ Nuovo tipo','bg-emerald-50 text-emerald-700 hover:bg-emerald-100',()=>azNuovoTipo(sel.macro.id,f.id)));
+            d.appendChild(bar);
+          }
+          d.appendChild(h(`<p class="text-sm text-gray-500 mb-1">${(f.tipi||[]).length} tipi</p>`));
+          d.appendChild(listaNodi(f.tipi||[],'tipo',sel.macro));
         }
 
         async function detailTipo(d, sel){
@@ -256,11 +291,10 @@
             <p class="text-sm text-gray-500 mb-3">${t.n_prod} prodotti · ${eur(t.spesa)}</p>`));
           if(isAdmin()){
             const bar=document.createElement('div'); bar.className='flex gap-2 mb-4 flex-wrap';
-            const mk=(txt,cls,fn)=>{const b=document.createElement('button');b.textContent=txt;b.className='px-3 py-1.5 rounded text-sm '+cls;b.onclick=fn;return b;};
-            bar.appendChild(mk('✏️ Rinomina','bg-gray-100 hover:bg-gray-200',()=>azRinomina(t.id,t.nome)));
-            bar.appendChild(mk('↔️ Sposta','bg-gray-100 hover:bg-gray-200',()=>azSposta(t.id)));
-            bar.appendChild(mk('🔀 Unisci in…','bg-gray-100 hover:bg-gray-200',()=>azUnisci(t.id)));
-            bar.appendChild(mk('🗑️ Elimina','bg-red-50 text-red-700 hover:bg-red-100',()=>azElimina(t.id)));
+            bar.appendChild(btn('✏️ Rinomina','bg-gray-100 hover:bg-gray-200',()=>azRinomina(t.id,t.nome)));
+            bar.appendChild(btn('↔️ Sposta','bg-gray-100 hover:bg-gray-200',()=>azSposta(t.id)));
+            bar.appendChild(btn('🔀 Unisci in…','bg-gray-100 hover:bg-gray-200',()=>azUnisci(t.id)));
+            bar.appendChild(btn('🗑️ Elimina','bg-red-50 text-red-700 hover:bg-red-100',()=>azElimina(t.id)));
             d.appendChild(bar);
           }
           const anag = await loadAnag(t.id);
@@ -315,6 +349,18 @@
 
         // ---------- AZIONI ADMIN ----------
         function elencoMacro(){ return TREE.map(m=>`${m.id}=${m.nome}`).join('\n'); }
+        async function azNuovaFamiglia(macroId){
+          const nome = prompt('Nome della nuova famiglia (raggruppamento):'); if(!nome || !nome.trim()) return;
+          const { error } = await supabaseClient.rpc('crea_famiglia', {p_nome:nome.trim(), p_macro:macroId});
+          if(error) return alert(error.message);
+          expanded.add('m'+macroId); afterChange();
+        }
+        async function azNuovoTipo(macroId, famigliaId){
+          const nome = prompt('Nome del nuovo tipo:'); if(!nome || !nome.trim()) return;
+          const { error } = await supabaseClient.rpc('crea_tipo', {p_nome:nome.trim(), p_macro:macroId, p_famiglia:famigliaId||null});
+          if(error) return alert(error.message);
+          expanded.add('m'+macroId); if(famigliaId) expanded.add('f'+famigliaId); afterChange();
+        }
         async function azRinomina(id, nome){
           const nuovo = prompt('Nuovo nome del tipo:', nome); if(!nuovo || nuovo===nome) return;
           const { error } = await supabaseClient.rpc('rinomina_tipo', {p_tipo:id, p_nome:nuovo});
@@ -323,10 +369,12 @@
         async function azSposta(id){
           const macro = parseInt(prompt('Sposta sotto quale Macro?\n'+elencoMacro())); if(!macro) return;
           let fam = null; const m = TREE.find(x=>x.id===macro);
-          if (m && m.is_merce){
+          if (m && (m.famiglie||[]).length){
             const fams=(m.famiglie||[]).map(f=>`${f.id}=${f.nome}`).join('\n');
-            fam = parseInt(prompt('In quale Famiglia?\n'+fams)) || null;
+            const r = prompt('In quale Famiglia? (id; vuoto = nessuna, diventa voce diretta)\n'+fams);
+            fam = r && r.trim() ? (parseInt(r)||null) : null;
           }
+          if (m && m.is_merce && !fam){ alert('Per la Merce in vendita il tipo deve stare in una Famiglia.'); return; }
           const { error } = await supabaseClient.rpc('sposta_tipo', {p_tipo:id, p_macro:macro, p_famiglia:fam});
           if(error) return alert(error.message); afterChange();
         }
