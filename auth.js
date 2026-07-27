@@ -36,12 +36,12 @@ async function requireAuth(pageName, opts = {}) {
     alert('Accesso negato.'); window.location.href = 'dashboard.html'; return null;
   }
 
-  // Permesso per-profilo (Admin sempre dentro; dashboard sempre accessibile; default tollerante)
+  // Permesso per-profilo (Admin sempre dentro; dashboard sempre accessibile; default NEGATO: serve grant esplicito)
   if (profile.ruolo !== 'Admin' && pageName !== 'dashboard.html') {
     const { data: perm } = await supabaseClient
       .from('permessi_profili').select('can_access')
       .eq('profilo', profile.ruolo).eq('pagina', pageName).maybeSingle();
-    if (perm && perm.can_access === false) {
+    if (!perm || perm.can_access !== true) {
       alert('Non hai i permessi per accedere a questa pagina.');
       window.location.href = 'dashboard.html'; return null;
     }
@@ -73,16 +73,21 @@ async function checkRicaviSerali() {
   } catch (e) {}
 }
 
-// Calcola le pagine vietate al profilo, le memorizza in cache di sessione e le nasconde via CSS
+// Calcola le pagine vietate al profilo, le memorizza in cache di sessione e le nasconde via CSS.
+// Default STRUTTURALE: una pagina gestita è nascosta se il profilo non ha un grant esplicito (can_access=true).
+// L'universo delle pagine gestite = tutte quelle presenti nella matrice permessi_profili → ogni pagina nuova è nascosta finché non viene concessa.
 async function applyMenuPermissions() {
   if (!currentProfile) return;
   const isAdminUser = currentProfile.ruolo === 'Admin';
   const denied = [];
   if (!isAdminUser) {
-    ['utenti.html', 'crea-utente.html'].forEach(p => denied.push(p)); // pagine solo-Admin
-    const { data } = await supabaseClient.from('permessi_profili')
+    const { data: tutte } = await supabaseClient.from('permessi_profili').select('pagina');
+    const universo = new Set((tutte || []).map(r => r.pagina));
+    const { data: mie } = await supabaseClient.from('permessi_profili')
       .select('pagina, can_access').eq('profilo', currentProfile.ruolo);
-    (data || []).forEach(r => { if (r.can_access === false) denied.push(r.pagina); });
+    const granted = new Set((mie || []).filter(r => r.can_access === true).map(r => r.pagina));
+    universo.forEach(pg => { if (!granted.has(pg)) denied.push(pg); });
+    ['utenti.html', 'crea-utente.html'].forEach(p => { if (!denied.includes(p)) denied.push(p); }); // solo-Admin
   }
   try { sessionStorage.setItem('menu_denied', JSON.stringify(denied)); } catch (e) {}
   let st = document.getElementById('menu-denied-style');
