@@ -31,6 +31,7 @@ const NAV_PAGES = [
   { href: 'ricavi.html', label: 'Ricavi' },
   { href: 'fornitori.html', label: 'Fornitori' },
   { href: 'classificazione.html', label: 'Costi' },
+  { href: 'turni.html', label: 'Turni' },
   { href: 'utenti.html', label: 'Utenti' },
 ];
 
