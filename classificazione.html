@@ -17,9 +17,10 @@
         .node-row.drop-hover { outline:2px solid #60a5fa; background: rgba(59,130,246,.30); }
         .twisty { width:16px; text-align:center; flex:0 0 16px; opacity:.8; }
         .node-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .node-meta { flex:0 0 auto; text-align:right; white-space:nowrap; display:flex; align-items:baseline; justify-content:flex-end; gap:6px; }
-        .meta-eur { font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
-        .meta-cnt { font-size:9px; opacity:.5; font-variant-numeric:tabular-nums; min-width:34px; text-align:right; }
+        .node-meta { flex:0 0 auto; white-space:nowrap; display:flex; align-items:baseline; justify-content:flex-end; gap:6px; }
+        .meta-eur { font-size:11px; font-variant-numeric:tabular-nums; }
+        .meta-sep { font-size:11px; opacity:.35; }
+        .meta-cnt { font-size:11px; opacity:.6; font-variant-numeric:tabular-nums; min-width:4ch; text-align:right; }
         tr.drag { cursor:grab; }
     </style>
 </head>
@@ -84,7 +85,8 @@
         const eur = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
         const eur2 = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',minimumFractionDigits:2});
         const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; };
-        const metaHtml = (n, spesa) => `<span class="meta-eur">${eur(spesa)}</span><span class="meta-cnt">${(n||0)}</span>`;
+        const nfmt = n => (Number(n)||0).toLocaleString('it-IT');
+        const metaHtml = (n, spesa) => `<span class="meta-eur">${nfmt(Math.round(spesa||0))} €</span><span class="meta-sep">|</span><span class="meta-cnt">${n||0}</span>`;
 
         async function carica(){
           const { data, error } = await supabaseClient.rpc('get_classificazione_tree');
