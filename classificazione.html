@@ -61,6 +61,7 @@
                 <input id="search" oninput="renderTree()" placeholder="Filtra…"
                        class="mt-2 w-full text-sm text-gray-800 rounded px-2 py-1">
                 <p class="text-[11px] text-gray-400 mt-2 leading-snug">Trascina articoli, Tipi o Famiglie su un nodo per spostarli. Con le checkbox nella tabella sposti più articoli insieme. Su Macro/Famiglia crei nuovi raggruppamenti.</p>
+                <button id="btnNuovaMacro" onclick="azNuovaMacro()" style="display:none" class="mt-2 w-full text-sm bg-white/15 hover:bg-white/25 rounded px-2 py-1">➕ Nuova macro-categoria</button>
             </div>
             <div id="tree" class="flex-1 overflow-y-auto p-2 text-sm"></div>
         </aside>
@@ -87,6 +88,15 @@
           if (error){ console.error(error); alert('Errore caricamento: '+error.message); return; }
           TREE = data || [];
           renderTree();
+          const bm=document.getElementById('btnNuovaMacro'); if(bm && isAdmin()) bm.style.display='block';
+        }
+
+        async function azNuovaMacro(){
+          const nome=prompt('Nome della nuova macro-categoria:'); if(!nome || !nome.trim()) return;
+          const merce=confirm('È "Merce in vendita" (entra nel food cost)?\n\nOK = sì   ·   Annulla = no (spesa/gestione)');
+          const { error } = await supabaseClient.rpc('crea_macro', {p_nome:nome.trim(), p_is_merce:merce});
+          if(error) return alert(error.message);
+          afterChange();
         }
 
         async function loadAnag(tipoId){
