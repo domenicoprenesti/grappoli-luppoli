@@ -150,7 +150,7 @@
       const tb=document.createElement('tbody');
       rows.forEach(r=>{
         const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50';
-        const contr = r.tipo_contratto==='part_time' ? ('PT '+(r.pt_modalita||'')) : 'Full';
+        const contr = r.tipo_contratto==='part_time' ? ('PT '+(r.pt_modalita||'')) : (r.tipo_contratto==='a_chiamata' ? 'A chiamata' : 'Full');
         const str = [r.str_max_sett,r.str_max_mese,r.str_max_anno].map(x=>x==null?'–':x).join(' / ');
         const mList = (mByR[r.id]||[]).map(id=>mNome[id]).filter(Boolean).join(', ');
         tr.innerHTML=`<td class="p-2">${esc((r.cognome||'')+' '+r.nome)}</td><td class="p-2">${r.ore_contratto}</td><td class="p-2">${esc(contr)}</td><td class="p-2">${r.giorni_riposo}</td><td class="p-2">${esc(str)}</td><td class="p-2 text-gray-600">${esc(mList||'—')}</td>`;
@@ -176,7 +176,7 @@
           <div class="flex gap-2"><label class="flex-1">Ore contratto/sett<input id="ore" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit?rec.ore_contratto:''}"></label>
             <label class="flex-1">N° giorni riposo<input id="riposi" type="number" class="w-full border rounded px-2 py-1" value="${isEdit?rec.giorni_riposo:1}"></label></div>
           <div class="flex gap-2 items-end">
-            <label class="flex-1">Contratto<select id="tipo" class="w-full border rounded px-2 py-1"><option value="full">Full</option><option value="part_time">Part-time</option></select></label>
+            <label class="flex-1">Contratto<select id="tipo" class="w-full border rounded px-2 py-1"><option value="full">Full</option><option value="part_time">Part-time</option><option value="a_chiamata">A chiamata</option></select></label>
             <label class="flex-1">Modalità PT<select id="ptm" class="w-full border rounded px-2 py-1"><option value="">—</option><option value="verticale">Verticale</option><option value="orizzontale">Orizzontale</option></select></label></div>
           <div class="flex gap-2"><label class="flex-1">Str. max sett<input id="ss" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_sett!=null?rec.str_max_sett:''}"></label>
             <label class="flex-1">Str. max mese<input id="sm" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_mese!=null?rec.str_max_mese:''}"></label>
