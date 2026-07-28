@@ -168,6 +168,115 @@
       sg.innerHTML='<div class="font-semibold mb-1">Suggerimenti di riequilibrio</div>'+(sugg.length?('<ul class="list-disc pl-5">'+sugg.map(s=>`<li>${esc(s)}</li>`).join('')+'</ul>'):'<div class="text-gray-400">Nessun suggerimento.</div>');
       box.appendChild(sg);
     }
+    function durOre(i,f){ const p=s=>{ const a=(s||'0:0').split(':'); return (+a[0])*60+(+a[1]); }; let d=p(f)-p(i); if(d<=0) d+=1440; return d/60; }
+    function isoWeekNum(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3); const firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4)); const fday=(firstThu.getUTCDay()+6)%7; firstThu.setUTCDate(firstThu.getUTCDate()-fday+3); return 1+Math.round((t-firstThu)/(7*24*3600*1000)); }
+    function giorniConsecutivi(set, iso){ const a=iso.split('-').map(Number); let d=new Date(a[0],a[1]-1,a[2]); let n=1; for(;;){ d.setDate(d.getDate()-1); const s=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(set.has(s)) n++; else break; } return n; }
+
+    function scegliRisorsa(risorse, st, ctx){
+      const {iso, gi, settN, fascia, chiude, mansByR, accByRG, assenze, riposoMin, maxCons} = ctx;
+      const dur = durOre(fascia.inizio, chiude);
+      const maxWork = 7 - riposoMin;
+      const eligibili = pool => pool.filter(r=>{
+        if(st[r.id].giorni.has(iso)) return false;
+        if(assenze.some(x=>x.risorsa_id===r.id && iso>=x.data_inizio && iso<=x.data_fine)) return false;
+        if(fascia.mansione_id && !(mansByR[r.id]&&mansByR[r.id].has(fascia.mansione_id))) return false;
+        const acc=accByRG[r.id+'|'+gi]; const cad=acc?acc.cadenza:'sempre';
+        if(cad==='mai') return false;
+        if(cad==='1su2' && settN%2!==0) return false;
+        if(cad==='2su3' && settN%3===0) return false;
+        if(cad==='3su4' && settN%4===0) return false;
+        if(st[r.id].giorni.size >= maxWork) return false;
+        if(maxCons && giorniConsecutivi(st[r.id].giorni, iso) > maxCons) return false;
+        const limite = r.tipo_contratto==='a_chiamata'
+          ? (r.str_max_sett!=null? Number(r.str_max_sett) : Infinity)
+          : (Number(r.ore_contratto||0) + (r.str_max_sett!=null? Number(r.str_max_sett) : Infinity));
+        if(st[r.id].ore + dur > limite) return false;
+        return true;
+      });
+      let pool = eligibili(risorse.filter(r=>r.tipo_contratto!=='a_chiamata'));
+      if(!pool.length) pool = eligibili(risorse.filter(r=>r.tipo_contratto==='a_chiamata'));
+      if(!pool.length) return null;
+      pool.sort((a,b)=>{
+        const da=st[a.id].ore-Number(a.ore_contratto||0), db=st[b.id].ore-Number(b.ore_contratto||0);
+        if(da!==db) return da-db;
+        const pa=(accByRG[a.id+'|'+gi]&&accByRG[a.id+'|'+gi].pref_riposo)?1:0, pb=(accByRG[b.id+'|'+gi]&&accByRG[b.id+'|'+gi].pref_riposo)?1:0;
+        if(pa!==pb) return pa-pb;
+        if(st[a.id].giorni.size!==st[b.id].giorni.size) return st[a.id].giorni.size-st[b.id].giorni.size;
+        return a.id-b.id;
+      });
+      return pool[0];
+    }
+
+    async function generaBozza(box, giorni){
+      if(!confirm('Genera la bozza per questa settimana? I turni inseriti a mano restano; la bozza precedente viene rifatta.')) return;
+      const dates=giorni.map(isoData);
+      await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).in('data',dates);
+      const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq] = await Promise.all([
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,giorni_riposo').eq('attivo',true),
+        supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
+        supabaseClient.from('turni_accordi').select('*'),
+        supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
+        supabaseClient.from('turni_periodi').select('*'),
+        supabaseClient.from('turni_orari').select('*'),
+        supabaseClient.from('turni_copertura').select('*'),
+        supabaseClient.from('turni_assegnazioni').select('*').in('data',dates),
+        supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle(),
+        supabaseClient.from('turni_mansioni').select('id,nome'),
+      ]);
+      const risorse=rq.data||[];
+      const mansByR={}; (mq.data||[]).forEach(m=>{ (mansByR[m.risorsa_id]=mansByR[m.risorsa_id]||new Set()).add(m.mansione_id); });
+      const accByRG={}; (aq.data||[]).forEach(a=>{ accByRG[a.risorsa_id+'|'+a.giorno]=a; });
+      const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[]; const coperture=cq.data||[];
+      const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const giornoChiusura=reg.giorno_chiusura||null; const maxCons=reg.max_giorni_consecutivi||null;
+      const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
+      const st={}; risorse.forEach(r=>st[r.id]={ore:0, giorni:new Set()});
+      const assByDay={};
+      (exq.data||[]).forEach(a=>{ (assByDay[a.data]=assByDay[a.data]||[]).push(a); if(st[a.risorsa_id]){ st[a.risorsa_id].ore+=durOre(a.ora_inizio,a.ora_fine); st[a.risorsa_id].giorni.add(a.data); } });
+      const nuovi=[]; const report=[];
+      giorni.forEach(d=>{
+        const iso=isoData(d); const gi=giornoIdx(d); const settN=isoWeekNum(d);
+        if(giornoChiusura && gi===giornoChiusura) return;
+        const per=risolviPeriodo(iso, periodi); if(!per) return;
+        const or=orari.find(o=>o.periodo_id===per.id && o.giorno===gi) || orari.find(o=>o.giorno===gi);
+        if(or && !or.aperto) return;
+        const chiusura=(or&&or.chiusura)||null;
+        const fasce=coperture.filter(c=>c.periodo_id===per.id && c.giorno===gi).sort((a,b)=>a.inizio.localeCompare(b.inizio));
+        const dayAss = assByDay[iso]||(assByDay[iso]=[]);
+        const scoperte=[];
+        fasce.forEach(f=>{
+          const chiude=chiusura||f.fine;
+          const conta=()=>dayAss.filter(a=> overlapT(a.ora_inizio,a.ora_fine,f.inizio,f.fine) && (!f.mansione_id || a.mansione_id===f.mansione_id)).length;
+          let coperti=conta(), guard=0;
+          while(coperti < f.min_risorse && guard++ < 50){
+            const cand=scegliRisorsa(risorse, st, {iso,gi,settN,fascia:f,chiude,mansByR,accByRG,assenze,riposoMin,maxCons});
+            if(!cand) break;
+            nuovi.push({risorsa_id:cand.id, data:iso, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null, generato:true});
+            dayAss.push({risorsa_id:cand.id, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null});
+            st[cand.id].ore+=durOre(f.inizio,chiude); st[cand.id].giorni.add(iso);
+            coperti=conta();
+          }
+          if(coperti < f.min_risorse) scoperte.push(`${tStr(f.inizio)}–${tStr(f.fine)}${f.mansione_id?(' · '+(mNome[f.mansione_id]||'')):''}: ${coperti}/${f.min_risorse}`);
+        });
+        report.push({iso, gi, scoperte});
+      });
+      if(nuovi.length){ const {error}=await supabaseClient.from('turni_assegnazioni').insert(nuovi); if(error){ alert(error.message); return; } }
+      await renderPianificazione(box);
+      const div=document.createElement('div'); div.className='mt-4 text-sm bg-white rounded shadow p-3';
+      const conProblemi=report.filter(r=>r.scoperte.length);
+      let h=`<div class="font-semibold mb-1">Bozza generata — ${nuovi.length} turni creati</div>`;
+      h += conProblemi.length
+        ? '<div class="text-red-700"><div class="mb-1">Fasce rimaste scoperte:</div><ul class="list-disc pl-5">'+conProblemi.map(r=>`<li>${GIORNI[r.gi]} ${isoGG(r.iso)}: ${r.scoperte.map(esc).join('; ')}</li>`).join('')+'</ul></div>'
+        : '<div class="text-emerald-700">Tutte le fasce coperte 🎉</div>';
+      div.innerHTML=h; box.appendChild(div);
+    }
+
+    async function svuotaBozza(box, giorni){
+      if(!confirm('Rimuovere i turni della bozza (generati automaticamente) di questa settimana? I turni manuali restano.')) return;
+      const dates=giorni.map(isoData);
+      const {error}=await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).in('data',dates);
+      if(error){ alert(error.message); return; }
+      renderPianificazione(box);
+    }
     async function renderPianificazione(box){
       if(!settLun) settLun = lunediDi(new Date());
       const giorni=[]; for(let i=0;i<7;i++){ const d=new Date(settLun); d.setDate(d.getDate()+i); giorni.push(d); }
@@ -179,6 +288,8 @@
           <label class="text-sm ml-2">Copertura <select id="vc" class="border rounded px-2 py-1 text-sm">
             <option value="dettaglio">Dettaglio</option><option value="compatto">Compatto</option><option value="avvisi">Solo avvisi</option><option value="nascondi">Nascondi</option></select></label>
           <button id="mon" class="px-2 py-1 rounded text-sm">Monitoraggio</button>
+          <button id="gen" class="px-2 py-1 rounded text-sm bg-emerald-600 text-white">🤖 Genera bozza</button>
+          <button id="svu" class="px-2 py-1 rounded text-sm bg-gray-100">🧹 Svuota bozza</button>
           <button id="tipi" class="ml-auto px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded text-sm">Gestisci turni-tipo</button>
         </div><div id="grid" class="overflow-x-auto"></div><div id="cop"></div><div id="monBox"></div>`;
       box.querySelector('#prev').onclick=()=>{ settLun.setDate(settLun.getDate()-7); renderPianificazione(box); };
@@ -187,6 +298,8 @@
       box.querySelector('#tipi').onclick=()=>gestisciTipiTurno(()=>renderPianificazione(box));
       const vc=box.querySelector('#vc'); vc.value=vistaCopertura; vc.onchange=()=>{ vistaCopertura=vc.value; renderPianificazione(box); };
       const monBtn=box.querySelector('#mon'); monBtn.className='px-2 py-1 rounded text-sm '+(mostraMonitor?'bg-indigo-600 text-white':'bg-gray-100'); monBtn.onclick=()=>{ mostraMonitor=!mostraMonitor; renderPianificazione(box); };
+      box.querySelector('#gen').onclick=()=>generaBozza(box, giorni);
+      box.querySelector('#svu').onclick=()=>svuotaBozza(box, giorni);
 
       const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome').eq('attivo',true).order('ordine',{nullsFirst:false}).order('cognome',{nullsFirst:true}).order('nome')).data||[];
       const dates=giorni.map(isoData);
@@ -217,7 +330,7 @@
           const iso=isoData(d); const a=byKey[r.id+'|'+iso];
           const td=document.createElement('td'); td.className='p-1 text-center';
           const cell=document.createElement('button');
-          cell.className='w-full text-xs rounded px-1 py-1 '+(a?'bg-emerald-100 hover:bg-emerald-200':'text-gray-300 hover:bg-gray-100');
+          cell.className='w-full text-xs rounded px-1 py-1 '+(a?'bg-emerald-100 hover:bg-emerald-200'+(a.generato?' ring-1 ring-amber-400':''):'text-gray-300 hover:bg-gray-100');
           cell.textContent = a ? (a.ora_inizio.slice(0,5)+'–'+a.ora_fine.slice(0,5)+(a.mansione_id?(' · '+(mNome[a.mansione_id]||'')):'')) : '+';
           cell.onclick=()=>modaleTurno(r, iso, a, tipi, mans, ()=>renderPianificazione(box));
           td.appendChild(cell); tr.appendChild(td);
