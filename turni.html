@@ -238,6 +238,18 @@
     }
 
     // ---------- Organico (risorse + mansioni M:N) ----------
+    async function riordinaRisorse(rows, fromId, toId, done){
+      if(fromId===toId) return;
+      const arr=rows.slice();
+      const fi=arr.findIndex(x=>x.id===fromId), ti=arr.findIndex(x=>x.id===toId);
+      if(fi<0||ti<0) return;
+      const [moved]=arr.splice(fi,1);
+      arr.splice(ti,0,moved);
+      const res=await Promise.all(arr.map((r,idx)=>supabaseClient.from('turni_risorse').update({ordine:idx+1}).eq('id',r.id)));
+      const err=res.find(x=>x.error);
+      if(err){ alert(err.error.message); return; }
+      done();
+    }
     async function scambiaOrdineRisorse(a, b, done){
       if(!a || !b) return;
       const oa=a.ordine, ob=b.ordine;
@@ -265,7 +277,12 @@
       tbl.innerHTML='<thead><tr class="text-left border-b text-gray-500"><th class="p-2">Nome</th><th class="p-2">Ore/sett</th><th class="p-2">Contratto</th><th class="p-2">Riposi</th><th class="p-2">Str. S/M/A</th><th class="p-2">Mansioni</th><th></th></tr></thead>';
       const tb=document.createElement('tbody');
       rows.forEach((r,i)=>{
-        const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50';
+        const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 cursor-move';
+        tr.draggable=true;
+        tr.ondragstart=e=>{ e.dataTransfer.setData('text/plain', String(r.id)); e.dataTransfer.effectAllowed='move'; };
+        tr.ondragover=e=>{ e.preventDefault(); tr.classList.add('bg-yellow-50'); };
+        tr.ondragleave=()=>tr.classList.remove('bg-yellow-50');
+        tr.ondrop=e=>{ e.preventDefault(); tr.classList.remove('bg-yellow-50'); const from=Number(e.dataTransfer.getData('text/plain')); riordinaRisorse(rows, from, r.id, ()=>renderOrganico(box)); };
         const contr = r.tipo_contratto==='part_time' ? ('PT '+(r.pt_modalita||'')) : (r.tipo_contratto==='a_chiamata' ? 'A chiamata' : 'Full');
         const str = [r.str_max_sett,r.str_max_mese,r.str_max_anno].map(x=>x==null?'–':x).join(' / ');
         const mList = (mByR[r.id]||[]).map(id=>mNome[id]).filter(Boolean).join(', ');
