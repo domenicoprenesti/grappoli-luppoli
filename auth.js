@@ -21,6 +21,51 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 let currentProfile = null; // { id, nome, cognome, email, ruolo, attivo, auth_id }
 
+// Barra di navigazione unica e uniforme per tutte le pagine (le voci non concesse le nasconde applyMenuPermissions)
+const NAV_PAGES = [
+  { href: 'dashboard.html', label: 'Dashboard' },
+  { href: 'fatture.html', label: 'Fatture' },
+  { href: 'prodotti.html', label: 'Prodotti' },
+  { href: 'vendite.html', label: 'Vendite' },
+  { href: 'margini.html', label: 'Margini' },
+  { href: 'ricavi.html', label: 'Ricavi' },
+  { href: 'fornitori.html', label: 'Fornitori' },
+  { href: 'classificazione.html', label: 'Classificazione' },
+  { href: 'utenti.html', label: 'Utenti' },
+];
+
+function buildNavbar() {
+  const nav = document.querySelector('nav');
+  if (!nav) return;
+  const current = (location.pathname.split('/').pop() || 'dashboard.html');
+  const links = NAV_PAGES.map(p => {
+    const active = p.href === current;
+    const cls = active
+      ? 'px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700 whitespace-nowrap'
+      : 'px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 whitespace-nowrap';
+    return `<a href="${p.href}" class="${cls}">${p.label}</a>`;
+  }).join('');
+  nav.className = 'fixed top-0 left-0 right-0 bg-white shadow-lg z-40';
+  nav.innerHTML =
+    '<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">' +
+      '<div class="flex justify-between h-16">' +
+        '<div class="flex items-center min-w-0">' +
+          '<button onclick="window.location.href=\'dashboard.html\'" class="flex items-center space-x-3 flex-shrink-0">' +
+            '<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"><img src="logo.png" alt="Logo" class="w-full h-full object-cover"></div>' +
+            '<span class="text-lg font-bold hidden sm:inline">Grappoli &amp; Luppoli</span>' +
+          '</button>' +
+          '<div class="hidden md:flex md:ml-6 lg:ml-10 md:space-x-1 lg:space-x-2 overflow-x-auto">' + links + '</div>' +
+        '</div>' +
+        '<div class="flex items-center space-x-3 flex-shrink-0">' +
+          '<span id="userName" class="text-sm text-gray-600 whitespace-nowrap"></span>' +
+          '<button onclick="logout()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Esci</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  const el = document.getElementById('userName');
+  if (el && currentProfile) el.textContent = `Ciao, ${currentProfile.nome || 'Utente'}`;
+}
+
 // Da chiamare a inizio pagina protetta: await requireAuth('fatture.html');
 async function requireAuth(pageName, opts = {}) {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -47,8 +92,7 @@ async function requireAuth(pageName, opts = {}) {
     }
   }
 
-  const el = document.getElementById('userName');
-  if (el) el.textContent = `Ciao, ${profile.nome || 'Utente'}`;
+  buildNavbar();
 
   await applyMenuPermissions();
   checkRicaviSerali();
@@ -120,3 +164,10 @@ async function registraAccesso(pagina, azione = 'visualizzazione') {
 
 // Helper per azioni personalizzate dalle pagine
 async function traccia(azione, pagina) { await registraAccesso(pagina || document.title, azione); }
+
+// Costruisce subito la barra uniforme non appena il DOM è pronto (indipendente dal login)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', buildNavbar);
+} else {
+  buildNavbar();
+}
