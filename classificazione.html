@@ -406,7 +406,7 @@
 
         function tabellaDescr(rows){
           const tbl=document.createElement('table'); tbl.className='w-full text-sm mt-1';
-          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1 w-6"></th><th>Articolo (nome in fattura)</th><th>Fornitore</th><th class="text-right">Prezzo medio</th><th class="text-right">Ultimo</th><th class="w-8"></th></tr></thead>';
+          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1 w-6"><input type="checkbox" id="selAllChk" title="Seleziona tutte le righe visibili"></th><th>Articolo (nome in fattura)</th><th>Fornitore</th><th class="text-right">Prezzo medio</th><th class="text-right">Ultimo</th><th class="w-8"></th></tr></thead>';
           const tb=document.createElement('tbody');
           if(!rows.length){ tb.innerHTML='<tr><td class="py-2 text-gray-400" colspan="6">Nessun articolo.</td></tr>'; }
           rows.forEach(a=>{
@@ -428,7 +428,18 @@
             tr.onclick=e=>{ if(e.target.closest('.eye')) return; toggleSel(a.id, tr, cb); };
             tb.appendChild(tr);
           });
-          tbl.appendChild(tb); return tbl;
+          tbl.appendChild(tb);
+          const selAll=tbl.querySelector('#selAllChk');
+          if(selAll){
+            selAll.checked = rows.length>0 && rows.every(a=>selArt.has(a.id));
+            selAll.onchange=()=>{
+              rows.forEach(a=>{ if(selAll.checked) selArt.add(a.id); else selArt.delete(a.id); });
+              const parent=tbl.parentNode; const fresh=tabellaDescr(rows);
+              if(parent) parent.replaceChild(fresh, tbl);
+              updateSelBar();
+            };
+          }
+          return tbl;
         }
 
         function openArticolo(a){
