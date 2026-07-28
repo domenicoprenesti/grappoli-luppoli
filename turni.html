@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="logo.png">
+    <title>Turni - Grappoli & Luppoli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+  <script>(async () => { await requireAuth('turni.html'); initTurni(); })();</script>
+  <nav></nav>
+  <div class="pt-16 max-w-6xl mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-3">🗓️ Gestione turni — Setup</h1>
+    <div id="tabs" class="flex flex-wrap gap-1 border-b mb-4"></div>
+    <div id="tabBody"></div>
+  </div>
+  <script>
+    const GIORNI = ['','Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+    const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; };
+    const SEZIONI = [
+      {key:'organico', label:'Organico', render:renderOrganico},
+      {key:'mansioni', label:'Mansioni', render:renderMansioni},
+      {key:'orari', label:'Orari & Fasi', render:renderOrariFasi},
+      {key:'copertura', label:'Copertura', render:renderCopertura},
+      {key:'accordi', label:'Accordi personali', render:renderAccordi},
+      {key:'regole', label:'Regole', render:renderRegole},
+      {key:'assenze', label:'Assenze', render:renderAssenze},
+    ];
+    let tabAttiva = 'organico';
+    function initTurni(){ renderTabs(); apriTab('organico'); }
+    function renderTabs(){
+      const t=document.getElementById('tabs'); t.innerHTML='';
+      SEZIONI.forEach(s=>{
+        const b=document.createElement('button');
+        b.textContent=s.label;
+        b.className='px-3 py-2 text-sm rounded-t '+(tabAttiva===s.key?'bg-white font-semibold border border-b-0':'text-gray-600 hover:bg-gray-100');
+        b.onclick=()=>apriTab(s.key);
+        t.appendChild(b);
+      });
+    }
+    function apriTab(key){ tabAttiva=key; renderTabs(); const s=SEZIONI.find(x=>x.key===key); document.getElementById('tabBody').innerHTML=''; s.render(document.getElementById('tabBody')); }
+
+    // ---------- Helper CRUD generico (tabelle a lista semplice) ----------
+    async function renderLista(box, cfg){
+      box.innerHTML = `<div class="flex justify-between items-center mb-2"><h2 class="text-lg font-bold">${esc(cfg.titolo)}</h2>
+        <button id="add" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">➕ Nuovo</button></div><div id="lista"></div>`;
+      box.querySelector('#add').onclick = ()=>formRecord(cfg, null, ()=>renderLista(box,cfg));
+      let q = supabaseClient.from(cfg.tabella).select('*');
+      if (cfg.ordina) q = q.order(cfg.ordina);
+      const { data, error } = await q;
+      const lista = box.querySelector('#lista');
+      if(error){ lista.innerHTML='<p class="text-red-600 text-sm">'+esc(error.message)+'</p>'; return; }
+      const rows = data||[];
+      if(!rows.length){ lista.innerHTML='<p class="text-gray-400 text-sm">Nessun record.</p>'; return; }
+      const tbl=document.createElement('table'); tbl.className='w-full text-sm bg-white rounded shadow';
+      tbl.innerHTML='<thead><tr class="text-left border-b text-gray-500">'+cfg.campi.map(c=>`<th class="p-2">${esc(c.label)}</th>`).join('')+'<th></th></tr></thead>';
+      const tb=document.createElement('tbody');
+      rows.forEach(r=>{
+        const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50';
+        tr.innerHTML=cfg.campi.map(c=>`<td class="p-2">${esc(fmtCampo(r[c.k],c))}</td>`).join('');
+        const td=document.createElement('td'); td.className='p-2 text-right whitespace-nowrap';
+        const be=document.createElement('button'); be.textContent='✏️'; be.onclick=()=>formRecord(cfg, r, ()=>renderLista(box,cfg));
+        const bx=document.createElement('button'); bx.textContent='🗑️'; bx.className='ml-2'; bx.onclick=()=>elimRecord(cfg, r.id, ()=>renderLista(box,cfg));
+        td.append(be,bx); tr.appendChild(td); tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); lista.appendChild(tbl);
+    }
+    function fmtCampo(v,c){ if(c.tipo==='check') return v?'sì':'no'; if(c.tipo==='select'&&c.opts){ const o=c.opts.find(o=>o.v===v); return o?o.l:(v==null?'':v); } return v==null?'':v; }
+    function formRecord(cfg, rec, done){
+      const isEdit=!!rec;
+      const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4'; ov.onclick=()=>ov.remove();
+      const card=document.createElement('div'); card.className='bg-white rounded-lg p-5 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto'; card.onclick=e=>e.stopPropagation();
+      card.innerHTML=`<h3 class="text-lg font-bold mb-3">${isEdit?'Modifica':'Nuovo'} — ${esc(cfg.titolo)}</h3><div id="f" class="space-y-2 text-sm"></div>
+        <div class="text-right mt-4"><button id="ann" class="px-3 py-1.5 bg-gray-100 rounded text-sm mr-2">Annulla</button><button id="sav" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Salva</button></div>`;
+      const f=card.querySelector('#f'); const inputs={};
+      cfg.campi.forEach(c=>{
+        const wrap=document.createElement('label'); wrap.className='block'; wrap.textContent=c.label+' ';
+        let el;
+        if(c.tipo==='check'){ el=document.createElement('input'); el.type='checkbox'; el.checked = rec ? !!rec[c.k] : (c.def!==undefined? c.def : false); }
+        else if(c.tipo==='select'){ el=document.createElement('select'); el.className='w-full border rounded px-2 py-1';
+          (c.opts||[]).forEach(o=>{ const op=document.createElement('option'); op.value=o.v==null?'':o.v; op.textContent=o.l; if(rec&&rec[c.k]===o.v) op.selected=true; el.appendChild(op); }); }
+        else { el=document.createElement('input'); el.type=(c.tipo==='number'?'number':(c.tipo==='date'?'date':(c.tipo==='time'?'time':'text'))); if(c.step) el.step=c.step; el.className='w-full border rounded px-2 py-1'; if(rec&&rec[c.k]!=null) el.value=rec[c.k]; }
+        inputs[c.k]=el; wrap.appendChild(el); f.appendChild(wrap);
+      });
+      card.querySelector('#ann').onclick=()=>ov.remove();
+      card.querySelector('#sav').onclick=async()=>{
+        const payload={};
+        for(const c of cfg.campi){
+          const el=inputs[c.k];
+          let v = c.tipo==='check'? el.checked : (c.tipo==='number'? (el.value===''?null:Number(el.value)) : el.value);
+          if(c.tipo==='select'){ if(el.value===''){ v=null; } else { const o=(c.opts||[]).find(o=>String(o.v)===el.value); v = o? o.v : el.value; } }
+          if((c.tipo==='date'||c.tipo==='time') && v==='') v=null;
+          if(c.obbligatorio && (v===''||v==null)){ alert('Campo obbligatorio: '+c.label); return; }
+          payload[c.k]=v;
+        }
+        let res;
+        if(isEdit) res=await supabaseClient.from(cfg.tabella).update(payload).eq('id', rec.id);
+        else res=await supabaseClient.from(cfg.tabella).insert(payload);
+        if(res.error){ alert(res.error.message); return; }
+        ov.remove(); done();
+      };
+      ov.appendChild(card); document.body.appendChild(ov);
+    }
+    async function elimRecord(cfg, id, done){
+      if(!confirm('Eliminare il record?')) return;
+      const { error } = await supabaseClient.from(cfg.tabella).delete().eq('id', id);
+      if(error){ alert(error.message); return; } done();
+    }
+
+    // ---------- Mansioni ----------
+    function renderMansioni(box){
+      renderLista(box, { tabella:'turni_mansioni', titolo:'Mansioni', ordina:'nome',
+        campi:[ {k:'nome', label:'Nome', tipo:'text', obbligatorio:true}, {k:'attivo', label:'Attiva', tipo:'check', def:true} ] });
+    }
+
+    // ---------- Organico (risorse + mansioni M:N) ----------
+    async function renderOrganico(box){
+      box.innerHTML=`<div class="flex justify-between items-center mb-2"><h2 class="text-lg font-bold">Organico</h2>
+        <button id="add" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">➕ Nuova risorsa</button></div><div id="lista"></div>`;
+      box.querySelector('#add').onclick=()=>formRisorsa(null, ()=>renderOrganico(box));
+      const [{data:risorse,error}, {data:mans}] = await Promise.all([
+        supabaseClient.from('turni_risorse').select('*').order('cognome',{nullsFirst:true}).order('nome'),
+        supabaseClient.from('turni_mansioni').select('id,nome')
+      ]);
+      const lista=box.querySelector('#lista');
+      if(error){ lista.innerHTML='<p class="text-red-600 text-sm">'+esc(error.message)+'</p>'; return; }
+      const { data:legami } = await supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id');
+      const mByR={}; (legami||[]).forEach(l=>{ (mByR[l.risorsa_id]=mByR[l.risorsa_id]||[]).push(l.mansione_id); });
+      const mNome={}; (mans||[]).forEach(m=>mNome[m.id]=m.nome);
+      const rows=risorse||[];
+      if(!rows.length){ lista.innerHTML='<p class="text-gray-400 text-sm">Nessuna risorsa.</p>'; return; }
+      const tbl=document.createElement('table'); tbl.className='w-full text-sm bg-white rounded shadow';
+      tbl.innerHTML='<thead><tr class="text-left border-b text-gray-500"><th class="p-2">Nome</th><th class="p-2">Ore/sett</th><th class="p-2">Contratto</th><th class="p-2">Riposi</th><th class="p-2">Str. S/M/A</th><th class="p-2">Mansioni</th><th></th></tr></thead>';
+      const tb=document.createElement('tbody');
+      rows.forEach(r=>{
+        const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50';
+        const contr = r.tipo_contratto==='part_time' ? ('PT '+(r.pt_modalita||'')) : 'Full';
+        const str = [r.str_max_sett,r.str_max_mese,r.str_max_anno].map(x=>x==null?'–':x).join(' / ');
+        const mList = (mByR[r.id]||[]).map(id=>mNome[id]).filter(Boolean).join(', ');
+        tr.innerHTML=`<td class="p-2">${esc((r.cognome||'')+' '+r.nome)}</td><td class="p-2">${r.ore_contratto}</td><td class="p-2">${esc(contr)}</td><td class="p-2">${r.giorni_riposo}</td><td class="p-2">${esc(str)}</td><td class="p-2 text-gray-600">${esc(mList||'—')}</td>`;
+        const td=document.createElement('td'); td.className='p-2 text-right whitespace-nowrap';
+        const be=document.createElement('button'); be.textContent='✏️'; be.onclick=()=>formRisorsa(r, ()=>renderOrganico(box));
+        const bx=document.createElement('button'); bx.textContent='🗑️'; bx.className='ml-2'; bx.onclick=async()=>{ if(!confirm('Eliminare la risorsa?'))return; const {error}=await supabaseClient.from('turni_risorse').delete().eq('id',r.id); if(error)return alert(error.message); renderOrganico(box); };
+        td.append(be,bx); tr.appendChild(td); tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); lista.appendChild(tbl);
+    }
+
+    async function formRisorsa(rec, done){
+      const isEdit=!!rec;
+      const { data:mans } = await supabaseClient.from('turni_mansioni').select('id,nome').order('nome');
+      let selMans = [];
+      if(isEdit){ const {data}=await supabaseClient.from('turni_risorse_mansioni').select('mansione_id').eq('risorsa_id',rec.id); selMans=(data||[]).map(x=>x.mansione_id); }
+      const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4'; ov.onclick=()=>ov.remove();
+      const card=document.createElement('div'); card.className='bg-white rounded-lg p-5 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto'; card.onclick=e=>e.stopPropagation();
+      card.innerHTML=`<h3 class="text-lg font-bold mb-3">${isEdit?'Modifica':'Nuova'} risorsa</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex gap-2"><label class="flex-1">Nome<input id="nome" class="w-full border rounded px-2 py-1" value="${isEdit?esc(rec.nome):''}"></label>
+            <label class="flex-1">Cognome<input id="cognome" class="w-full border rounded px-2 py-1" value="${isEdit?esc(rec.cognome||''):''}"></label></div>
+          <div class="flex gap-2"><label class="flex-1">Ore contratto/sett<input id="ore" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit?rec.ore_contratto:''}"></label>
+            <label class="flex-1">N° giorni riposo<input id="riposi" type="number" class="w-full border rounded px-2 py-1" value="${isEdit?rec.giorni_riposo:1}"></label></div>
+          <div class="flex gap-2 items-end">
+            <label class="flex-1">Contratto<select id="tipo" class="w-full border rounded px-2 py-1"><option value="full">Full</option><option value="part_time">Part-time</option></select></label>
+            <label class="flex-1">Modalità PT<select id="ptm" class="w-full border rounded px-2 py-1"><option value="">—</option><option value="verticale">Verticale</option><option value="orizzontale">Orizzontale</option></select></label></div>
+          <div class="flex gap-2"><label class="flex-1">Str. max sett<input id="ss" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_sett!=null?rec.str_max_sett:''}"></label>
+            <label class="flex-1">Str. max mese<input id="sm" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_mese!=null?rec.str_max_mese:''}"></label>
+            <label class="flex-1">Str. max anno<input id="sa" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_anno!=null?rec.str_max_anno:''}"></label></div>
+          <div><div class="text-gray-600 mb-1">Mansioni</div><div id="mans" class="flex flex-wrap gap-2"></div></div>
+          <label class="block">Note<textarea id="note" rows="2" class="w-full border rounded px-2 py-1">${isEdit?esc(rec.note||''):''}</textarea></label>
+          <label class="flex items-center gap-1"><input id="attivo" type="checkbox" ${(!isEdit||rec.attivo)?'checked':''}> Attiva</label>
+        </div>
+        <div class="text-right mt-4"><button id="ann" class="px-3 py-1.5 bg-gray-100 rounded text-sm mr-2">Annulla</button><button id="sav" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Salva</button></div>`;
+      const mansBox=card.querySelector('#mans');
+      (mans||[]).forEach(m=>{ const l=document.createElement('label'); l.className='flex items-center gap-1'; const cb=document.createElement('input'); cb.type='checkbox'; cb.value=m.id; cb.checked=selMans.includes(m.id); l.append(cb, document.createTextNode(m.nome)); mansBox.appendChild(l); });
+      card.querySelector('#tipo').value = isEdit?rec.tipo_contratto:'full';
+      card.querySelector('#ptm').value = isEdit&&rec.pt_modalita?rec.pt_modalita:'';
+      card.querySelector('#ann').onclick=()=>ov.remove();
+      card.querySelector('#sav').onclick=async()=>{
+        const nome=card.querySelector('#nome').value.trim(); if(!nome){ alert('Nome obbligatorio'); return; }
+        const tipo=card.querySelector('#tipo').value; const ptm=card.querySelector('#ptm').value||null;
+        if(tipo==='part_time' && !ptm){ alert('Per il part-time indica la modalità (verticale/orizzontale).'); return; }
+        const num=id=>{ const v=card.querySelector('#'+id).value; return v===''?null:Number(v); };
+        const payload={ nome, cognome:card.querySelector('#cognome').value.trim()||null, ore_contratto:Number(card.querySelector('#ore').value||0),
+          giorni_riposo:Number(card.querySelector('#riposi').value||1), tipo_contratto:tipo, pt_modalita:ptm,
+          str_max_sett:num('ss'), str_max_mese:num('sm'), str_max_anno:num('sa'),
+          note:card.querySelector('#note').value.trim()||null, attivo:card.querySelector('#attivo').checked };
+        let rid;
+        if(isEdit){ const {error}=await supabaseClient.from('turni_risorse').update(payload).eq('id',rec.id); if(error)return alert(error.message); rid=rec.id; }
+        else { const {data,error}=await supabaseClient.from('turni_risorse').insert(payload).select('id').single(); if(error)return alert(error.message); rid=data.id; }
+        await supabaseClient.from('turni_risorse_mansioni').delete().eq('risorsa_id', rid);
+        const scelte=[...mansBox.querySelectorAll('input:checked')].map(cb=>({risorsa_id:rid, mansione_id:Number(cb.value)}));
+        if(scelte.length){ const {error}=await supabaseClient.from('turni_risorse_mansioni').insert(scelte); if(error)return alert(error.message); }
+        ov.remove(); done();
+      };
+      ov.appendChild(card); document.body.appendChild(ov);
+    }
+
+    // ---------- Orari & Fasi ----------
+    async function renderOrariFasi(box){
+      box.innerHTML='<h2 class="text-lg font-bold mb-2">Orari di apertura</h2><div id="orari"></div><h2 class="text-lg font-bold mt-6 mb-2">Fasi di setup</h2><div id="fasi"></div>';
+      const { data:orari } = await supabaseClient.from('turni_orari').select('*').order('giorno');
+      const oBox=box.querySelector('#orari');
+      const tbl=document.createElement('table'); tbl.className='w-full text-sm bg-white rounded shadow max-w-xl';
+      tbl.innerHTML='<thead><tr class="text-left border-b text-gray-500"><th class="p-2">Giorno</th><th class="p-2">Aperto</th><th class="p-2">Apertura</th><th class="p-2">Chiusura</th></tr></thead>';
+      const tb=document.createElement('tbody');
+      (orari||[]).forEach(o=>{
+        const tr=document.createElement('tr'); tr.className='border-b';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=o.aperto;
+        const ap=document.createElement('input'); ap.type='time'; ap.value=o.apertura||''; ap.className='border rounded px-1';
+        const ch=document.createElement('input'); ch.type='time'; ch.value=o.chiusura||''; ch.className='border rounded px-1';
+        const salva=async()=>{ const {error}=await supabaseClient.from('turni_orari').update({aperto:cb.checked, apertura:ap.value||null, chiusura:ch.value||null}).eq('giorno',o.giorno); if(error)alert(error.message); };
+        cb.onchange=salva; ap.onchange=salva; ch.onchange=salva;
+        const td0=document.createElement('td'); td0.className='p-2 font-medium'; td0.textContent=GIORNI[o.giorno];
+        const td1=document.createElement('td'); td1.className='p-2'; td1.appendChild(cb);
+        const td2=document.createElement('td'); td2.className='p-2'; td2.appendChild(ap);
+        const td3=document.createElement('td'); td3.className='p-2'; td3.appendChild(ch);
+        tr.append(td0,td1,td2,td3); tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); oBox.appendChild(tbl);
+      const mans = (await supabaseClient.from('turni_mansioni').select('id,nome').order('nome')).data||[];
+      renderLista(box.querySelector('#fasi'), { tabella:'turni_fasi', titolo:'Fasi setup', ordina:'tipo', campi:[
+        {k:'tipo', label:'Fase', tipo:'select', obbligatorio:true, opts:[{v:'apertura',l:'Apertura'},{v:'chiusura',l:'Chiusura'}]},
+        {k:'durata_min', label:'Durata (min)', tipo:'number'},
+        {k:'n_risorse', label:'N° risorse', tipo:'number'},
+        {k:'mansione_id', label:'Mansione', tipo:'select', opts:[{v:null,l:'Chiunque'}].concat(mans.map(m=>({v:m.id,l:m.nome})))},
+      ]});
+    }
+
+    // ---------- Copertura ----------
+    async function renderCopertura(box){
+      const mans = (await supabaseClient.from('turni_mansioni').select('id,nome').order('nome')).data||[];
+      renderLista(box, { tabella:'turni_copertura', titolo:'Copertura a fasce (minimi per giorno)', ordina:'giorno', campi:[
+        {k:'giorno', label:'Giorno', tipo:'select', obbligatorio:true, opts:[1,2,3,4,5,6,7].map(g=>({v:g,l:GIORNI[g]}))},
+        {k:'inizio', label:'Dalle', tipo:'time', obbligatorio:true},
+        {k:'fine', label:'Alle', tipo:'time', obbligatorio:true},
+        {k:'min_risorse', label:'Min risorse', tipo:'number'},
+        {k:'mansione_id', label:'Mansione', tipo:'select', opts:[{v:null,l:'Chiunque'}].concat(mans.map(m=>({v:m.id,l:m.nome})))},
+      ]});
+    }
+
+    // ---------- Accordi personali ----------
+    const CADENZE=['sempre','mai','1su2','2su3','3su4','custom'];
+    async function renderAccordi(box){
+      const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome').eq('attivo',true).order('cognome',{nullsFirst:true}).order('nome')).data||[];
+      box.innerHTML='<h2 class="text-lg font-bold mb-2">Accordi personali</h2>'+
+        '<div class="mb-3"><label class="text-sm">Risorsa <select id="ris" class="border rounded px-2 py-1 text-sm"></select></label></div><div id="grid"></div>';
+      const sel=box.querySelector('#ris');
+      sel.innerHTML=risorse.map(r=>`<option value="${r.id}">${esc((r.cognome||'')+' '+r.nome)}</option>`).join('');
+      sel.onchange=()=>renderGrid(box, Number(sel.value));
+      if(risorse.length) renderGrid(box, risorse[0].id); else box.querySelector('#grid').innerHTML='<p class="text-gray-400 text-sm">Nessuna risorsa attiva.</p>';
+    }
+    async function renderGrid(box, risorsaId){
+      const { data } = await supabaseClient.from('turni_accordi').select('*').eq('risorsa_id',risorsaId);
+      const byG={}; (data||[]).forEach(a=>byG[a.giorno]=a);
+      const grid=box.querySelector('#grid');
+      const tbl=document.createElement('table'); tbl.className='w-full text-sm bg-white rounded shadow max-w-xl';
+      tbl.innerHTML='<thead><tr class="text-left border-b text-gray-500"><th class="p-2">Giorno</th><th class="p-2">Cadenza lavoro</th><th class="p-2">Preferito riposo</th></tr></thead>';
+      const tb=document.createElement('tbody');
+      for(let g=1; g<=7; g++){
+        const a=byG[g]||{cadenza:'sempre', pref_riposo:false};
+        const tr=document.createElement('tr'); tr.className='border-b';
+        const seln=document.createElement('select'); seln.className='border rounded px-1 text-sm';
+        CADENZE.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; if(a.cadenza===c)o.selected=true; seln.appendChild(o); });
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!a.pref_riposo;
+        const salva=async()=>{ const {error}=await supabaseClient.from('turni_accordi').upsert({risorsa_id:risorsaId, giorno:g, cadenza:seln.value, pref_riposo:cb.checked},{onConflict:'risorsa_id,giorno'}); if(error)alert(error.message); };
+        seln.onchange=salva; cb.onchange=salva;
+        const td0=document.createElement('td'); td0.className='p-2 font-medium'; td0.textContent=GIORNI[g];
+        const td1=document.createElement('td'); td1.className='p-2'; td1.appendChild(seln);
+        const td2=document.createElement('td'); td2.className='p-2'; td2.appendChild(cb);
+        tr.append(td0,td1,td2); tb.appendChild(tr);
+      }
+      tbl.appendChild(tb); grid.innerHTML=''; grid.appendChild(tbl);
+    }
+
+    // ---------- Regole ----------
+    async function renderRegole(box){
+      const { data } = await supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle();
+      const r=data||{};
+      box.innerHTML=`<h2 class="text-lg font-bold mb-3">Regole generali</h2>
+        <div class="space-y-3 text-sm max-w-md bg-white p-4 rounded shadow">
+          <label class="block">Riposo settimanale minimo (giorni)<input id="rmin" type="number" class="w-full border rounded px-2 py-1" value="${r.riposo_sett_min==null?1:r.riposo_sett_min}"></label>
+          <label class="flex items-center gap-2"><input id="bil" type="checkbox" ${r.bilancia_straordinari?'checked':''}> Bilancia gli straordinari tra le risorse</label>
+          <label class="block">Tolleranza ore (± ore/sett)<input id="toll" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${r.tolleranza_ore==null?2:r.tolleranza_ore}"></label>
+          <label class="block">Giorno di chiusura settimanale
+            <select id="gc" class="w-full border rounded px-2 py-1"><option value="">Nessuno</option>${[1,2,3,4,5,6,7].map(g=>`<option value="${g}" ${r.giorno_chiusura===g?'selected':''}>${GIORNI[g]}</option>`).join('')}</select></label>
+          <label class="flex items-center gap-2"><input id="fest" type="checkbox" ${r.considera_festivita?'checked':''}> Considera le festività</label>
+          <label class="block">Max giorni consecutivi (vuoto = nessun limite)<input id="maxc" type="number" class="w-full border rounded px-2 py-1" value="${r.max_giorni_consecutivi==null?'':r.max_giorni_consecutivi}"></label>
+          <div class="text-right"><button id="sav" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Salva</button></div>
+        </div>`;
+      box.querySelector('#sav').onclick=async()=>{
+        const payload={ id:1, riposo_sett_min:Number(box.querySelector('#rmin').value||1), bilancia_straordinari:box.querySelector('#bil').checked,
+          tolleranza_ore:Number(box.querySelector('#toll').value||0), giorno_chiusura: box.querySelector('#gc').value?Number(box.querySelector('#gc').value):null,
+          considera_festivita:box.querySelector('#fest').checked, max_giorni_consecutivi: box.querySelector('#maxc').value?Number(box.querySelector('#maxc').value):null };
+        const { error } = await supabaseClient.from('turni_regole').upsert(payload,{onConflict:'id'});
+        if(error){ alert(error.message); return; } alert('Regole salvate.');
+      };
+    }
+
+    // ---------- Assenze ----------
+    async function renderAssenze(box){
+      const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome').order('cognome',{nullsFirst:true}).order('nome')).data||[];
+      const nomeR={}; risorse.forEach(r=>nomeR[r.id]=((r.cognome||'')+' '+r.nome).trim());
+      renderLista(box, { tabella:'turni_assenze', titolo:'Assenze', ordina:'data_inizio', campi:[
+        {k:'risorsa_id', label:'Risorsa', tipo:'select', obbligatorio:true, opts:risorse.map(r=>({v:r.id,l:nomeR[r.id]}))},
+        {k:'data_inizio', label:'Dal', tipo:'date', obbligatorio:true},
+        {k:'data_fine', label:'Al', tipo:'date', obbligatorio:true},
+        {k:'tipo', label:'Tipo', tipo:'select', obbligatorio:true, opts:[{v:'ferie',l:'Ferie'},{v:'malattia',l:'Malattia'},{v:'indisponibilita',l:'Indisponibilità'}]},
+        {k:'note', label:'Note', tipo:'text'},
+      ]});
+    }
+  </script>
+</body>
+</html>
