@@ -62,6 +62,53 @@
     function itGG(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
     function giornoIdx(d){ return ((d.getDay()+6)%7)+1; }
 
+    let vistaCopertura = 'dettaglio';
+    const tStr = t => (t||'').slice(0,5);
+    const isoGG = iso => iso.slice(8,10)+'/'+iso.slice(5,7);
+    function overlapT(aI,aF,bI,bF){ return aI < bF && aF > bI; }
+    function rangeLen(p){ return (new Date(p.data_fine) - new Date(p.data_inizio)); }
+    function risolviPeriodo(iso, periodi){
+      const dated = periodi.filter(p=>p.data_inizio && p.data_fine && p.data_inizio<=iso && iso<=p.data_fine);
+      if(dated.length){ dated.sort((a,b)=>rangeLen(a)-rangeLen(b)); return dated[0]; }
+      return periodi.find(p=>!p.data_inizio && !p.data_fine) || null;
+    }
+    function calcolaCopertura(giorni, ass, periodi, coperture, mNome){
+      const byDate={}; (ass||[]).forEach(a=>{ (byDate[a.data]=byDate[a.data]||[]).push(a); });
+      return giorni.map(d=>{
+        const iso=isoData(d); const gi=giornoIdx(d);
+        const per=risolviPeriodo(iso, periodi);
+        const fasce = per ? (coperture||[]).filter(c=>c.periodo_id===per.id && c.giorno===gi) : [];
+        const assg = byDate[iso]||[];
+        const fout = fasce.map(f=>{
+          const cnt = assg.filter(a=> overlapT(a.ora_inizio,a.ora_fine,f.inizio,f.fine) && (!f.mansione_id || a.mansione_id===f.mansione_id)).length;
+          return { inizio:f.inizio, fine:f.fine, mansioneNome: f.mansione_id? (mNome[f.mansione_id]||'') : null, richiesto:f.min_risorse, assegnati:cnt, scoperto: cnt < f.min_risorse };
+        }).sort((a,b)=>a.inizio.localeCompare(b.inizio));
+        return { iso, gi, periodoNome: per? per.nome : null, fasce: fout, haGap: fout.some(x=>x.scoperto) };
+      });
+    }
+    function vistaDettaglioCop(box, cop){
+      const wrap=document.createElement('div'); wrap.className='mt-4';
+      wrap.innerHTML='<h3 class="font-semibold text-sm mb-2">Copertura</h3>';
+      const grid=document.createElement('div'); grid.className='grid gap-2 md:grid-cols-2 lg:grid-cols-4';
+      cop.forEach(g=>{
+        const card=document.createElement('div'); card.className='bg-white rounded shadow p-2 text-xs';
+        let h=`<div class="font-medium">${GIORNI[g.gi]} ${isoGG(g.iso)}${g.periodoNome?(' · '+esc(g.periodoNome)):''}</div>`;
+        if(!g.fasce.length) h+='<div class="text-gray-400">nessun minimo definito</div>';
+        else h+=g.fasce.map(f=>`<div class="${f.scoperto?'text-red-600':'text-emerald-700'}">${tStr(f.inizio)}–${tStr(f.fine)}${f.mansioneNome?(' · '+esc(f.mansioneNome)):''}: ${f.assegnati}/${f.richiesto}${f.scoperto?' ⚠':''}</div>`).join('');
+        card.innerHTML=h; grid.appendChild(card);
+      });
+      wrap.appendChild(grid); box.appendChild(wrap);
+    }
+    function popupCoperturaGiorno(g){
+      const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4'; ov.onclick=()=>ov.remove();
+      const card=document.createElement('div'); card.className='bg-white rounded-lg p-4 max-w-sm w-full shadow-xl text-sm'; card.onclick=e=>e.stopPropagation();
+      let h=`<h3 class="font-bold mb-2">Copertura ${GIORNI[g.gi]} ${isoGG(g.iso)}</h3>`;
+      if(!g.fasce.length) h+='<div class="text-gray-400">Nessun minimo definito.</div>';
+      else h+=g.fasce.map(f=>`<div class="${f.scoperto?'text-red-600':'text-emerald-700'}">${tStr(f.inizio)}–${tStr(f.fine)}${f.mansioneNome?(' · '+esc(f.mansioneNome)):''}: ${f.assegnati}/${f.richiesto}${f.scoperto?' ⚠':''}</div>`).join('');
+      h+='<div class="text-right mt-3"><button id="c" class="px-3 py-1.5 bg-gray-100 rounded">Chiudi</button></div>';
+      card.innerHTML=h; card.querySelector('#c').onclick=()=>ov.remove();
+      ov.appendChild(card); document.body.appendChild(ov);
+    }
     async function renderPianificazione(box){
       if(!settLun) settLun = lunediDi(new Date());
       const giorni=[]; for(let i=0;i<7;i++){ const d=new Date(settLun); d.setDate(d.getDate()+i); giorni.push(d); }
@@ -70,12 +117,15 @@
           <span class="font-semibold">Settimana ${itGG(giorni[0])} – ${itGG(giorni[6])}/${giorni[6].getFullYear()}</span>
           <button id="next" class="px-2 py-1 border rounded">▶</button>
           <button id="oggi" class="px-2 py-1 bg-gray-100 rounded text-sm">Oggi</button>
+          <label class="text-sm ml-2">Copertura <select id="vc" class="border rounded px-2 py-1 text-sm">
+            <option value="dettaglio">Dettaglio</option><option value="compatto">Compatto</option><option value="avvisi">Solo avvisi</option><option value="nascondi">Nascondi</option></select></label>
           <button id="tipi" class="ml-auto px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded text-sm">Gestisci turni-tipo</button>
-        </div><div id="grid" class="overflow-x-auto"></div>`;
+        </div><div id="grid" class="overflow-x-auto"></div><div id="cop"></div>`;
       box.querySelector('#prev').onclick=()=>{ settLun.setDate(settLun.getDate()-7); renderPianificazione(box); };
       box.querySelector('#next').onclick=()=>{ settLun.setDate(settLun.getDate()+7); renderPianificazione(box); };
       box.querySelector('#oggi').onclick=()=>{ settLun=lunediDi(new Date()); renderPianificazione(box); };
       box.querySelector('#tipi').onclick=()=>gestisciTipiTurno(()=>renderPianificazione(box));
+      const vc=box.querySelector('#vc'); vc.value=vistaCopertura; vc.onchange=()=>{ vistaCopertura=vc.value; renderPianificazione(box); };
 
       const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome').eq('attivo',true).order('ordine',{nullsFirst:false}).order('cognome',{nullsFirst:true}).order('nome')).data||[];
       const dates=giorni.map(isoData);
@@ -84,12 +134,16 @@
       const mans=(await supabaseClient.from('turni_mansioni').select('id,nome')).data||[];
       const mNome={}; mans.forEach(m=>mNome[m.id]=m.nome);
       const tipi=(await supabaseClient.from('turni_tipi_turno').select('*').eq('attivo',true).order('ora_inizio')).data||[];
+      const periodi=(await supabaseClient.from('turni_periodi').select('*')).data||[];
+      const coperture=(await supabaseClient.from('turni_copertura').select('*')).data||[];
+      const cop = calcolaCopertura(giorni, ass||[], periodi, coperture, mNome);
 
       const grid=box.querySelector('#grid');
       const todayIso=isoData(new Date());
       const tbl=document.createElement('table'); tbl.className='text-sm bg-white rounded shadow';
       let head='<thead><tr><th class="p-2 text-left border-b">Risorsa</th>';
-      giorni.forEach(d=>{ const t=isoData(d)===todayIso; head+=`<th class="p-2 border-b text-center ${t?'bg-blue-50':''}">${GIORNI[giornoIdx(d)]} ${itGG(d)}</th>`; });
+      giorni.forEach((d,i)=>{ const t=isoData(d)===todayIso; const gap=(vistaCopertura==='avvisi' && cop[i] && cop[i].haGap);
+        head+=`<th class="p-2 border-b text-center ${t?'bg-blue-50':''} ${gap?'text-red-600 cursor-pointer':''}" data-gi="${i}">${GIORNI[giornoIdx(d)]} ${itGG(d)}${gap?' ⚠':''}</th>`; });
       head+='</tr></thead>';
       tbl.innerHTML=head;
       const tb=document.createElement('tbody');
@@ -109,7 +163,21 @@
         });
         tb.appendChild(tr);
       });
-      tbl.appendChild(tb); grid.appendChild(tbl);
+      tbl.appendChild(tb);
+      if(vistaCopertura==='compatto'){
+        const tf=document.createElement('tfoot');
+        const trf=document.createElement('tr'); trf.className='border-t bg-gray-50';
+        const c0=document.createElement('td'); c0.className='p-1 text-xs text-gray-500 whitespace-nowrap'; c0.textContent='Copertura'; trf.appendChild(c0);
+        cop.forEach(g=>{ const td=document.createElement('td'); td.className='p-1 align-top';
+          td.innerHTML = g.fasce.length ? g.fasce.map(f=>`<div class="text-[10px] ${f.scoperto?'text-red-600':'text-emerald-700'}">${tStr(f.inizio)}–${tStr(f.fine)}: ${f.assegnati}/${f.richiesto}${f.scoperto?'⚠':''}</div>`).join('') : '<span class="text-gray-300 text-[10px]">—</span>';
+          trf.appendChild(td); });
+        tf.appendChild(trf); tbl.appendChild(tf);
+      }
+      grid.appendChild(tbl);
+      if(vistaCopertura==='avvisi'){
+        tbl.querySelectorAll('th[data-gi]').forEach(th=>{ const i=Number(th.dataset.gi); if(cop[i] && cop[i].haGap) th.onclick=()=>popupCoperturaGiorno(cop[i]); });
+      }
+      if(vistaCopertura==='dettaglio') vistaDettaglioCop(box.querySelector('#cop'), cop);
     }
 
     function modaleTurno(risorsa, iso, a, tipi, mans, done){
