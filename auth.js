@@ -30,7 +30,7 @@ const NAV_PAGES = [
   { href: 'margini.html', label: 'Margini' },
   { href: 'ricavi.html', label: 'Ricavi' },
   { href: 'fornitori.html', label: 'Fornitori' },
-  { href: 'classificazione.html', label: 'Classificazione' },
+  { href: 'classificazione.html', label: 'Costi' },
   { href: 'utenti.html', label: 'Utenti' },
 ];
 
