@@ -31,6 +31,7 @@
       ]});
     }
     const SEZIONI = [
+      {key:'pianificazione', label:'Pianificazione', render:renderPianificazione},
       {key:'organico', label:'Organico', render:renderOrganico},
       {key:'mansioni', label:'Mansioni', render:renderMansioni},
       {key:'periodi', label:'Periodi', render:renderPeriodi},
@@ -40,8 +41,8 @@
       {key:'regole', label:'Regole', render:renderRegole},
       {key:'assenze', label:'Assenze', render:renderAssenze},
     ];
-    let tabAttiva = 'organico';
-    function initTurni(){ renderTabs(); apriTab('organico'); }
+    let tabAttiva = 'pianificazione';
+    function initTurni(){ renderTabs(); apriTab('pianificazione'); }
     function renderTabs(){
       const t=document.getElementById('tabs'); t.innerHTML='';
       SEZIONI.forEach(s=>{
@@ -53,6 +54,113 @@
       });
     }
     function apriTab(key){ tabAttiva=key; renderTabs(); const s=SEZIONI.find(x=>x.key===key); document.getElementById('tabBody').innerHTML=''; s.render(document.getElementById('tabBody')); }
+
+    // ---------- PIANIFICAZIONE (editor settimanale) ----------
+    let settLun = null; // lunedì della settimana visualizzata (Date)
+    function lunediDi(d){ const x=new Date(d); const g=(x.getDay()+6)%7; x.setDate(x.getDate()-g); x.setHours(0,0,0,0); return x; }
+    function isoData(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function itGG(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
+    function giornoIdx(d){ return ((d.getDay()+6)%7)+1; }
+
+    async function renderPianificazione(box){
+      if(!settLun) settLun = lunediDi(new Date());
+      const giorni=[]; for(let i=0;i<7;i++){ const d=new Date(settLun); d.setDate(d.getDate()+i); giorni.push(d); }
+      box.innerHTML=`<div class="flex items-center gap-2 flex-wrap mb-3">
+          <button id="prev" class="px-2 py-1 border rounded">◀</button>
+          <span class="font-semibold">Settimana ${itGG(giorni[0])} – ${itGG(giorni[6])}/${giorni[6].getFullYear()}</span>
+          <button id="next" class="px-2 py-1 border rounded">▶</button>
+          <button id="oggi" class="px-2 py-1 bg-gray-100 rounded text-sm">Oggi</button>
+          <button id="tipi" class="ml-auto px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded text-sm">Gestisci turni-tipo</button>
+        </div><div id="grid" class="overflow-x-auto"></div>`;
+      box.querySelector('#prev').onclick=()=>{ settLun.setDate(settLun.getDate()-7); renderPianificazione(box); };
+      box.querySelector('#next').onclick=()=>{ settLun.setDate(settLun.getDate()+7); renderPianificazione(box); };
+      box.querySelector('#oggi').onclick=()=>{ settLun=lunediDi(new Date()); renderPianificazione(box); };
+      box.querySelector('#tipi').onclick=()=>gestisciTipiTurno(()=>renderPianificazione(box));
+
+      const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome').eq('attivo',true).order('cognome',{nullsFirst:true}).order('nome')).data||[];
+      const dates=giorni.map(isoData);
+      const { data:ass } = await supabaseClient.from('turni_assegnazioni').select('*').in('data', dates);
+      const byKey={}; (ass||[]).forEach(a=>byKey[a.risorsa_id+'|'+a.data]=a);
+      const mans=(await supabaseClient.from('turni_mansioni').select('id,nome')).data||[];
+      const mNome={}; mans.forEach(m=>mNome[m.id]=m.nome);
+      const tipi=(await supabaseClient.from('turni_tipi_turno').select('*').eq('attivo',true).order('ora_inizio')).data||[];
+
+      const grid=box.querySelector('#grid');
+      const todayIso=isoData(new Date());
+      const tbl=document.createElement('table'); tbl.className='text-sm bg-white rounded shadow';
+      let head='<thead><tr><th class="p-2 text-left border-b">Risorsa</th>';
+      giorni.forEach(d=>{ const t=isoData(d)===todayIso; head+=`<th class="p-2 border-b text-center ${t?'bg-blue-50':''}">${GIORNI[giornoIdx(d)]} ${itGG(d)}</th>`; });
+      head+='</tr></thead>';
+      tbl.innerHTML=head;
+      const tb=document.createElement('tbody');
+      if(!risorse.length){ tb.innerHTML='<tr><td class="p-2 text-gray-400" colspan="8">Nessuna risorsa attiva. Aggiungila nella scheda Organico.</td></tr>'; }
+      risorse.forEach(r=>{
+        const tr=document.createElement('tr'); tr.className='border-b';
+        const td0=document.createElement('td'); td0.className='p-2 font-medium whitespace-nowrap'; td0.textContent=((r.cognome||'')+' '+r.nome).trim();
+        tr.appendChild(td0);
+        giorni.forEach(d=>{
+          const iso=isoData(d); const a=byKey[r.id+'|'+iso];
+          const td=document.createElement('td'); td.className='p-1 text-center';
+          const cell=document.createElement('button');
+          cell.className='w-full text-xs rounded px-1 py-1 '+(a?'bg-emerald-100 hover:bg-emerald-200':'text-gray-300 hover:bg-gray-100');
+          cell.textContent = a ? (a.ora_inizio.slice(0,5)+'–'+a.ora_fine.slice(0,5)+(a.mansione_id?(' · '+(mNome[a.mansione_id]||'')):'')) : '+';
+          cell.onclick=()=>modaleTurno(r, iso, a, tipi, mans, ()=>renderPianificazione(box));
+          td.appendChild(cell); tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); grid.appendChild(tbl);
+    }
+
+    function modaleTurno(risorsa, iso, a, tipi, mans, done){
+      const isEdit=!!a;
+      const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4'; ov.onclick=()=>ov.remove();
+      const card=document.createElement('div'); card.className='bg-white rounded-lg p-5 max-w-md w-full shadow-xl'; card.onclick=e=>e.stopPropagation();
+      const nome=((risorsa.cognome||'')+' '+risorsa.nome).trim();
+      card.innerHTML=`<h3 class="text-lg font-bold mb-1">${isEdit?'Modifica':'Nuovo'} turno</h3>
+        <p class="text-sm text-gray-500 mb-3">${esc(nome)} · ${esc(iso)}</p>
+        <div class="space-y-2 text-sm">
+          <label class="block">Turno-tipo (precompila gli orari)
+            <select id="tt" class="w-full border rounded px-2 py-1"><option value="">— libero —</option>${tipi.map(t=>`<option value="${t.id}" data-i="${t.ora_inizio}" data-f="${t.ora_fine}">${esc(t.nome)} (${t.ora_inizio.slice(0,5)}–${t.ora_fine.slice(0,5)})</option>`).join('')}</select></label>
+          <div class="flex gap-2"><label class="flex-1">Dalle<input id="oi" type="time" class="w-full border rounded px-2 py-1" value="${isEdit?a.ora_inizio.slice(0,5):''}"></label>
+            <label class="flex-1">Alle<input id="of" type="time" class="w-full border rounded px-2 py-1" value="${isEdit?a.ora_fine.slice(0,5):''}"></label></div>
+          <label class="block">Mansione<select id="mn" class="w-full border rounded px-2 py-1"><option value="">— generico —</option>${mans.map(m=>`<option value="${m.id}" ${isEdit&&a.mansione_id===m.id?'selected':''}>${esc(m.nome)}</option>`).join('')}</select></label>
+          <label class="block">Note<input id="nt" class="w-full border rounded px-2 py-1" value="${isEdit?esc(a.note||''):''}"></label>
+        </div>
+        <div class="flex justify-between mt-4">
+          <div>${isEdit?'<button id="del" class="px-3 py-1.5 bg-red-50 text-red-700 rounded text-sm">Elimina</button>':''}</div>
+          <div><button id="ann" class="px-3 py-1.5 bg-gray-100 rounded text-sm mr-2">Annulla</button><button id="sav" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Salva</button></div>
+        </div>`;
+      const tt=card.querySelector('#tt');
+      tt.onchange=()=>{ const o=tt.selectedOptions[0]; if(o&&o.value){ card.querySelector('#oi').value=(o.dataset.i||'').slice(0,5); card.querySelector('#of').value=(o.dataset.f||'').slice(0,5); } };
+      card.querySelector('#ann').onclick=()=>ov.remove();
+      if(isEdit) card.querySelector('#del').onclick=async()=>{ if(!confirm('Eliminare il turno?'))return; const {error}=await supabaseClient.from('turni_assegnazioni').delete().eq('id',a.id); if(error)return alert(error.message); ov.remove(); done(); };
+      card.querySelector('#sav').onclick=async()=>{
+        const oi=card.querySelector('#oi').value, of=card.querySelector('#of').value;
+        if(!oi||!of){ alert('Inserisci gli orari.'); return; }
+        const mn=card.querySelector('#mn').value;
+        const payload={ risorsa_id:risorsa.id, data:iso, ora_inizio:oi, ora_fine:of, mansione_id: mn?Number(mn):null, note:card.querySelector('#nt').value.trim()||null };
+        const { error } = await supabaseClient.from('turni_assegnazioni').upsert(payload,{onConflict:'risorsa_id,data'});
+        if(error){ alert(error.message); return; }
+        ov.remove(); done();
+      };
+      ov.appendChild(card); document.body.appendChild(ov);
+    }
+
+    function gestisciTipiTurno(done){
+      const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4'; ov.onclick=()=>{ ov.remove(); done(); };
+      const card=document.createElement('div'); card.className='bg-white rounded-lg p-5 max-w-lg w-full shadow-xl max-h-[90vh] overflow-y-auto'; card.onclick=e=>e.stopPropagation();
+      card.innerHTML='<div class="flex justify-between items-center mb-2"><h3 class="text-lg font-bold">Turni-tipo</h3><button id="close" class="text-gray-500">✕</button></div><div id="boxTT"></div>';
+      card.querySelector('#close').onclick=()=>{ ov.remove(); done(); };
+      renderLista(card.querySelector('#boxTT'), { tabella:'turni_tipi_turno', titolo:'Turni-tipo', ordina:'ora_inizio', campi:[
+        {k:'nome', label:'Nome', tipo:'text', obbligatorio:true},
+        {k:'ora_inizio', label:'Dalle', tipo:'time', obbligatorio:true},
+        {k:'ora_fine', label:'Alle', tipo:'time', obbligatorio:true},
+        {k:'colore', label:'Colore (opz.)', tipo:'text'},
+        {k:'attivo', label:'Attivo', tipo:'check', def:true},
+      ]});
+      ov.appendChild(card); document.body.appendChild(ov);
+    }
 
     // ---------- Helper CRUD generico (tabelle a lista semplice) ----------
     async function renderLista(box, cfg){
