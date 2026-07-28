@@ -20,9 +20,20 @@
   <script>
     const GIORNI = ['','Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
     const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; };
+    const nomePeriodo = p => p.nome + ((p.data_inizio||p.data_fine)? ` (${p.data_inizio||'…'} → ${p.data_fine||'…'})` : '');
+    async function loadPeriodi(){ const { data } = await supabaseClient.from('turni_periodi').select('*').order('id'); return data||[]; }
+    function renderPeriodi(box){
+      renderLista(box, { tabella:'turni_periodi', titolo:'Periodi (stagioni)', ordina:'id', campi:[
+        {k:'nome', label:'Nome', tipo:'text', obbligatorio:true},
+        {k:'data_inizio', label:'Dal', tipo:'date'},
+        {k:'data_fine', label:'Al', tipo:'date'},
+        {k:'attivo', label:'Attivo', tipo:'check', def:true},
+      ]});
+    }
     const SEZIONI = [
       {key:'organico', label:'Organico', render:renderOrganico},
       {key:'mansioni', label:'Mansioni', render:renderMansioni},
+      {key:'periodi', label:'Periodi', render:renderPeriodi},
       {key:'orari', label:'Orari & Fasi', render:renderOrariFasi},
       {key:'copertura', label:'Copertura', render:renderCopertura},
       {key:'accordi', label:'Accordi personali', render:renderAccordi},
@@ -49,6 +60,7 @@
         <button id="add" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">➕ Nuovo</button></div><div id="lista"></div>`;
       box.querySelector('#add').onclick = ()=>formRecord(cfg, null, ()=>renderLista(box,cfg));
       let q = supabaseClient.from(cfg.tabella).select('*');
+      if (cfg.filtro) q = q.eq(cfg.filtro.col, cfg.filtro.val);
       if (cfg.ordina) q = q.order(cfg.ordina);
       const { data, error } = await q;
       const lista = box.querySelector('#lista');
@@ -96,6 +108,7 @@
           if(c.obbligatorio && (v===''||v==null)){ alert('Campo obbligatorio: '+c.label); return; }
           payload[c.k]=v;
         }
+        if(cfg.fissi) Object.assign(payload, cfg.fissi);
         let res;
         if(isEdit) res=await supabaseClient.from(cfg.tabella).update(payload).eq('id', rec.id);
         else res=await supabaseClient.from(cfg.tabella).insert(payload);
@@ -200,26 +213,15 @@
 
     // ---------- Orari & Fasi ----------
     async function renderOrariFasi(box){
-      box.innerHTML='<h2 class="text-lg font-bold mb-2">Orari di apertura</h2><div id="orari"></div><h2 class="text-lg font-bold mt-6 mb-2">Fasi di setup</h2><div id="fasi"></div>';
-      const { data:orari } = await supabaseClient.from('turni_orari').select('*').order('giorno');
-      const oBox=box.querySelector('#orari');
-      const tbl=document.createElement('table'); tbl.className='w-full text-sm bg-white rounded shadow max-w-xl';
-      tbl.innerHTML='<thead><tr class="text-left border-b text-gray-500"><th class="p-2">Giorno</th><th class="p-2">Aperto</th><th class="p-2">Apertura</th><th class="p-2">Chiusura</th></tr></thead>';
-      const tb=document.createElement('tbody');
-      (orari||[]).forEach(o=>{
-        const tr=document.createElement('tr'); tr.className='border-b';
-        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=o.aperto;
-        const ap=document.createElement('input'); ap.type='time'; ap.value=o.apertura||''; ap.className='border rounded px-1';
-        const ch=document.createElement('input'); ch.type='time'; ch.value=o.chiusura||''; ch.className='border rounded px-1';
-        const salva=async()=>{ const {error}=await supabaseClient.from('turni_orari').update({aperto:cb.checked, apertura:ap.value||null, chiusura:ch.value||null}).eq('giorno',o.giorno); if(error)alert(error.message); };
-        cb.onchange=salva; ap.onchange=salva; ch.onchange=salva;
-        const td0=document.createElement('td'); td0.className='p-2 font-medium'; td0.textContent=GIORNI[o.giorno];
-        const td1=document.createElement('td'); td1.className='p-2'; td1.appendChild(cb);
-        const td2=document.createElement('td'); td2.className='p-2'; td2.appendChild(ap);
-        const td3=document.createElement('td'); td3.className='p-2'; td3.appendChild(ch);
-        tr.append(td0,td1,td2,td3); tb.appendChild(tr);
-      });
-      tbl.appendChild(tb); oBox.appendChild(tbl);
+      box.innerHTML='<div class="flex items-center gap-3 flex-wrap mb-3"><h2 class="text-lg font-bold">Orari di apertura</h2>'+
+        '<label class="text-sm">Periodo <select id="per" class="border rounded px-2 py-1 text-sm"></select></label></div>'+
+        '<div id="orari"></div><h2 class="text-lg font-bold mt-6 mb-2">Fasi di setup</h2><div id="fasi"></div>';
+      const periodi=await loadPeriodi();
+      const sel=box.querySelector('#per');
+      sel.innerHTML=periodi.map(p=>`<option value="${p.id}">${esc(nomePeriodo(p))}</option>`).join('');
+      sel.onchange=()=>renderOrariGrid(box.querySelector('#orari'), Number(sel.value));
+      if(periodi.length) renderOrariGrid(box.querySelector('#orari'), periodi[0].id);
+      else box.querySelector('#orari').innerHTML='<p class="text-gray-400 text-sm">Crea prima un periodo (scheda Periodi).</p>';
       const mans = (await supabaseClient.from('turni_mansioni').select('id,nome').order('nome')).data||[];
       renderLista(box.querySelector('#fasi'), { tabella:'turni_fasi', titolo:'Fasi setup', ordina:'tipo', campi:[
         {k:'tipo', label:'Fase', tipo:'select', obbligatorio:true, opts:[{v:'apertura',l:'Apertura'},{v:'chiusura',l:'Chiusura'}]},
@@ -228,17 +230,47 @@
         {k:'mansione_id', label:'Mansione', tipo:'select', opts:[{v:null,l:'Chiunque'}].concat(mans.map(m=>({v:m.id,l:m.nome})))},
       ]});
     }
+    async function renderOrariGrid(oBox, periodoId){
+      const { data:esistenti } = await supabaseClient.from('turni_orari').select('giorno').eq('periodo_id',periodoId);
+      const have=new Set((esistenti||[]).map(r=>r.giorno));
+      const missing=[]; for(let g=1;g<=7;g++) if(!have.has(g)) missing.push({periodo_id:periodoId, giorno:g, aperto:true, apertura:'18:00', chiusura:'23:59'});
+      if(missing.length){ const {error}=await supabaseClient.from('turni_orari').insert(missing); if(error){ oBox.innerHTML='<p class="text-red-600 text-sm">'+esc(error.message)+'</p>'; return; } }
+      const { data:orari } = await supabaseClient.from('turni_orari').select('*').eq('periodo_id',periodoId).order('giorno');
+      const tbl=document.createElement('table'); tbl.className='w-full text-sm bg-white rounded shadow max-w-xl';
+      tbl.innerHTML='<thead><tr class="text-left border-b text-gray-500"><th class="p-2">Giorno</th><th class="p-2">Aperto</th><th class="p-2">Apertura</th><th class="p-2">Chiusura</th></tr></thead>';
+      const tb=document.createElement('tbody');
+      (orari||[]).forEach(o=>{
+        const tr=document.createElement('tr'); tr.className='border-b';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=o.aperto;
+        const ap=document.createElement('input'); ap.type='time'; ap.value=o.apertura||''; ap.className='border rounded px-1';
+        const ch=document.createElement('input'); ch.type='time'; ch.value=o.chiusura||''; ch.className='border rounded px-1';
+        const salva=async()=>{ const {error}=await supabaseClient.from('turni_orari').update({aperto:cb.checked, apertura:ap.value||null, chiusura:ch.value||null}).eq('periodo_id',periodoId).eq('giorno',o.giorno); if(error)alert(error.message); };
+        cb.onchange=salva; ap.onchange=salva; ch.onchange=salva;
+        const td0=document.createElement('td'); td0.className='p-2 font-medium'; td0.textContent=GIORNI[o.giorno];
+        const td1=document.createElement('td'); td1.className='p-2'; td1.appendChild(cb);
+        const td2=document.createElement('td'); td2.className='p-2'; td2.appendChild(ap);
+        const td3=document.createElement('td'); td3.className='p-2'; td3.appendChild(ch);
+        tr.append(td0,td1,td2,td3); tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); oBox.innerHTML=''; oBox.appendChild(tbl);
+    }
 
     // ---------- Copertura ----------
     async function renderCopertura(box){
+      const periodi=await loadPeriodi();
       const mans = (await supabaseClient.from('turni_mansioni').select('id,nome').order('nome')).data||[];
-      renderLista(box, { tabella:'turni_copertura', titolo:'Copertura a fasce (minimi per giorno)', ordina:'giorno', campi:[
+      box.innerHTML='<div class="flex items-center gap-3 flex-wrap mb-2"><h2 class="text-lg font-bold">Copertura a fasce (minimi per giorno)</h2>'+
+        '<label class="text-sm">Periodo <select id="per" class="border rounded px-2 py-1 text-sm"></select></label></div><div id="cop"></div>';
+      const sel=box.querySelector('#per'); sel.innerHTML=periodi.map(p=>`<option value="${p.id}">${esc(nomePeriodo(p))}</option>`).join('');
+      const draw=()=>{ const pid=Number(sel.value); renderLista(box.querySelector('#cop'), { tabella:'turni_copertura', titolo:'Fasce', ordina:'giorno', filtro:{col:'periodo_id',val:pid}, fissi:{periodo_id:pid}, campi:[
         {k:'giorno', label:'Giorno', tipo:'select', obbligatorio:true, opts:[1,2,3,4,5,6,7].map(g=>({v:g,l:GIORNI[g]}))},
         {k:'inizio', label:'Dalle', tipo:'time', obbligatorio:true},
         {k:'fine', label:'Alle', tipo:'time', obbligatorio:true},
         {k:'min_risorse', label:'Min risorse', tipo:'number'},
         {k:'mansione_id', label:'Mansione', tipo:'select', opts:[{v:null,l:'Chiunque'}].concat(mans.map(m=>({v:m.id,l:m.nome})))},
-      ]});
+      ]}); };
+      sel.onchange=draw;
+      if(periodi.length) draw(); else box.querySelector('#cop').innerHTML='<p class="text-gray-400 text-sm">Crea prima un periodo (scheda Periodi).</p>';
     }
 
     // ---------- Accordi personali ----------
