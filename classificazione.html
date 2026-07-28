@@ -58,7 +58,7 @@
         <aside class="sidebar bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900 text-white flex flex-col">
             <div class="p-3 border-b border-white/10">
                 <h1 class="text-lg font-bold flex items-center">💰 Costi</h1>
-                <input id="search" oninput="renderTree()" placeholder="Filtra…"
+                <input id="search" oninput="onSearch()" placeholder="Cerca in tutto il database…"
                        class="mt-2 w-full text-sm text-gray-800 rounded px-2 py-1">
                 <p class="text-[11px] text-gray-400 mt-2 leading-snug">Trascina articoli, Tipi o Famiglie su un nodo per spostarli. Con le checkbox nella tabella sposti più articoli insieme. Su Macro/Famiglia crei nuovi raggruppamenti.</p>
                 <button id="btnNuovaMacro" onclick="azNuovaMacro()" style="display:none" class="mt-2 w-full text-sm bg-white/15 hover:bg-white/25 rounded px-2 py-1">➕ Nuova macro-categoria</button>
@@ -217,7 +217,6 @@
         }
 
         function renderTipo(box,t,m,f,q,depth){
-          if (q && !nodeMatches(t,q)) return;
           const key='t'+t.id, open=expanded.has(key);
           const anag = anagCache[t.id];
           const loose = anag ? anag.filter(a=>!a.pu_id) : [];
@@ -254,6 +253,78 @@
           if (t.nome.toLowerCase().includes(q)) return true;
           const anag = anagCache[t.id]||[];
           return anag.some(a => (a.descrizione||'').toLowerCase().includes(q));
+        }
+
+        // ---------- RICERCA GLOBALE ----------
+        let searchTimer = null;
+        function onSearch(){
+          const q = (document.getElementById('search').value || '').trim();
+          clearTimeout(searchTimer);
+          if (q.length < 2){
+            const d=document.getElementById('detail');
+            if (d) { d.className='text-gray-500'; d.innerHTML="Seleziona una voce nell'albero a sinistra."; }
+            return;
+          }
+          searchTimer = setTimeout(() => showSearchResults(q), 300);
+        }
+
+        async function showSearchResults(q){
+          const d = document.getElementById('detail'); d.className=''; d.innerHTML='<p class="text-gray-400 text-sm">Ricerca…</p>';
+          const ql = q.toLowerCase();
+          // cartelle (nomi macro/famiglia/tipo) dall'albero già in memoria
+          const cartelle = [];
+          TREE.forEach(m=>{
+            if(m.nome.toLowerCase().includes(ql)) cartelle.push({kind:'macro', id:m.id, path:m.nome});
+            (m.famiglie||[]).forEach(f=>{
+              if(f.nome.toLowerCase().includes(ql)) cartelle.push({kind:'famiglia', id:f.id, path:m.nome+' › '+f.nome});
+              (f.tipi||[]).forEach(t=>{ if(t.nome.toLowerCase().includes(ql)) cartelle.push({kind:'tipo', id:t.id, path:m.nome+' › '+f.nome+' › '+t.nome}); });
+            });
+            (m.voci||[]).forEach(t=>{ if(t.nome.toLowerCase().includes(ql)) cartelle.push({kind:'tipo', id:t.id, path:m.nome+' › '+t.nome}); });
+          });
+          const { data, error } = await supabaseClient.rpc('cerca_articoli', { p_q: q });
+          const arts = error ? [] : (data || []);
+          d.innerHTML='';
+          d.appendChild(h(`<h2 class="text-xl font-bold mb-2">Risultati per “${esc(q)}”</h2>`));
+          if(cartelle.length){
+            d.appendChild(h('<h3 class="font-semibold text-sm mt-2 mb-1">Cartelle</h3>'));
+            cartelle.slice(0,50).forEach(c=>{
+              const row=document.createElement('div'); row.className='text-sm py-0.5 cursor-pointer hover:bg-blue-50 rounded px-1';
+              row.textContent=(c.kind==='macro'?'📂 ':c.kind==='famiglia'?'📁 ':'🏷️ ')+c.path;
+              row.onclick=()=>navigaCartella(c);
+              d.appendChild(row);
+            });
+          }
+          d.appendChild(h(`<h3 class="font-semibold text-sm mt-3 mb-1">Articoli (${arts.length}${arts.length>=200?'+':''})</h3>`));
+          if(error){ d.appendChild(h('<p class="text-red-600 text-sm">'+esc(error.message)+'</p>')); return; }
+          if(!arts.length){ d.appendChild(h('<p class="text-gray-400 text-sm">Nessun articolo trovato.</p>')); if(!cartelle.length) return; }
+          const tbl=document.createElement('table'); tbl.className='w-full text-sm';
+          tbl.innerHTML='<thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Articolo (nome in fattura)</th><th>Cartella</th><th>Fornitore</th><th class="text-right">Prezzo</th></tr></thead>';
+          const tb=document.createElement('tbody');
+          arts.forEach(a=>{
+            const path=[a.macro,a.famiglia,a.tipo].filter(Boolean).join(' › ') || '—';
+            const tr=document.createElement('tr'); tr.className='border-b hover:bg-blue-50 cursor-pointer';
+            tr.onclick=()=>{ if(a.tipo_id) goToTipo(a.tipo_id); };
+            const c1=document.createElement('td'); c1.className='py-1'; c1.textContent=a.descrizione;
+            const c2=document.createElement('td'); c2.className='text-gray-500 text-xs'; c2.textContent=path;
+            const c3=document.createElement('td'); c3.className='text-gray-600'; c3.textContent=a.fornitore||'—';
+            const c4=document.createElement('td'); c4.className='text-right'; c4.textContent=a.prezzo!=null?eur2(a.prezzo):'—';
+            tr.append(c1,c2,c3,c4); tb.appendChild(tr);
+          });
+          tbl.appendChild(tb); d.appendChild(tbl);
+        }
+
+        function navigaCartella(c){
+          if(c.kind==='macro'){ const m=findMacro(c.id); if(!m) return; expanded.add('m'+c.id); selectedKey='m'+c.id; renderTree(); showDetail({type:'macro',data:m}); }
+          else if(c.kind==='famiglia'){ const r=findFamiglia(c.id); if(!r) return; expanded.add('m'+r.m.id); expanded.add('f'+c.id); selectedKey='f'+c.id; renderTree(); showDetail({type:'famiglia',data:r.f,macro:r.m}); }
+          else { goToTipo(c.id); }
+        }
+
+        async function goToTipo(tipoId){
+          const r=findTipo(tipoId); if(!r) return;
+          expanded.add('m'+r.m.id); if(r.f) expanded.add('f'+r.f.id); expanded.add('t'+tipoId);
+          await loadAnag(tipoId);
+          selectedKey='t'+tipoId; renderTree();
+          showDetail({type:'tipo', data:r.t, macro:r.m, famiglia:r.f});
         }
 
         // ---------- DETTAGLIO ----------
