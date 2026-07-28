@@ -17,7 +17,9 @@
         .node-row.drop-hover { outline:2px solid #60a5fa; background: rgba(59,130,246,.30); }
         .twisty { width:16px; text-align:center; flex:0 0 16px; opacity:.8; }
         .node-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .node-meta { font-size:10px; opacity:.65; flex:0 0 auto; }
+        .node-meta { flex:0 0 auto; text-align:right; white-space:nowrap; display:flex; align-items:baseline; justify-content:flex-end; gap:6px; }
+        .meta-eur { font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+        .meta-cnt { font-size:9px; opacity:.5; font-variant-numeric:tabular-nums; min-width:34px; text-align:right; }
         tr.drag { cursor:grab; }
     </style>
 </head>
@@ -82,6 +84,7 @@
         const eur = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
         const eur2 = n => (Number(n)||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',minimumFractionDigits:2});
         const esc = s => { const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; };
+        const metaHtml = (n, spesa) => `<span class="meta-eur">${eur(spesa)}</span><span class="meta-cnt">${(n||0)}</span>`;
 
         async function carica(){
           const { data, error } = await supabaseClient.rpc('get_classificazione_tree');
@@ -175,7 +178,7 @@
           if (hasChildren && onToggle){ tw.onclick = e => { e.stopPropagation(); onToggle(); }; }
           const lab = document.createElement('span'); lab.className='node-label';
           lab.innerHTML = (icon?icon+' ':'') + esc(label);
-          const mt = document.createElement('span'); mt.className='node-meta'; mt.textContent = meta||'';
+          const mt = document.createElement('span'); mt.className='node-meta'; mt.innerHTML = meta||'';
           r.appendChild(tw); r.appendChild(lab); r.appendChild(mt);
           r.onclick = onClick;
           if (dragPayload){
@@ -197,7 +200,7 @@
           TREE.forEach(m => {
             const key='m'+m.id, open=expanded.has(key);
             box.appendChild(row(0, key, true, open, (m.is_merce?'🟢':'•'), m.nome,
-              `${m.n_prod}·${eur(m.spesa)}`,
+              metaHtml(m.n_prod, m.spesa),
               ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'macro',data:m}); },
               ()=>{ toggle(key); renderTree(); },
               {kind:'macro', id:m.id, isMerce:m.is_merce}, null));
@@ -209,7 +212,9 @@
 
         function renderFamiglia(box,f,m,q){
           const key='f'+f.id, open=expanded.has(key);
-          box.appendChild(row(1, key, (f.tipi||[]).length>0, open, '📁', f.nome, '',
+          const fn=(f.tipi||[]).reduce((s,t)=>s+(t.n_prod||0),0);
+          const fs=(f.tipi||[]).reduce((s,t)=>s+(t.spesa||0),0);
+          box.appendChild(row(1, key, (f.tipi||[]).length>0, open, '📁', f.nome, metaHtml(fn, fs),
             ()=>{ selectedKey=key; toggle(key); renderTree(); showDetail({type:'famiglia',data:f,macro:m}); },
             ()=>{ toggle(key); renderTree(); },
             {kind:'famiglia', id:f.id, macroId:m.id, isMerce:m.is_merce}, {t:'fam', id:f.id}));
@@ -222,7 +227,7 @@
           const loose = anag ? anag.filter(a=>!a.pu_id) : [];
           const hasChildren = (t.prodotti&&t.prodotti.length>0) || !anag || loose.length>0 || t.n_prod>0;
           box.appendChild(row(depth, key, hasChildren, open, '🏷️', t.nome,
-            `${t.n_prod}·${eur(t.spesa)}`,
+            metaHtml(t.n_prod, t.spesa),
             ()=>{ selectedKey=key; toggleTipo(key,t.id); showDetail({type:'tipo',data:t,macro:m,famiglia:f}); },
             ()=> toggleTipo(key,t.id),
             {kind:'tipo', id:t.id}, {t:'tipo', id:t.id}));
@@ -244,7 +249,7 @@
         function renderDescr(box,a,depth){
           const key='d'+a.id;
           box.appendChild(row(depth, key, false, false, '•', a.descrizione,
-            a.prezzo!=null?eur2(a.prezzo):'',
+            a.prezzo!=null?('<span class="meta-eur" style="opacity:.75">'+eur2(a.prezzo)+'</span>'):'',
             ()=>{ selectedKey=key; renderTree(); showDetail({type:'descr',data:a}); }, null,
             null, ()=>({t:'art', ids: (selArt.size && selArt.has(a.id)) ? [...selArt] : [a.id]})));
         }
