@@ -208,10 +208,27 @@
       return pool[0];
     }
 
-    async function generaBozza(box, giorni){
-      if(!confirm('Genera la bozza per questa settimana? I turni inseriti a mano restano; la bozza precedente viene rifatta.')) return;
-      const dates=giorni.map(isoData);
-      await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).in('data',dates);
+    function settRangeDefault(){ const lun=lunediDi(settLun||new Date()); const dom=new Date(lun); dom.setDate(dom.getDate()+6); return {dal:isoData(lun), al:isoData(dom)}; }
+    function dateInIntervallo(dal, al){ const p=s=>{const a=s.split('-').map(Number); return new Date(a[0],a[1]-1,a[2]);}; const out=[]; let d=p(dal); const end=p(al); while(d<=end){ out.push(new Date(d)); d.setDate(d.getDate()+1); } return out; }
+    function chiediPeriodo(titolo, def, onOk){
+      const ov=document.createElement('div'); ov.className='fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4'; ov.onclick=()=>ov.remove();
+      const card=document.createElement('div'); card.className='bg-white rounded-lg p-5 max-w-sm w-full shadow-xl text-sm'; card.onclick=e=>e.stopPropagation();
+      card.innerHTML=`<h3 class="text-lg font-bold mb-3">${esc(titolo)}</h3>
+        <div class="flex gap-2"><label class="flex-1">Dal<input id="pd" type="date" class="w-full border rounded px-2 py-1" value="${def.dal}"></label>
+          <label class="flex-1">Al<input id="pa" type="date" class="w-full border rounded px-2 py-1" value="${def.al}"></label></div>
+        <div class="text-right mt-4"><button id="ann" class="px-3 py-1.5 bg-gray-100 rounded mr-2">Annulla</button><button id="ok" class="px-3 py-1.5 bg-blue-600 text-white rounded">Conferma</button></div>`;
+      card.querySelector('#ann').onclick=()=>ov.remove();
+      card.querySelector('#ok').onclick=()=>{ const dal=card.querySelector('#pd').value, al=card.querySelector('#pa').value; if(!dal||!al||al<dal){ alert('Intervallo non valido.'); return; } ov.remove(); onOk(dal,al); };
+      ov.appendChild(card); document.body.appendChild(ov);
+    }
+
+    async function generaBozza(box){ chiediPeriodo('Genera bozza — scegli il periodo', settRangeDefault(), (dal,al)=>{ if(confirm('Genera la bozza da '+dal+' a '+al+'? I turni inseriti a mano restano; la bozza precedente in questo intervallo viene rifatta.')) eseguiGenera(box,dal,al); }); }
+
+    async function eseguiGenera(box, dal, al){
+      const p=s=>{const a=s.split('-').map(Number); return new Date(a[0],a[1]-1,a[2]);};
+      const loadDal=isoData(lunediDi(p(dal)));
+      const lunUlt=lunediDi(p(al)); const domUlt=new Date(lunUlt); domUlt.setDate(domUlt.getDate()+6); const loadAl=isoData(domUlt);
+      await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
       const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq] = await Promise.all([
         supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,giorni_riposo,max_ore').eq('attivo',true),
         supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
@@ -220,7 +237,7 @@
         supabaseClient.from('turni_periodi').select('*'),
         supabaseClient.from('turni_orari').select('*'),
         supabaseClient.from('turni_copertura').select('*'),
-        supabaseClient.from('turni_assegnazioni').select('*').in('data',dates),
+        supabaseClient.from('turni_assegnazioni').select('*').gte('data',loadDal).lte('data',loadAl),
         supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle(),
         supabaseClient.from('turni_mansioni').select('id,nome'),
       ]);
@@ -230,53 +247,62 @@
       const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[]; const coperture=cq.data||[];
       const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const giornoChiusura=reg.giorno_chiusura||null; const maxCons=reg.max_giorni_consecutivi||null;
       const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
-      const st={}; risorse.forEach(r=>st[r.id]={ore:0, giorni:new Set()});
-      const assByDay={};
-      (exq.data||[]).forEach(a=>{ (assByDay[a.data]=assByDay[a.data]||[]).push(a); if(st[a.risorsa_id]){ st[a.risorsa_id].ore+=durOre(a.ora_inizio,a.ora_fine); st[a.risorsa_id].giorni.add(a.data); } });
+      const esist=exq.data||[];
+      const giorniTot=dateInIntervallo(dal,al);
+      const weeks={}; giorniTot.forEach(d=>{ const l=isoData(lunediDi(d)); (weeks[l]=weeks[l]||[]).push(d); });
       const nuovi=[]; const report=[];
-      giorni.forEach(d=>{
-        const iso=isoData(d); const gi=giornoIdx(d); const settN=isoWeekNum(d);
-        if(giornoChiusura && gi===giornoChiusura) return;
-        const per=risolviPeriodo(iso, periodi); if(!per) return;
-        const or=orari.find(o=>o.periodo_id===per.id && o.giorno===gi) || orari.find(o=>o.giorno===gi);
-        if(or && !or.aperto) return;
-        const chiusura=(or&&or.chiusura)||null;
-        const fasce=coperture.filter(c=>c.periodo_id===per.id && c.giorno===gi).sort((a,b)=>a.inizio.localeCompare(b.inizio));
-        const dayAss = assByDay[iso]||(assByDay[iso]=[]);
-        const scoperte=[];
-        fasce.forEach(f=>{
-          const chiude=chiusura||f.fine;
-          const conta=()=>dayAss.filter(a=> overlapT(a.ora_inizio,a.ora_fine,f.inizio,f.fine) && (!f.mansione_id || a.mansione_id===f.mansione_id)).length;
-          let coperti=conta(), guard=0;
-          while(coperti < f.min_risorse && guard++ < 50){
-            const cand=scegliRisorsa(risorse, st, {iso,gi,settN,fascia:f,chiude,mansByR,accByRG,assenze,riposoMin,maxCons});
-            if(!cand) break;
-            nuovi.push({risorsa_id:cand.id, data:iso, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null, generato:true});
-            dayAss.push({risorsa_id:cand.id, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null});
-            st[cand.id].ore+=durOre(f.inizio,chiude); st[cand.id].giorni.add(iso);
-            coperti=conta();
-          }
-          if(coperti < f.min_risorse) scoperte.push(`${tStr(f.inizio)}–${tStr(f.fine)}${f.mansione_id?(' · '+(mNome[f.mansione_id]||'')):''}: ${coperti}/${f.min_risorse}`);
+      Object.keys(weeks).sort().forEach(lunIso=>{
+        const l=p(lunIso); const settN=isoWeekNum(l);
+        const st={}; risorse.forEach(r=>st[r.id]={ore:0, giorni:new Set()});
+        const weekIsos=[]; for(let i=0;i<7;i++){ const dd=new Date(l); dd.setDate(dd.getDate()+i); weekIsos.push(isoData(dd)); }
+        const assByDay={};
+        esist.filter(a=>weekIsos.indexOf(a.data)>=0).forEach(a=>{ (assByDay[a.data]=assByDay[a.data]||[]).push(a); if(st[a.risorsa_id]){ st[a.risorsa_id].ore+=durOre(a.ora_inizio,a.ora_fine); st[a.risorsa_id].giorni.add(a.data); } });
+        weeks[lunIso].sort((x,y)=>x-y).forEach(d=>{
+          const iso=isoData(d); const gi=giornoIdx(d);
+          if(giornoChiusura && gi===giornoChiusura) return;
+          const per=risolviPeriodo(iso, periodi); if(!per) return;
+          const or=orari.find(o=>o.periodo_id===per.id && o.giorno===gi) || orari.find(o=>o.giorno===gi);
+          if(or && !or.aperto) return;
+          const chiusura=(or&&or.chiusura)||null;
+          const fasce=coperture.filter(c=>c.periodo_id===per.id && c.giorno===gi).sort((a,b)=>a.inizio.localeCompare(b.inizio));
+          const dayAss=assByDay[iso]||(assByDay[iso]=[]);
+          const scoperte=[];
+          fasce.forEach(f=>{
+            const chiude=chiusura||f.fine;
+            const conta=()=>dayAss.filter(a=> overlapT(a.ora_inizio,a.ora_fine,f.inizio,f.fine) && (!f.mansione_id || a.mansione_id===f.mansione_id)).length;
+            let coperti=conta(), guard=0;
+            while(coperti < f.min_risorse && guard++ < 50){
+              const cand=scegliRisorsa(risorse, st, {iso,gi,settN,fascia:f,chiude,mansByR,accByRG,assenze,riposoMin,maxCons});
+              if(!cand) break;
+              nuovi.push({risorsa_id:cand.id, data:iso, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null, generato:true});
+              dayAss.push({risorsa_id:cand.id, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null});
+              st[cand.id].ore+=durOre(f.inizio,chiude); st[cand.id].giorni.add(iso);
+              coperti=conta();
+            }
+            if(coperti < f.min_risorse) scoperte.push(`${tStr(f.inizio)}–${tStr(f.fine)}${f.mansione_id?(' · '+(mNome[f.mansione_id]||'')):''}: ${coperti}/${f.min_risorse}`);
+          });
+          report.push({iso, gi, scoperte});
         });
-        report.push({iso, gi, scoperte});
       });
       if(nuovi.length){ const {error}=await supabaseClient.from('turni_assegnazioni').insert(nuovi); if(error){ alert(error.message); return; } }
       await renderPianificazione(box);
-      const div=document.createElement('div'); div.className='mt-4 text-sm bg-white rounded shadow p-3';
+      report.sort((a,b)=>a.iso.localeCompare(b.iso));
       const conProblemi=report.filter(r=>r.scoperte.length);
-      let h=`<div class="font-semibold mb-1">Bozza generata — ${nuovi.length} turni creati</div>`;
+      const div=document.createElement('div'); div.className='mt-4 text-sm bg-white rounded shadow p-3 max-h-72 overflow-y-auto';
+      let h=`<div class="font-semibold mb-1">Bozza generata (${esc(dal)} → ${esc(al)}) — ${nuovi.length} turni creati</div>`;
       h += conProblemi.length
         ? '<div class="text-red-700"><div class="mb-1">Fasce rimaste scoperte:</div><ul class="list-disc pl-5">'+conProblemi.map(r=>`<li>${GIORNI[r.gi]} ${isoGG(r.iso)}: ${r.scoperte.map(esc).join('; ')}</li>`).join('')+'</ul></div>'
-        : '<div class="text-emerald-700">Tutte le fasce coperte 🎉</div>';
+        : '<div class="text-emerald-700">Tutte le fasce coperte nel periodo 🎉</div>';
       div.innerHTML=h; box.appendChild(div);
     }
 
-    async function svuotaBozza(box, giorni){
-      if(!confirm('Rimuovere i turni della bozza (generati automaticamente) di questa settimana? I turni manuali restano.')) return;
-      const dates=giorni.map(isoData);
-      const {error}=await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).in('data',dates);
-      if(error){ alert(error.message); return; }
-      renderPianificazione(box);
+    async function svuotaBozza(box){
+      chiediPeriodo('Svuota bozza — scegli il periodo', settRangeDefault(), async (dal,al)=>{
+        if(!confirm('Rimuovere i turni della bozza (generati automaticamente) da '+dal+' a '+al+'? I turni manuali restano.')) return;
+        const {error}=await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
+        if(error){ alert(error.message); return; }
+        renderPianificazione(box);
+      });
     }
     async function renderPianificazione(box){
       if(!settLun) settLun = lunediDi(new Date());
@@ -299,8 +325,8 @@
       box.querySelector('#tipi').onclick=()=>gestisciTipiTurno(()=>renderPianificazione(box));
       const vc=box.querySelector('#vc'); vc.value=vistaCopertura; vc.onchange=()=>{ vistaCopertura=vc.value; renderPianificazione(box); };
       const monBtn=box.querySelector('#mon'); monBtn.className='px-2 py-1 rounded text-sm '+(mostraMonitor?'bg-indigo-600 text-white':'bg-gray-100'); monBtn.onclick=()=>{ mostraMonitor=!mostraMonitor; renderPianificazione(box); };
-      box.querySelector('#gen').onclick=()=>generaBozza(box, giorni);
-      box.querySelector('#svu').onclick=()=>svuotaBozza(box, giorni);
+      box.querySelector('#gen').onclick=()=>generaBozza(box);
+      box.querySelector('#svu').onclick=()=>svuotaBozza(box);
 
       const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome').eq('attivo',true).order('ordine',{nullsFirst:false}).order('cognome',{nullsFirst:true}).order('nome')).data||[];
       const dates=giorni.map(isoData);
