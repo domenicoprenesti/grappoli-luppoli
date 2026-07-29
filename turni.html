@@ -197,6 +197,7 @@
       if(!pool.length) pool = eligibili(risorse.filter(r=>r.tipo_contratto==='a_chiamata'));
       if(!pool.length) return null;
       pool.sort((a,b)=>{
+        const ma=a.max_ore?1:0, mb=b.max_ore?1:0; if(ma!==mb) return mb-ma;
         const da=st[a.id].ore-Number(a.ore_contratto||0), db=st[b.id].ore-Number(b.ore_contratto||0);
         if(da!==db) return da-db;
         const pa=(accByRG[a.id+'|'+gi]&&accByRG[a.id+'|'+gi].pref_riposo)?1:0, pb=(accByRG[b.id+'|'+gi]&&accByRG[b.id+'|'+gi].pref_riposo)?1:0;
@@ -212,7 +213,7 @@
       const dates=giorni.map(isoData);
       await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).in('data',dates);
       const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq] = await Promise.all([
-        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,giorni_riposo').eq('attivo',true),
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,giorni_riposo,max_ore').eq('attivo',true),
         supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
         supabaseClient.from('turni_accordi').select('*'),
         supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
@@ -529,7 +530,7 @@
         const contr = r.tipo_contratto==='part_time' ? ('PT '+(r.pt_modalita||'')) : (r.tipo_contratto==='a_chiamata' ? 'A chiamata' : 'Full');
         const str = [r.str_max_sett,r.str_max_mese,r.str_max_anno].map(x=>x==null?'–':x).join(' / ');
         const mList = (mByR[r.id]||[]).map(id=>mNome[id]).filter(Boolean).join(', ');
-        tr.innerHTML=`<td class="p-2">${esc((r.cognome||'')+' '+r.nome)}</td><td class="p-2">${r.ore_contratto}</td><td class="p-2">${esc(contr)}</td><td class="p-2">${r.giorni_riposo}</td><td class="p-2">${esc(str)}</td><td class="p-2 text-gray-600">${esc(mList||'—')}</td>`;
+        tr.innerHTML=`<td class="p-2">${esc((r.cognome||'')+' '+r.nome)}${r.max_ore?' <span title="Massimizza ore">⬆️</span>':''}</td><td class="p-2">${r.ore_contratto}</td><td class="p-2">${esc(contr)}</td><td class="p-2">${r.giorni_riposo}</td><td class="p-2">${esc(str)}</td><td class="p-2 text-gray-600">${esc(mList||'—')}</td>`;
         const td=document.createElement('td'); td.className='p-2 text-right whitespace-nowrap';
         const su=document.createElement('button'); su.textContent='↑'; su.title='Sposta su'; su.className='px-1'; su.disabled=(i===0); if(i===0) su.classList.add('opacity-30'); su.onclick=()=>scambiaOrdineRisorse(r, rows[i-1], ()=>renderOrganico(box));
         const giu=document.createElement('button'); giu.textContent='↓'; giu.title='Sposta giù'; giu.className='px-1'; giu.disabled=(i===rows.length-1); if(i===rows.length-1) giu.classList.add('opacity-30'); giu.onclick=()=>scambiaOrdineRisorse(r, rows[i+1], ()=>renderOrganico(box));
@@ -561,6 +562,7 @@
             <label class="flex-1">Str. max anno<input id="sa" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_anno!=null?rec.str_max_anno:''}"></label></div>
           <div><div class="text-gray-600 mb-1">Mansioni</div><div id="mans" class="flex flex-wrap gap-2"></div></div>
           <label class="block">Note<textarea id="note" rows="2" class="w-full border rounded px-2 py-1">${isEdit?esc(rec.note||''):''}</textarea></label>
+          <label class="flex items-center gap-1"><input id="maxore" type="checkbox" ${isEdit&&rec.max_ore?'checked':''}> ⬆️ Massimizza ore (priorità nei turni)</label>
           <label class="flex items-center gap-1"><input id="attivo" type="checkbox" ${(!isEdit||rec.attivo)?'checked':''}> Attiva</label>
         </div>
         <div class="text-right mt-4"><button id="ann" class="px-3 py-1.5 bg-gray-100 rounded text-sm mr-2">Annulla</button><button id="sav" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Salva</button></div>`;
@@ -577,7 +579,7 @@
         const payload={ nome, cognome:card.querySelector('#cognome').value.trim()||null, ore_contratto:Number(card.querySelector('#ore').value||0),
           giorni_riposo:Number(card.querySelector('#riposi').value||1), tipo_contratto:tipo, pt_modalita:ptm,
           str_max_sett:num('ss'), str_max_mese:num('sm'), str_max_anno:num('sa'),
-          note:card.querySelector('#note').value.trim()||null, attivo:card.querySelector('#attivo').checked };
+          note:card.querySelector('#note').value.trim()||null, max_ore:card.querySelector('#maxore').checked, attivo:card.querySelector('#attivo').checked };
         let rid;
         if(isEdit){ const {error}=await supabaseClient.from('turni_risorse').update(payload).eq('id',rec.id); if(error)return alert(error.message); rid=rec.id; }
         else {
