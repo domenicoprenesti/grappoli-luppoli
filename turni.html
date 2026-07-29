@@ -175,18 +175,23 @@
     function giorniConsecutivi(set, iso){ const a=iso.split('-').map(Number); let d=new Date(a[0],a[1]-1,a[2]); let n=1; for(;;){ d.setDate(d.getDate()-1); const s=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(set.has(s)) n++; else break; } return n; }
 
     function scegliRisorsa(risorse, st, ctx){
-      const {iso, gi, settN, fascia, chiude, mansByR, accByRG, assenze, riposoMin, maxCons, usaChiamata} = ctx;
+      const {iso, gi, settN, fascia, chiude, mansByR, accByRG, rotPhase, assenze, riposoMin, maxCons, usaChiamata} = ctx;
       const dur = durOre(fascia.inizio, chiude);
       const maxWork = 7 - riposoMin;
-      const eligibili = pool => pool.filter(r=>{
+      // ignoraRot=true = ultima risorsa "copri sempre": salta SOLO la rotazione (1su2/2su3/3su4),
+      // ma resta rigido su riposo minimo, assenze, mansioni, doppio turno e tetti ore. 'mai' resta invalicabile.
+      const eligibili = (pool, ignoraRot) => pool.filter(r=>{
         if(st[r.id].giorni.has(iso)) return false;
         if(assenze.some(x=>x.risorsa_id===r.id && iso>=x.data_inizio && iso<=x.data_fine)) return false;
         if(fascia.mansione_id && !(mansByR[r.id]&&mansByR[r.id].has(fascia.mansione_id))) return false;
         const acc=accByRG[r.id+'|'+gi]; const cad=acc?acc.cadenza:'sempre';
         if(cad==='mai') return false;
-        if(cad==='1su2' && settN%2!==0) return false;
-        if(cad==='2su3' && settN%3===0) return false;
-        if(cad==='3su4' && settN%4===0) return false;
+        if(!ignoraRot){
+          const ph=rotPhase?(rotPhase[r.id+'|'+gi]||0):0;
+          if(cad==='1su2' && (settN+ph)%2!==0) return false;
+          if(cad==='2su3' && (settN+ph)%3===0) return false;
+          if(cad==='3su4' && (settN+ph)%4===0) return false;
+        }
         if(st[r.id].giorni.size >= maxWork) return false;
         if(maxCons && giorniConsecutivi(st[r.id].giorni, iso) > maxCons) return false;
         const limite = r.tipo_contratto==='a_chiamata'
@@ -195,8 +200,13 @@
         if(st[r.id].ore + dur > limite) return false;
         return true;
       });
-      let pool = eligibili(risorse.filter(r=>r.tipo_contratto!=='a_chiamata'));
-      if(!pool.length && usaChiamata) pool = eligibili(risorse.filter(r=>r.tipo_contratto==='a_chiamata'));
+      const regolari=risorse.filter(r=>r.tipo_contratto!=='a_chiamata');
+      const aChiamata=risorse.filter(r=>r.tipo_contratto==='a_chiamata');
+      let forced=false;
+      let pool = eligibili(regolari, false);
+      if(!pool.length && usaChiamata) pool = eligibili(aChiamata, false);
+      if(!pool.length){ pool = eligibili(regolari, true); if(pool.length) forced=true; }
+      if(!pool.length && usaChiamata){ pool = eligibili(aChiamata, true); if(pool.length) forced=true; }
       if(!pool.length) return null;
       pool.sort((a,b)=>{
         const ma=a.max_ore?1:0, mb=b.max_ore?1:0; if(ma!==mb) return mb-ma;
@@ -207,7 +217,7 @@
         if(st[a.id].giorni.size!==st[b.id].giorni.size) return st[a.id].giorni.size-st[b.id].giorni.size;
         return a.id-b.id;
       });
-      return pool[0];
+      return {cand: pool[0], forced};
     }
 
     function settRangeDefault(){ const lun=lunediDi(settLun||new Date()); const dom=new Date(lun); dom.setDate(dom.getDate()+6); return {dal:isoData(lun), al:isoData(dom)}; }
@@ -247,6 +257,8 @@
       const risorse=rq.data||[];
       const mansByR={}; (mq.data||[]).forEach(m=>{ (mansByR[m.risorsa_id]=mansByR[m.risorsa_id]||new Set()).add(m.mansione_id); });
       const accByRG={}; (aq.data||[]).forEach(a=>{ accByRG[a.risorsa_id+'|'+a.giorno]=a; });
+      // sfasamento rotazioni: risorse con stessa (giorno,cadenza) riposano in settimane diverse
+      const rotPhase={}; { const groups={}; (aq.data||[]).forEach(a=>{ (groups[a.giorno+'|'+a.cadenza]=groups[a.giorno+'|'+a.cadenza]||[]).push(a); }); Object.values(groups).forEach(list=>{ list.sort((x,y)=>x.risorsa_id-y.risorsa_id).forEach((a,idx)=>{ rotPhase[a.risorsa_id+'|'+a.giorno]=idx; }); }); }
       const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[]; const coperture=cq.data||[];
       const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const giornoChiusura=reg.giorno_chiusura||null; const maxCons=reg.max_giorni_consecutivi||null;
       const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
@@ -254,7 +266,7 @@
       await caricaChiusure();
       const giorniTot=dateInIntervallo(dal,al);
       const weeks={}; giorniTot.forEach(d=>{ const l=isoData(lunediDi(d)); (weeks[l]=weeks[l]||[]).push(d); });
-      const nuovi=[]; const report=[]; let oreDaCoprire=0;
+      const nuovi=[]; const report=[]; const forzati=[]; let oreDaCoprire=0;
       Object.keys(weeks).sort().forEach(lunIso=>{
         const l=p(lunIso); const settN=isoWeekNum(l);
         const st={}; risorse.forEach(r=>st[r.id]={ore:0, giorni:new Set()});
@@ -277,11 +289,13 @@
             const conta=()=>dayAss.filter(a=> overlapT(a.ora_inizio,a.ora_fine,f.inizio,f.fine) && (!f.mansione_id || a.mansione_id===f.mansione_id)).length;
             let coperti=conta(), guard=0;
             while(coperti < f.min_risorse && guard++ < 50){
-              const cand=scegliRisorsa(risorse, st, {iso,gi,settN,fascia:f,chiude,mansByR,accByRG,assenze,riposoMin,maxCons,usaChiamata});
-              if(!cand) break;
+              const sc=scegliRisorsa(risorse, st, {iso,gi,settN,fascia:f,chiude,mansByR,accByRG,rotPhase,assenze,riposoMin,maxCons,usaChiamata});
+              if(!sc) break;
+              const cand=sc.cand;
               nuovi.push({risorsa_id:cand.id, data:iso, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null, generato:true});
               dayAss.push({risorsa_id:cand.id, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null});
               st[cand.id].ore+=durOre(f.inizio,chiude); st[cand.id].giorni.add(iso);
+              if(sc.forced) forzati.push(GIORNI[gi]+' '+isoGG(iso)+' '+tStr(f.inizio)+': '+((cand.nome?cand.nome+' ':'')+(cand.cognome||'')).trim());
               coperti=conta();
             }
             if(coperti < f.min_risorse){ const manc=f.min_risorse-coperti; const oreM=manc*durOre(f.inizio,chiude); oreDaCoprire+=oreM; scoperte.push(`${tStr(f.inizio)}–${tStr(f.fine)}${f.mansione_id?(' · '+(mNome[f.mansione_id]||'')):''}: ${coperti}/${f.min_risorse} (mancano ${manc} ≈ ${oreM.toFixed(1)} h)`); }
@@ -299,6 +313,7 @@
         ? '<div class="text-red-700"><div class="mb-1">Fasce rimaste scoperte:</div><ul class="list-disc pl-5">'+conProblemi.map(r=>`<li>${GIORNI[r.gi]} ${isoGG(r.iso)}: ${r.scoperte.map(esc).join('; ')}</li>`).join('')+'</ul></div>'
         : '<div class="text-emerald-700">Tutte le fasce coperte nel periodo 🎉</div>';
       if(oreDaCoprire>0) h += `<div class="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">⚠️ <b>Ore ancora da coprire: ${oreDaCoprire.toFixed(1)} h</b> (con le sole risorse non a chiamata). Scegli tu come coprirle — es. chiamando una risorsa <b>a chiamata</b> — e assegnale a mano nella griglia, oppure rigenera spuntando "Usa anche le risorse a chiamata".</div>`;
+      if(forzati.length) h += `<div class="mt-2 p-2 bg-orange-50 border border-orange-200 rounded">🔁 <b>${forzati.length} turni assegnati forzando la rotazione</b> (per non lasciare fasce scoperte): ${forzati.slice(0,30).map(esc).join('; ')}${forzati.length>30?' …':''}</div>`;
       div.innerHTML=h; box.appendChild(div);
     }
 
