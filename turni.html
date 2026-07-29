@@ -326,15 +326,16 @@
     let calMese=null;
     async function renderChiusure(box){
       box.innerHTML='<h2 class="text-lg font-bold mb-2">Chiusure del locale</h2>'+
-        '<div class="grid md:grid-cols-3 gap-4 mb-4"><div id="cf"></div><div id="cx"></div><div id="cm"></div></div>'+
-        '<h3 class="font-semibold text-sm mb-2">Calendario</h3><div id="cal"></div>';
-      const aggCal=()=>caricaChiusure().then(()=>renderCalendario(box.querySelector('#cal')));
-      renderLista(box.querySelector('#cf'), {tabella:'turni_chiusure',titolo:'Ferie / chiusure',ordina:'data_inizio',filtro:{col:'tipo',val:'ferie'},fissi:{tipo:'ferie'},onChange:aggCal,campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'data_inizio',label:'Dal',tipo:'date',obbligatorio:true},{k:'data_fine',label:'Al',tipo:'date',obbligatorio:true},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
-      renderLista(box.querySelector('#cx'), {tabella:'turni_chiusure',titolo:'Festività fisse (gg/mm)',ordina:'mese',filtro:{col:'tipo',val:'fissa'},fissi:{tipo:'fissa'},onChange:aggCal,campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'giorno',label:'Giorno (1-31)',tipo:'number',obbligatorio:true},{k:'mese',label:'Mese (1-12)',tipo:'number',obbligatorio:true},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
-      renderLista(box.querySelector('#cm'), {tabella:'turni_chiusure',titolo:'Festività mobili (Pasqua)',ordina:'offset_pasqua',filtro:{col:'tipo',val:'mobile'},fissi:{tipo:'mobile'},onChange:aggCal,campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'offset_pasqua',label:'Ricorrenza',tipo:'select',obbligatorio:true,opts:[{v:0,l:'Pasqua'},{v:1,l:'Pasquetta'}]},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
+        '<div id="cal" class="mb-5"></div>'+
+        '<h3 class="font-semibold text-sm mb-2 text-gray-500">Regole (clic per espandere)</h3>'+
+        '<div class="space-y-2"><div id="cf"></div><div id="cx"></div><div id="cm"></div></div>';
       if(!calMese){ const n=new Date(); calMese=new Date(n.getFullYear(), n.getMonth(), 1); }
       await caricaChiusure();
       renderCalendario(box.querySelector('#cal'));
+      const aggCal=()=>caricaChiusure().then(()=>renderCalendario(box.querySelector('#cal')));
+      renderLista(box.querySelector('#cf'), {tabella:'turni_chiusure',titolo:'Ferie / chiusure',ordina:'data_inizio',filtro:{col:'tipo',val:'ferie'},fissi:{tipo:'ferie'},collapse:true,onChange:aggCal,campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'data_inizio',label:'Dal',tipo:'date',obbligatorio:true},{k:'data_fine',label:'Al',tipo:'date',obbligatorio:true},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
+      renderLista(box.querySelector('#cx'), {tabella:'turni_chiusure',titolo:'Festività fisse (gg/mm)',ordina:'mese',filtro:{col:'tipo',val:'fissa'},fissi:{tipo:'fissa'},collapse:true,onChange:aggCal,campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'giorno',label:'Giorno (1-31)',tipo:'number',obbligatorio:true},{k:'mese',label:'Mese (1-12)',tipo:'number',obbligatorio:true},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
+      renderLista(box.querySelector('#cm'), {tabella:'turni_chiusure',titolo:'Festività mobili (Pasqua)',ordina:'offset_pasqua',filtro:{col:'tipo',val:'mobile'},fissi:{tipo:'mobile'},collapse:true,onChange:aggCal,campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'offset_pasqua',label:'Ricorrenza',tipo:'select',obbligatorio:true,opts:[{v:0,l:'Pasqua'},{v:1,l:'Pasquetta'}]},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
     }
     function renderCalendario(box){
       const anno=calMese.getFullYear(), mese=calMese.getMonth();
@@ -498,10 +499,19 @@
 
     // ---------- Helper CRUD generico (tabelle a lista semplice) ----------
     async function renderLista(box, cfg){
-      box.innerHTML = `<div class="flex justify-between items-center mb-2"><h2 class="text-lg font-bold">${esc(cfg.titolo)}</h2>
-        <button id="add" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">➕ Nuovo</button></div><div id="lista"></div>`;
+      if(cfg.collapse){
+        box.innerHTML = `<details class="bg-white rounded shadow" ${cfg._open?'open':''}>
+          <summary class="flex justify-between items-center cursor-pointer p-3 select-none">
+            <span class="font-semibold">${esc(cfg.titolo)}</span>
+            <button id="add" class="px-3 py-1 bg-blue-600 text-white rounded text-sm">➕ Nuovo</button>
+          </summary><div id="lista" class="p-3 pt-0"></div></details>`;
+        box.querySelector('details').addEventListener('toggle', e=>{ cfg._open = e.target.open; });
+      } else {
+        box.innerHTML = `<div class="flex justify-between items-center mb-2"><h2 class="text-lg font-bold">${esc(cfg.titolo)}</h2>
+          <button id="add" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">➕ Nuovo</button></div><div id="lista"></div>`;
+      }
       const ridis=()=>{ renderLista(box,cfg); if(cfg.onChange) cfg.onChange(); };
-      box.querySelector('#add').onclick = ()=>formRecord(cfg, null, ridis);
+      box.querySelector('#add').onclick = (e)=>{ if(e){ e.preventDefault(); e.stopPropagation(); } formRecord(cfg, null, ridis); };
       let q = supabaseClient.from(cfg.tabella).select('*');
       if (cfg.filtro) q = q.eq(cfg.filtro.col, cfg.filtro.val);
       if (cfg.ordina) q = q.order(cfg.ordina);
