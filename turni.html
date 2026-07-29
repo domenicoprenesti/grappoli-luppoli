@@ -40,6 +40,7 @@
       {key:'accordi', label:'Accordi personali', render:renderAccordi},
       {key:'regole', label:'Regole', render:renderRegole},
       {key:'assenze', label:'Assenze', render:renderAssenze},
+      {key:'chiusure', label:'Chiusure', render:renderChiusure},
     ];
     let tabAttiva = 'pianificazione';
     function initTurni(){ renderTabs(); apriTab('pianificazione'); }
@@ -77,6 +78,7 @@
       const byDate={}; (ass||[]).forEach(a=>{ (byDate[a.data]=byDate[a.data]||[]).push(a); });
       return giorni.map(d=>{
         const iso=isoData(d); const gi=giornoIdx(d);
+        if(statoGiorno(iso).chiuso) return { iso, gi, periodoNome:null, fasce:[], haGap:false, chiuso:true };
         const per=risolviPeriodo(iso, periodi);
         const fasce = per ? (coperture||[]).filter(c=>c.periodo_id===per.id && c.giorno===gi) : [];
         const assg = byDate[iso]||[];
@@ -249,6 +251,7 @@
       const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const giornoChiusura=reg.giorno_chiusura||null; const maxCons=reg.max_giorni_consecutivi||null;
       const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
       const esist=exq.data||[];
+      await caricaChiusure();
       const giorniTot=dateInIntervallo(dal,al);
       const weeks={}; giorniTot.forEach(d=>{ const l=isoData(lunediDi(d)); (weeks[l]=weeks[l]||[]).push(d); });
       const nuovi=[]; const report=[]; let oreDaCoprire=0;
@@ -260,6 +263,7 @@
         esist.filter(a=>weekIsos.indexOf(a.data)>=0).forEach(a=>{ (assByDay[a.data]=assByDay[a.data]||[]).push(a); if(st[a.risorsa_id]){ st[a.risorsa_id].ore+=durOre(a.ora_inizio,a.ora_fine); st[a.risorsa_id].giorni.add(a.data); } });
         weeks[lunIso].sort((x,y)=>x-y).forEach(d=>{
           const iso=isoData(d); const gi=giornoIdx(d);
+          if(statoGiorno(iso).chiuso) return;
           if(giornoChiusura && gi===giornoChiusura) return;
           const per=risolviPeriodo(iso, periodi); if(!per) return;
           const or=orari.find(o=>o.periodo_id===per.id && o.giorno===gi) || orari.find(o=>o.giorno===gi);
@@ -306,6 +310,62 @@
         renderPianificazione(box);
       });
     }
+    let CHIUSURE=[], OVERRIDE={};
+    function pasqua(anno){ const a=anno%19,b=Math.floor(anno/100),c=anno%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,mn=Math.floor((a+11*h+22*l)/451),mese=Math.floor((h+l-7*mn+114)/31),giorno=((h+l-7*mn+114)%31)+1; return new Date(anno,mese-1,giorno); }
+    async function caricaChiusure(){ const [c,o]=await Promise.all([supabaseClient.from('turni_chiusure').select('*').eq('attivo',true), supabaseClient.from('turni_giorni_override').select('*')]); CHIUSURE=c.data||[]; OVERRIDE={}; (o.data||[]).forEach(x=>OVERRIDE[x.data]=x.aperto); }
+    function statoGiorno(iso){
+      if(iso in OVERRIDE) return {chiuso:!OVERRIDE[iso], motivo:'override'};
+      const a=iso.split('-').map(Number); const anno=a[0], mm=a[1], gg=a[2];
+      for(const c of CHIUSURE){
+        if(c.tipo==='ferie'){ if(c.data_inizio&&c.data_fine&&iso>=c.data_inizio&&iso<=c.data_fine) return {chiuso:true, motivo:c.nome}; }
+        else if(c.tipo==='fissa'){ if(c.giorno===gg&&c.mese===mm) return {chiuso:true, motivo:c.nome}; }
+        else if(c.tipo==='mobile'){ const p=pasqua(anno); p.setDate(p.getDate()+(c.offset_pasqua||0)); if(isoData(p)===iso) return {chiuso:true, motivo:c.nome}; }
+      }
+      return {chiuso:false, motivo:null};
+    }
+    let calMese=null;
+    async function renderChiusure(box){
+      box.innerHTML='<h2 class="text-lg font-bold mb-2">Chiusure del locale</h2>'+
+        '<div class="grid md:grid-cols-3 gap-4 mb-4"><div id="cf"></div><div id="cx"></div><div id="cm"></div></div>'+
+        '<h3 class="font-semibold text-sm mb-2">Calendario</h3><div id="cal"></div>';
+      renderLista(box.querySelector('#cf'), {tabella:'turni_chiusure',titolo:'Ferie / chiusure',ordina:'data_inizio',filtro:{col:'tipo',val:'ferie'},fissi:{tipo:'ferie'},campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'data_inizio',label:'Dal',tipo:'date',obbligatorio:true},{k:'data_fine',label:'Al',tipo:'date',obbligatorio:true},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
+      renderLista(box.querySelector('#cx'), {tabella:'turni_chiusure',titolo:'Festività fisse (gg/mm)',ordina:'mese',filtro:{col:'tipo',val:'fissa'},fissi:{tipo:'fissa'},campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'giorno',label:'Giorno (1-31)',tipo:'number',obbligatorio:true},{k:'mese',label:'Mese (1-12)',tipo:'number',obbligatorio:true},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
+      renderLista(box.querySelector('#cm'), {tabella:'turni_chiusure',titolo:'Festività mobili (Pasqua)',ordina:'offset_pasqua',filtro:{col:'tipo',val:'mobile'},fissi:{tipo:'mobile'},campi:[{k:'nome',label:'Nome',tipo:'text',obbligatorio:true},{k:'offset_pasqua',label:'Ricorrenza',tipo:'select',obbligatorio:true,opts:[{v:0,l:'Pasqua'},{v:1,l:'Pasquetta'}]},{k:'attivo',label:'Attivo',tipo:'check',def:true}]});
+      if(!calMese){ const n=new Date(); calMese=new Date(n.getFullYear(), n.getMonth(), 1); }
+      await caricaChiusure();
+      renderCalendario(box.querySelector('#cal'));
+    }
+    function renderCalendario(box){
+      const anno=calMese.getFullYear(), mese=calMese.getMonth();
+      const primo=new Date(anno,mese,1), ultimo=new Date(anno,mese+1,0);
+      const mesi=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+      box.innerHTML=`<div class="flex items-center gap-2 mb-2"><button id="pm" class="px-2 py-1 border rounded">◀</button><span class="font-semibold">${mesi[mese]} ${anno}</span><button id="nm" class="px-2 py-1 border rounded">▶</button><button id="om" class="px-2 py-1 bg-gray-100 rounded text-sm">Oggi</button><span class="text-xs text-gray-400 ml-2">Clic su un giorno per forzare aperto/chiuso</span></div><div id="grigliaCal" class="overflow-x-auto"></div>`;
+      box.querySelector('#pm').onclick=()=>{ calMese=new Date(anno,mese-1,1); renderCalendario(box); };
+      box.querySelector('#nm').onclick=()=>{ calMese=new Date(anno,mese+1,1); renderCalendario(box); };
+      box.querySelector('#om').onclick=()=>{ const n=new Date(); calMese=new Date(n.getFullYear(),n.getMonth(),1); renderCalendario(box); };
+      const g=box.querySelector('#grigliaCal');
+      const tbl=document.createElement('table'); tbl.className='text-xs bg-white rounded shadow';
+      tbl.innerHTML='<thead><tr>'+['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].map(x=>`<th class="p-2 border-b">${x}</th>`).join('')+'</tr></thead>';
+      const tb=document.createElement('tbody');
+      let tr=document.createElement('tr');
+      const startPad=(primo.getDay()+6)%7; for(let i=0;i<startPad;i++){ tr.appendChild(document.createElement('td')); }
+      for(let day=1; day<=ultimo.getDate(); day++){
+        if((startPad+day-1)%7===0 && day!==1){ tb.appendChild(tr); tr=document.createElement('tr'); }
+        const d=new Date(anno,mese,day); const iso=isoData(d); const s=statoGiorno(iso);
+        const td=document.createElement('td'); td.className='p-1 align-top';
+        const cell=document.createElement('button'); cell.className='w-16 h-16 rounded text-left p-1 '+(s.chiuso?'bg-red-100 hover:bg-red-200':'bg-emerald-50 hover:bg-emerald-100')+((iso in OVERRIDE)?' ring-2 ring-amber-400':'');
+        cell.innerHTML=`<div class="font-semibold">${day}</div><div class="text-[9px] leading-tight ${s.chiuso?'text-red-700':'text-emerald-700'}">${s.chiuso?('chiuso'+(s.motivo&&s.motivo!=='override'?(' · '+esc(s.motivo)):'')):'aperto'}</div>`;
+        cell.onclick=()=>menuOverride(iso, ()=>caricaChiusure().then(()=>renderCalendario(box)));
+        td.appendChild(cell); tr.appendChild(td);
+      }
+      tb.appendChild(tr); tbl.appendChild(tb); g.innerHTML=''; g.appendChild(tbl);
+    }
+    function menuOverride(iso, done){
+      const scelta=prompt('Giorno '+iso+':\n1 = Forza CHIUSO\n2 = Forza APERTO\n3 = Togli override (torna alla regola)\n\nScrivi 1, 2 o 3:');
+      if(scelta==='1') supabaseClient.from('turni_giorni_override').upsert({data:iso,aperto:false},{onConflict:'data'}).then(({error})=>{ if(error)return alert(error.message); done(); });
+      else if(scelta==='2') supabaseClient.from('turni_giorni_override').upsert({data:iso,aperto:true},{onConflict:'data'}).then(({error})=>{ if(error)return alert(error.message); done(); });
+      else if(scelta==='3') supabaseClient.from('turni_giorni_override').delete().eq('data',iso).then(({error})=>{ if(error)return alert(error.message); done(); });
+    }
     async function renderPianificazione(box){
       if(!settLun) settLun = lunediDi(new Date());
       const giorni=[]; for(let i=0;i<7;i++){ const d=new Date(settLun); d.setDate(d.getDate()+i); giorni.push(d); }
@@ -339,14 +399,15 @@
       const tipi=(await supabaseClient.from('turni_tipi_turno').select('*').eq('attivo',true).order('ora_inizio')).data||[];
       const periodi=(await supabaseClient.from('turni_periodi').select('*')).data||[];
       const coperture=(await supabaseClient.from('turni_copertura').select('*')).data||[];
+      await caricaChiusure();
       const cop = calcolaCopertura(giorni, ass||[], periodi, coperture, mNome);
 
       const grid=box.querySelector('#grid');
       const todayIso=isoData(new Date());
       const tbl=document.createElement('table'); tbl.className='text-sm bg-white rounded shadow';
       let head='<thead><tr><th class="p-2 text-left border-b">Risorsa</th>';
-      giorni.forEach((d,i)=>{ const t=isoData(d)===todayIso; const gap=(vistaCopertura==='avvisi' && cop[i] && cop[i].haGap);
-        head+=`<th class="p-2 border-b text-center ${t?'bg-blue-50':''} ${gap?'text-red-600 cursor-pointer':''}" data-gi="${i}">${GIORNI[giornoIdx(d)]} ${itGG(d)}${gap?' ⚠':''}</th>`; });
+      giorni.forEach((d,i)=>{ const t=isoData(d)===todayIso; const gap=(vistaCopertura==='avvisi' && cop[i] && cop[i].haGap); const s=statoGiorno(isoData(d));
+        head+=`<th class="p-2 border-b text-center ${s.chiuso?'bg-gray-200 text-gray-500':(t?'bg-blue-50':'')} ${gap?'text-red-600 cursor-pointer':''}" data-gi="${i}">${GIORNI[giornoIdx(d)]} ${itGG(d)}${s.chiuso?' 🔒':(gap?' ⚠':'')}</th>`; });
       head+='</tr></thead>';
       tbl.innerHTML=head;
       const tb=document.createElement('tbody');
