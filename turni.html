@@ -66,7 +66,7 @@
     let mostraMonitor = false;
     const tStr = t => (t||'').slice(0,5);
     const isoGG = iso => iso.slice(8,10)+'/'+iso.slice(5,7);
-    function overlapT(aI,aF,bI,bF){ return aI < bF && aF > bI; }
+    function overlapT(aI,aF,bI,bF){ const m=t=>{const a=(t||'0:0').split(':'); return (+a[0])*60+(+a[1]);}; let ai=m(aI),af=m(aF); if(af<=ai)af+=1440; let bi=m(bI),bf=m(bF); if(bf<=bi)bf+=1440; return ai<bf && af>bi; }
     function rangeLen(p){ return (new Date(p.data_fine) - new Date(p.data_inizio)); }
     function risolviPeriodo(iso, periodi){
       const dated = periodi.filter(p=>p.data_inizio && p.data_fine && p.data_inizio<=iso && iso<=p.data_fine);
