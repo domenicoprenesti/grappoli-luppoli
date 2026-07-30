@@ -175,6 +175,15 @@
     function isoWeekNum(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3); const firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4)); const fday=(firstThu.getUTCDay()+6)%7; firstThu.setUTCDate(firstThu.getUTCDate()-fday+3); return 1+Math.round((t-firstThu)/(7*24*3600*1000)); }
     function giorniConsecutivi(set, iso){ const a=iso.split('-').map(Number); let d=new Date(a[0],a[1]-1,a[2]); let n=1; for(;;){ d.setDate(d.getDate()-1); const s=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(set.has(s)) n++; else break; } return n; }
 
+    // costo di sbilancio ore per il riequilibrio: sotto contratto pesa sempre; sopra contratto
+    // pesa solo per chi NON è "massimizza ore" (per i max_ore lo straordinario è "gratis" → attira l'eccedenza);
+    // per gli "a chiamata" ogni ora è indesiderata (ultima risorsa) → si cerca di scaricarle sui regolari.
+    function costoRis(r, ore){
+      const c=Number(r.ore_contratto||0);
+      if(r.tipo_contratto==='a_chiamata') return ore*2;
+      if(r.max_ore) return Math.max(0, c-ore);
+      const d=ore-c; return d>=0 ? d*1.2 : (-d);
+    }
     function scegliRisorsa(risorse, st, ctx){
       const {iso, gi, settN, fascia, chiude, mansByR, accByRG, rotPhase, assenze, riposoMin, maxCons, usaChiamata} = ctx;
       const dur = durOre(fascia.inizio, chiude);
@@ -315,6 +324,39 @@
           }
           report.push({iso, gi, scoperte});
         });
+        // FASE 2 — riequilibrio ore: sposta turni generati da chi è sopra a chi è sotto (vincoli rispettati, conservativo)
+        { const byId={}; risorse.forEach(r=>byId[r.id]=r); let it=0;
+          while(it++ < 300){
+            let best=null;
+            const shifts=nuovi.filter(a=>weekIsos.indexOf(a.data)>=0);
+            for(const sh of shifts){
+              const G=byId[sh.risorsa_id]; if(!G) continue;
+              const gi2=giornoIdx(p(sh.data)); const dur=durOre(sh.ora_inizio, sh.ora_fine);
+              for(const R of risorse){
+                if(R.id===G.id) continue;
+                if(st[R.id].giorni.has(sh.data)) continue;
+                if(assenze.some(x=>x.risorsa_id===R.id && sh.data>=x.data_inizio && sh.data<=x.data_fine)) continue;
+                if(sh.mansione_id && !(mansByR[R.id]&&mansByR[R.id].has(sh.mansione_id))) continue;
+                const acc=accByRG[R.id+'|'+gi2]; const cad=acc?acc.cadenza:'sempre';
+                if(cad==='mai') continue;
+                const ph=rotPhase[R.id+'|'+gi2]||0;
+                if(cad==='1su2' && (settN+ph)%2!==0) continue;
+                if(cad==='2su3' && (settN+ph)%3===0) continue;
+                if(cad==='3su4' && (settN+ph)%4===0) continue;
+                if(st[R.id].giorni.size >= (7-riposoMin)) continue;
+                if(maxCons){ const tmp=new Set(st[R.id].giorni); tmp.add(sh.data); if(giorniConsecutivi(tmp, sh.data) > maxCons) continue; }
+                const limiteR = R.tipo_contratto==='a_chiamata' ? (R.str_max_sett!=null?Number(R.str_max_sett):Infinity) : (Number(R.ore_contratto||0)+(R.str_max_sett!=null?Number(R.str_max_sett):Infinity));
+                if(st[R.id].ore + dur > limiteR) continue;
+                const gain = (costoRis(G, st[G.id].ore) + costoRis(R, st[R.id].ore)) - (costoRis(G, st[G.id].ore - dur) + costoRis(R, st[R.id].ore + dur));
+                if(gain > 0.001 && (!best || gain > best.gain)) best={sh, R, G, dur, gain};
+              }
+            }
+            if(!best) break;
+            best.sh.risorsa_id = best.R.id;
+            st[best.G.id].ore -= best.dur; st[best.G.id].giorni.delete(best.sh.data);
+            st[best.R.id].ore += best.dur; st[best.R.id].giorni.add(best.sh.data);
+          }
+        }
       });
       if(nuovi.length){ const {error}=await supabaseClient.from('turni_assegnazioni').insert(nuovi); if(error){ alert(error.message); return; } }
       await renderPianificazione(box);
