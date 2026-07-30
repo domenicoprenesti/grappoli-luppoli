@@ -42,17 +42,32 @@
       {key:'assenze', label:'Assenze', render:renderAssenze},
       {key:'chiusure', label:'Chiusure', render:renderChiusure},
     ];
+    const AREE = [
+      {key:'pianificazione', label:'Pianificazione', sezioni:['pianificazione']},
+      {key:'organico', label:'Organico', sezioni:['organico','accordi','mansioni','assenze']},
+      {key:'fabbisogno', label:'Fabbisogno', sezioni:['periodi','orari','copertura','chiusure']},
+      {key:'regole', label:'Regole', sezioni:['regole']},
+    ];
+    let areaAttiva = 'pianificazione';
     let tabAttiva = 'pianificazione';
-    function initTurni(){ renderTabs(); apriTab('pianificazione'); }
+    function initTurni(){ apriArea('pianificazione'); }
+    function apriArea(ak){ areaAttiva=ak; const a=AREE.find(x=>x.key===ak); apriTab(a.sezioni[0]); }
     function renderTabs(){
-      const t=document.getElementById('tabs'); t.innerHTML='';
-      SEZIONI.forEach(s=>{
-        const b=document.createElement('button');
-        b.textContent=s.label;
-        b.className='px-3 py-2 text-sm rounded-t '+(tabAttiva===s.key?'bg-white font-semibold border border-b-0':'text-gray-600 hover:bg-gray-100');
-        b.onclick=()=>apriTab(s.key);
-        t.appendChild(b);
-      });
+      const bar=document.getElementById('tabs'); bar.innerHTML='';
+      const arow=document.createElement('div'); arow.className='flex gap-1 border-b mb-1';
+      AREE.forEach(a=>{ const b=document.createElement('button'); b.textContent=a.label;
+        b.className='px-4 py-2 text-sm rounded-t '+(areaAttiva===a.key?'bg-blue-600 text-white font-semibold':'text-gray-600 hover:bg-gray-100');
+        b.onclick=()=>apriArea(a.key); arow.appendChild(b); });
+      bar.appendChild(arow);
+      const a=AREE.find(x=>x.key===areaAttiva);
+      if(a && a.sezioni.length>1){
+        const srow=document.createElement('div'); srow.className='flex gap-1 flex-wrap';
+        a.sezioni.forEach(sk=>{ const s=SEZIONI.find(x=>x.key===sk); if(!s) return;
+          const b=document.createElement('button'); b.textContent=s.label;
+          b.className='px-3 py-1.5 text-sm rounded-t '+(tabAttiva===sk?'bg-white font-semibold border border-b-0':'text-gray-600 hover:bg-gray-100');
+          b.onclick=()=>apriTab(sk); srow.appendChild(b); });
+        bar.appendChild(srow);
+      }
     }
     function apriTab(key){ tabAttiva=key; renderTabs(); const s=SEZIONI.find(x=>x.key===key); document.getElementById('tabBody').innerHTML=''; s.render(document.getElementById('tabBody')); }
 
@@ -273,7 +288,7 @@
       // sfasamento rotazioni: risorse con stessa (giorno,cadenza) riposano in settimane diverse
       const rotPhase={}; { const groups={}; (aq.data||[]).forEach(a=>{ (groups[a.giorno+'|'+a.cadenza]=groups[a.giorno+'|'+a.cadenza]||[]).push(a); }); Object.values(groups).forEach(list=>{ list.sort((x,y)=>x.risorsa_id-y.risorsa_id).forEach((a,idx)=>{ rotPhase[a.risorsa_id+'|'+a.giorno]=idx; }); }); }
       const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[]; const coperture=cq.data||[];
-      const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const giornoChiusura=reg.giorno_chiusura||null; const maxCons=reg.max_giorni_consecutivi||null;
+      const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const maxCons=reg.max_giorni_consecutivi||null;
       const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
       const esist=exq.data||[];
       await caricaChiusure();
@@ -289,7 +304,6 @@
         weeks[lunIso].sort((x,y)=>x-y).forEach(d=>{
           const iso=isoData(d); const gi=giornoIdx(d);
           if(statoGiorno(iso).chiuso) return;
-          if(giornoChiusura && gi===giornoChiusura) return;
           const per=risolviPeriodo(iso, periodi); if(!per) return;
           const or=orari.find(o=>o.periodo_id===per.id && o.giorno===gi) || orari.find(o=>o.giorno===gi);
           if(or && !or.aperto) return;
@@ -871,16 +885,12 @@
           <label class="block">Riposo settimanale minimo (giorni)<input id="rmin" type="number" class="w-full border rounded px-2 py-1" value="${r.riposo_sett_min==null?1:r.riposo_sett_min}"></label>
           <label class="flex items-center gap-2"><input id="bil" type="checkbox" ${r.bilancia_straordinari?'checked':''}> Bilancia gli straordinari tra le risorse</label>
           <label class="block">Tolleranza ore (± ore/sett)<input id="toll" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${r.tolleranza_ore==null?2:r.tolleranza_ore}"></label>
-          <label class="block">Giorno di chiusura settimanale
-            <select id="gc" class="w-full border rounded px-2 py-1"><option value="">Nessuno</option>${[1,2,3,4,5,6,7].map(g=>`<option value="${g}" ${r.giorno_chiusura===g?'selected':''}>${GIORNI[g]}</option>`).join('')}</select></label>
-          <label class="flex items-center gap-2"><input id="fest" type="checkbox" ${r.considera_festivita?'checked':''}> Considera le festività</label>
           <label class="block">Max giorni consecutivi (vuoto = nessun limite)<input id="maxc" type="number" class="w-full border rounded px-2 py-1" value="${r.max_giorni_consecutivi==null?'':r.max_giorni_consecutivi}"></label>
           <div class="text-right"><button id="sav" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Salva</button></div>
         </div>`;
       box.querySelector('#sav').onclick=async()=>{
         const payload={ id:1, riposo_sett_min:Number(box.querySelector('#rmin').value||1), bilancia_straordinari:box.querySelector('#bil').checked,
-          tolleranza_ore:Number(box.querySelector('#toll').value||0), giorno_chiusura: box.querySelector('#gc').value?Number(box.querySelector('#gc').value):null,
-          considera_festivita:box.querySelector('#fest').checked, max_giorni_consecutivi: box.querySelector('#maxc').value?Number(box.querySelector('#maxc').value):null };
+          tolleranza_ore:Number(box.querySelector('#toll').value||0), max_giorni_consecutivi: box.querySelector('#maxc').value?Number(box.querySelector('#maxc').value):null };
         const { error } = await supabaseClient.from('turni_regole').upsert(payload,{onConflict:'id'});
         if(error){ alert(error.message); return; } alert('Regole salvate.');
       };
