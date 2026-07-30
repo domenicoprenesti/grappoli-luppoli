@@ -306,7 +306,7 @@
       // sfasamento rotazioni: risorse con stessa (giorno,cadenza) riposano in settimane diverse
       const rotPhase={}; { const groups={}; (aq.data||[]).forEach(a=>{ (groups[a.giorno+'|'+a.cadenza]=groups[a.giorno+'|'+a.cadenza]||[]).push(a); }); Object.values(groups).forEach(list=>{ list.sort((x,y)=>x.risorsa_id-y.risorsa_id).forEach((a,idx)=>{ rotPhase[a.risorsa_id+'|'+a.giorno]=idx; }); }); }
       const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[];
-      const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const maxCons=reg.max_giorni_consecutivi||null;
+      const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const maxCons=reg.max_giorni_consecutivi||null; const gp=reg.giorno_prioritario||null;
       const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
       const esist=exq.data||[];
       await caricaChiusure();
@@ -319,7 +319,7 @@
         const weekIsos=[]; for(let i=0;i<7;i++){ const dd=new Date(l); dd.setDate(dd.getDate()+i); weekIsos.push(isoData(dd)); }
         const assByDay={};
         esist.filter(a=>weekIsos.indexOf(a.data)>=0).forEach(a=>{ (assByDay[a.data]=assByDay[a.data]||[]).push(a); if(st[a.risorsa_id]){ st[a.risorsa_id].ore+=durOre(a.ora_inizio,a.ora_fine); st[a.risorsa_id].giorni.add(a.data); } });
-        weeks[lunIso].sort((x,y)=>x-y).forEach(d=>{
+        weeks[lunIso].sort((x,y)=>{ if(gp){ const px=giornoIdx(x)===gp?0:1, py=giornoIdx(y)===gp?0:1; if(px!==py) return px-py; } return x-y; }).forEach(d=>{
           const iso=isoData(d); const gi=giornoIdx(d);
           if(statoGiorno(iso).chiuso) return;
           const per=risolviPeriodo(iso, periodi); if(!per) return;
@@ -1035,11 +1035,15 @@
           <label class="flex items-center gap-2"><input id="bil" type="checkbox" ${r.bilancia_straordinari?'checked':''}> Bilancia gli straordinari tra le risorse</label>
           <label class="block">Tolleranza ore (± ore/sett)<input id="toll" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${r.tolleranza_ore==null?2:r.tolleranza_ore}"></label>
           <label class="block">Max giorni consecutivi (vuoto = nessun limite)<input id="maxc" type="number" class="w-full border rounded px-2 py-1" value="${r.max_giorni_consecutivi==null?'':r.max_giorni_consecutivi}"></label>
+          <label class="block">Giorno prioritario di copertura
+            <select id="gp" class="w-full border rounded px-2 py-1"><option value="">Nessuno (Lun→Dom)</option>${[1,2,3,4,5,6,7].map(g=>`<option value="${g}" ${r.giorno_prioritario===g?'selected':''}>${GIORNI[g]}</option>`).join('')}</select>
+            <span class="block text-xs text-gray-500 mt-1">Il generatore copre prima questo giorno ogni settimana, così il riposo ruota sugli altri giorni (utile per non lasciare sempre le stesse persone a riposo la domenica).</span></label>
           <div class="text-right"><button id="sav" class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Salva</button></div>
         </div>`;
       box.querySelector('#sav').onclick=async()=>{
         const payload={ id:1, riposo_sett_min:Number(box.querySelector('#rmin').value||1), bilancia_straordinari:box.querySelector('#bil').checked,
-          tolleranza_ore:Number(box.querySelector('#toll').value||0), max_giorni_consecutivi: box.querySelector('#maxc').value?Number(box.querySelector('#maxc').value):null };
+          tolleranza_ore:Number(box.querySelector('#toll').value||0), max_giorni_consecutivi: box.querySelector('#maxc').value?Number(box.querySelector('#maxc').value):null,
+          giorno_prioritario: box.querySelector('#gp').value?Number(box.querySelector('#gp').value):null };
         const { error } = await supabaseClient.from('turni_regole').upsert(payload,{onConflict:'id'});
         if(error){ alert(error.message); return; } alert('Regole salvate.');
       };
