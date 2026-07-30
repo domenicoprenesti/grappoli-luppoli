@@ -171,6 +171,7 @@
       box.appendChild(sg);
     }
     function durOre(i,f){ const p=s=>{ const a=(s||'0:0').split(':'); return (+a[0])*60+(+a[1]); }; let d=p(f)-p(i); if(d<=0) d+=1440; return d/60; }
+    function shiftMin(t, delta){ const a=(t||'0:0').split(':'); let m=(+a[0])*60+(+a[1])+delta; m=((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')+':00'; }
     function isoWeekNum(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3); const firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4)); const fday=(firstThu.getUTCDay()+6)%7; firstThu.setUTCDate(firstThu.getUTCDate()-fday+3); return 1+Math.round((t-firstThu)/(7*24*3600*1000)); }
     function giorniConsecutivi(set, iso){ const a=iso.split('-').map(Number); let d=new Date(a[0],a[1]-1,a[2]); let n=1; for(;;){ d.setDate(d.getDate()-1); const s=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(set.has(s)) n++; else break; } return n; }
 
@@ -242,7 +243,7 @@
       const loadDal=isoData(lunediDi(p(dal)));
       const lunUlt=lunediDi(p(al)); const domUlt=new Date(lunUlt); domUlt.setDate(domUlt.getDate()+6); const loadAl=isoData(domUlt);
       await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
-      const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq] = await Promise.all([
+      const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq, fq] = await Promise.all([
         supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,giorni_riposo,max_ore').eq('attivo',true),
         supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
         supabaseClient.from('turni_accordi').select('*'),
@@ -253,7 +254,10 @@
         supabaseClient.from('turni_assegnazioni').select('*').gte('data',loadDal).lte('data',loadAl),
         supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle(),
         supabaseClient.from('turni_mansioni').select('id,nome'),
+        supabaseClient.from('turni_fasi').select('*'),
       ]);
+      const fasi=fq.data||[];
+      const faseAper=fasi.find(f=>f.tipo==='apertura'); const faseChiu=fasi.find(f=>f.tipo==='chiusura');
       const risorse=rq.data||[];
       const mansByR={}; (mq.data||[]).forEach(m=>{ (mansByR[m.risorsa_id]=mansByR[m.risorsa_id]||new Set()).add(m.mansione_id); });
       const accByRG={}; (aq.data||[]).forEach(a=>{ accByRG[a.risorsa_id+'|'+a.giorno]=a; });
@@ -300,6 +304,15 @@
             }
             if(coperti < f.min_risorse){ const manc=f.min_risorse-coperti; const oreM=manc*durOre(f.inizio,chiude); oreDaCoprire+=oreM; scoperte.push(`${tStr(f.inizio)}–${tStr(f.fine)}${f.mansione_id?(' · '+(mNome[f.mansione_id]||'')):''}: ${coperti}/${f.min_risorse} (mancano ${manc} ≈ ${oreM.toFixed(1)} h)`); }
           });
+          // FASI: estendi gli orari dei turni generati oggi (apertura prima, chiusura dopo)
+          if(fasce.length){
+            const apreT=fasce[0].inizio; const chiudeT=chiusura||fasce[fasce.length-1].fine;
+            const dayGen=nuovi.filter(a=>a.data===iso);
+            if(faseAper && faseAper.durata_min>0){ const ni=shiftMin(apreT, -faseAper.durata_min);
+              dayGen.filter(a=>a.ora_inizio===apreT && (!faseAper.mansione_id || a.mansione_id===faseAper.mansione_id)).slice(0, faseAper.n_risorse||1).forEach(a=>{ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(ni,a.ora_inizio); a.ora_inizio=ni; }); }
+            if(faseChiu && faseChiu.durata_min>0){ const nf=shiftMin(chiudeT, +faseChiu.durata_min);
+              dayGen.filter(a=>a.ora_fine===chiudeT && (!faseChiu.mansione_id || a.mansione_id===faseChiu.mansione_id)).slice(0, faseChiu.n_risorse||1).forEach(a=>{ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(a.ora_fine,nf); a.ora_fine=nf; }); }
+          }
           report.push({iso, gi, scoperte});
         });
       });
