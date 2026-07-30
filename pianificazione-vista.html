@@ -54,6 +54,8 @@ main{max-width:1320px;margin:0 auto;padding:10px 20px 60px}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cell{background:var(--panel);border:1px solid var(--line);border-radius:var(--r); min-height:118px;padding:8px 9px 9px;text-align:left;width:100%; display:flex;flex-direction:column;gap:6px;transition:.14s;position:relative;}
 .cell.empty{background:transparent;border-color:transparent;pointer-events:none}
+.cell.other{background:transparent;border-color:#251f2b;opacity:.5}
+.cell.other .dnum{color:var(--faint)}
 .cell.we{background:#231d2a}
 .cell.oggi{border-color:var(--ferie);box-shadow:0 0 0 1px var(--ferie) inset}
 .dnum{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);font-weight:500}
@@ -231,31 +233,32 @@ function renderPeople(){
 }
 
 /* ---- Vista mese ---- */
-function renderMese(){
-  const y=CUR.getFullYear(), m=CUR.getMonth();
-  const primo=new Date(y,m,1), ng=new Date(y,m+1,0).getDate(), off=dow(primo);
-  let h='<div class="dow">'+GG3.map(g=>'<div>'+g+'</div>').join('')+'</div><div class="grid">';
-  for(let i=0;i<off;i++) h+='<div class="cell empty"></div>';
-  const oggi=iso(new Date());
-  for(let g=1;g<=ng;g++){
-    const d=new Date(y,m,g), inf=leggiGiorno(d);
-    const cls=['cell']; if(dow(d)>=5) cls.push('we'); if(iso(d)===oggi) cls.push('oggi');
-    if(inf.chiuso) cls.push('chiuso');
-    h+='<div class="'+cls.join(' ')+'"><span class="dnum">'+g+'</span>';
-    if(inf.chiuso) h+='<div class="closed"><b>Chiuso</b>'+(inf.motivo&&inf.motivo!=='override'?inf.motivo:'')+'</div>';
-    else {
-      h+='<div class="rows">';
-      PEOPLE.forEach(p=>{
-        const t=inf[p.id]; if(!t || t.tipo==='none') return;
-        const dim=FILTRO.size&&!FILTRO.has(p.id)?' dim':'';
-        const kind=t.tipo==='ore'?'':(t.tipo==='ferie'?' ferie':' off');
-        const txt=t.tipo==='ore'?t.txt:t.lab;
-        h+='<div class="row'+kind+dim+'" style="--c:'+p.css+'"><span class="nm">'+p.label+'</span><span class="tm">'+txt+'</span></div>';
-      });
-      h+='</div>';
-    }
+function cellMese(d, m, oggi){
+  const inf=leggiGiorno(d);
+  const cls=['cell']; if(d.getMonth()!==m) cls.push('other');
+  if(dow(d)>=5) cls.push('we'); if(iso(d)===oggi) cls.push('oggi');
+  if(inf.chiuso) cls.push('chiuso');
+  let h='<div class="'+cls.join(' ')+'"><span class="dnum">'+d.getDate()+'</span>';
+  if(inf.chiuso) h+='<div class="closed"><b>Chiuso</b>'+(inf.motivo&&inf.motivo!=='override'?inf.motivo:'')+'</div>';
+  else {
+    h+='<div class="rows">';
+    PEOPLE.forEach(p=>{
+      const t=inf[p.id]; if(!t || t.tipo==='none') return;
+      const dim=FILTRO.size&&!FILTRO.has(p.id)?' dim':'';
+      const kind=t.tipo==='ore'?'':(t.tipo==='ferie'?' ferie':' off');
+      const txt=t.tipo==='ore'?t.txt:t.lab;
+      h+='<div class="row'+kind+dim+'" style="--c:'+p.css+'"><span class="nm">'+p.label+'</span><span class="tm">'+txt+'</span></div>';
+    });
     h+='</div>';
   }
+  return h+'</div>';
+}
+function renderMese(){
+  const y=CUR.getFullYear(), m=CUR.getMonth();
+  const start=lunedi(new Date(y,m,1)), end=addD(lunedi(new Date(y,m+1,0)),6);
+  const oggi=iso(new Date());
+  let h='<div class="dow">'+GG3.map(g=>'<div>'+g+'</div>').join('')+'</div><div class="grid">';
+  for(let d=new Date(start); d<=end; d=addD(d,1)) h+=cellMese(d, m, oggi);
   return h+'</div>';
 }
 
@@ -325,13 +328,12 @@ function render(){
   document.getElementById('summary').innerHTML = renderSummary();
   if(VISTA==='mese') document.getElementById('period').innerHTML = MESI[CUR.getMonth()]+' <em>'+CUR.getFullYear()+'</em>';
   else { const l=lunedi(CUR), d=addD(l,6); const a=l.getDate()+(l.getMonth()!==d.getMonth()?' '+MESI[l.getMonth()].slice(0,3).toLowerCase():''); document.getElementById('period').innerHTML=a+' – '+d.getDate()+' <em>'+MESI[d.getMonth()].toLowerCase()+' '+d.getFullYear()+'</em>'; }
-  const wt=document.getElementById('wtot');
-  if(VISTA==='sett'){ const lun=lunedi(CUR); let all=0, shown=0;
-    for(let i=0;i<7;i++){ const inf=leggiGiorno(addD(lun,i)); if(inf.chiuso) continue;
-      PEOPLE.forEach(p=>{ const t=inf[p.id]; if(t&&t.tipo==='ore'){ const oh=t.e-t.s; all+=oh; if(!FILTRO.size||FILTRO.has(p.id)) shown+=oh; } }); }
-    const r=x=>Math.round(x*10)/10;
+  const wt=document.getElementById('wtot'); const r=x=>Math.round(x*10)/10;
+  { let all=0, shown=0;
+    giorniPeriodo().forEach(d=>{ const inf=leggiGiorno(d); if(inf.chiuso) return;
+      PEOPLE.forEach(p=>{ const t=inf[p.id]; if(t&&t.tipo==='ore'){ const oh=t.e-t.s; all+=oh; if(!FILTRO.size||FILTRO.has(p.id)) shown+=oh; } }); });
     wt.innerHTML = FILTRO.size ? ('<b>'+r(shown)+'</b> di '+r(all)+' ore pianificate') : ('<b>'+r(all)+'</b> ore pianificate');
-  } else wt.textContent='';
+  }
   const jm=document.getElementById('jump'); if([...jm.options].some(o=>o.value===mkey(CUR))) jm.value=mkey(CUR);
   document.getElementById('prev').disabled=!inRange(passo(-1));
   document.getElementById('next').disabled=!inRange(passo(1));
