@@ -259,12 +259,12 @@ function cellMese(d, m, oggi){
   return h+'</div>';
 }
 function cellSommaSett(weekStart){
-  const per=PEOPLE.map(p=>({p,h:0}));
+  const per=PEOPLE.map(p=>({p,h:0,rip:0}));
   for(let i=0;i<7;i++){ const inf=leggiGiorno(addD(weekStart,i)); if(inf.chiuso) continue;
-    per.forEach(x=>{ const t=inf[x.p.id]; if(t&&t.tipo==='ore') x.h+=(t.e-t.s); }); }
+    per.forEach(x=>{ const t=inf[x.p.id]; if(!t) return; if(t.tipo==='ore') x.h+=(t.e-t.s); else if(t.tipo==='rip') x.rip++; }); }
   const r=v=>Math.round(v*10)/10; let all=0, shown=0, list='';
-  per.forEach(x=>{ if(x.h<=0) return; const sh=(!FILTRO.size||FILTRO.has(x.p.id)); all+=x.h; if(sh) shown+=x.h;
-    list+='<span class="'+(sh?'':'dim')+'" style="color:'+x.p.css+'">'+x.p.label+' '+r(x.h)+'</span>'; });
+  per.forEach(x=>{ if(x.h<=0 && x.rip<=0) return; const sh=(!FILTRO.size||FILTRO.has(x.p.id)); all+=x.h; if(sh) shown+=x.h;
+    list+='<span class="'+(sh?'':'dim')+'" style="color:'+x.p.css+'">'+x.p.label+' '+r(x.h)+(x.rip?' · '+x.rip+'r':'')+'</span>'; });
   const tot = FILTRO.size ? ('<b>'+r(shown)+'</b> di '+r(all)) : ('<b>'+r(all)+'</b>');
   return '<div class="wkcell"><div class="wktot-c">'+tot+' ore</div><div class="wk-res">'+list+'</div></div>';
 }
