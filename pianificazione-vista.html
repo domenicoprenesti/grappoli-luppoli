@@ -48,10 +48,15 @@ header.top{position:sticky; top:0; z-index:40; background:rgba(23,19,27,.93); ba
 .ghost{border:1px solid var(--line);background:transparent;border-radius:9px;padding:7px 12px; font-size:13px;color:var(--muted);transition:.16s;}
 .ghost:hover{color:var(--ink);border-color:var(--line2)}
 main{max-width:1320px;margin:0 auto;padding:10px 20px 60px}
-.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.dow{display:grid;grid-template-columns:minmax(140px,.9fr) repeat(7,1fr);gap:6px;margin-bottom:6px}
 .dow div{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint); padding:4px 8px;font-weight:600;}
-.dow div:nth-child(n+6){color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.grid{display:grid;grid-template-columns:minmax(140px,.9fr) repeat(7,1fr);gap:6px}
+.wkcell{display:flex;flex-direction:column;gap:6px;padding:8px 10px 8px 2px;justify-content:center}
+.wkcell .wktot-c{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+.wkcell .wktot-c b{color:var(--ink);font-weight:600}
+.wk-res{display:flex;flex-direction:column;gap:2px}
+.wk-res span{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600}
+.wk-res span.dim{opacity:.3}
 .cell{background:var(--panel);border:1px solid var(--line);border-radius:var(--r); min-height:118px;padding:8px 9px 9px;text-align:left;width:100%; display:flex;flex-direction:column;gap:6px;transition:.14s;position:relative;}
 .cell.empty{background:transparent;border-color:transparent;pointer-events:none}
 .cell.other{background:transparent;border-color:#251f2b;opacity:.5}
@@ -253,12 +258,25 @@ function cellMese(d, m, oggi){
   }
   return h+'</div>';
 }
+function cellSommaSett(weekStart){
+  const per=PEOPLE.map(p=>({p,h:0}));
+  for(let i=0;i<7;i++){ const inf=leggiGiorno(addD(weekStart,i)); if(inf.chiuso) continue;
+    per.forEach(x=>{ const t=inf[x.p.id]; if(t&&t.tipo==='ore') x.h+=(t.e-t.s); }); }
+  const r=v=>Math.round(v*10)/10; let all=0, shown=0, list='';
+  per.forEach(x=>{ if(x.h<=0) return; const sh=(!FILTRO.size||FILTRO.has(x.p.id)); all+=x.h; if(sh) shown+=x.h;
+    list+='<span class="'+(sh?'':'dim')+'" style="color:'+x.p.css+'">'+x.p.label+' '+r(x.h)+'</span>'; });
+  const tot = FILTRO.size ? ('<b>'+r(shown)+'</b> di '+r(all)) : ('<b>'+r(all)+'</b>');
+  return '<div class="wkcell"><div class="wktot-c">'+tot+' ore</div><div class="wk-res">'+list+'</div></div>';
+}
 function renderMese(){
   const y=CUR.getFullYear(), m=CUR.getMonth();
   const start=lunedi(new Date(y,m,1)), end=addD(lunedi(new Date(y,m+1,0)),6);
   const oggi=iso(new Date());
-  let h='<div class="dow">'+GG3.map(g=>'<div>'+g+'</div>').join('')+'</div><div class="grid">';
-  for(let d=new Date(start); d<=end; d=addD(d,1)) h+=cellMese(d, m, oggi);
+  let h='<div class="dow"><div>Settimana</div>'+GG3.map(g=>'<div>'+g+'</div>').join('')+'</div><div class="grid">';
+  for(let ws=new Date(start); ws<=end; ws=addD(ws,7)){
+    h+=cellSommaSett(ws);
+    for(let i=0;i<7;i++) h+=cellMese(addD(ws,i), m, oggi);
+  }
   return h+'</div>';
 }
 
