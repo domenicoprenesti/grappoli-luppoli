@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pianificazione turni · Grappoli &amp; Luppoli</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<style>
+:root{
+  --bg:#17131b; --panel:#211b26; --panel2:#2a2230; --line:#39303f; --line2:#4a3f52;
+  --ink:#f3ece3; --muted:#a294a9; --faint:#6f6377;
+  --chiuso:#c0463f; --ferie:#b58cd8;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg); color:var(--ink); font-family:'Archivo',system-ui,sans-serif; font-size:15px; line-height:1.45; -webkit-font-smoothing:antialiased;}
+button,select,input{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--ferie);outline-offset:2px;border-radius:4px}
+header.top{position:sticky; top:0; z-index:40; background:rgba(23,19,27,.93); backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
+.top-inner{max-width:1320px;margin:0 auto;padding:14px 20px 12px; display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px}
+.brand{display:flex;flex-direction:column;line-height:1.05;margin-right:auto}
+.brand b{font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:23px; letter-spacing:-.02em; font-variation-settings:'wdth' 85;}
+.brand span{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:3px}
+.seg button{padding:6px 16px;border-radius:99px;font-size:13.5px;font-weight:500;color:var(--muted); transition:.18s;}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#17131b;font-weight:600}
+.people{display:flex;gap:7px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:7px; padding:5px 13px 5px 10px;border-radius:99px; border:1px solid var(--line);background:var(--panel); font-size:13.5px;color:var(--muted);transition:.18s;}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.chip[data-on="1"]{color:var(--ink);border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel))}
+.chip[data-on="1"] .dot{background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 25%,transparent)}
+.chip[data-on="0"]{opacity:.5}
+.navbar{max-width:1320px;margin:0 auto;padding:18px 20px 6px; display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+.period{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:30px; letter-spacing:-.025em;margin:0;font-variation-settings:'wdth' 90;}
+.period em{font-style:normal;color:var(--faint);font-weight:500}
+.navbtns{display:flex;gap:6px;margin-left:auto;align-items:center}
+.nb{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--panel); color:var(--muted);display:grid;place-items:center;font-size:16px;transition:.16s;}
+.nb:hover:not(:disabled){color:var(--ink);border-color:var(--line2)}
+.nb:disabled{opacity:.3;cursor:not-allowed}
+.jump{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 10px; font-size:13.5px;color:var(--ink);}
+.ghost{border:1px solid var(--line);background:transparent;border-radius:9px;padding:7px 12px; font-size:13px;color:var(--muted);transition:.16s;}
+.ghost:hover{color:var(--ink);border-color:var(--line2)}
+main{max-width:1320px;margin:0 auto;padding:10px 20px 60px}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.dow div{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint); padding:4px 8px;font-weight:600;}
+.dow div:nth-child(n+6){color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cell{background:var(--panel);border:1px solid var(--line);border-radius:var(--r); min-height:118px;padding:8px 9px 9px;text-align:left;width:100%; display:flex;flex-direction:column;gap:6px;transition:.14s;position:relative;}
+.cell.empty{background:transparent;border-color:transparent;pointer-events:none}
+.cell.we{background:#231d2a}
+.cell.oggi{border-color:var(--ferie);box-shadow:0 0 0 1px var(--ferie) inset}
+.dnum{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);font-weight:500}
+.cell.oggi .dnum{color:var(--ferie)}
+.rows{display:flex;flex-direction:column;gap:3px}
+.row{display:flex;align-items:center;gap:7px;font-size:12.5px;line-height:1.25}
+.row .nm{font-weight:700;font-size:10px;letter-spacing:.04em;color:var(--c);flex:none}
+.row .tm{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);letter-spacing:-.01em}
+.row.off .tm{color:var(--faint)}
+.row.ferie .tm{color:var(--ferie)}
+.row.dim{opacity:.22}
+.closed{display:flex;flex-direction:column;gap:2px;margin-top:2px; color:var(--chiuso);font-size:12px;}
+.closed b{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.cell.chiuso{background:color-mix(in srgb,var(--chiuso) 13%,var(--panel));border-color:color-mix(in srgb,var(--chiuso) 35%,var(--line))}
+.unknown{font-size:11.5px;color:var(--faint);font-style:italic}
+.week{display:flex;flex-direction:column;gap:5px}
+.tl-head{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:end; padding:0 4px 6px;position:sticky;top:66px;background:var(--bg);z-index:20;}
+.ticks{position:relative;height:20px;border-bottom:1px solid var(--line)}
+.tick{position:absolute;bottom:4px;transform:translateX(-50%); font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--faint)}
+.tick i{position:absolute;left:50%;bottom:-5px;width:1px;height:5px;background:var(--line2)}
+.wrow{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:stretch; background:var(--panel);border:1px solid var(--line);border-radius:var(--r); padding:11px 14px 11px 12px;transition:.14s;width:100%;}
+.wrow.we{background:#231d2a}
+.wrow.oggi{border-color:var(--ferie)}
+.wd{display:flex;flex-direction:column;gap:1px}
+.wd .dd{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.02em}
+.wd .dl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.wd .dh{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
+.lanes{position:relative;display:flex;flex-direction:column;gap:4px;justify-content:center}
+.lane{position:relative;height:26px}
+.lane::before{content:"";position:absolute;inset:12px 0 auto;height:1px;background:var(--line)}
+.bar{position:absolute;top:0;height:26px;border-radius:7px; display:flex;align-items:center;gap:8px;padding:0 10px; background:color-mix(in srgb,var(--c) 24%,var(--panel)); border:1px solid color-mix(in srgb,var(--c) 55%,transparent); color:var(--ink);overflow:hidden;white-space:nowrap;}
+.bar b{font-size:11px;letter-spacing:.06em;color:var(--c);font-weight:700}
+.bar span{font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+.bar.dim{opacity:.18}
+.lane .rest{position:absolute;left:0;top:4px;font-size:11.5px;color:var(--faint); display:flex;align-items:center;gap:7px;}
+.lane .rest b{font-size:11px;letter-spacing:.06em;font-weight:700}
+.wclosed{display:flex;align-items:center;gap:10px;color:var(--chiuso);font-size:13.5px;padding:6px 0}
+.wclosed b{font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.summary{margin-top:26px;border-top:1px solid var(--line);padding-top:20px; display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px}
+.card .who{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.card .who i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.card .who b{font-size:14px;font-weight:600}
+.card .big{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:32px; letter-spacing:-.03em;line-height:1;}
+.card .big s{font-size:14px;font-weight:500;text-decoration:none;color:var(--faint);margin-left:4px}
+.card .sub{font-size:12.5px;color:var(--muted);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
+.card .sub em{font-style:normal;color:var(--faint)}
+.note{margin-top:22px;font-size:12.5px;color:var(--faint);line-height:1.6;max-width:70ch}
+.loading{padding:60px 20px;text-align:center;color:var(--muted)}
+@media (max-width:820px){
+  .cell{min-height:0;padding:7px}
+  .row .tm{font-size:10.5px}
+  .period{font-size:24px}
+  .tl-head,.wrow{grid-template-columns:1fr;gap:8px}
+  .tl-head{display:none}
+  .wd{flex-direction:row;align-items:baseline;gap:9px}
+  .wd .dh{margin:0 0 0 auto}
+  .lane{height:24px}
+  .bar{height:24px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{
+  header.top,.navbtns,.people,.seg,.note,.summary{display:none}
+  body{background:#fff;color:#000}
+  .cell{background:#fff;border-color:#bbb;break-inside:avoid}
+  .cell.we{background:#f5f5f5}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <b>Pianificazione turni</b>
+      <span>Grappoli &amp; Luppoli</span>
+    </div>
+    <div class="seg" role="group" aria-label="Vista">
+      <button id="vMese" aria-pressed="true">Mese</button>
+      <button id="vSett" aria-pressed="false">Settimana</button>
+    </div>
+    <div class="people" id="people"></div>
+  </div>
+</header>
+
+<div class="navbar">
+  <h2 class="period" id="period"></h2>
+  <div class="navbtns">
+    <select class="jump" id="jump" aria-label="Vai al mese"></select>
+    <button class="nb" id="prev" aria-label="Periodo precedente">‹</button>
+    <button class="nb" id="next" aria-label="Periodo successivo">›</button>
+    <button class="ghost" id="csv">Scarica CSV</button>
+    <button class="ghost" id="stampa">Stampa</button>
+  </div>
+</div>
+
+<main>
+  <div id="view"><div class="loading">Caricamento pianificazione…</div></div>
+  <div class="summary" id="summary"></div>
+  <p class="note" id="note"></p>
+</main>
+
+<script>
+const PALETTE = ['#e8b33c','#cf4b73','#69b25a','#7fa6c9','#b58cd8','#e07a5f','#4db6ac','#f4a261','#9575cd','#4fc3f7','#ef9a9a','#aed581'];
+const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const GG = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+const GG3 = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+
+/* ---- Stato dati ---- */
+let PEOPLE=[];           // {id, nome, label, css, aChiamata}
+let SHIFT={};            // 'iso|id' -> {s,e,txt}
+let ASSByRes={};         // id -> [{data_inizio,data_fine,tipo}]
+let CHIUSURE=[], OVERRIDE={};
+let KEYS=[], MIN, MAX, T0=15.5, T1=25.5;
+
+/* ---- Utility ---- */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const mkey = d => d.getFullYear()+'-'+pad(d.getMonth()+1);
+const dow  = d => (d.getDay()+6)%7;
+const addD = (d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+const lunedi = d => addD(d,-dow(d));
+const inRange = d => d>=MIN && d<=MAX;
+const cap = s => s? s.charAt(0).toUpperCase()+s.slice(1) : s;
+
+function hm(t){ const a=(t||'0:0').split(':'); return {v:(+a[0])+(+a[1])/60, lab:pad(+a[0])+':'+pad(+a[1])}; }
+function shiftInfo(oi, of){ const a=hm(oi), b=hm(of); let e=b.v; if(e<=a.v) e+=24; return {s:a.v, e, txt:a.lab+'–'+b.lab}; }
+
+/* ---- Chiusure (come turni.html) ---- */
+function pasqua(anno){ const a=anno%19,b=Math.floor(anno/100),c=anno%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,mn=Math.floor((a+11*h+22*l)/451),mese=Math.floor((h+l-7*mn+114)/31),giorno=((h+l-7*mn+114)%31)+1; return new Date(anno,mese-1,giorno); }
+function statoGiorno(isok){
+  if(isok in OVERRIDE) return {chiuso:!OVERRIDE[isok], motivo:'override'};
+  const a=isok.split('-').map(Number); const anno=a[0], mm=a[1], gg=a[2];
+  for(const c of CHIUSURE){
+    if(c.tipo==='ferie'){ if(c.data_inizio&&c.data_fine&&isok>=c.data_inizio&&isok<=c.data_fine) return {chiuso:true, motivo:c.nome}; }
+    else if(c.tipo==='fissa'){ if(c.giorno===gg&&c.mese===mm) return {chiuso:true, motivo:c.nome}; }
+    else if(c.tipo==='mobile'){ const p=pasqua(anno); p.setDate(p.getDate()+(c.offset_pasqua||0)); if(iso(p)===isok) return {chiuso:true, motivo:c.nome}; }
+  }
+  return {chiuso:false, motivo:null};
+}
+
+/* ---- Lettura giornata ---- */
+function leggiGiorno(d){
+  const k=iso(d);
+  const s=statoGiorno(k); if(s.chiuso) return {chiuso:true, motivo:s.motivo};
+  const out={chiuso:false};
+  PEOPLE.forEach(p=>{
+    const sh=SHIFT[k+'|'+p.id];
+    if(sh){ out[p.id]={tipo:'ore', s:sh.s, e:sh.e, txt:sh.txt}; return; }
+    const ass=(ASSByRes[p.id]||[]).find(a=>k>=a.data_inizio && k<=a.data_fine);
+    if(ass){ out[p.id]={tipo: ass.tipo==='ferie'?'ferie':'off', lab: cap(ass.tipo||'Assente')}; return; }
+    out[p.id]= p.aChiamata? {tipo:'none'} : {tipo:'rip', lab:'Riposo'};
+  });
+  return out;
+}
+
+/* ---- Stato UI ---- */
+let VISTA='mese', CUR=new Date();
+let FILTRO=new Set();
+
+function renderPeople(){
+  const el=document.getElementById('people'); el.innerHTML='';
+  PEOPLE.forEach(p=>{
+    const b=document.createElement('button'); b.className='chip'; b.style.setProperty('--c',p.css);
+    b.dataset.on=FILTRO.has(p.id)?'1':'0'; b.setAttribute('aria-pressed',FILTRO.has(p.id));
+    b.innerHTML='<i class="dot"></i>'+p.nome;
+    b.onclick=()=>{ FILTRO.has(p.id)?FILTRO.delete(p.id):FILTRO.add(p.id); renderPeople(); render(); };
+    el.appendChild(b);
+  });
+}
+
+/* ---- Vista mese ---- */
+function renderMese(){
+  const y=CUR.getFullYear(), m=CUR.getMonth();
+  const primo=new Date(y,m,1), ng=new Date(y,m+1,0).getDate(), off=dow(primo);
+  let h='<div class="dow">'+GG3.map(g=>'<div>'+g+'</div>').join('')+'</div><div class="grid">';
+  for(let i=0;i<off;i++) h+='<div class="cell empty"></div>';
+  const oggi=iso(new Date());
+  for(let g=1;g<=ng;g++){
+    const d=new Date(y,m,g), inf=leggiGiorno(d);
+    const cls=['cell']; if(dow(d)>=5) cls.push('we'); if(iso(d)===oggi) cls.push('oggi');
+    if(inf.chiuso) cls.push('chiuso');
+    h+='<div class="'+cls.join(' ')+'"><span class="dnum">'+g+'</span>';
+    if(inf.chiuso) h+='<div class="closed"><b>Chiuso</b>'+(inf.motivo&&inf.motivo!=='override'?inf.motivo:'')+'</div>';
+    else {
+      h+='<div class="rows">';
+      PEOPLE.forEach(p=>{
+        const t=inf[p.id]; if(!t || t.tipo==='none') return;
+        const dim=FILTRO.size&&!FILTRO.has(p.id)?' dim':'';
+        const kind=t.tipo==='ore'?'':(t.tipo==='ferie'?' ferie':' off');
+        const txt=t.tipo==='ore'?t.txt:t.lab;
+        h+='<div class="row'+kind+dim+'" style="--c:'+p.css+'"><span class="nm">'+p.label+'</span><span class="tm">'+txt+'</span></div>';
+      });
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  return h+'</div>';
+}
+
+/* ---- Vista settimana ---- */
+const pos = v => ((v-T0)/(T1-T0))*100;
+function renderSett(){
+  const lun=lunedi(CUR);
+  let h='<div class="tl-head"><div></div><div class="ticks">';
+  for(let t=Math.ceil(T0);t<=Math.floor(T1);t++){ const lab=(t>24?pad(t-24):pad(t))+':00'; h+='<div class="tick" style="left:'+pos(t)+'%">'+lab+'<i></i></div>'; }
+  h+='</div></div><div class="week">';
+  const oggi=iso(new Date());
+  for(let i=0;i<7;i++){
+    const d=addD(lun,i), inf=leggiGiorno(d);
+    const cls=['wrow']; if(dow(d)>=5) cls.push('we'); if(iso(d)===oggi) cls.push('oggi');
+    let ore=0; if(!inf.chiuso) PEOPLE.forEach(p=>{ const t=inf[p.id]; if(t&&t.tipo==='ore'&&(!FILTRO.size||FILTRO.has(p.id))) ore+=(t.e-t.s); });
+    h+='<div class="'+cls.join(' ')+'"><div class="wd"><span class="dd">'+d.getDate()+'</span><span class="dl">'+GG[dow(d)]+'</span><span class="dh">'+(inf.chiuso?'—':ore.toFixed(1)+' ore in sala')+'</span></div><div class="lanes">';
+    if(inf.chiuso) h+='<div class="wclosed"><b>Chiuso</b>'+(inf.motivo&&inf.motivo!=='override'?inf.motivo:'')+'</div>';
+    else {
+      let vuoto=true;
+      PEOPLE.forEach(p=>{
+        const t=inf[p.id]; if(!t || t.tipo==='none') return; vuoto=false;
+        const dim=FILTRO.size&&!FILTRO.has(p.id)?' dim':'';
+        h+='<div class="lane">';
+        if(t.tipo==='ore') h+='<div class="bar'+dim+'" style="--c:'+p.css+';left:'+pos(t.s)+'%;width:'+(pos(t.e)-pos(t.s))+'%"><b>'+p.label+'</b><span>'+t.txt+'</span></div>';
+        else h+='<div class="rest'+dim+'" style="color:'+(t.tipo==='ferie'?'var(--ferie)':'var(--faint)')+'"><b style="color:'+p.css+'">'+p.label+'</b>'+t.lab+'</div>';
+        h+='</div>';
+      });
+      if(vuoto) h+='<div class="wclosed" style="color:var(--faint)">Nessun turno</div>';
+    }
+    h+='</div></div>';
+  }
+  return h+'</div>';
+}
+
+/* ---- Riepilogo ---- */
+function giorniPeriodo(){
+  const out=[];
+  if(VISTA==='mese'){ const y=CUR.getFullYear(), m=CUR.getMonth(), n=new Date(y,m+1,0).getDate(); for(let g=1;g<=n;g++) out.push(new Date(y,m,g)); }
+  else { const lun=lunedi(CUR); for(let i=0;i<7;i++) out.push(addD(lun,i)); }
+  return out;
+}
+function renderSummary(){
+  const gg=giorniPeriodo(); const st={}; PEOPLE.forEach(p=>st[p.id]={ore:0,turni:0,rip:0,ferie:0}); let chiusi=0;
+  gg.forEach(d=>{ const inf=leggiGiorno(d); if(inf.chiuso){ chiusi++; return; }
+    PEOPLE.forEach(p=>{ const t=inf[p.id]; if(!t) return;
+      if(t.tipo==='ore'){ st[p.id].ore+=(t.e-t.s); st[p.id].turni++; }
+      else if(t.tipo==='rip') st[p.id].rip++; else if(t.tipo==='ferie') st[p.id].ferie++; });
+  });
+  let h='';
+  PEOPLE.forEach(p=>{ const s=st[p.id];
+    h+='<div class="card" style="--c:'+p.css+'"><div class="who"><i></i><b>'+p.nome+'</b></div>'
+     + '<div class="big">'+(Math.round(s.ore*10)/10)+'<s>ore</s></div>'
+     + '<div class="sub"><span>'+s.turni+' <em>turni</em></span>'
+     + (s.rip?'<span>'+s.rip+' <em>riposi</em></span>':'')
+     + (s.ferie?'<span>'+s.ferie+' <em>gg ferie</em></span>':'')+'</div></div>';
+  });
+  h+='<div class="card" style="--c:var(--chiuso)"><div class="who"><i></i><b>Locale</b></div>'
+   + '<div class="big">'+(gg.length-chiusi)+'<s>gg aperto</s></div>'
+   + '<div class="sub"><span>'+chiusi+' <em>chiusure</em></span></div></div>';
+  return h;
+}
+
+/* ---- Render ---- */
+function passo(n){ if(VISTA==='mese'){ const d=new Date(CUR); d.setDate(1); d.setMonth(d.getMonth()+n); return d; } return addD(CUR,7*n); }
+function render(){
+  document.getElementById('view').innerHTML = VISTA==='mese'?renderMese():renderSett();
+  document.getElementById('summary').innerHTML = renderSummary();
+  if(VISTA==='mese') document.getElementById('period').innerHTML = MESI[CUR.getMonth()]+' <em>'+CUR.getFullYear()+'</em>';
+  else { const l=lunedi(CUR), d=addD(l,6); const a=l.getDate()+(l.getMonth()!==d.getMonth()?' '+MESI[l.getMonth()].slice(0,3).toLowerCase():''); document.getElementById('period').innerHTML=a+' – '+d.getDate()+' <em>'+MESI[d.getMonth()].toLowerCase()+' '+d.getFullYear()+'</em>'; }
+  const jm=document.getElementById('jump'); if([...jm.options].some(o=>o.value===mkey(CUR))) jm.value=mkey(CUR);
+  document.getElementById('prev').disabled=!inRange(passo(-1));
+  document.getElementById('next').disabled=!inRange(passo(1));
+}
+function setVista(v){ VISTA=v; document.getElementById('vMese').setAttribute('aria-pressed',v==='mese'); document.getElementById('vSett').setAttribute('aria-pressed',v==='sett'); render(); }
+
+/* ---- CSV ---- */
+function csv(){
+  const gg=giorniPeriodo();
+  const righe=[['Data','Giorno'].concat(PEOPLE.map(p=>p.nome)).concat(['Note']).join(';')];
+  gg.forEach(d=>{ const inf=leggiGiorno(d);
+    const cel=p=>{ if(inf.chiuso) return ''; const t=inf[p.id]; if(!t) return ''; return t.tipo==='ore'?t.txt.replace('–','-'):(t.tipo==='none'?'':(t.lab||'')); };
+    righe.push([iso(d),GG[dow(d)]].concat(PEOPLE.map(cel)).concat([inf.chiuso?('CHIUSO — '+(inf.motivo&&inf.motivo!=='override'?inf.motivo:'')):'']).join(';'));
+  });
+  const nome=VISTA==='mese'?'turni_'+mkey(CUR):'turni_settimana_'+iso(lunedi(CUR));
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+righe.join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download=nome+'.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---- Caricamento dati ---- */
+async function caricaDati(){
+  const [rq, aq, asq, cq, oq] = await Promise.all([
+    supabaseClient.from('turni_risorse').select('id,nome,cognome,tipo_contratto,ordine').eq('attivo',true).order('ordine',{nullsFirst:false}).order('cognome',{nullsFirst:true}).order('nome'),
+    supabaseClient.from('turni_assegnazioni').select('risorsa_id,data,ora_inizio,ora_fine'),
+    supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine,tipo'),
+    supabaseClient.from('turni_chiusure').select('*').eq('attivo',true),
+    supabaseClient.from('turni_giorni_override').select('*'),
+  ]);
+  PEOPLE = (rq.data||[]).map((r,i)=>{ const nome=(r.nome||r.cognome||('#'+r.id)); return { id:r.id, nome, label:nome.replace(/^A chiamata\s*\[?|\]$/gi,'').slice(0,3).trim()||nome.slice(0,3), css:PALETTE[i%PALETTE.length], aChiamata:r.tipo_contratto==='a_chiamata' }; });
+  SHIFT={}; let minS=99, maxE=0;
+  (aq.data||[]).forEach(a=>{ const si=shiftInfo(a.ora_inizio,a.ora_fine); SHIFT[a.data+'|'+a.risorsa_id]=si; if(si.s<minS)minS=si.s; if(si.e>maxE)maxE=si.e; });
+  if(minS<99){ T0=Math.max(0,Math.floor(minS)-0.5); T1=Math.min(30,Math.ceil(maxE)+0.5); }
+  ASSByRes={}; (asq.data||[]).forEach(a=>{ (ASSByRes[a.risorsa_id]=ASSByRes[a.risorsa_id]||[]).push(a); });
+  CHIUSURE=cq.data||[]; OVERRIDE={}; (oq.data||[]).forEach(x=>OVERRIDE[x.data]=x.aperto);
+  FILTRO=new Set();
+  // intervallo mesi dalle assegnazioni
+  const dates=(aq.data||[]).map(a=>a.data).sort();
+  const oggi=new Date(); oggi.setHours(0,0,0,0);
+  if(dates.length){ const a0=dates[0].split('-').map(Number), a1=dates[dates.length-1].split('-').map(Number);
+    MIN=new Date(a0[0],a0[1]-1,1); MAX=new Date(a1[0],a1[1],0); }
+  else { MIN=new Date(oggi.getFullYear(),oggi.getMonth(),1); MAX=new Date(oggi.getFullYear(),oggi.getMonth()+1,0); }
+  CUR = (oggi>=MIN && oggi<=MAX)? oggi : new Date(MIN);
+  KEYS=[]; { let d=new Date(MIN); while(d<=MAX){ KEYS.push(mkey(d)); d=new Date(d.getFullYear(),d.getMonth()+1,1); } }
+}
+
+/* ---- Avvio ---- */
+(async function init(){
+  let prof=null; try{ prof=await requireAuth('turni.html'); }catch(e){}
+  if(!prof){ document.getElementById('view').innerHTML='<div class="loading">Accesso non autorizzato.</div>'; return; }
+  await caricaDati();
+  if(!PEOPLE.length){ document.getElementById('view').innerHTML='<div class="loading">Nessuna risorsa attiva. Aggiungi le risorse nella scheda Organico.</div>'; return; }
+  const j=document.getElementById('jump');
+  j.innerHTML=KEYS.map(k=>{const [y,m]=k.split('-'); return '<option value="'+k+'">'+MESI[+m-1]+' '+y+'</option>';}).join('');
+  j.onchange=()=>{ const [y,m]=j.value.split('-').map(Number); CUR=new Date(y,m-1,1); render(); };
+  document.getElementById('prev').onclick=()=>{ if(inRange(passo(-1))){ CUR=passo(-1); render(); } };
+  document.getElementById('next').onclick=()=>{ if(inRange(passo(1))){ CUR=passo(1); render(); } };
+  document.getElementById('vMese').onclick=()=>setVista('mese');
+  document.getElementById('vSett').onclick=()=>setVista('sett');
+  document.getElementById('csv').onclick=csv;
+  document.getElementById('stampa').onclick=()=>window.print();
+  document.addEventListener('keydown', e=>{
+    if(e.key==='ArrowLeft' && inRange(passo(-1))){ CUR=passo(-1); render(); }
+    if(e.key==='ArrowRight'&& inRange(passo(1)) ){ CUR=passo(1);  render(); }
+  });
+  document.getElementById('note').textContent='Vista di sola lettura dei turni realmente pianificati. Usa Mese/Settimana, i filtri persona, il CSV o la stampa. Per modificare i turni torna alla griglia Pianificazione.';
+  renderPeople();
+  setVista('mese');
+})();
+</script>
+</body>
+</html>
