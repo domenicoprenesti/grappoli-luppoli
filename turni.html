@@ -35,8 +35,8 @@
       {key:'organico', label:'Organico', render:renderOrganico},
       {key:'mansioni', label:'Mansioni', render:renderMansioni},
       {key:'periodi', label:'Periodi', render:renderPeriodi},
-      {key:'orari', label:'Orari & Fasi', render:renderOrariFasi},
-      {key:'copertura', label:'Copertura', render:renderCopertura},
+      {key:'orari', label:'Apertura & orari', render:renderOrariFasi},
+      {key:'esigenze', label:'Esigenze del periodo', render:renderEsigenze},
       {key:'accordi', label:'Accordi personali', render:renderAccordi},
       {key:'regole', label:'Regole', render:renderRegole},
       {key:'assenze', label:'Assenze', render:renderAssenze},
@@ -45,7 +45,7 @@
     const AREE = [
       {key:'pianificazione', label:'Pianificazione', sezioni:['pianificazione']},
       {key:'organico', label:'Organico', sezioni:['organico','accordi','mansioni','assenze']},
-      {key:'fabbisogno', label:'Fabbisogno', sezioni:['periodi','orari','copertura','chiusure']},
+      {key:'fabbisogno', label:'Fabbisogno', sezioni:['periodi','orari','esigenze','chiusure']},
       {key:'regole', label:'Regole', sezioni:['regole']},
     ];
     let areaAttiva = 'pianificazione';
@@ -89,19 +89,22 @@
       if(dated.length){ dated.sort((a,b)=>rangeLen(a)-rangeLen(b)); return dated[0]; }
       return periodi.find(p=>!p.data_inizio && !p.data_fine) || null;
     }
-    function calcolaCopertura(giorni, ass, periodi, coperture, mNome){
+    function calcolaCopertura(giorni, ass, periodi, esigenze, mNome, orari){
       const byDate={}; (ass||[]).forEach(a=>{ (byDate[a.data]=byDate[a.data]||[]).push(a); });
       return giorni.map(d=>{
         const iso=isoData(d); const gi=giornoIdx(d);
         if(statoGiorno(iso).chiuso) return { iso, gi, periodoNome:null, fasce:[], haGap:false, chiuso:true };
         const per=risolviPeriodo(iso, periodi);
-        const fasce = per ? (coperture||[]).filter(c=>c.periodo_id===per.id && c.giorno===gi) : [];
-        const assg = byDate[iso]||[];
-        const fout = fasce.map(f=>{
-          const cnt = assg.filter(a=> overlapT(a.ora_inizio,a.ora_fine,f.inizio,f.fine) && (!f.mansione_id || a.mansione_id===f.mansione_id)).length;
-          return { inizio:f.inizio, fine:f.fine, mansioneNome: f.mansione_id? (mNome[f.mansione_id]||'') : null, richiesto:f.min_risorse, assegnati:cnt, scoperto: cnt < f.min_risorse };
-        }).sort((a,b)=>a.inizio.localeCompare(b.inizio));
-        return { iso, gi, periodoNome: per? per.nome : null, fasce: fout, haGap: fout.some(x=>x.scoperto) };
+        if(!per) return { iso, gi, periodoNome:null, fasce:[], haGap:false };
+        const or=(orari||[]).find(o=>o.periodo_id===per.id && o.giorno===gi) || (orari||[]).find(o=>o.giorno===gi);
+        const A=(or&&or.apertura)||null, C=(or&&or.chiusura)||null;
+        const assg=byDate[iso]||[];
+        const fout=esigenzeGiorno(esigenze, per.id, gi).filter(e=>e.tipo==='copertura').map(e=>{
+          const w=risolviFinestra(e,A,C); if(!w) return null;
+          const cnt=assg.filter(a=> overlapT(a.ora_inizio,a.ora_fine,w.inizio,w.fine) && (!e.mansione_id || a.mansione_id===e.mansione_id)).length;
+          return { inizio:w.inizio, fine:w.fine, mansioneNome: e.mansione_id?(mNome[e.mansione_id]||''):null, richiesto:e.min_risorse, assegnati:cnt, scoperto: cnt<e.min_risorse };
+        }).filter(Boolean).sort((a,b)=>a.inizio.localeCompare(b.inizio));
+        return { iso, gi, periodoNome: per.nome, fasce: fout, haGap: fout.some(x=>x.scoperto) };
       });
     }
     function vistaDettaglioCop(box, cop){
@@ -187,6 +190,13 @@
     }
     function durOre(i,f){ const p=s=>{ const a=(s||'0:0').split(':'); return (+a[0])*60+(+a[1]); }; let d=p(f)-p(i); if(d<=0) d+=1440; return d/60; }
     function shiftMin(t, delta){ const a=(t||'0:0').split(':'); let m=(+a[0])*60+(+a[1])+delta; m=((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')+':00'; }
+    function esigenzeGiorno(esigenze, periodoId, gi){ return (esigenze||[]).filter(e=>e.attivo!==false && e.periodo_id===periodoId && (e.giorno==null || e.giorno===gi)); }
+    function risolviFinestra(e, A, C){
+      if(e.ancora==='assoluto'){ return (e.ora_inizio&&e.ora_fine)? {inizio:e.ora_inizio, fine:e.ora_fine} : null; }
+      if(e.ancora==='apertura'){ return A? {inizio:shiftMin(A, e.off_inizio_min||0), fine:shiftMin(A, e.off_fine_min||0)} : null; }
+      if(e.ancora==='chiusura'){ return C? {inizio:shiftMin(C, e.off_inizio_min||0), fine:shiftMin(C, e.off_fine_min||0)} : null; }
+      return null;
+    }
     function isoWeekNum(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3); const firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4)); const fday=(firstThu.getUTCDay()+6)%7; firstThu.setUTCDate(firstThu.getUTCDate()-fday+3); return 1+Math.round((t-firstThu)/(7*24*3600*1000)); }
     function giorniConsecutivi(set, iso){ const a=iso.split('-').map(Number); let d=new Date(a[0],a[1]-1,a[2]); let n=1; for(;;){ d.setDate(d.getDate()-1); const s=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(set.has(s)) n++; else break; } return n; }
 
@@ -267,27 +277,25 @@
       const loadDal=isoData(lunediDi(p(dal)));
       const lunUlt=lunediDi(p(al)); const domUlt=new Date(lunUlt); domUlt.setDate(domUlt.getDate()+6); const loadAl=isoData(domUlt);
       await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
-      const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq, fq] = await Promise.all([
+      const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq] = await Promise.all([
         supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,giorni_riposo,max_ore').eq('attivo',true),
         supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
         supabaseClient.from('turni_accordi').select('*'),
         supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
         supabaseClient.from('turni_periodi').select('*'),
         supabaseClient.from('turni_orari').select('*'),
-        supabaseClient.from('turni_copertura').select('*'),
+        supabaseClient.from('turni_esigenze').select('*'),
         supabaseClient.from('turni_assegnazioni').select('*').gte('data',loadDal).lte('data',loadAl),
         supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle(),
         supabaseClient.from('turni_mansioni').select('id,nome'),
-        supabaseClient.from('turni_fasi').select('*'),
       ]);
-      const fasi=fq.data||[];
-      const faseAper=fasi.find(f=>f.tipo==='apertura'); const faseChiu=fasi.find(f=>f.tipo==='chiusura');
+      const esigenze=cq.data||[];
       const risorse=rq.data||[];
       const mansByR={}; (mq.data||[]).forEach(m=>{ (mansByR[m.risorsa_id]=mansByR[m.risorsa_id]||new Set()).add(m.mansione_id); });
       const accByRG={}; (aq.data||[]).forEach(a=>{ accByRG[a.risorsa_id+'|'+a.giorno]=a; });
       // sfasamento rotazioni: risorse con stessa (giorno,cadenza) riposano in settimane diverse
       const rotPhase={}; { const groups={}; (aq.data||[]).forEach(a=>{ (groups[a.giorno+'|'+a.cadenza]=groups[a.giorno+'|'+a.cadenza]||[]).push(a); }); Object.values(groups).forEach(list=>{ list.sort((x,y)=>x.risorsa_id-y.risorsa_id).forEach((a,idx)=>{ rotPhase[a.risorsa_id+'|'+a.giorno]=idx; }); }); }
-      const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[]; const coperture=cq.data||[];
+      const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[];
       const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const maxCons=reg.max_giorni_consecutivi||null;
       const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
       const esist=exq.data||[];
@@ -308,7 +316,10 @@
           const or=orari.find(o=>o.periodo_id===per.id && o.giorno===gi) || orari.find(o=>o.giorno===gi);
           if(or && !or.aperto) return;
           const chiusura=(or&&or.chiusura)||null;
-          const fasce=coperture.filter(c=>c.periodo_id===per.id && c.giorno===gi).sort((a,b)=>a.inizio.localeCompare(b.inizio));
+          const aperturaG=(or&&or.apertura)||null;
+          const fasce=esigenzeGiorno(esigenze, per.id, gi).filter(e=>e.tipo==='copertura')
+            .map(e=>{ const w=risolviFinestra(e, aperturaG, chiusura); return w? {inizio:w.inizio, fine:w.fine, min_risorse:e.min_risorse, mansione_id:e.mansione_id} : null; })
+            .filter(Boolean).sort((a,b)=>a.inizio.localeCompare(b.inizio));
           const dayAss=assByDay[iso]||(assByDay[iso]=[]);
           const scoperte=[];
           fasce.forEach(f=>{
@@ -327,14 +338,18 @@
             }
             if(coperti < f.min_risorse){ const manc=f.min_risorse-coperti; const oreM=manc*durOre(f.inizio,chiude); oreDaCoprire+=oreM; scoperte.push(`${tStr(f.inizio)}–${tStr(f.fine)}${f.mansione_id?(' · '+(mNome[f.mansione_id]||'')):''}: ${coperti}/${f.min_risorse} (mancano ${manc} ≈ ${oreM.toFixed(1)} h)`); }
           });
-          // FASI: estendi gli orari dei turni generati oggi (apertura prima, chiusura dopo)
-          if(fasce.length){
+          // ESIGENZE estensione: allunga gli orari dei turni generati oggi
+          const estens=esigenzeGiorno(esigenze, per.id, gi).filter(e=>e.tipo==='estensione');
+          if(estens.length && fasce.length){
             const apreT=fasce[0].inizio; const chiudeT=chiusura||fasce[fasce.length-1].fine;
             const dayGen=nuovi.filter(a=>a.data===iso);
-            if(faseAper && faseAper.durata_min>0){ const ni=shiftMin(apreT, -faseAper.durata_min);
-              dayGen.filter(a=>a.ora_inizio===apreT && (!faseAper.mansione_id || a.mansione_id===faseAper.mansione_id)).slice(0, faseAper.n_risorse||1).forEach(a=>{ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(ni,a.ora_inizio); a.ora_inizio=ni; }); }
-            if(faseChiu && faseChiu.durata_min>0){ const nf=shiftMin(chiudeT, +faseChiu.durata_min);
-              dayGen.filter(a=>a.ora_fine===chiudeT && (!faseChiu.mansione_id || a.mansione_id===faseChiu.mansione_id)).slice(0, faseChiu.n_risorse||1).forEach(a=>{ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(a.ora_fine,nf); a.ora_fine=nf; }); }
+            estens.forEach(e=>{ const w=risolviFinestra(e, apreT, chiudeT); if(!w) return;
+              if(e.ancora==='chiusura'){ const nf=w.fine;
+                dayGen.filter(a=>a.ora_fine===chiudeT && (!e.mansione_id||a.mansione_id===e.mansione_id)).slice(0, e.min_risorse||1).forEach(a=>{ if(durOre(a.ora_fine,nf)>0){ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(a.ora_fine,nf); a.ora_fine=nf; } });
+              } else { const ni=w.inizio;
+                dayGen.filter(a=>a.ora_inizio===apreT && (!e.mansione_id||a.mansione_id===e.mansione_id)).slice(0, e.min_risorse||1).forEach(a=>{ if(durOre(ni,a.ora_inizio)>0){ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(ni,a.ora_inizio); a.ora_inizio=ni; } });
+              }
+            });
           }
           report.push({iso, gi, scoperte});
         });
@@ -484,9 +499,10 @@
       const mNome={}; mans.forEach(m=>mNome[m.id]=m.nome);
       const tipi=(await supabaseClient.from('turni_tipi_turno').select('*').eq('attivo',true).order('ora_inizio')).data||[];
       const periodi=(await supabaseClient.from('turni_periodi').select('*')).data||[];
-      const coperture=(await supabaseClient.from('turni_copertura').select('*')).data||[];
+      const esigenze=(await supabaseClient.from('turni_esigenze').select('*')).data||[];
+      const orari=(await supabaseClient.from('turni_orari').select('*')).data||[];
       await caricaChiusure();
-      const cop = calcolaCopertura(giorni, ass||[], periodi, coperture, mNome);
+      const cop = calcolaCopertura(giorni, ass||[], periodi, esigenze, mNome, orari);
 
       const grid=box.querySelector('#grid');
       const todayIso=isoData(new Date());
@@ -784,20 +800,13 @@
     async function renderOrariFasi(box){
       box.innerHTML='<div class="flex items-center gap-3 flex-wrap mb-3"><h2 class="text-lg font-bold">Orari di apertura</h2>'+
         '<label class="text-sm">Periodo <select id="per" class="border rounded px-2 py-1 text-sm"></select></label></div>'+
-        '<div id="orari"></div><h2 class="text-lg font-bold mt-6 mb-2">Fasi di setup</h2><div id="fasi"></div>';
+        '<div id="orari"></div>';
       const periodi=await loadPeriodi();
       const sel=box.querySelector('#per');
       sel.innerHTML=periodi.map(p=>`<option value="${p.id}">${esc(nomePeriodo(p))}</option>`).join('');
       sel.onchange=()=>renderOrariGrid(box.querySelector('#orari'), Number(sel.value));
       if(periodi.length) renderOrariGrid(box.querySelector('#orari'), periodi[0].id);
       else box.querySelector('#orari').innerHTML='<p class="text-gray-400 text-sm">Crea prima un periodo (scheda Periodi).</p>';
-      const mans = (await supabaseClient.from('turni_mansioni').select('id,nome').order('nome')).data||[];
-      renderLista(box.querySelector('#fasi'), { tabella:'turni_fasi', titolo:'Fasi setup', ordina:'tipo', campi:[
-        {k:'tipo', label:'Fase', tipo:'select', obbligatorio:true, opts:[{v:'apertura',l:'Apertura'},{v:'chiusura',l:'Chiusura'}]},
-        {k:'durata_min', label:'Durata (min)', tipo:'number'},
-        {k:'n_risorse', label:'N° risorse', tipo:'number'},
-        {k:'mansione_id', label:'Mansione', tipo:'select', opts:[{v:null,l:'Chiunque'}].concat(mans.map(m=>({v:m.id,l:m.nome})))},
-      ]});
     }
     async function renderOrariGrid(oBox, periodoId){
       const { data:esistenti } = await supabaseClient.from('turni_orari').select('giorno').eq('periodo_id',periodoId);
@@ -824,22 +833,29 @@
       tbl.appendChild(tb); oBox.innerHTML=''; oBox.appendChild(tbl);
     }
 
-    // ---------- Copertura ----------
-    async function renderCopertura(box){
+    // ---------- Esigenze del periodo ----------
+    async function renderEsigenze(box){
       const periodi=await loadPeriodi();
-      const mans = (await supabaseClient.from('turni_mansioni').select('id,nome').order('nome')).data||[];
-      box.innerHTML='<div class="flex items-center gap-3 flex-wrap mb-2"><h2 class="text-lg font-bold">Copertura a fasce (minimi per giorno)</h2>'+
-        '<label class="text-sm">Periodo <select id="per" class="border rounded px-2 py-1 text-sm"></select></label></div><div id="cop"></div>';
+      const mans=(await supabaseClient.from('turni_mansioni').select('id,nome').order('nome')).data||[];
+      box.innerHTML='<div class="flex items-center gap-3 flex-wrap mb-2"><h2 class="text-lg font-bold">Esigenze del periodo</h2>'+
+        '<label class="text-sm">Periodo <select id="per" class="border rounded px-2 py-1 text-sm"></select></label></div>'+
+        '<p class="text-xs text-gray-500 mb-2">Copertura = quante persone servono presenti nella finestra (conta per lo scoperto). Estensione = allunga il turno di chi apre/chiude. Finestra: Assoluta (orari) oppure relativa ad Apertura/Chiusura con offset in minuti (es. −60 = un\'ora prima).</p>'+
+        '<div id="es"></div>';
       const sel=box.querySelector('#per'); sel.innerHTML=periodi.map(p=>`<option value="${p.id}">${esc(nomePeriodo(p))}</option>`).join('');
-      const draw=()=>{ const pid=Number(sel.value); renderLista(box.querySelector('#cop'), { tabella:'turni_copertura', titolo:'Fasce', ordina:'giorno', filtro:{col:'periodo_id',val:pid}, fissi:{periodo_id:pid}, campi:[
-        {k:'giorno', label:'Giorno', tipo:'select', obbligatorio:true, opts:[1,2,3,4,5,6,7].map(g=>({v:g,l:GIORNI[g]}))},
-        {k:'inizio', label:'Dalle', tipo:'time', obbligatorio:true},
-        {k:'fine', label:'Alle', tipo:'time', obbligatorio:true},
-        {k:'min_risorse', label:'Min risorse', tipo:'number'},
+      const draw=()=>{ const pid=Number(sel.value); renderLista(box.querySelector('#es'), { tabella:'turni_esigenze', titolo:'Esigenze', ordina:'giorno', filtro:{col:'periodo_id',val:pid}, fissi:{periodo_id:pid}, campi:[
+        {k:'tipo', label:'Tipo', tipo:'select', obbligatorio:true, opts:[{v:'copertura',l:'Copertura'},{v:'estensione',l:'Estensione'}]},
+        {k:'giorno', label:'Giorno', tipo:'select', opts:[{v:null,l:'Tutti i giorni'}].concat([1,2,3,4,5,6,7].map(g=>({v:g,l:GIORNI[g]})))},
+        {k:'ancora', label:'Finestra', tipo:'select', obbligatorio:true, opts:[{v:'assoluto',l:'Assoluta (orari)'},{v:'apertura',l:'Relativa apertura'},{v:'chiusura',l:'Relativa chiusura'}]},
+        {k:'ora_inizio', label:'Dalle (se assoluta)', tipo:'time'},
+        {k:'ora_fine', label:'Alle (se assoluta)', tipo:'time'},
+        {k:'off_inizio_min', label:'Offset inizio (min, se relativa)', tipo:'number'},
+        {k:'off_fine_min', label:'Offset fine (min, se relativa)', tipo:'number'},
+        {k:'min_risorse', label:'Min risorse', tipo:'number', obbligatorio:true},
         {k:'mansione_id', label:'Mansione', tipo:'select', opts:[{v:null,l:'Chiunque'}].concat(mans.map(m=>({v:m.id,l:m.nome})))},
+        {k:'attivo', label:'Attivo', tipo:'check', def:true},
       ]}); };
       sel.onchange=draw;
-      if(periodi.length) draw(); else box.querySelector('#cop').innerHTML='<p class="text-gray-400 text-sm">Crea prima un periodo (scheda Periodi).</p>';
+      if(periodi.length) draw(); else box.querySelector('#es').innerHTML='<p class="text-gray-400 text-sm">Crea prima un periodo (scheda Periodi).</p>';
     }
 
     // ---------- Accordi personali ----------
