@@ -8,16 +8,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
+    <style>
+      .sidebar { width: 240px; min-width: 240px; height: calc(100vh - 64px); position: sticky; top: 64px; }
+      .main-content { flex: 1; min-width: 0; overflow-x: auto; }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
   <script>(async () => { await requireAuth('turni.html'); initTurni(); })();</script>
   <nav></nav>
-  <div class="pt-16 max-w-7xl mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-3">🗓️ Gestione turni — Setup</h1>
-    <div class="flex gap-4 items-start">
-      <aside id="tabs" class="w-52 shrink-0"></aside>
-      <div id="tabBody" class="flex-1 min-w-0"></div>
-    </div>
+  <div class="flex pt-16">
+    <aside class="sidebar bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900 text-white flex flex-col">
+      <div class="p-3 border-b border-white/10">
+        <h1 class="text-lg font-bold flex items-center">🗓️ Gestione turni</h1>
+      </div>
+      <div id="tabs" class="flex-1 overflow-y-auto p-2"></div>
+    </aside>
+    <main class="main-content p-6">
+      <div id="tabBody"></div>
+    </main>
   </div>
   <script>
     const GIORNI = ['','Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
@@ -56,22 +64,18 @@
     function apriArea(ak){ areaAttiva=ak; const a=AREE.find(x=>x.key===ak); apriTab(a.sezioni[0]); }
     function renderTabs(){
       const bar=document.getElementById('tabs'); bar.innerHTML='';
-      const box=document.createElement('div'); box.className='bg-white rounded shadow overflow-hidden text-sm divide-y';
       AREE.forEach(a=>{
         const active = areaAttiva===a.key;
         const ab=document.createElement('button'); ab.textContent=a.label;
-        ab.className='w-full text-left px-3 py-2 font-semibold '+(active?'bg-blue-600 text-white':'hover:bg-gray-100');
-        ab.onclick=()=>apriArea(a.key); box.appendChild(ab);
+        ab.className='w-full text-left px-3 py-2 rounded font-semibold text-sm mb-0.5 '+(active?'bg-white/20 text-white':'text-gray-200 hover:bg-white/10');
+        ab.onclick=()=>apriArea(a.key); bar.appendChild(ab);
         if(active && a.sezioni.length>1){
-          const sub=document.createElement('div'); sub.className='bg-gray-50';
           a.sezioni.forEach(sk=>{ const s=SEZIONI.find(x=>x.key===sk); if(!s) return;
             const sb=document.createElement('button'); sb.textContent=s.label;
-            sb.className='w-full text-left pl-6 pr-3 py-1.5 border-l-2 '+(tabAttiva===sk?'border-blue-600 bg-blue-100 text-blue-700 font-medium':'border-transparent text-gray-600 hover:bg-gray-100');
-            sb.onclick=()=>apriTab(sk); sub.appendChild(sb); });
-          box.appendChild(sub);
+            sb.className='w-full text-left pl-6 pr-3 py-1.5 rounded text-sm mb-0.5 '+(tabAttiva===sk?'bg-white/25 text-white font-medium':'text-gray-300 hover:bg-white/10');
+            sb.onclick=()=>apriTab(sk); bar.appendChild(sb); });
         }
       });
-      bar.appendChild(box);
     }
     function apriTab(key){ tabAttiva=key; renderTabs(); const s=SEZIONI.find(x=>x.key===key); document.getElementById('tabBody').innerHTML=''; s.render(document.getElementById('tabBody')); }
 
