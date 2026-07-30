@@ -51,12 +51,14 @@
       {key:'regole', label:'Regole', render:renderRegole},
       {key:'assenze', label:'Assenze', render:renderAssenze},
       {key:'chiusure', label:'Chiusure', render:renderChiusure},
+      {key:'assistente', label:'Assistente', render:renderAssistente},
     ];
     const AREE = [
       {key:'pianificazione', label:'Pianificazione', sezioni:['pianificazione']},
       {key:'organico', label:'Organico', sezioni:['organico','accordi','mansioni','assenze']},
       {key:'fabbisogno', label:'Fabbisogno', sezioni:['periodi','orari','esigenze','chiusure']},
       {key:'regole', label:'Regole', sezioni:['regole']},
+      {key:'assistente', label:'Assistente', sezioni:['assistente']},
     ];
     let areaAttiva = 'pianificazione';
     let tabAttiva = 'pianificazione';
@@ -474,6 +476,127 @@
       if(scelta==='1') supabaseClient.from('turni_giorni_override').upsert({data:iso,aperto:false},{onConflict:'data'}).then(({error})=>{ if(error)return alert(error.message); done(); });
       else if(scelta==='2') supabaseClient.from('turni_giorni_override').upsert({data:iso,aperto:true},{onConflict:'data'}).then(({error})=>{ if(error)return alert(error.message); done(); });
       else if(scelta==='3') supabaseClient.from('turni_giorni_override').delete().eq('data',iso).then(({error})=>{ if(error)return alert(error.message); done(); });
+    }
+    async function datiAnalisi(dal, al){
+      await caricaChiusure();
+      const [rq,mq,aq,asq,pq,oq,cq,gq,mnq]=await Promise.all([
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett').eq('attivo',true),
+        supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
+        supabaseClient.from('turni_assegnazioni').select('id,risorsa_id,data,ora_inizio,ora_fine,mansione_id').gte('data',dal).lte('data',al),
+        supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine,tipo'),
+        supabaseClient.from('turni_periodi').select('*'),
+        supabaseClient.from('turni_orari').select('*'),
+        supabaseClient.from('turni_esigenze').select('*'),
+        supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle(),
+        supabaseClient.from('turni_mansioni').select('id,nome'),
+      ]);
+      const risorse=rq.data||[]; const risById={}; risorse.forEach(r=>risById[r.id]=r);
+      const mansByR={}; (mq.data||[]).forEach(m=>{ (mansByR[m.risorsa_id]=mansByR[m.risorsa_id]||new Set()).add(m.mansione_id); });
+      const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
+      const ass=aq.data||[]; const assByDay={}; ass.forEach(a=>{ (assByDay[a.data]=assByDay[a.data]||[]).push(a); });
+      const assByRes={}; (asq.data||[]).forEach(a=>{ (assByRes[a.risorsa_id]=assByRes[a.risorsa_id]||[]).push(a); });
+      return { risorse, risById, mansByR, mNome, ass, assByDay, assByRes, periodi:pq.data||[], orari:oq.data||[], esigenze:cq.data||[], reg:gq.data||{} };
+    }
+    function catMatch(f,tk){ if((tk.includes('copert')||tk.includes('scopert'))&&f.cat==='Copertura')return true; if((tk.includes('ore')||tk.includes('contratt')||tk.includes('straordinar'))&&f.cat==='Ore & contratti')return true; if((tk.includes('ripos')||tk.includes('consecut')||tk.includes('chius')||tk.includes('assen'))&&f.cat==='Vincoli')return true; if(tk.includes('config')&&f.cat==='Config')return true; return false; }
+    function analizzaTurni(D, dal, al){
+      const F=[]; const push=(sev,cat,testo,azioni)=>F.push({sev,cat,testo,azioni:azioni||[]});
+      const reg=D.reg||{}; const tol=Number(reg.tolleranza_ore||0); const riposoMin=Number(reg.riposo_sett_min||0); const maxCons=reg.max_giorni_consecutivi||null;
+      const nomeR=id=>{ const r=D.risById[id]; return r? ((r.cognome?r.cognome+' ':'')+(r.nome||'')).trim() : ('#'+id); };
+      const mNome=id=>D.mNome[id]||('mansione#'+id);
+      const periodiUsati=new Set();
+      dateInIntervallo(dal,al).forEach(d=>{
+        const iso=isoData(d), gi=giornoIdx(d);
+        if(statoGiorno(iso).chiuso) return;
+        const per=risolviPeriodo(iso, D.periodi); if(!per) return; periodiUsati.add(per.id);
+        const or=D.orari.find(o=>o.periodo_id===per.id&&o.giorno===gi)||D.orari.find(o=>o.giorno===gi);
+        if(or && !or.aperto) return;
+        const A=(or&&or.apertura)||null, C=(or&&or.chiusura)||null;
+        const dayAss=D.assByDay[iso]||[];
+        esigenzeGiorno(D.esigenze, per.id, gi).filter(e=>e.tipo==='copertura').forEach(e=>{ const w=risolviFinestra(e,A,C); if(!w) return;
+          const cnt=dayAss.filter(a=>overlapT(a.ora_inizio,a.ora_fine,w.inizio,w.fine)&&(!e.mansione_id||a.mansione_id===e.mansione_id)).length;
+          if(cnt<e.min_risorse){ push('errore','Copertura', GIORNI[gi]+' '+isoGG(iso)+' '+tStr(w.inizio)+'–'+tStr(w.fine)+(e.mansione_id?(' · '+mNome(e.mansione_id)):'')+': coperti '+cnt+'/'+e.min_risorse,
+            [ {label:'Rigenera bozza', tipo:'rigenera', usaChiamata:false}, {label:'Includi a chiamata', tipo:'rigenera', usaChiamata:true},
+              (cnt>0? {label:'Riduci minimo a '+cnt, tipo:'riduciMin', esigenzaId:e.id, n:cnt} : null) ].filter(Boolean)); }
+        });
+      });
+      const perConEsig=new Set(D.esigenze.filter(e=>e.tipo==='copertura'&&e.attivo!==false).map(e=>e.periodo_id));
+      periodiUsati.forEach(pid=>{ if(perConEsig.has(pid)) return; const p=D.periodi.find(x=>x.id===pid);
+        const fonti=D.periodi.filter(x=>x.id!==pid && perConEsig.has(x.id));
+        const az=[{label:'Vai a Esigenze', tipo:'vai', area:'fabbisogno', tab:'esigenze'}].concat(fonti.map(f=>({label:'Copia da '+f.nome, tipo:'copiaEsigenze', fromId:f.id, fromNome:f.nome, toId:pid})));
+        push('errore','Copertura','Il periodo "'+(p?p.nome:pid)+'" non ha esigenze di copertura: in quei giorni non verranno generati turni.', az);
+      });
+      D.esigenze.filter(e=>e.attivo!==false && e.mansione_id).forEach(e=>{ const chi=D.risorse.some(r=>(D.mansByR[r.id]||new Set()).has(e.mansione_id)); if(!chi) push('errore','Copertura','Un’esigenza richiede la mansione "'+mNome(e.mansione_id)+'" ma nessuna risorsa attiva la possiede.', [{label:'Vai a Organico', tipo:'vai', area:'organico', tab:'organico'}]); });
+      const wk={};
+      D.ass.forEach(a=>{ const dd=a.data.split('-').map(Number); const dt=new Date(dd[0],dd[1]-1,dd[2]); const lun=isoData(lunediDi(dt)); const key=a.risorsa_id+'|'+lun;
+        (wk[key]=wk[key]||{ris:a.risorsa_id, lun, ore:0, giorni:new Set()}); wk[key].ore+=durOre(a.ora_inizio,a.ora_fine); wk[key].giorni.add(a.data); });
+      Object.values(wk).forEach(w=>{ const r=D.risById[w.ris]; if(!r) return; const contr=Number(r.ore_contratto||0); const aChiamata=r.tipo_contratto==='a_chiamata'; const setStr='sett. del '+isoGG(w.lun);
+        if(!aChiamata){
+          if(w.ore < contr - tol) push('avviso','Ore & contratti', nomeR(w.ris)+' — '+setStr+': '+w.ore.toFixed(1)+'/'+contr+' h ('+(w.ore-contr).toFixed(1)+', sotto contratto).', [{label:'Rigenera con riequilibrio', tipo:'rigenera', usaChiamata:false}]);
+          const tetto = contr + (r.str_max_sett!=null?Number(r.str_max_sett):Infinity);
+          if(w.ore > tetto){ const x=Math.ceil(w.ore-contr); push('avviso','Ore & contratti', nomeR(w.ris)+' — '+setStr+': '+w.ore.toFixed(1)+' h, oltre il tetto straordinari ('+(r.str_max_sett||0)+' h).', [{label:'Alza tetto a '+x+' h', tipo:'alzaTetto', risorsaId:w.ris, x, nome:nomeR(w.ris)}, {label:'Rigenera', tipo:'rigenera', usaChiamata:false}]); }
+        }
+        if(w.giorni.size > 7 - riposoMin) push('avviso','Vincoli', nomeR(w.ris)+' — '+setStr+': '+w.giorni.size+' giorni lavorati (riposo minimo '+riposoMin+').', []);
+        if(maxCons){ const setG=new Set(w.giorni); let bad=false; setG.forEach(iso=>{ if(giorniConsecutivi(setG,iso)>maxCons) bad=true; }); if(bad) push('avviso','Vincoli', nomeR(w.ris)+' — '+setStr+': supera '+maxCons+' giorni consecutivi.', []); }
+      });
+      D.ass.forEach(a=>{ if(statoGiorno(a.data).chiuso) push('errore','Vincoli','Turno di '+nomeR(a.risorsa_id)+' il '+isoGG(a.data)+' cade in un giorno di chiusura.', [{label:'Rimuovi turno', tipo:'rimuoviTurno', assegnazioneId:a.id}]);
+        const abs=(D.assByRes[a.risorsa_id]||[]).find(x=>a.data>=x.data_inizio && a.data<=x.data_fine); if(abs) push('errore','Vincoli','Turno di '+nomeR(a.risorsa_id)+' il '+isoGG(a.data)+' durante un’assenza ('+(abs.tipo||'')+').', [{label:'Rimuovi turno', tipo:'rimuoviTurno', assegnazioneId:a.id}]); });
+      D.esigenze.filter(e=>e.attivo!==false).forEach(e=>{ let prob=null;
+        if(e.tipo==='copertura' && !(e.min_risorse>0)) prob='minimo risorse ≤ 0';
+        else if(e.ancora==='assoluto' && (!e.ora_inizio||!e.ora_fine)) prob='finestra assoluta senza orari';
+        else if((e.ancora==='apertura'||e.ancora==='chiusura') && e.off_inizio_min==null && e.off_fine_min==null) prob='finestra relativa senza offset';
+        if(prob){ const p=D.periodi.find(x=>x.id===e.periodo_id); push('info','Config','Esigenza nel periodo "'+(p?p.nome:e.periodo_id)+'" incoerente: '+prob+'.', [{label:'Vai a Esigenze', tipo:'vai', area:'fabbisogno', tab:'esigenze'}]); }
+      });
+      return F;
+    }
+    async function eseguiAzione(a, box, dal, al, rianalizza){
+      if(!a) return;
+      if(a.tipo==='vai'){ apriArea(a.area); if(a.tab) apriTab(a.tab); return; }
+      if(a.tipo==='rigenera'){ if(!confirm('Rigenerare la bozza da '+dal+' a '+al+(a.usaChiamata?' includendo le risorse a chiamata':'')+'? La bozza precedente nell’intervallo viene rifatta.')) return; const tmp=document.createElement('div'); await eseguiGenera(tmp, dal, al, !!a.usaChiamata); await rianalizza(); return; }
+      if(a.tipo==='riduciMin'){ if(!confirm('Portare il minimo di questa fascia a '+a.n+'?')) return; const {error}=await supabaseClient.from('turni_esigenze').update({min_risorse:a.n}).eq('id',a.esigenzaId); if(error) return alert(error.message); await rianalizza(); return; }
+      if(a.tipo==='alzaTetto'){ if(!confirm('Alzare il tetto straordinari settimanale di '+a.nome+' a '+a.x+' h?')) return; const {error}=await supabaseClient.from('turni_risorse').update({str_max_sett:a.x}).eq('id',a.risorsaId); if(error) return alert(error.message); await rianalizza(); return; }
+      if(a.tipo==='copiaEsigenze'){ if(!confirm('Copiare le esigenze da "'+a.fromNome+'" nel periodo carente?')) return; const {data}=await supabaseClient.from('turni_esigenze').select('giorno,tipo,ancora,ora_inizio,ora_fine,off_inizio_min,off_fine_min,min_risorse,mansione_id,attivo').eq('periodo_id',a.fromId); const rows=(data||[]).map(r=>Object.assign({},r,{periodo_id:a.toId})); if(!rows.length) return alert('Nessuna esigenza da copiare.'); const {error}=await supabaseClient.from('turni_esigenze').insert(rows); if(error) return alert(error.message); await rianalizza(); return; }
+      if(a.tipo==='rimuoviTurno'){ if(!confirm('Rimuovere questo turno?')) return; const {error}=await supabaseClient.from('turni_assegnazioni').delete().eq('id',a.assegnazioneId); if(error) return alert(error.message); await rianalizza(); return; }
+    }
+    async function renderAssistente(box){
+      const admin = !!(typeof currentProfile!=='undefined' && currentProfile && currentProfile.ruolo==='Admin');
+      const def=settRangeDefault();
+      box.innerHTML=`<h2 class="text-lg font-bold mb-2">Assistente turni</h2>
+        <p class="text-xs text-gray-500 mb-3">Analizza pianificazione e configurazione e propone correzioni. Riconosce parole chiave (giorni, nomi, "scoperto", "ore", "straordinari", "riposo", "chiuso", "mansione"…), non ancora frasi libere.${admin?'':' <b>Sola lettura</b>: le correzioni sono riservate agli Admin.'}</p>
+        <div class="flex flex-wrap items-end gap-2 mb-3 text-sm">
+          <label>Dal <input id="ad" type="date" class="border rounded px-2 py-1" value="${def.dal}"></label>
+          <label>Al <input id="aa" type="date" class="border rounded px-2 py-1" value="${def.al}"></label>
+          <button id="ago" class="px-3 py-1.5 bg-slate-800 text-white rounded">🔎 Analizza</button>
+          <input id="afq" placeholder="Cosa non va? es. 'sabato scoperto'" class="border rounded px-2 py-1 flex-1 min-w-[180px]">
+          <button id="afiltra" class="px-3 py-1.5 bg-gray-100 rounded">Filtra</button>
+        </div>
+        <div id="aout" class="text-sm text-gray-400">Premi «Analizza» per iniziare.</div>`;
+      let FIND=[]; const out=box.querySelector('#aout');
+      const rianalizza=async()=>{ await run(); };
+      async function run(){
+        const dal=box.querySelector('#ad').value, al=box.querySelector('#aa').value;
+        if(!dal||!al||al<dal){ out.innerHTML='<p class="text-red-600">Intervallo non valido.</p>'; return; }
+        out.innerHTML='<p class="text-gray-400">Analisi in corso…</p>';
+        const D=await datiAnalisi(dal,al); FIND=analizzaTurni(D,dal,al); disegna();
+      }
+      function disegna(){
+        const dal=box.querySelector('#ad').value, al=box.querySelector('#aa').value; const filtro=box.querySelector('#afq').value;
+        if(!FIND.length){ out.innerHTML='<div class="p-3 bg-emerald-50 text-emerald-700 rounded">Nessun problema rilevato nel periodo 🎉</div>'; return; }
+        let list=FIND;
+        if(filtro && filtro.trim()){ const toks=filtro.toLowerCase().split(/\s+/).filter(Boolean); const f2=FIND.filter(f=>{ const t=f.testo.toLowerCase(); return toks.every(tk=>t.includes(tk)||catMatch(f,tk)); }); if(f2.length) list=f2; }
+        const cats=['Copertura','Ore & contratti','Vincoli','Config'];
+        const sevCls={errore:'border-red-300 bg-red-50', avviso:'border-amber-300 bg-amber-50', info:'border-gray-200 bg-gray-50'};
+        let h='<p class="text-xs text-gray-500 mb-2">'+list.length+' su '+FIND.length+' segnalazioni</p>';
+        cats.forEach(c=>{ const items=list.filter(f=>f.cat===c); if(!items.length) return; h+='<h3 class="font-semibold text-sm mt-3 mb-1">'+esc(c)+'</h3>';
+          items.forEach(f=>{ const idx=FIND.indexOf(f); h+='<div class="border rounded p-2 mb-1 '+(sevCls[f.sev]||'')+'"><div>'+esc(f.testo)+'</div>';
+            if(f.azioni.length && admin){ h+='<div class="flex flex-wrap gap-1 mt-1">'+f.azioni.map((a,j)=>'<button data-f="'+idx+'" data-a="'+j+'" class="az px-2 py-0.5 bg-white border rounded text-xs">'+esc(a.label)+'</button>').join('')+'</div>'; }
+            h+='</div>'; });
+        });
+        out.innerHTML=h;
+        out.querySelectorAll('.az').forEach(b=>{ b.onclick=()=>eseguiAzione(FIND[+b.dataset.f].azioni[+b.dataset.a], box, dal, al, rianalizza); });
+      }
+      box.querySelector('#ago').onclick=run;
+      box.querySelector('#afiltra').onclick=disegna;
+      box.querySelector('#afq').addEventListener('keydown',e=>{ if(e.key==='Enter') disegna(); });
     }
     async function renderPianificazione(box){
       if(!settLun) settLun = lunediDi(new Date());
