@@ -81,6 +81,11 @@ main{max-width:1320px;margin:0 auto;padding:10px 20px 60px}
 .wd .dd{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.02em}
 .wd .dl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
 .wd .dh{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
+.wd-res{display:flex;flex-wrap:wrap;gap:3px 8px;margin-top:6px}
+.wd-res span{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600}
+.wd-res span.dim{opacity:.3}
+.wtot{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);margin-left:12px}
+.wtot b{color:var(--ink);font-weight:600}
 .lanes{position:relative;display:flex;flex-direction:column;gap:4px;justify-content:center}
 .lane{position:relative;height:26px}
 .lane::before{content:"";position:absolute;inset:12px 0 auto;height:1px;background:var(--line)}
@@ -140,7 +145,7 @@ main{max-width:1320px;margin:0 auto;padding:10px 20px 60px}
 </header>
 
 <div class="navbar">
-  <h2 class="period" id="period"></h2>
+  <h2 class="period" id="period"></h2><span class="wtot" id="wtot"></span>
   <div class="navbtns">
     <select class="jump" id="jump" aria-label="Vai al mese"></select>
     <button class="nb" id="prev" aria-label="Periodo precedente">‹</button>
@@ -265,8 +270,8 @@ function renderSett(){
   for(let i=0;i<7;i++){
     const d=addD(lun,i), inf=leggiGiorno(d);
     const cls=['wrow']; if(dow(d)>=5) cls.push('we'); if(iso(d)===oggi) cls.push('oggi');
-    let ore=0; if(!inf.chiuso) PEOPLE.forEach(p=>{ const t=inf[p.id]; if(t&&t.tipo==='ore'&&(!FILTRO.size||FILTRO.has(p.id))) ore+=(t.e-t.s); });
-    h+='<div class="'+cls.join(' ')+'"><div class="wd"><span class="dd">'+d.getDate()+'</span><span class="dl">'+GG[dow(d)]+'</span><span class="dh">'+(inf.chiuso?'—':ore.toFixed(1)+' ore in sala')+'</span></div><div class="lanes">';
+    let ore=0, resList=''; if(!inf.chiuso) PEOPLE.forEach(p=>{ const t=inf[p.id]; if(t&&t.tipo==='ore'){ const oh=t.e-t.s; const sh=(!FILTRO.size||FILTRO.has(p.id)); if(sh) ore+=oh; resList+='<span class="'+(sh?'':'dim')+'" style="color:'+p.css+'">'+p.label+' '+(Math.round(oh*10)/10)+'</span>'; } });
+    h+='<div class="'+cls.join(' ')+'"><div class="wd"><span class="dd">'+d.getDate()+'</span><span class="dl">'+GG[dow(d)]+'</span><span class="dh">'+(inf.chiuso?'—':ore.toFixed(1)+' ore in sala')+'</span>'+(resList?'<div class="wd-res">'+resList+'</div>':'')+'</div><div class="lanes">';
     if(inf.chiuso) h+='<div class="wclosed"><b>Chiuso</b>'+(inf.motivo&&inf.motivo!=='override'?inf.motivo:'')+'</div>';
     else {
       let vuoto=true;
@@ -320,6 +325,13 @@ function render(){
   document.getElementById('summary').innerHTML = renderSummary();
   if(VISTA==='mese') document.getElementById('period').innerHTML = MESI[CUR.getMonth()]+' <em>'+CUR.getFullYear()+'</em>';
   else { const l=lunedi(CUR), d=addD(l,6); const a=l.getDate()+(l.getMonth()!==d.getMonth()?' '+MESI[l.getMonth()].slice(0,3).toLowerCase():''); document.getElementById('period').innerHTML=a+' – '+d.getDate()+' <em>'+MESI[d.getMonth()].toLowerCase()+' '+d.getFullYear()+'</em>'; }
+  const wt=document.getElementById('wtot');
+  if(VISTA==='sett'){ const lun=lunedi(CUR); let all=0, shown=0;
+    for(let i=0;i<7;i++){ const inf=leggiGiorno(addD(lun,i)); if(inf.chiuso) continue;
+      PEOPLE.forEach(p=>{ const t=inf[p.id]; if(t&&t.tipo==='ore'){ const oh=t.e-t.s; all+=oh; if(!FILTRO.size||FILTRO.has(p.id)) shown+=oh; } }); }
+    const r=x=>Math.round(x*10)/10;
+    wt.innerHTML = FILTRO.size ? ('<b>'+r(shown)+'</b> di '+r(all)+' ore pianificate') : ('<b>'+r(all)+'</b> ore pianificate');
+  } else wt.textContent='';
   const jm=document.getElementById('jump'); if([...jm.options].some(o=>o.value===mkey(CUR))) jm.value=mkey(CUR);
   document.getElementById('prev').disabled=!inRange(passo(-1));
   document.getElementById('next').disabled=!inRange(passo(1));
