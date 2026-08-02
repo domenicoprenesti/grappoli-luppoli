@@ -587,7 +587,7 @@
       const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto').eq('attivo',true).order('ordine',{nullsFirst:false}).order('cognome',{nullsFirst:true}).order('nome')).data||[];
       const dal=isoData(giorni[0]), al=isoData(giorni[giorni.length-1]);
       const { data:ass } = await supabaseClient.from('turni_assegnazioni').select('*').gte('data',dal).lte('data',al);
-      const byKey={}; const oreByR={}; (ass||[]).forEach(a=>{ byKey[a.risorsa_id+'|'+a.data]=a; oreByR[a.risorsa_id]=(oreByR[a.risorsa_id]||0)+durOre(a.ora_inizio,a.ora_fine); });
+      const byKey={}; const oreByR={}; const assByDay={}; (ass||[]).forEach(a=>{ byKey[a.risorsa_id+'|'+a.data]=a; oreByR[a.risorsa_id]=(oreByR[a.risorsa_id]||0)+durOre(a.ora_inizio,a.ora_fine); (assByDay[a.data]=assByDay[a.data]||[]).push(a); });
       const mans=(await supabaseClient.from('turni_mansioni').select('id,nome')).data||[];
       const mNome={}; mans.forEach(m=>mNome[m.id]=m.nome);
       const tipi=(await supabaseClient.from('turni_tipi_turno').select('*').eq('attivo',true).order('ora_inizio')).data||[];
@@ -610,25 +610,29 @@
       tbl.innerHTML=head;
       const tb=document.createElement('tbody');
       if(vistaCopertura!=='nascondi'){
-        const bandsMap={};
-        cop.forEach(g=>{ if(g.chiuso) return; (g.fasce||[]).forEach(f=>{ const k=f.inizio+'|'+f.fine+'|'+(f.mansioneNome||''); if(!bandsMap[k]) bandsMap[k]={inizio:f.inizio,fine:f.fine,man:f.mansioneNome||''}; }); });
-        const bands=Object.values(bandsMap).sort((a,b)=> a.inizio.localeCompare(b.inizio) || a.man.localeCompare(b.man));
-        if(bands.length){
+        const toMin=t=>{ const p=(t||'0:0').split(':'); return (+p[0])*60+(+p[1]); };
+        const bnorm=(i,f)=>{ let s=toMin(i), e=toMin(f); if(e<=s) e+=1440; return [s,e]; };
+        const fmt=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+        let minS=null, maxE=null;
+        cop.forEach(g=>{ if(g.chiuso) return; (g.fasce||[]).forEach(f=>{ const [s,e]=bnorm(f.inizio,f.fine); if(minS===null||s<minS)minS=s; if(maxE===null||e>maxE)maxE=e; }); });
+        if(minS!==null){
+          const startH=Math.floor(minS/60)*60;
           const trH=document.createElement('tr'); trH.className='bg-slate-100';
           const h0=document.createElement('td'); h0.className='p-1 text-xs font-semibold text-gray-600 whitespace-nowrap'; h0.textContent='Copertura fabbisogno'; trH.appendChild(h0);
           giorni.forEach((d,ci)=>{ const td=document.createElement('td'); td.className=wkCell[ci]; trH.appendChild(td); }); tb.appendChild(trH);
-          bands.forEach(b=>{
+          for(let S=startH; S<maxE; S+=60){
             const tr=document.createElement('tr'); tr.className='border-b bg-slate-50';
-            const c0=document.createElement('td'); c0.className='p-1 text-xs whitespace-nowrap'; c0.textContent=tStr(b.inizio)+'–'+tStr(b.fine)+(b.man?(' · '+b.man):''); tr.appendChild(c0);
+            const c0=document.createElement('td'); c0.className='p-1 text-xs whitespace-nowrap'; c0.textContent=fmt(S)+'–'+fmt(S+60); tr.appendChild(c0);
             cop.forEach((g,ci)=>{ const td=document.createElement('td'); td.className='p-1 text-center '+wkCell[ci];
-              if(g.chiuso) td.innerHTML='<span class="text-gray-300 text-xs">🔒</span>';
-              else { const f=(g.fasce||[]).find(x=>x.inizio===b.inizio && x.fine===b.fine && (x.mansioneNome||'')===b.man);
-                if(!f) td.innerHTML='<span class="text-gray-200">·</span>';
-                else if(f.scoperto) td.innerHTML=`<span class="text-red-600 font-semibold">❗<span class="text-[9px] font-normal"> ${f.assegnati}/${f.richiesto}</span></span>`;
-                else td.innerHTML='<span class="text-emerald-600">✓</span>'; }
+              if(g.chiuso){ td.innerHTML='<span class="text-gray-300 text-xs">🔒</span>'; tr.appendChild(td); return; }
+              let req=0; (g.fasce||[]).forEach(f=>{ const [bs,be]=bnorm(f.inizio,f.fine); if(bs<S+60 && be>S) req=Math.max(req, f.richiesto); });
+              if(req===0){ td.innerHTML='<span class="text-gray-200">·</span>'; }
+              else { let asg=0; (assByDay[g.iso]||[]).forEach(a=>{ const [as,ae]=bnorm(a.ora_inizio,a.ora_fine); if(as<S+60 && ae>S) asg++; });
+                if(asg>=req) td.innerHTML='<span class="text-emerald-600">✓</span>';
+                else td.innerHTML=`<span class="text-red-600 font-semibold">❗<span class="text-[9px] font-normal"> ${asg}/${req}</span></span>`; }
               tr.appendChild(td); });
             tb.appendChild(tr);
-          });
+          }
           const sp=document.createElement('tr'); const spc=document.createElement('td'); spc.colSpan=giorni.length+1; spc.className='py-1'; sp.appendChild(spc); tb.appendChild(sp);
         }
       }
