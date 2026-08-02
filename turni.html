@@ -248,7 +248,7 @@
       await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
       const annoDal=dal.slice(0,4)+'-01-01', annoAl=al.slice(0,4)+'-12-31';
       const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq, ayq] = await Promise.all([
-        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_max_giorno,str_max_giorno').eq('attivo',true),
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_min_giorno,ore_max_giorno,str_max_giorno').eq('attivo',true),
         supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
         supabaseClient.from('turni_accordi').select('*'),
         supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
@@ -411,7 +411,7 @@
       const annoDal=dal.slice(0,4)+'-01-01', annoAl=al.slice(0,4)+'-12-31';
       await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
       const [rq,mq,aq,asq,pq,oq,cq,exq,gq,mnq,ayq]=await Promise.all([
-        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_max_giorno,str_max_giorno').eq('attivo',true),
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_min_giorno,ore_max_giorno,str_max_giorno').eq('attivo',true),
         supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
         supabaseClient.from('turni_accordi').select('*'),
         supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
@@ -502,6 +502,9 @@
               else if(canL){ lo-=60; count++; }
               else break;
             }
+            const minH=(r.ore_min_giorno!=null?Number(r.ore_min_giorno):0);
+            const maxLenHard=Math.min( capG(r), limSett(r)-st[r.id].ore, limiteMese(r,mk)-(oreMese[r.id+'|'+mk]||0), limiteAnno(r)-(oreAnno[r.id+'|'+yk]||0) );
+            while((hi-lo)/60 < minH && (hi-lo)/60 < maxLenHard){ if(hi<dayE){ hi+=60; } else if(lo-60>=dayS){ lo-=60; } else break; }
             const oi=fmtMin(lo), of=fmtMin(hi); const durH=durOre(oi,of);
             nuovi.push({risorsa_id:r.id, data:iso, ora_inizio:oi, ora_fine:of, mansione_id:null, generato:true});
             dayAss.push({risorsa_id:r.id, ora_inizio:oi, ora_fine:of, mansione_id:null});
@@ -529,7 +532,7 @@
       const lunUlt=lunediDi(p(al)); const domUlt=new Date(lunUlt); domUlt.setDate(domUlt.getDate()+6); const loadAl=isoData(domUlt);
       const annoDal=dal.slice(0,4)+'-01-01', annoAl=al.slice(0,4)+'-12-31';
       const [rq,aq,asq,pq,oq,cq,exq,gq,ayq]=await Promise.all([
-        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_max_giorno,str_max_giorno').eq('attivo',true),
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_min_giorno,ore_max_giorno,str_max_giorno').eq('attivo',true),
         supabaseClient.from('turni_accordi').select('*'),
         supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
         supabaseClient.from('turni_periodi').select('*'),
@@ -554,10 +557,11 @@
       const capG=r=> r.ore_max_giorno!=null ? (Number(r.ore_max_giorno)+(r.str_max_giorno!=null?Number(r.str_max_giorno):0)) : Infinity;
       const limSett=r=> r.tipo_contratto==='a_chiamata' ? (r.str_max_sett!=null?Number(r.str_max_sett):Infinity) : (Number(r.ore_contratto||0)+(r.str_max_sett!=null?Number(r.str_max_sett):Infinity));
       const target=r=> r.tipo_contratto==='a_chiamata'?0:(r.categoria==='socio'?(r.ore_normali!=null?Number(r.ore_normali):Number(r.ore_contratto||0)):Number(r.ore_contratto||0));
-      const W1=100, W2=1;
+      const penF=(r,len)=>Math.max(0,(r.ore_min_giorno!=null?Number(r.ore_min_giorno):0)-len);
+      const W1=100, W2=1, W4=3;
       const giorniTot=dateInIntervallo(dal,al);
       const weeks={}; giorniTot.forEach(d=>{ const l=isoData(lunediDi(d)); (weeks[l]=weeks[l]||[]).push(d); });
-      const outBlocchi=[]; let scopPre=0,devPre=0,scopPost=0,devPost=0;
+      const outBlocchi=[]; let scopPre=0,devPre=0,scopPost=0,devPost=0,penPre=0,penPost=0;
       Object.keys(weeks).sort().forEach(lunIso=>{
         const l=p(lunIso); const settN=isoWeekNum(l);
         const weekIsos=[]; for(let i=0;i<7;i++){const dd=new Date(l);dd.setDate(dd.getDate()+i);weekIsos.push(isoData(dd));}
@@ -583,7 +587,8 @@
         blocchi.forEach(b=>{ covApply(b.data,b.s,b.e,1); oreR[b.rid]+=(b.e-b.s)/60; giorniR[b.rid].add(b.data); const mk=b.rid+'|'+b.data.slice(0,7),yk=b.rid+'|'+b.data.slice(0,4); oreMese[mk]=(oreMese[mk]||0)+(b.e-b.s)/60; oreAnno[yk]=(oreAnno[yk]||0)+(b.e-b.s)/60; });
         const scopTot=()=>{ let s=0; Object.keys(dayInfo).forEach(iso=>{ dayInfo[iso].slots.forEach(S=>{ s+=Math.max(0,dayInfo[iso].req[S]-covD[iso][S]); }); }); return s; };
         const devTot=()=>{ let d=0; risorse.forEach(r=>{ d+=Math.abs(oreR[r.id]-target(r)); }); return d; };
-        scopPre+=scopTot(); devPre+=devTot();
+        const penTot=()=>{ let x=0; blocchi.forEach(b=>{ x+=penF(byId[b.rid], (b.e-b.s)/60); }); return x; };
+        scopPre+=scopTot(); devPre+=devTot(); penPre+=penTot();
         const puoLavorareGiorno=(r,iso,gi)=>{
           if(!usaChiamata && r.tipo_contratto==='a_chiamata') return false;
           if(giorniR[r.id].has(iso)) return false;
@@ -614,19 +619,19 @@
           Object.keys(dayInfo).forEach(iso=>{ const di=dayInfo[iso];
             di.slots.forEach(S=>{ if(di.req[S]-covD[iso][S] <= 0) return;
               risorse.forEach(r=>{ if(!puoLavorareGiorno(r,iso,di.gi)) return; if(!capOk(r,iso,1,1)) return;
-                const dO=W1*scopDelta(iso,S,1)+W2*devDelta(r.id,1);
+                const dO=W1*scopDelta(iso,S,1)+W2*devDelta(r.id,1)+W4*penF(r,1);
                 consider(dO, ()=>{ blocchi.push({rid:r.id,data:iso,s:S,e:S+60}); covApply(iso,S,S+60,1); oreR[r.id]+=1; giorniR[r.id].add(iso); giorniGlob[r.id].add(iso); const mk=r.id+'|'+iso.slice(0,7),yk=r.id+'|'+iso.slice(0,4); oreMese[mk]=(oreMese[mk]||0)+1; oreAnno[yk]=(oreAnno[yk]||0)+1; });
               });
             });
           });
           blocchi.forEach(b=>{ const di=dayInfo[b.data]; if(!di) return; const r=byId[b.rid]; const lenH=(b.e-b.s)/60; const mk=b.rid+'|'+b.data.slice(0,7), yk=b.rid+'|'+b.data.slice(0,4);
-            if(b.e<di.dayE && capOk(r,b.data,1,lenH+1)){ const S=b.e; consider(W1*scopDelta(b.data,S,1)+W2*devDelta(b.rid,1), ()=>{ covApply(b.data,S,S+60,1); b.e+=60; oreR[b.rid]+=1; oreMese[mk]+=1; oreAnno[yk]+=1; }); }
-            if(b.s>di.dayS && capOk(r,b.data,1,lenH+1)){ const S=b.s-60; consider(W1*scopDelta(b.data,S,1)+W2*devDelta(b.rid,1), ()=>{ covApply(b.data,S,S+60,1); b.s-=60; oreR[b.rid]+=1; oreMese[mk]+=1; oreAnno[yk]+=1; }); }
-            if(lenH>1){ const S=b.e-60; consider(W1*scopDelta(b.data,S,-1)+W2*devDelta(b.rid,-1), ()=>{ covApply(b.data,S,S+60,-1); b.e-=60; oreR[b.rid]-=1; oreMese[mk]-=1; oreAnno[yk]-=1; }); }
-            if(lenH>1){ const S=b.s; consider(W1*scopDelta(b.data,S,-1)+W2*devDelta(b.rid,-1), ()=>{ covApply(b.data,S,S+60,-1); b.s+=60; oreR[b.rid]-=1; oreMese[mk]-=1; oreAnno[yk]-=1; }); }
-            { let ds=0; for(let S=b.s;S<b.e;S+=60) ds+=scopDelta(b.data,S,-1); consider(W1*ds+W2*devDelta(b.rid,-lenH), ()=>{ covApply(b.data,b.s,b.e,-1); oreR[b.rid]-=lenH; giorniR[b.rid].delete(b.data); giorniGlob[b.rid].delete(b.data); oreMese[mk]-=lenH; oreAnno[yk]-=lenH; blocchi.splice(blocchi.indexOf(b),1); }); }
+            if(b.e<di.dayE && capOk(r,b.data,1,lenH+1)){ const S=b.e; consider(W1*scopDelta(b.data,S,1)+W2*devDelta(b.rid,1)+W4*(penF(r,lenH+1)-penF(r,lenH)), ()=>{ covApply(b.data,S,S+60,1); b.e+=60; oreR[b.rid]+=1; oreMese[mk]+=1; oreAnno[yk]+=1; }); }
+            if(b.s>di.dayS && capOk(r,b.data,1,lenH+1)){ const S=b.s-60; consider(W1*scopDelta(b.data,S,1)+W2*devDelta(b.rid,1)+W4*(penF(r,lenH+1)-penF(r,lenH)), ()=>{ covApply(b.data,S,S+60,1); b.s-=60; oreR[b.rid]+=1; oreMese[mk]+=1; oreAnno[yk]+=1; }); }
+            if(lenH>1){ const S=b.e-60; consider(W1*scopDelta(b.data,S,-1)+W2*devDelta(b.rid,-1)+W4*(penF(r,lenH-1)-penF(r,lenH)), ()=>{ covApply(b.data,S,S+60,-1); b.e-=60; oreR[b.rid]-=1; oreMese[mk]-=1; oreAnno[yk]-=1; }); }
+            if(lenH>1){ const S=b.s; consider(W1*scopDelta(b.data,S,-1)+W2*devDelta(b.rid,-1)+W4*(penF(r,lenH-1)-penF(r,lenH)), ()=>{ covApply(b.data,S,S+60,-1); b.s+=60; oreR[b.rid]-=1; oreMese[mk]-=1; oreAnno[yk]-=1; }); }
+            { let ds=0; for(let S=b.s;S<b.e;S+=60) ds+=scopDelta(b.data,S,-1); consider(W1*ds+W2*devDelta(b.rid,-lenH)-W4*penF(r,lenH), ()=>{ covApply(b.data,b.s,b.e,-1); oreR[b.rid]-=lenH; giorniR[b.rid].delete(b.data); giorniGlob[b.rid].delete(b.data); oreMese[mk]-=lenH; oreAnno[yk]-=lenH; blocchi.splice(blocchi.indexOf(b),1); }); }
             risorse.forEach(r2=>{ if(r2.id===b.rid) return; if(!puoLavorareGiorno(r2,b.data,di.gi)) return; if(!capOk(r2,b.data,lenH,lenH)) return;
-              const dO=W2*(devDelta(b.rid,-lenH)+(Math.abs(oreR[r2.id]+lenH-target(r2))-Math.abs(oreR[r2.id]-target(r2))));
+              const dO=W2*(devDelta(b.rid,-lenH)+(Math.abs(oreR[r2.id]+lenH-target(r2))-Math.abs(oreR[r2.id]-target(r2))))+W4*(penF(r2,lenH)-penF(r,lenH));
               consider(dO, ()=>{ const mkB=r2.id+'|'+b.data.slice(0,7),ykB=r2.id+'|'+b.data.slice(0,4);
                 oreR[b.rid]-=lenH; giorniR[b.rid].delete(b.data); giorniGlob[b.rid].delete(b.data); oreMese[mk]-=lenH; oreAnno[yk]-=lenH;
                 oreR[r2.id]+=lenH; giorniR[r2.id].add(b.data); giorniGlob[r2.id].add(b.data); oreMese[mkB]=(oreMese[mkB]||0)+lenH; oreAnno[ykB]=(oreAnno[ykB]||0)+lenH;
@@ -635,7 +640,7 @@
           });
           if(!best) break; best.fn();
         }
-        scopPost+=scopTot(); devPost+=devTot();
+        scopPost+=scopTot(); devPost+=devTot(); penPost+=penTot();
         blocchi.forEach(b=>{ outBlocchi.push({risorsa_id:b.rid, data:b.data, ora_inizio:fmtMin(b.s), ora_fine:fmtMin(b.e), mansione_id:null, generato:true}); });
       });
       await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
@@ -644,7 +649,8 @@
       const div=document.createElement('div'); div.className='mt-4 text-sm bg-white rounded shadow p-3';
       div.innerHTML=`<div class="font-semibold mb-1">Ottimizzazione (${esc(dal)} → ${esc(al)})</div>`+
         `<div>Ore-uomo scoperte: <b>${scopPre}</b> → <b class="${scopPost<scopPre?'text-emerald-700':(scopPost>scopPre?'text-red-700':'')}">${scopPost}</b></div>`+
-        `<div>Scostamento ore settimana (Σ): <b>${devPre.toFixed(1)}</b> → <b class="${devPost<devPre?'text-emerald-700':''}">${devPost.toFixed(1)}</b></div>`;
+        `<div>Scostamento ore settimana (Σ): <b>${devPre.toFixed(1)}</b> → <b class="${devPost<devPre?'text-emerald-700':''}">${devPost.toFixed(1)}</b></div>`+
+        `<div>Ore sotto il minimo giornaliero (Σ): <b>${penPre.toFixed(1)}</b> → <b class="${penPost<penPre?'text-emerald-700':''}">${penPost.toFixed(1)}</b></div>`;
       box.appendChild(div);
     }
     let CHIUSURE=[], OVERRIDE={};
@@ -1157,6 +1163,7 @@
             <label class="flex-1">Str. max mese<input id="sm" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_mese!=null?rec.str_max_mese:''}"></label>
             <label class="flex-1">Str. max anno<input id="sa" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_anno!=null?rec.str_max_anno:''}"></label></div>
           <div class="flex gap-2">
+            <label class="flex-1">Ore min/giorno<input id="omin" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.ore_min_giorno!=null?rec.ore_min_giorno:''}"></label>
             <label class="flex-1">Ore max/giorno<input id="omg" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.ore_max_giorno!=null?rec.ore_max_giorno:''}"></label>
             <label class="flex-1">Str. max/giorno<input id="smg" type="number" step="0.5" class="w-full border rounded px-2 py-1" value="${isEdit&&rec.str_max_giorno!=null?rec.str_max_giorno:''}"></label></div>
           <div class="flex gap-2">
@@ -1183,7 +1190,7 @@
           giorni_riposo:Number(card.querySelector('#riposi').value||1), tipo_contratto:tipo, pt_modalita:ptm,
           str_max_sett:num('ss'), str_max_mese:num('sm'), str_max_anno:num('sa'),
           note:card.querySelector('#note').value.trim()||null, max_ore:card.querySelector('#maxore').checked, attivo:card.querySelector('#attivo').checked,
-          categoria:card.querySelector('#cat').value, ore_normali:num('oren'), ore_max_giorno:num('omg'), str_max_giorno:num('smg') };
+          categoria:card.querySelector('#cat').value, ore_normali:num('oren'), ore_min_giorno:num('omin'), ore_max_giorno:num('omg'), str_max_giorno:num('smg') };
         let rid;
         if(isEdit){ const {error}=await supabaseClient.from('turni_risorse').update(payload).eq('id',rec.id); if(error)return alert(error.message); rid=rec.id; }
         else {
