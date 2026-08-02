@@ -434,6 +434,7 @@
       await caricaChiusure();
       const toMin=t=>{const a=(t||'0:0').split(':'); return (+a[0])*60+(+a[1]);};
       const bnorm=(i,f)=>{let s=toMin(i),e=toMin(f); if(e<=s)e+=1440; return [s,e];};
+      const bnormDay=(i,f,dayS)=>{let s=toMin(i),e=toMin(f); if(e<=s)e+=1440; if(s<dayS){s+=1440;e+=1440;} return [s,e];};
       const fmtMin=m=>{const mm=((m%1440)+1440)%1440; return String(Math.floor(mm/60)).padStart(2,'0')+':'+String(mm%60).padStart(2,'0')+':00';};
       const quotaGiorno=r=>{ const lav=(r.giorni_riposo!=null?(7-Number(r.giorni_riposo)):5); return lav>0? Number(r.ore_contratto||0)/lav : Number(r.ore_contratto||0); };
       const limSett=r=> r.tipo_contratto==='a_chiamata' ? (r.str_max_sett!=null?Number(r.str_max_sett):Infinity) : (Number(r.ore_contratto||0)+(r.str_max_sett!=null?Number(r.str_max_sett):Infinity));
@@ -462,7 +463,7 @@
           const req={}, cov={};
           slots.forEach(S=>{ req[S]=0; es.forEach(x=>{ if(x.s<S+60 && x.e>S) req[S]=Math.max(req[S],x.min); }); cov[S]=0; });
           const dayAss=assByDay[iso]||(assByDay[iso]=[]);
-          dayAss.forEach(a=>{ const b=bnorm(a.ora_inizio,a.ora_fine); slots.forEach(S=>{ if(b[0]<S+60 && b[1]>S) cov[S]++; }); });
+          dayAss.forEach(a=>{ const b=bnormDay(a.ora_inizio,a.ora_fine,dayS); slots.forEach(S=>{ if(b[0]<S+60 && b[1]>S) cov[S]++; }); });
           const residuo=S=>Math.max(0, req[S]-cov[S]);
           slots.forEach(S=>{ uomoReq+=req[S]; });
           let guard=0;
@@ -553,6 +554,7 @@
       await caricaChiusure();
       const toMin=t=>{const a=(t||'0:0').split(':'); return (+a[0])*60+(+a[1]);};
       const bnorm=(i,f)=>{let s=toMin(i),e=toMin(f); if(e<=s)e+=1440; return [s,e];};
+      const bnormDay=(i,f,dayS)=>{let s=toMin(i),e=toMin(f); if(e<=s)e+=1440; if(s<dayS){s+=1440;e+=1440;} return [s,e];};
       const fmtMin=m=>{const mm=((m%1440)+1440)%1440; return String(Math.floor(mm/60)).padStart(2,'0')+':'+String(mm%60).padStart(2,'0')+':00';};
       const capG=r=> r.ore_max_giorno!=null ? (Number(r.ore_max_giorno)+(r.str_max_giorno!=null?Number(r.str_max_giorno):0)) : Infinity;
       const limSett=r=> r.tipo_contratto==='a_chiamata' ? (r.str_max_sett!=null?Number(r.str_max_sett):Infinity) : (Number(r.ore_contratto||0)+(r.str_max_sett!=null?Number(r.str_max_sett):Infinity));
@@ -582,8 +584,8 @@
         const covD={}; Object.keys(dayInfo).forEach(iso=>{ covD[iso]={}; dayInfo[iso].slots.forEach(S=>covD[iso][S]=0); });
         const oreR={}, giorniR={}; risorse.forEach(r=>{oreR[r.id]=0; giorniR[r.id]=new Set();});
         const covApply=(iso,s,e,delta)=>{ if(!covD[iso]) return; for(let S=s;S<e;S+=60){ if(covD[iso][S]!=null) covD[iso][S]+=delta; } };
-        esist.filter(a=>weekIsos.indexOf(a.data)>=0 && !a.generato).forEach(a=>{ const b=bnorm(a.ora_inizio,a.ora_fine); covApply(a.data,b[0],b[1],1); oreR[a.risorsa_id]=(oreR[a.risorsa_id]||0)+durOre(a.ora_inizio,a.ora_fine); giorniR[a.risorsa_id].add(a.data); });
-        let blocchi = esist.filter(a=>weekIsos.indexOf(a.data)>=0 && a.generato).map(a=>{ const b=bnorm(a.ora_inizio,a.ora_fine); return {rid:a.risorsa_id, data:a.data, s:b[0], e:b[1]}; });
+        esist.filter(a=>weekIsos.indexOf(a.data)>=0 && !a.generato).forEach(a=>{ const b=bnormDay(a.ora_inizio,a.ora_fine, dayInfo[a.data]?dayInfo[a.data].dayS:0); covApply(a.data,b[0],b[1],1); oreR[a.risorsa_id]=(oreR[a.risorsa_id]||0)+durOre(a.ora_inizio,a.ora_fine); giorniR[a.risorsa_id].add(a.data); });
+        let blocchi = esist.filter(a=>weekIsos.indexOf(a.data)>=0 && a.generato).map(a=>{ const b=bnormDay(a.ora_inizio,a.ora_fine, dayInfo[a.data]?dayInfo[a.data].dayS:0); return {rid:a.risorsa_id, data:a.data, s:b[0], e:b[1]}; });
         blocchi.forEach(b=>{ covApply(b.data,b.s,b.e,1); oreR[b.rid]+=(b.e-b.s)/60; giorniR[b.rid].add(b.data); const mk=b.rid+'|'+b.data.slice(0,7),yk=b.rid+'|'+b.data.slice(0,4); oreMese[mk]=(oreMese[mk]||0)+(b.e-b.s)/60; oreAnno[yk]=(oreAnno[yk]||0)+(b.e-b.s)/60; });
         const scopTot=()=>{ let s=0; Object.keys(dayInfo).forEach(iso=>{ dayInfo[iso].slots.forEach(S=>{ s+=Math.max(0,dayInfo[iso].req[S]-covD[iso][S]); }); }); return s; };
         const devTot=()=>{ let d=0; risorse.forEach(r=>{ d+=Math.abs(oreR[r.id]-target(r)); }); return d; };
@@ -898,6 +900,7 @@
       if(vistaCopertura!=='nascondi'){
         const toMin=t=>{ const p=(t||'0:0').split(':'); return (+p[0])*60+(+p[1]); };
         const bnorm=(i,f)=>{ let s=toMin(i), e=toMin(f); if(e<=s) e+=1440; return [s,e]; };
+        const bnormDay=(i,f,dS)=>{ let s=toMin(i), e=toMin(f); if(e<=s) e+=1440; if(s<dS){s+=1440;e+=1440;} return [s,e]; };
         const fmt=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
         let minS=null, maxE=null;
         cop.forEach(g=>{ if(g.chiuso) return; (g.fasce||[]).forEach(f=>{ const [s,e]=bnorm(f.inizio,f.fine); if(minS===null||s<minS)minS=s; if(maxE===null||e>maxE)maxE=e; }); });
@@ -913,7 +916,7 @@
               if(g.chiuso){ td.innerHTML='<span class="text-gray-300 text-xs">🔒</span>'; tr.appendChild(td); return; }
               let req=0; (g.fasce||[]).forEach(f=>{ const [bs,be]=bnorm(f.inizio,f.fine); if(bs<S+60 && be>S) req=Math.max(req, f.richiesto); });
               if(req===0){ td.innerHTML='<span class="text-gray-200">·</span>'; }
-              else { let asg=0; (assByDay[g.iso]||[]).forEach(a=>{ const [as,ae]=bnorm(a.ora_inizio,a.ora_fine); if(as<S+60 && ae>S) asg++; });
+              else { let asg=0; (assByDay[g.iso]||[]).forEach(a=>{ const [as,ae]=bnormDay(a.ora_inizio,a.ora_fine,startH); if(as<S+60 && ae>S) asg++; });
                 if(asg>=req) td.innerHTML='<span class="text-emerald-600">✓</span>';
                 else td.innerHTML=`<span class="text-red-600 font-semibold">❗<span class="text-[9px] font-normal"> ${asg}/${req}</span></span>`; }
               tr.appendChild(td); });
