@@ -152,6 +152,10 @@
     }
     function isoWeekNum(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3); const firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4)); const fday=(firstThu.getUTCDay()+6)%7; firstThu.setUTCDate(firstThu.getUTCDate()-fday+3); return 1+Math.round((t-firstThu)/(7*24*3600*1000)); }
     function giorniConsecutivi(set, iso){ const a=iso.split('-').map(Number); let d=new Date(a[0],a[1]-1,a[2]); let n=1; for(;;){ d.setDate(d.getDate()-1); const s=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(set.has(s)) n++; else break; } return n; }
+    // sequenza di giorni consecutivi che ATTRAVERSA iso (indietro + avanti), contando iso stesso: usata per max giorni consecutivi
+    function runConsecutivo(set, iso){ const a=iso.split('-').map(Number); const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); let n=1; let d=new Date(a[0],a[1]-1,a[2]); for(;;){ d.setDate(d.getDate()-1); if(set.has(key(d))) n++; else break; } d=new Date(a[0],a[1]-1,a[2]); for(;;){ d.setDate(d.getDate()+1); if(set.has(key(d))) n++; else break; } return n; }
+    function limiteMese(r, mk){ if(r.tipo_contratto==='a_chiamata') return (r.str_max_mese!=null?Number(r.str_max_mese):Infinity); const dim=new Date(+mk.slice(0,4), +mk.slice(5,7), 0).getDate(); return Number(r.ore_contratto||0)*(dim/7) + (r.str_max_mese!=null?Number(r.str_max_mese):Infinity); }
+    function limiteAnno(r){ if(r.tipo_contratto==='a_chiamata') return (r.str_max_anno!=null?Number(r.str_max_anno):Infinity); return Number(r.ore_contratto||0)*52 + (r.str_max_anno!=null?Number(r.str_max_anno):Infinity); }
 
     // costo di sbilancio ore per il riequilibrio: sotto contratto pesa sempre; sopra contratto
     // pesa solo per chi NON è "massimizza ore" (per i max_ore lo straordinario è "gratis" → attira l'eccedenza);
@@ -172,7 +176,7 @@
       return r.max_ore ? [2, ore-c] : [2.5, ore-c];
     }
     function scegliRisorsa(risorse, st, ctx){
-      const {iso, gi, settN, fascia, chiude, mansByR, accByRG, rotPhase, assenze, riposoMin, maxCons, usaChiamata} = ctx;
+      const {iso, gi, settN, fascia, chiude, mansByR, accByRG, rotPhase, assenze, riposoMin, maxCons, usaChiamata, giorniGlob, oreMese, oreAnno} = ctx;
       const dur = durOre(fascia.inizio, chiude);
       const maxWork = 7 - riposoMin;
       // ignoraRot=true = ultima risorsa "copri sempre": salta SOLO la rotazione (1su2/2su3/3su4),
@@ -190,12 +194,14 @@
           if(cad==='3su4' && (settN+ph)%4===0) return false;
         }
         if(st[r.id].giorni.size >= maxWork) return false;
-        if(maxCons && giorniConsecutivi(st[r.id].giorni, iso) > maxCons) return false;
+        if(maxCons && runConsecutivo(giorniGlob?giorniGlob[r.id]:st[r.id].giorni, iso) > maxCons) return false;
         const limite = r.tipo_contratto==='a_chiamata'
           ? (r.str_max_sett!=null? Number(r.str_max_sett) : Infinity)
           : (Number(r.ore_contratto||0) + (r.str_max_sett!=null? Number(r.str_max_sett) : Infinity));
         if(st[r.id].ore + dur > limite) return false;
         if(r.ore_max_giorno!=null){ const capG=Number(r.ore_max_giorno)+(r.str_max_giorno!=null?Number(r.str_max_giorno):0); if(dur > capG) return false; }
+        if(oreMese){ const mk=iso.slice(0,7); if((oreMese[r.id+'|'+mk]||0) + dur > limiteMese(r, mk)) return false; }
+        if(oreAnno){ const yk=iso.slice(0,4); if((oreAnno[r.id+'|'+yk]||0) + dur > limiteAnno(r)) return false; }
         return true;
       });
       const regolari=risorse.filter(r=>r.tipo_contratto!=='a_chiamata');
@@ -240,8 +246,9 @@
       const loadDal=isoData(lunediDi(p(dal)));
       const lunUlt=lunediDi(p(al)); const domUlt=new Date(lunUlt); domUlt.setDate(domUlt.getDate()+6); const loadAl=isoData(domUlt);
       await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
-      const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq] = await Promise.all([
-        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,giorni_riposo,max_ore,categoria,ore_normali,ore_max_giorno,str_max_giorno').eq('attivo',true),
+      const annoDal=dal.slice(0,4)+'-01-01', annoAl=al.slice(0,4)+'-12-31';
+      const [rq, mq, aq, asq, pq, oq, cq, exq, gq, mnq, ayq] = await Promise.all([
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_max_giorno,str_max_giorno').eq('attivo',true),
         supabaseClient.from('turni_risorse_mansioni').select('risorsa_id,mansione_id'),
         supabaseClient.from('turni_accordi').select('*'),
         supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
@@ -251,6 +258,7 @@
         supabaseClient.from('turni_assegnazioni').select('*').gte('data',loadDal).lte('data',loadAl),
         supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle(),
         supabaseClient.from('turni_mansioni').select('id,nome'),
+        supabaseClient.from('turni_assegnazioni').select('risorsa_id,data,ora_inizio,ora_fine').gte('data',annoDal).lte('data',annoAl),
       ]);
       const esigenze=cq.data||[];
       const risorse=rq.data||[];
@@ -262,6 +270,13 @@
       const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const maxCons=reg.max_giorni_consecutivi||null; const gp=reg.giorno_prioritario||null;
       const mNome={}; (mnq.data||[]).forEach(m=>mNome[m.id]=m.nome);
       const esist=exq.data||[];
+      const byId={}; risorse.forEach(r=>byId[r.id]=r);
+      // set giorni globale per risorsa (cross-settimana) per il controllo max giorni consecutivi
+      const giorniGlob={}; risorse.forEach(r=>giorniGlob[r.id]=new Set());
+      esist.forEach(a=>{ if(giorniGlob[a.risorsa_id]) giorniGlob[a.risorsa_id].add(a.data); });
+      // accumulo ore per risorsa per MESE e ANNO (per i tetti straordinari mensile/annuale)
+      const oreMese={}, oreAnno={};
+      (ayq.data||[]).forEach(a=>{ const h=durOre(a.ora_inizio,a.ora_fine); const mk=a.risorsa_id+'|'+a.data.slice(0,7), yk=a.risorsa_id+'|'+a.data.slice(0,4); oreMese[mk]=(oreMese[mk]||0)+h; oreAnno[yk]=(oreAnno[yk]||0)+h; });
       await caricaChiusure();
       const giorniTot=dateInIntervallo(dal,al);
       const weeks={}; giorniTot.forEach(d=>{ const l=isoData(lunediDi(d)); (weeks[l]=weeks[l]||[]).push(d); });
@@ -290,12 +305,13 @@
             const conta=()=>dayAss.filter(a=> overlapT(a.ora_inizio,a.ora_fine,f.inizio,f.fine) && (!f.mansione_id || a.mansione_id===f.mansione_id)).length;
             let coperti=conta(), guard=0;
             while(coperti < f.min_risorse && guard++ < 50){
-              const sc=scegliRisorsa(risorse, st, {iso,gi,settN,fascia:f,chiude,mansByR,accByRG,rotPhase,assenze,riposoMin,maxCons,usaChiamata});
+              const sc=scegliRisorsa(risorse, st, {iso,gi,settN,fascia:f,chiude,mansByR,accByRG,rotPhase,assenze,riposoMin,maxCons,usaChiamata,giorniGlob,oreMese,oreAnno});
               if(!sc) break;
-              const cand=sc.cand;
+              const cand=sc.cand; const durA=durOre(f.inizio,chiude);
               nuovi.push({risorsa_id:cand.id, data:iso, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null, generato:true});
               dayAss.push({risorsa_id:cand.id, ora_inizio:f.inizio, ora_fine:chiude, mansione_id:f.mansione_id||null});
-              st[cand.id].ore+=durOre(f.inizio,chiude); st[cand.id].giorni.add(iso);
+              st[cand.id].ore+=durA; st[cand.id].giorni.add(iso); giorniGlob[cand.id].add(iso);
+              oreMese[cand.id+'|'+iso.slice(0,7)]=(oreMese[cand.id+'|'+iso.slice(0,7)]||0)+durA; oreAnno[cand.id+'|'+iso.slice(0,4)]=(oreAnno[cand.id+'|'+iso.slice(0,4)]||0)+durA;
               if(sc.forced) forzati.push(GIORNI[gi]+' '+isoGG(iso)+' '+tStr(f.inizio)+': '+((cand.nome?cand.nome+' ':'')+(cand.cognome||'')).trim());
               coperti=conta();
             }
@@ -306,11 +322,19 @@
           if(estens.length && fasce.length){
             const apreT=fasce[0].inizio; const chiudeT=chiusura||fasce[fasce.length-1].fine;
             const dayGen=nuovi.filter(a=>a.data===iso);
+            const okCap=(a, added, newIn, newFi)=>{ const r=byId[a.risorsa_id]; if(!r) return false; const newDur=durOre(newIn,newFi);
+              const limS = r.tipo_contratto==='a_chiamata' ? (r.str_max_sett!=null?Number(r.str_max_sett):Infinity) : (Number(r.ore_contratto||0)+(r.str_max_sett!=null?Number(r.str_max_sett):Infinity));
+              if(st[r.id].ore + added > limS) return false;
+              if(r.ore_max_giorno!=null && newDur > (Number(r.ore_max_giorno)+(r.str_max_giorno!=null?Number(r.str_max_giorno):0))) return false;
+              if((oreMese[r.id+'|'+iso.slice(0,7)]||0) + added > limiteMese(r, iso.slice(0,7))) return false;
+              if((oreAnno[r.id+'|'+iso.slice(0,4)]||0) + added > limiteAnno(r)) return false;
+              return true; };
+            const aggOre=(rid, added)=>{ if(st[rid]) st[rid].ore+=added; oreMese[rid+'|'+iso.slice(0,7)]=(oreMese[rid+'|'+iso.slice(0,7)]||0)+added; oreAnno[rid+'|'+iso.slice(0,4)]=(oreAnno[rid+'|'+iso.slice(0,4)]||0)+added; };
             estens.forEach(e=>{ const w=risolviFinestra(e, apreT, chiudeT); if(!w) return;
               if(e.ancora==='chiusura'){ const nf=w.fine;
-                dayGen.filter(a=>a.ora_fine===chiudeT && (!e.mansione_id||a.mansione_id===e.mansione_id)).slice(0, e.min_risorse||1).forEach(a=>{ if(durOre(a.ora_fine,nf)>0){ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(a.ora_fine,nf); a.ora_fine=nf; } });
+                dayGen.filter(a=>a.ora_fine===chiudeT && (!e.mansione_id||a.mansione_id===e.mansione_id)).slice(0, e.min_risorse||1).forEach(a=>{ const added=durOre(a.ora_fine,nf); if(added>0 && okCap(a, added, a.ora_inizio, nf)){ aggOre(a.risorsa_id, added); a.ora_fine=nf; } });
               } else { const ni=w.inizio;
-                dayGen.filter(a=>a.ora_inizio===apreT && (!e.mansione_id||a.mansione_id===e.mansione_id)).slice(0, e.min_risorse||1).forEach(a=>{ if(durOre(ni,a.ora_inizio)>0){ if(st[a.risorsa_id]) st[a.risorsa_id].ore+=durOre(ni,a.ora_inizio); a.ora_inizio=ni; } });
+                dayGen.filter(a=>a.ora_inizio===apreT && (!e.mansione_id||a.mansione_id===e.mansione_id)).slice(0, e.min_risorse||1).forEach(a=>{ const added=durOre(ni,a.ora_inizio); if(added>0 && okCap(a, added, ni, a.ora_fine)){ aggOre(a.risorsa_id, added); a.ora_inizio=ni; } });
               }
             });
           }
@@ -336,18 +360,24 @@
                 if(cad==='2su3' && (settN+ph)%3===0) continue;
                 if(cad==='3su4' && (settN+ph)%4===0) continue;
                 if(st[R.id].giorni.size >= (7-riposoMin)) continue;
-                if(maxCons){ const tmp=new Set(st[R.id].giorni); tmp.add(sh.data); if(giorniConsecutivi(tmp, sh.data) > maxCons) continue; }
+                if(maxCons && runConsecutivo(giorniGlob[R.id], sh.data) > maxCons) continue;
                 const limiteR = R.tipo_contratto==='a_chiamata' ? (R.str_max_sett!=null?Number(R.str_max_sett):Infinity) : (Number(R.ore_contratto||0)+(R.str_max_sett!=null?Number(R.str_max_sett):Infinity));
                 if(st[R.id].ore + dur > limiteR) continue;
                 if(R.ore_max_giorno!=null && dur > (Number(R.ore_max_giorno)+(R.str_max_giorno!=null?Number(R.str_max_giorno):0))) continue;
+                const mk2=sh.data.slice(0,7), yk2=sh.data.slice(0,4);
+                if((oreMese[R.id+'|'+mk2]||0) + dur > limiteMese(R, mk2)) continue;
+                if((oreAnno[R.id+'|'+yk2]||0) + dur > limiteAnno(R)) continue;
                 const gain = (costoRis(G, st[G.id].ore) + costoRis(R, st[R.id].ore)) - (costoRis(G, st[G.id].ore - dur) + costoRis(R, st[R.id].ore + dur));
                 if(gain > 0.001 && (!best || gain > best.gain)) best={sh, R, G, dur, gain};
               }
             }
             if(!best) break;
             best.sh.risorsa_id = best.R.id;
-            st[best.G.id].ore -= best.dur; st[best.G.id].giorni.delete(best.sh.data);
-            st[best.R.id].ore += best.dur; st[best.R.id].giorni.add(best.sh.data);
+            st[best.G.id].ore -= best.dur; st[best.G.id].giorni.delete(best.sh.data); giorniGlob[best.G.id].delete(best.sh.data);
+            st[best.R.id].ore += best.dur; st[best.R.id].giorni.add(best.sh.data); giorniGlob[best.R.id].add(best.sh.data);
+            const mkB=best.sh.data.slice(0,7), ykB=best.sh.data.slice(0,4);
+            oreMese[best.G.id+'|'+mkB]=(oreMese[best.G.id+'|'+mkB]||0)-best.dur; oreAnno[best.G.id+'|'+ykB]=(oreAnno[best.G.id+'|'+ykB]||0)-best.dur;
+            oreMese[best.R.id+'|'+mkB]=(oreMese[best.R.id+'|'+mkB]||0)+best.dur; oreAnno[best.R.id+'|'+ykB]=(oreAnno[best.R.id+'|'+ykB]||0)+best.dur;
           }
         }
       });
