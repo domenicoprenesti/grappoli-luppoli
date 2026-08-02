@@ -607,12 +607,14 @@
       head+='</tr></thead>';
       tbl.innerHTML=head;
       const tb=document.createElement('tbody');
-      const trAn=document.createElement('tr'); trAn.className='border-b bg-amber-50';
-      const a0=document.createElement('td'); a0.className='p-1 text-xs font-semibold text-gray-500 whitespace-nowrap'; a0.textContent='⚠ Anomalie'; trAn.appendChild(a0);
+      const trAn=document.createElement('tr'); trAn.className='border-b bg-slate-50';
+      const a0=document.createElement('td'); a0.className='p-1 text-xs font-semibold text-gray-500 whitespace-nowrap'; a0.textContent='Copertura fabbisogno'; trAn.appendChild(a0);
       cop.forEach(g=>{ const td=document.createElement('td'); td.className='p-1 align-top text-center';
         if(g.chiuso) td.innerHTML='<span class="text-[9px] text-gray-400">chiuso</span>';
         else if(!g.fasce.length) td.innerHTML='<span class="text-[9px] text-gray-300">—</span>';
-        else { const sc=g.fasce.filter(f=>f.scoperto); td.innerHTML = sc.length ? sc.map(f=>`<div class="text-[9px] text-red-600 leading-tight">${tStr(f.inizio)}–${tStr(f.fine)}: ${f.assegnati}/${f.richiesto}⚠</div>`).join('') : '<span class="text-[11px] text-emerald-600">✓</span>'; }
+        else td.innerHTML = g.fasce.map(f=> f.scoperto
+          ? `<div class="text-[9px] text-red-600 leading-tight">${tStr(f.inizio)}–${tStr(f.fine)}: ${f.assegnati}/${f.richiesto} ❗</div>`
+          : `<div class="text-[9px] text-emerald-600 leading-tight">${tStr(f.inizio)}–${tStr(f.fine)} ✓</div>`).join('');
         trAn.appendChild(td); });
       tb.appendChild(trAn);
       if(!risorse.length){ const tr0=document.createElement('tr'); const td0=document.createElement('td'); td0.className='p-2 text-gray-400'; td0.textContent='Nessuna risorsa attiva. Aggiungila nella scheda Organico.'; tr0.appendChild(td0); tb.appendChild(tr0); }
