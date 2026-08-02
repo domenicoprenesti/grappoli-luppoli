@@ -572,7 +572,7 @@
           <button id="svu" class="px-2 py-1 rounded text-sm bg-gray-100">🧹 Svuota bozza</button>
           <button id="vista" class="ml-auto px-3 py-1.5 bg-slate-800 text-white rounded text-sm">📅 Visualizza pianificazione</button>
           <button id="tipi" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded text-sm">Gestisci turni-tipo</button>
-        </div><div id="copTop" class="overflow-x-auto mb-3"></div><div id="grid" class="overflow-x-auto"></div>`;
+        </div><div id="grid" class="overflow-x-auto"></div>`;
       box.querySelector('#vSet').onclick=()=>{ vistaMese=false; renderPianificazione(box); };
       box.querySelector('#vMes').onclick=()=>{ vistaMese=true; renderPianificazione(box); };
       box.querySelector('#prev').onclick=()=>{ if(vistaMese) meseCur=new Date(meseCur.getFullYear(), meseCur.getMonth()-1, 1); else settLun.setDate(settLun.getDate()-7); renderPianificazione(box); };
@@ -601,12 +601,35 @@
       const todayIso=isoData(new Date());
       const targetFactor = giorni.length/7;
       const tbl=document.createElement('table'); tbl.className='text-sm bg-white rounded shadow';
-      let head='<thead><tr><th class="p-2 text-left border-b">Risorsa</th>';
+      let head='<thead><tr><th class="p-2 text-left border-b"></th>';
       giorni.forEach((d,i)=>{ const t=isoData(d)===todayIso; const gap=(vistaCopertura==='avvisi' && cop[i] && cop[i].haGap); const s=statoGiorno(isoData(d));
         head+=`<th class="p-1 border-b text-center text-xs ${s.chiuso?'bg-gray-200 text-gray-500':(t?'bg-blue-50':'')} ${gap?'text-red-600 cursor-pointer':''}" data-gi="${i}">${GIORNI[giornoIdx(d)]}<br>${itGG(d)}${s.chiuso?' 🔒':(gap?' ⚠':'')}</th>`; });
       head+='</tr></thead>';
       tbl.innerHTML=head;
       const tb=document.createElement('tbody');
+      if(vistaCopertura!=='nascondi'){
+        const bandsMap={};
+        cop.forEach(g=>{ if(g.chiuso) return; (g.fasce||[]).forEach(f=>{ const k=f.inizio+'|'+f.fine+'|'+(f.mansioneNome||''); if(!bandsMap[k]) bandsMap[k]={inizio:f.inizio,fine:f.fine,man:f.mansioneNome||''}; }); });
+        const bands=Object.values(bandsMap).sort((a,b)=> a.inizio.localeCompare(b.inizio) || a.man.localeCompare(b.man));
+        if(bands.length){
+          const trH=document.createElement('tr'); trH.className='bg-slate-100';
+          const h0=document.createElement('td'); h0.className='p-1 text-xs font-semibold text-gray-600 whitespace-nowrap'; h0.textContent='Copertura fabbisogno'; trH.appendChild(h0);
+          giorni.forEach(()=>trH.appendChild(document.createElement('td'))); tb.appendChild(trH);
+          bands.forEach(b=>{
+            const tr=document.createElement('tr'); tr.className='border-b bg-slate-50';
+            const c0=document.createElement('td'); c0.className='p-1 text-xs whitespace-nowrap'; c0.textContent=tStr(b.inizio)+'–'+tStr(b.fine)+(b.man?(' · '+b.man):''); tr.appendChild(c0);
+            cop.forEach(g=>{ const td=document.createElement('td'); td.className='p-1 text-center';
+              if(g.chiuso) td.innerHTML='<span class="text-gray-300 text-xs">🔒</span>';
+              else { const f=(g.fasce||[]).find(x=>x.inizio===b.inizio && x.fine===b.fine && (x.mansioneNome||'')===b.man);
+                if(!f) td.innerHTML='<span class="text-gray-200">·</span>';
+                else if(f.scoperto) td.innerHTML=`<span class="text-red-600 font-semibold">❗<span class="text-[9px] font-normal"> ${f.assegnati}/${f.richiesto}</span></span>`;
+                else td.innerHTML='<span class="text-emerald-600">✓</span>'; }
+              tr.appendChild(td); });
+            tb.appendChild(tr);
+          });
+          const sp=document.createElement('tr'); const spc=document.createElement('td'); spc.colSpan=giorni.length+1; spc.className='py-1'; sp.appendChild(spc); tb.appendChild(sp);
+        }
+      }
       if(!risorse.length){ const tr0=document.createElement('tr'); const td0=document.createElement('td'); td0.className='p-2 text-gray-400'; td0.textContent='Nessuna risorsa attiva. Aggiungila nella scheda Organico.'; tr0.appendChild(td0); tb.appendChild(tr0); }
       risorse.forEach(r=>{
         const tr=document.createElement('tr'); tr.className='border-b';
@@ -631,33 +654,6 @@
       });
       tbl.appendChild(tb);
       grid.appendChild(tbl);
-      if(vistaCopertura!=='nascondi') renderMatriceCopertura(box.querySelector('#copTop'), cop, giorni);
-    }
-    function renderMatriceCopertura(box, cop, giorni){
-      if(!box) return;
-      const bandsMap={};
-      cop.forEach(g=>{ if(g.chiuso) return; (g.fasce||[]).forEach(f=>{ const k=f.inizio+'|'+f.fine+'|'+(f.mansioneNome||''); if(!bandsMap[k]) bandsMap[k]={inizio:f.inizio, fine:f.fine, man:f.mansioneNome||''}; }); });
-      const bands=Object.values(bandsMap).sort((a,b)=> a.inizio.localeCompare(b.inizio) || a.man.localeCompare(b.man));
-      if(!bands.length){ box.innerHTML='<p class="text-gray-400 text-sm">Nessun fabbisogno definito nel periodo.</p>'; return; }
-      const tbl=document.createElement('table'); tbl.className='text-sm bg-white rounded shadow';
-      let head='<thead><tr><th class="p-2 text-left border-b">Copertura fabbisogno</th>';
-      const todayIso=isoData(new Date());
-      giorni.forEach(d=>{ const t=isoData(d)===todayIso; head+=`<th class="p-1 border-b text-center text-xs ${t?'bg-blue-50':''}">${GIORNI[giornoIdx(d)]}<br>${itGG(d)}</th>`; });
-      head+='</tr></thead>'; tbl.innerHTML=head;
-      const tb=document.createElement('tbody');
-      bands.forEach(b=>{
-        const tr=document.createElement('tr'); tr.className='border-b';
-        const c0=document.createElement('td'); c0.className='p-1 text-xs whitespace-nowrap'; c0.textContent=tStr(b.inizio)+'–'+tStr(b.fine)+(b.man?(' · '+b.man):''); tr.appendChild(c0);
-        cop.forEach(g=>{ const td=document.createElement('td'); td.className='p-1 text-center';
-          if(g.chiuso){ td.innerHTML='<span class="text-gray-300 text-xs">🔒</span>'; }
-          else { const f=(g.fasce||[]).find(x=>x.inizio===b.inizio && x.fine===b.fine && (x.mansioneNome||'')===b.man);
-            if(!f) td.innerHTML='<span class="text-gray-200">·</span>';
-            else if(f.scoperto) td.innerHTML=`<span class="text-red-600 font-semibold">❗<span class="text-[9px] font-normal"> ${f.assegnati}/${f.richiesto}</span></span>`;
-            else td.innerHTML='<span class="text-emerald-600">✓</span>'; }
-          tr.appendChild(td); });
-        tb.appendChild(tr);
-      });
-      tbl.appendChild(tb); box.innerHTML=''; box.appendChild(tbl);
     }
 
     function modaleTurno(risorsa, iso, a, tipi, mans, done){
