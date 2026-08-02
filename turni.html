@@ -567,12 +567,12 @@
           <button id="next" class="px-2 py-1 border rounded">▶</button>
           <button id="oggi" class="px-2 py-1 bg-gray-100 rounded text-sm">Oggi</button>
           <label class="text-sm ml-2">Copertura <select id="vc" class="border rounded px-2 py-1 text-sm">
-            <option value="dettaglio">Dettaglio</option><option value="compatto">Compatto</option><option value="avvisi">Solo avvisi</option><option value="nascondi">Nascondi</option></select></label>
+            <option value="mostra">Mostra</option><option value="nascondi">Nascondi</option></select></label>
           <button id="gen" class="px-2 py-1 rounded text-sm bg-emerald-600 text-white">🤖 Genera bozza</button>
           <button id="svu" class="px-2 py-1 rounded text-sm bg-gray-100">🧹 Svuota bozza</button>
           <button id="vista" class="ml-auto px-3 py-1.5 bg-slate-800 text-white rounded text-sm">📅 Visualizza pianificazione</button>
           <button id="tipi" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded text-sm">Gestisci turni-tipo</button>
-        </div><div id="grid" class="overflow-x-auto"></div><div id="cop"></div>`;
+        </div><div id="copTop" class="overflow-x-auto mb-3"></div><div id="grid" class="overflow-x-auto"></div>`;
       box.querySelector('#vSet').onclick=()=>{ vistaMese=false; renderPianificazione(box); };
       box.querySelector('#vMes').onclick=()=>{ vistaMese=true; renderPianificazione(box); };
       box.querySelector('#prev').onclick=()=>{ if(vistaMese) meseCur=new Date(meseCur.getFullYear(), meseCur.getMonth()-1, 1); else settLun.setDate(settLun.getDate()-7); renderPianificazione(box); };
@@ -580,7 +580,7 @@
       box.querySelector('#oggi').onclick=()=>{ const n=new Date(); settLun=lunediDi(n); meseCur=new Date(n.getFullYear(), n.getMonth(), 1); renderPianificazione(box); };
       box.querySelector('#tipi').onclick=()=>gestisciTipiTurno(()=>renderPianificazione(box));
       box.querySelector('#vista').onclick=()=>window.open('pianificazione-vista.html','vistaPian','width=1400,height=920');
-      const vc=box.querySelector('#vc'); vc.value=vistaCopertura; vc.onchange=()=>{ vistaCopertura=vc.value; renderPianificazione(box); };
+      const vc=box.querySelector('#vc'); vc.value=(vistaCopertura==='nascondi'?'nascondi':'mostra'); vc.onchange=()=>{ vistaCopertura=vc.value; renderPianificazione(box); };
       box.querySelector('#gen').onclick=()=>generaBozza(box);
       box.querySelector('#svu').onclick=()=>svuotaBozza(box);
 
@@ -607,16 +607,6 @@
       head+='</tr></thead>';
       tbl.innerHTML=head;
       const tb=document.createElement('tbody');
-      const trAn=document.createElement('tr'); trAn.className='border-b bg-slate-50';
-      const a0=document.createElement('td'); a0.className='p-1 text-xs font-semibold text-gray-500 whitespace-nowrap'; a0.textContent='Copertura fabbisogno'; trAn.appendChild(a0);
-      cop.forEach(g=>{ const td=document.createElement('td'); td.className='p-1 align-top text-center';
-        if(g.chiuso) td.innerHTML='<span class="text-[9px] text-gray-400">chiuso</span>';
-        else if(!g.fasce.length) td.innerHTML='<span class="text-[9px] text-gray-300">—</span>';
-        else td.innerHTML = g.fasce.map(f=> f.scoperto
-          ? `<div class="text-[9px] text-red-600 leading-tight">${tStr(f.inizio)}–${tStr(f.fine)}: ${f.assegnati}/${f.richiesto} ❗</div>`
-          : `<div class="text-[9px] text-emerald-600 leading-tight">${tStr(f.inizio)}–${tStr(f.fine)} ✓</div>`).join('');
-        trAn.appendChild(td); });
-      tb.appendChild(trAn);
       if(!risorse.length){ const tr0=document.createElement('tr'); const td0=document.createElement('td'); td0.className='p-2 text-gray-400'; td0.textContent='Nessuna risorsa attiva. Aggiungila nella scheda Organico.'; tr0.appendChild(td0); tb.appendChild(tr0); }
       risorse.forEach(r=>{
         const tr=document.createElement('tr'); tr.className='border-b';
@@ -640,20 +630,34 @@
         tb.appendChild(tr);
       });
       tbl.appendChild(tb);
-      if(vistaCopertura==='compatto'){
-        const tf=document.createElement('tfoot');
-        const trf=document.createElement('tr'); trf.className='border-t bg-gray-50';
-        const c0=document.createElement('td'); c0.className='p-1 text-xs text-gray-500 whitespace-nowrap'; c0.textContent='Copertura'; trf.appendChild(c0);
-        cop.forEach(g=>{ const td=document.createElement('td'); td.className='p-1 align-top';
-          td.innerHTML = g.fasce.length ? g.fasce.map(f=>`<div class="text-[10px] ${f.scoperto?'text-red-600':'text-emerald-700'}">${tStr(f.inizio)}–${tStr(f.fine)}: ${f.assegnati}/${f.richiesto}${f.scoperto?'⚠':''}</div>`).join('') : '<span class="text-gray-300 text-[10px]">—</span>';
-          trf.appendChild(td); });
-        tf.appendChild(trf); tbl.appendChild(tf);
-      }
       grid.appendChild(tbl);
-      if(vistaCopertura==='avvisi'){
-        tbl.querySelectorAll('th[data-gi]').forEach(th=>{ const i=Number(th.dataset.gi); if(cop[i] && cop[i].haGap) th.onclick=()=>popupCoperturaGiorno(cop[i]); });
-      }
-      if(vistaCopertura==='dettaglio') vistaDettaglioCop(box.querySelector('#cop'), cop);
+      if(vistaCopertura!=='nascondi') renderMatriceCopertura(box.querySelector('#copTop'), cop, giorni);
+    }
+    function renderMatriceCopertura(box, cop, giorni){
+      if(!box) return;
+      const bandsMap={};
+      cop.forEach(g=>{ if(g.chiuso) return; (g.fasce||[]).forEach(f=>{ const k=f.inizio+'|'+f.fine+'|'+(f.mansioneNome||''); if(!bandsMap[k]) bandsMap[k]={inizio:f.inizio, fine:f.fine, man:f.mansioneNome||''}; }); });
+      const bands=Object.values(bandsMap).sort((a,b)=> a.inizio.localeCompare(b.inizio) || a.man.localeCompare(b.man));
+      if(!bands.length){ box.innerHTML='<p class="text-gray-400 text-sm">Nessun fabbisogno definito nel periodo.</p>'; return; }
+      const tbl=document.createElement('table'); tbl.className='text-sm bg-white rounded shadow';
+      let head='<thead><tr><th class="p-2 text-left border-b">Copertura fabbisogno</th>';
+      const todayIso=isoData(new Date());
+      giorni.forEach(d=>{ const t=isoData(d)===todayIso; head+=`<th class="p-1 border-b text-center text-xs ${t?'bg-blue-50':''}">${GIORNI[giornoIdx(d)]}<br>${itGG(d)}</th>`; });
+      head+='</tr></thead>'; tbl.innerHTML=head;
+      const tb=document.createElement('tbody');
+      bands.forEach(b=>{
+        const tr=document.createElement('tr'); tr.className='border-b';
+        const c0=document.createElement('td'); c0.className='p-1 text-xs whitespace-nowrap'; c0.textContent=tStr(b.inizio)+'–'+tStr(b.fine)+(b.man?(' · '+b.man):''); tr.appendChild(c0);
+        cop.forEach(g=>{ const td=document.createElement('td'); td.className='p-1 text-center';
+          if(g.chiuso){ td.innerHTML='<span class="text-gray-300 text-xs">🔒</span>'; }
+          else { const f=(g.fasce||[]).find(x=>x.inizio===b.inizio && x.fine===b.fine && (x.mansioneNome||'')===b.man);
+            if(!f) td.innerHTML='<span class="text-gray-200">·</span>';
+            else if(f.scoperto) td.innerHTML=`<span class="text-red-600 font-semibold">❗<span class="text-[9px] font-normal"> ${f.assegnati}/${f.richiesto}</span></span>`;
+            else td.innerHTML='<span class="text-emerald-600">✓</span>'; }
+          tr.appendChild(td); });
+        tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); box.innerHTML=''; box.appendChild(tbl);
     }
 
     function modaleTurno(risorsa, iso, a, tipi, mans, done){
