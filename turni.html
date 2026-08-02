@@ -522,6 +522,131 @@
       h+= conProblemi.length ? ('<div class="text-red-700 mt-1"><div>Giorni con ore-uomo scoperte:</div><ul class="list-disc pl-5">'+conProblemi.map(r=>`<li>${GIORNI[r.gi]} ${isoGG(r.iso)}: ${r.scop} ore-uomo</li>`).join('')+'</ul></div>') : '<div class="text-emerald-700 mt-1">Tutta la domanda coperta 🎉</div>';
       div.innerHTML=h; box.appendChild(div);
     }
+    async function ottimizzaBozza(box){ chiediPeriodo('Ottimizza bozza — scegli il periodo', settRangeDefault(), (dal,al,usaChiamata)=>{ if(confirm('Ottimizzare la bozza da '+dal+' a '+al+'? Sovrascrive i turni automatici; i manuali restano.')) eseguiOttimizza(box,dal,al,usaChiamata); }, true); }
+    async function eseguiOttimizza(box, dal, al, usaChiamata){
+      const p=s=>{const a=s.split('-').map(Number); return new Date(a[0],a[1]-1,a[2]);};
+      const loadDal=isoData(lunediDi(p(dal)));
+      const lunUlt=lunediDi(p(al)); const domUlt=new Date(lunUlt); domUlt.setDate(domUlt.getDate()+6); const loadAl=isoData(domUlt);
+      const annoDal=dal.slice(0,4)+'-01-01', annoAl=al.slice(0,4)+'-12-31';
+      const [rq,aq,asq,pq,oq,cq,exq,gq,ayq]=await Promise.all([
+        supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto,str_max_sett,str_max_mese,str_max_anno,giorni_riposo,max_ore,categoria,ore_normali,ore_max_giorno,str_max_giorno').eq('attivo',true),
+        supabaseClient.from('turni_accordi').select('*'),
+        supabaseClient.from('turni_assenze').select('risorsa_id,data_inizio,data_fine'),
+        supabaseClient.from('turni_periodi').select('*'),
+        supabaseClient.from('turni_orari').select('*'),
+        supabaseClient.from('turni_esigenze').select('*'),
+        supabaseClient.from('turni_assegnazioni').select('*').gte('data',loadDal).lte('data',loadAl),
+        supabaseClient.from('turni_regole').select('*').eq('id',1).maybeSingle(),
+        supabaseClient.from('turni_assegnazioni').select('risorsa_id,data,ora_inizio,ora_fine,generato').gte('data',annoDal).lte('data',annoAl),
+      ]);
+      const risorse=rq.data||[]; const byId={}; risorse.forEach(r=>byId[r.id]=r);
+      const accByRG={}; (aq.data||[]).forEach(a=>{ accByRG[a.risorsa_id+'|'+a.giorno]=a; });
+      const rotPhase={}; { const groups={}; (aq.data||[]).forEach(a=>{ (groups[a.giorno+'|'+a.cadenza]=groups[a.giorno+'|'+a.cadenza]||[]).push(a); }); Object.values(groups).forEach(list=>{ list.sort((x,y)=>x.risorsa_id-y.risorsa_id).forEach((a,idx)=>{ rotPhase[a.risorsa_id+'|'+a.giorno]=idx; }); }); }
+      const assenze=asq.data||[]; const periodi=pq.data||[]; const orari=oq.data||[]; const esigenze=cq.data||[];
+      const reg=gq.data||{}; const riposoMin=Number(reg.riposo_sett_min||0); const maxCons=reg.max_giorni_consecutivi||null;
+      const esist=exq.data||[];
+      const oreMese={}, oreAnno={}; (ayq.data||[]).forEach(a=>{ if(a.generato && a.data>=dal && a.data<=al) return; const h=durOre(a.ora_inizio,a.ora_fine); oreMese[a.risorsa_id+'|'+a.data.slice(0,7)]=(oreMese[a.risorsa_id+'|'+a.data.slice(0,7)]||0)+h; oreAnno[a.risorsa_id+'|'+a.data.slice(0,4)]=(oreAnno[a.risorsa_id+'|'+a.data.slice(0,4)]||0)+h; });
+      const giorniGlob={}; risorse.forEach(r=>giorniGlob[r.id]=new Set()); esist.forEach(a=>{ if(giorniGlob[a.risorsa_id]) giorniGlob[a.risorsa_id].add(a.data); });
+      await caricaChiusure();
+      const toMin=t=>{const a=(t||'0:0').split(':'); return (+a[0])*60+(+a[1]);};
+      const bnorm=(i,f)=>{let s=toMin(i),e=toMin(f); if(e<=s)e+=1440; return [s,e];};
+      const fmtMin=m=>{const mm=((m%1440)+1440)%1440; return String(Math.floor(mm/60)).padStart(2,'0')+':'+String(mm%60).padStart(2,'0')+':00';};
+      const capG=r=> r.ore_max_giorno!=null ? (Number(r.ore_max_giorno)+(r.str_max_giorno!=null?Number(r.str_max_giorno):0)) : Infinity;
+      const limSett=r=> r.tipo_contratto==='a_chiamata' ? (r.str_max_sett!=null?Number(r.str_max_sett):Infinity) : (Number(r.ore_contratto||0)+(r.str_max_sett!=null?Number(r.str_max_sett):Infinity));
+      const target=r=> r.tipo_contratto==='a_chiamata'?0:(r.categoria==='socio'?(r.ore_normali!=null?Number(r.ore_normali):Number(r.ore_contratto||0)):Number(r.ore_contratto||0));
+      const W1=100, W2=1;
+      const giorniTot=dateInIntervallo(dal,al);
+      const weeks={}; giorniTot.forEach(d=>{ const l=isoData(lunediDi(d)); (weeks[l]=weeks[l]||[]).push(d); });
+      const outBlocchi=[]; let scopPre=0,devPre=0,scopPost=0,devPost=0;
+      Object.keys(weeks).sort().forEach(lunIso=>{
+        const l=p(lunIso); const settN=isoWeekNum(l);
+        const weekIsos=[]; for(let i=0;i<7;i++){const dd=new Date(l);dd.setDate(dd.getDate()+i);weekIsos.push(isoData(dd));}
+        const dayInfo={};
+        weekIsos.forEach(iso=>{
+          const d=p(iso), gi=giornoIdx(d);
+          if(statoGiorno(iso).chiuso) return;
+          const per=risolviPeriodo(iso,periodi); if(!per) return;
+          const or=orari.find(o=>o.periodo_id===per.id&&o.giorno===gi)||orari.find(o=>o.giorno===gi);
+          if(or && !or.aperto) return;
+          const A=(or&&or.apertura)||null, C=(or&&or.chiusura)||null;
+          const es=esigenzeGiorno(esigenze,per.id,gi).map(e=>{const w=risolviFinestra(e,A,C); if(!w) return null; const b=bnorm(w.inizio,w.fine); return {s:b[0],e:b[1],min:e.min_risorse||1};}).filter(Boolean);
+          if(!es.length) return;
+          const dayS=Math.floor(Math.min.apply(null,es.map(x=>x.s))/60)*60, dayE=Math.max.apply(null,es.map(x=>x.e));
+          const slots=[]; const req={}; for(let S=dayS;S<dayE;S+=60){ slots.push(S); req[S]=0; es.forEach(x=>{ if(x.s<S+60&&x.e>S) req[S]=Math.max(req[S],x.min); }); }
+          dayInfo[iso]={gi,dayS,dayE,slots,req};
+        });
+        const covD={}; Object.keys(dayInfo).forEach(iso=>{ covD[iso]={}; dayInfo[iso].slots.forEach(S=>covD[iso][S]=0); });
+        const oreR={}, giorniR={}; risorse.forEach(r=>{oreR[r.id]=0; giorniR[r.id]=new Set();});
+        const covApply=(iso,s,e,delta)=>{ if(!covD[iso]) return; for(let S=s;S<e;S+=60){ if(covD[iso][S]!=null) covD[iso][S]+=delta; } };
+        esist.filter(a=>weekIsos.indexOf(a.data)>=0 && !a.generato).forEach(a=>{ const b=bnorm(a.ora_inizio,a.ora_fine); covApply(a.data,b[0],b[1],1); oreR[a.risorsa_id]=(oreR[a.risorsa_id]||0)+durOre(a.ora_inizio,a.ora_fine); giorniR[a.risorsa_id].add(a.data); });
+        let blocchi = esist.filter(a=>weekIsos.indexOf(a.data)>=0 && a.generato).map(a=>{ const b=bnorm(a.ora_inizio,a.ora_fine); return {rid:a.risorsa_id, data:a.data, s:b[0], e:b[1]}; });
+        blocchi.forEach(b=>{ covApply(b.data,b.s,b.e,1); oreR[b.rid]+=(b.e-b.s)/60; giorniR[b.rid].add(b.data); const mk=b.rid+'|'+b.data.slice(0,7),yk=b.rid+'|'+b.data.slice(0,4); oreMese[mk]=(oreMese[mk]||0)+(b.e-b.s)/60; oreAnno[yk]=(oreAnno[yk]||0)+(b.e-b.s)/60; });
+        const scopTot=()=>{ let s=0; Object.keys(dayInfo).forEach(iso=>{ dayInfo[iso].slots.forEach(S=>{ s+=Math.max(0,dayInfo[iso].req[S]-covD[iso][S]); }); }); return s; };
+        const devTot=()=>{ let d=0; risorse.forEach(r=>{ d+=Math.abs(oreR[r.id]-target(r)); }); return d; };
+        scopPre+=scopTot(); devPre+=devTot();
+        const puoLavorareGiorno=(r,iso,gi)=>{
+          if(!usaChiamata && r.tipo_contratto==='a_chiamata') return false;
+          if(giorniR[r.id].has(iso)) return false;
+          if(assenze.some(x=>x.risorsa_id===r.id && iso>=x.data_inizio && iso<=x.data_fine)) return false;
+          const acc=accByRG[r.id+'|'+gi]; const cad=acc?acc.cadenza:'sempre'; if(cad==='mai') return false;
+          const ph=rotPhase[r.id+'|'+gi]||0;
+          if(cad==='1su2'&&(settN+ph)%2!==0) return false;
+          if(cad==='2su3'&&(settN+ph)%3===0) return false;
+          if(cad==='3su4'&&(settN+ph)%4===0) return false;
+          if(giorniR[r.id].size >= (7-riposoMin)) return false;
+          if(maxCons && runConsecutivo(giorniGlob[r.id], iso) > maxCons) return false;
+          return true;
+        };
+        const capOk=(r,iso,addH,blockLenH)=>{
+          if(oreR[r.id]+addH > limSett(r)+1e-9) return false;
+          if(blockLenH > capG(r)+1e-9) return false;
+          const mk=r.id+'|'+iso.slice(0,7), yk=r.id+'|'+iso.slice(0,4);
+          if((oreMese[mk]||0)+addH > limiteMese(r,iso.slice(0,7))+1e-9) return false;
+          if((oreAnno[yk]||0)+addH > limiteAnno(r)+1e-9) return false;
+          return true;
+        };
+        const scopDelta=(iso,S,d)=>{ const req=dayInfo[iso].req[S], c=covD[iso][S]; return Math.max(0,req-(c+d))-Math.max(0,req-c); };
+        const devDelta=(rid,dk)=>{ const t=target(byId[rid]); return Math.abs(oreR[rid]+dk-t)-Math.abs(oreR[rid]-t); };
+        let it=0;
+        for(;;){
+          if(it++>3000) break;
+          let best=null; const consider=(dO, fn)=>{ if(dO < -1e-9 && (!best || dO<best.dO)) best={dO, fn}; };
+          Object.keys(dayInfo).forEach(iso=>{ const di=dayInfo[iso];
+            di.slots.forEach(S=>{ if(di.req[S]-covD[iso][S] <= 0) return;
+              risorse.forEach(r=>{ if(!puoLavorareGiorno(r,iso,di.gi)) return; if(!capOk(r,iso,1,1)) return;
+                const dO=W1*scopDelta(iso,S,1)+W2*devDelta(r.id,1);
+                consider(dO, ()=>{ blocchi.push({rid:r.id,data:iso,s:S,e:S+60}); covApply(iso,S,S+60,1); oreR[r.id]+=1; giorniR[r.id].add(iso); giorniGlob[r.id].add(iso); const mk=r.id+'|'+iso.slice(0,7),yk=r.id+'|'+iso.slice(0,4); oreMese[mk]=(oreMese[mk]||0)+1; oreAnno[yk]=(oreAnno[yk]||0)+1; });
+              });
+            });
+          });
+          blocchi.forEach(b=>{ const di=dayInfo[b.data]; if(!di) return; const r=byId[b.rid]; const lenH=(b.e-b.s)/60; const mk=b.rid+'|'+b.data.slice(0,7), yk=b.rid+'|'+b.data.slice(0,4);
+            if(b.e<di.dayE && capOk(r,b.data,1,lenH+1)){ const S=b.e; consider(W1*scopDelta(b.data,S,1)+W2*devDelta(b.rid,1), ()=>{ covApply(b.data,S,S+60,1); b.e+=60; oreR[b.rid]+=1; oreMese[mk]+=1; oreAnno[yk]+=1; }); }
+            if(b.s>di.dayS && capOk(r,b.data,1,lenH+1)){ const S=b.s-60; consider(W1*scopDelta(b.data,S,1)+W2*devDelta(b.rid,1), ()=>{ covApply(b.data,S,S+60,1); b.s-=60; oreR[b.rid]+=1; oreMese[mk]+=1; oreAnno[yk]+=1; }); }
+            if(lenH>1){ const S=b.e-60; consider(W1*scopDelta(b.data,S,-1)+W2*devDelta(b.rid,-1), ()=>{ covApply(b.data,S,S+60,-1); b.e-=60; oreR[b.rid]-=1; oreMese[mk]-=1; oreAnno[yk]-=1; }); }
+            if(lenH>1){ const S=b.s; consider(W1*scopDelta(b.data,S,-1)+W2*devDelta(b.rid,-1), ()=>{ covApply(b.data,S,S+60,-1); b.s+=60; oreR[b.rid]-=1; oreMese[mk]-=1; oreAnno[yk]-=1; }); }
+            { let ds=0; for(let S=b.s;S<b.e;S+=60) ds+=scopDelta(b.data,S,-1); consider(W1*ds+W2*devDelta(b.rid,-lenH), ()=>{ covApply(b.data,b.s,b.e,-1); oreR[b.rid]-=lenH; giorniR[b.rid].delete(b.data); giorniGlob[b.rid].delete(b.data); oreMese[mk]-=lenH; oreAnno[yk]-=lenH; blocchi.splice(blocchi.indexOf(b),1); }); }
+            risorse.forEach(r2=>{ if(r2.id===b.rid) return; if(!puoLavorareGiorno(r2,b.data,di.gi)) return; if(!capOk(r2,b.data,lenH,lenH)) return;
+              const dO=W2*(devDelta(b.rid,-lenH)+(Math.abs(oreR[r2.id]+lenH-target(r2))-Math.abs(oreR[r2.id]-target(r2))));
+              consider(dO, ()=>{ const mkB=r2.id+'|'+b.data.slice(0,7),ykB=r2.id+'|'+b.data.slice(0,4);
+                oreR[b.rid]-=lenH; giorniR[b.rid].delete(b.data); giorniGlob[b.rid].delete(b.data); oreMese[mk]-=lenH; oreAnno[yk]-=lenH;
+                oreR[r2.id]+=lenH; giorniR[r2.id].add(b.data); giorniGlob[r2.id].add(b.data); oreMese[mkB]=(oreMese[mkB]||0)+lenH; oreAnno[ykB]=(oreAnno[ykB]||0)+lenH;
+                b.rid=r2.id; });
+            });
+          });
+          if(!best) break; best.fn();
+        }
+        scopPost+=scopTot(); devPost+=devTot();
+        blocchi.forEach(b=>{ outBlocchi.push({risorsa_id:b.rid, data:b.data, ora_inizio:fmtMin(b.s), ora_fine:fmtMin(b.e), mansione_id:null, generato:true}); });
+      });
+      await supabaseClient.from('turni_assegnazioni').delete().eq('generato',true).gte('data',dal).lte('data',al);
+      if(outBlocchi.length){ const {error}=await supabaseClient.from('turni_assegnazioni').insert(outBlocchi); if(error){ alert(error.message); return; } }
+      await renderPianificazione(box);
+      const div=document.createElement('div'); div.className='mt-4 text-sm bg-white rounded shadow p-3';
+      div.innerHTML=`<div class="font-semibold mb-1">Ottimizzazione (${esc(dal)} → ${esc(al)})</div>`+
+        `<div>Ore-uomo scoperte: <b>${scopPre}</b> → <b class="${scopPost<scopPre?'text-emerald-700':(scopPost>scopPre?'text-red-700':'')}">${scopPost}</b></div>`+
+        `<div>Scostamento ore settimana (Σ): <b>${devPre.toFixed(1)}</b> → <b class="${devPost<devPre?'text-emerald-700':''}">${devPost.toFixed(1)}</b></div>`;
+      box.appendChild(div);
+    }
     let CHIUSURE=[], OVERRIDE={};
     function pasqua(anno){ const a=anno%19,b=Math.floor(anno/100),c=anno%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,mn=Math.floor((a+11*h+22*l)/451),mese=Math.floor((h+l-7*mn+114)/31),giorno=((h+l-7*mn+114)%31)+1; return new Date(anno,mese-1,giorno); }
     async function caricaChiusure(){ const [c,o]=await Promise.all([supabaseClient.from('turni_chiusure').select('*').eq('attivo',true), supabaseClient.from('turni_giorni_override').select('*')]); CHIUSURE=c.data||[]; OVERRIDE={}; (o.data||[]).forEach(x=>OVERRIDE[x.data]=x.aperto); }
@@ -721,6 +846,7 @@
             <option value="mostra">Mostra</option><option value="nascondi">Nascondi</option></select></label>
           <button id="gen" class="px-2 py-1 rounded text-sm bg-emerald-600 text-white">🤖 Genera bozza</button>
           <button id="genv2" class="px-2 py-1 rounded text-sm bg-teal-700 text-white">🧪 Genera v2 (ore-uomo)</button>
+          <button id="ottim" class="px-2 py-1 rounded text-sm bg-amber-600 text-white">🛠️ Ottimizza</button>
           <button id="svu" class="px-2 py-1 rounded text-sm bg-gray-100">🧹 Svuota bozza</button>
           <button id="vista" class="ml-auto px-3 py-1.5 bg-slate-800 text-white rounded text-sm">📅 Visualizza pianificazione</button>
           <button id="tipi" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded text-sm">Gestisci turni-tipo</button>
@@ -735,6 +861,7 @@
       const vc=box.querySelector('#vc'); vc.value=(vistaCopertura==='nascondi'?'nascondi':'mostra'); vc.onchange=()=>{ vistaCopertura=vc.value; renderPianificazione(box); };
       box.querySelector('#gen').onclick=()=>generaBozza(box);
       box.querySelector('#genv2').onclick=()=>generaBozzaV2(box);
+      box.querySelector('#ottim').onclick=()=>ottimizzaBozza(box);
       box.querySelector('#svu').onclick=()=>svuotaBozza(box);
 
       const risorse=(await supabaseClient.from('turni_risorse').select('id,nome,cognome,ore_contratto,tipo_contratto').eq('attivo',true).order('ordine',{nullsFirst:false}).order('cognome',{nullsFirst:true}).order('nome')).data||[];
