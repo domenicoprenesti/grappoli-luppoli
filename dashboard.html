@@ -180,6 +180,61 @@
                 </div>
             </div>
 
+            <!-- Alert Aumenti Fornitori -->
+            <div class="bg-white rounded-xl shadow-lg p-5 mb-4">
+                <div class="flex items-center justify-between mb-3 flex-wrap gap-3">
+                    <h2 class="text-lg font-bold text-gray-900">⚠️ Aumenti Fornitori</h2>
+                    <div class="flex items-end gap-2">
+                        <div>
+                            <label class="block text-[11px] uppercase text-gray-500">Soglia aumento</label>
+                            <div class="flex items-center">
+                                <input type="number" id="alertSoglia" value="10" min="0" step="1" onkeydown="if(event.key==='Enter')renderAlerts()" class="w-20 px-2 py-1 border-2 border-gray-200 rounded-l-lg text-sm text-right">
+                                <span class="px-2 py-1 bg-gray-100 border-2 border-l-0 border-gray-200 rounded-r-lg text-sm text-gray-600">%</span>
+                            </div>
+                        </div>
+                        <button onclick="renderAlerts()" class="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 whitespace-nowrap">↻ Ricalcola</button>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mb-3">Confronta l'ultimo prezzo d'acquisto (€/UDM) con la media storica degli acquisti precedenti. Serve almeno 2 acquisti per lo stesso gruppo.</p>
+                <div id="alertSummary" class="text-sm text-gray-600 mb-4">Caricamento…</div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-800">Per prodotto + fornitore</h3>
+                        <p class="text-[11px] text-gray-400 mb-2">Stesso articolo dallo stesso fornitore nel tempo.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100 text-gray-700"><tr>
+                                    <th class="px-2 py-2 text-left">Prodotto</th>
+                                    <th class="px-2 py-2 text-left">Fornitore</th>
+                                    <th class="px-2 py-2 text-right">Media</th>
+                                    <th class="px-2 py-2 text-right">Ultimo</th>
+                                    <th class="px-2 py-2 text-right">Δ</th>
+                                    <th class="px-2 py-2 text-right">Data</th>
+                                </tr></thead>
+                                <tbody id="alertTableFornitore" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-800">Per prodotto (codice interno)</h3>
+                        <p class="text-[11px] text-gray-400 mb-2">Stesso prodotto unificato, tutti i fornitori insieme.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100 text-gray-700"><tr>
+                                    <th class="px-2 py-2 text-left">Prodotto</th>
+                                    <th class="px-2 py-2 text-right">Media</th>
+                                    <th class="px-2 py-2 text-right">Ultimo</th>
+                                    <th class="px-2 py-2 text-right">Δ</th>
+                                    <th class="px-2 py-2 text-right">Data</th>
+                                    <th class="px-2 py-2 text-right">Forn.</th>
+                                </tr></thead>
+                                <tbody id="alertTableProdotto" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Andamento Costi Prodotto -->
             <div class="bg-white rounded-xl shadow-lg p-5 mb-4">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">📈 Andamento Costi Prodotto</h2>
@@ -1427,6 +1482,118 @@
       loadUnif();
       loadCostFilters();
       loadUdmOptions();
+    </script>
+
+    <script>
+      // ===== ALERT AUMENTI FORNITORI =====
+      let alertPurchases = null; // cache normalizzata (€/UDM per acquisto)
+
+      function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+      async function loadAlertsData(){
+        try {
+          // anagrafica: descrizione -> { rap (UDM per UDF), unifId }
+          const descrInfo = new Map();
+          let from = 0;
+          while (true){
+            const { data, error } = await supabaseClient.from('anagrafica_prodotti')
+              .select('descrizione, rapporto_udv_udf, prodotto_unificato_id').range(from, from+999);
+            if (error || !data || !data.length) break;
+            data.forEach(a=>{
+              const rapN = parseFloat(a.rapporto_udv_udf);
+              descrInfo.set(a.descrizione, { rap: (rapN && rapN>1)?rapN:1, unifId: a.prodotto_unificato_id || null });
+            });
+            if (data.length < 1000) break; from += 1000;
+          }
+          // prodotti unificati: id -> nome
+          const unifName = new Map();
+          const { data: us } = await supabaseClient.from('prodotti_unificati').select('id, nome');
+          (us||[]).forEach(u=>unifName.set(u.id, u.nome));
+          // prodotti (righe fattura) -> acquisti normalizzati a €/UDM
+          const purchases = [];
+          from = 0;
+          while (true){
+            const { data, error } = await supabaseClient.from('prodotti')
+              .select('descrizione, prezzo, fornitore, data_fattura').range(from, from+999);
+            if (error || !data || !data.length) break;
+            data.forEach(p=>{
+              if (!p.data_fattura || p.prezzo==null) return;
+              const info = descrInfo.get(p.descrizione) || { rap:1, unifId:null };
+              const unit = (Number(p.prezzo)||0) / (info.rap||1);
+              if (!(unit > 0)) return;
+              const key = info.unifId ? ('U'+info.unifId) : ('D:'+(p.descrizione||'?'));
+              const label = info.unifId ? (unifName.get(info.unifId) || 'Prodotto unificato') : (p.descrizione || '?');
+              purchases.push({ key, label, fornitore: p.fornitore || '?', data: p.data_fattura, unit });
+            });
+            if (data.length < 1000) break; from += 1000;
+          }
+          alertPurchases = purchases;
+        } catch(e){ console.error('Alert aumenti — errore caricamento', e); alertPurchases = []; }
+        renderAlerts();
+      }
+
+      function computeAlertGroups(purchases, t){
+        const groups = new Map();
+        purchases.forEach(p=>{
+          if (!groups.has(p.gkey)) groups.set(p.gkey, { meta:p, rows:[] });
+          groups.get(p.gkey).rows.push(p);
+        });
+        const out = [];
+        groups.forEach(g=>{
+          const rows = g.rows.slice().sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+          if (rows.length < 2) return;
+          const latest = rows[rows.length-1];
+          const prev = rows.slice(0, rows.length-1);
+          const baseline = prev.reduce((s,r)=>s+r.unit,0)/prev.length;
+          if (!(baseline > 0)) return;
+          const pct = (latest.unit - baseline)/baseline;
+          if (pct >= t) out.push({ meta:g.meta, baseline, latest: latest.unit, pct, data: latest.data, nForn: new Set(rows.map(r=>r.fornitore)).size });
+        });
+        out.sort((a,b)=>b.pct-a.pct);
+        return out;
+      }
+
+      function renderAlerts(){
+        if (!alertPurchases) return;
+        const soglia = Math.max(0, parseFloat(document.getElementById('alertSoglia').value)||0);
+        const t = soglia/100;
+        const pf = computeAlertGroups(alertPurchases.map(p=>({...p, gkey: p.key+'||'+p.fornitore})), t);
+        const pr = computeAlertGroups(alertPurchases.map(p=>({...p, gkey: p.key})), t);
+        const euro = (typeof costEuro==='function') ? costEuro : (n=>'€'+(Number(n)||0).toFixed(2));
+        const dIt  = (typeof costDateIt==='function') ? costDateIt : (s=>s);
+        const pctTxt = v => '<span class="font-bold text-red-600">+'+(v*100).toFixed(1)+'%</span>';
+        const tbF = document.getElementById('alertTableFornitore');
+        const tbP = document.getElementById('alertTableProdotto');
+        tbF.innerHTML=''; tbP.innerHTML='';
+        pf.forEach(a=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = '<td class="px-2 py-2">'+esc(a.meta.label)+'</td>'+
+                         '<td class="px-2 py-2 text-gray-600">'+esc(a.meta.fornitore)+'</td>'+
+                         '<td class="px-2 py-2 text-right text-gray-500">'+euro(a.baseline)+'</td>'+
+                         '<td class="px-2 py-2 text-right font-semibold">'+euro(a.latest)+'</td>'+
+                         '<td class="px-2 py-2 text-right">'+pctTxt(a.pct)+'</td>'+
+                         '<td class="px-2 py-2 text-right text-gray-500 whitespace-nowrap">'+dIt(a.data)+'</td>';
+          tbF.appendChild(tr);
+        });
+        pr.forEach(a=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = '<td class="px-2 py-2">'+esc(a.meta.label)+'</td>'+
+                         '<td class="px-2 py-2 text-right text-gray-500">'+euro(a.baseline)+'</td>'+
+                         '<td class="px-2 py-2 text-right font-semibold">'+euro(a.latest)+'</td>'+
+                         '<td class="px-2 py-2 text-right">'+pctTxt(a.pct)+'</td>'+
+                         '<td class="px-2 py-2 text-right text-gray-500 whitespace-nowrap">'+dIt(a.data)+'</td>'+
+                         '<td class="px-2 py-2 text-right text-gray-500">'+a.nForn+'</td>';
+          tbP.appendChild(tr);
+        });
+        if (!pf.length) tbF.innerHTML = '<tr><td colspan="6" class="px-2 py-3 text-center text-green-600">✓ Nessun aumento oltre soglia</td></tr>';
+        if (!pr.length) tbP.innerHTML = '<tr><td colspan="6" class="px-2 py-3 text-center text-green-600">✓ Nessun aumento oltre soglia</td></tr>';
+        const sum = document.getElementById('alertSummary');
+        sum.innerHTML = (pf.length || pr.length)
+          ? ('<span class="font-semibold text-amber-700">'+pf.length+'</span> combinazioni prodotto-fornitore · <span class="font-semibold text-amber-700">'+pr.length+'</span> prodotti (codice interno) sopra +'+soglia+'%')
+          : ('<span class="text-green-600 font-medium">✓ Nessun aumento oltre +'+soglia+'% sul tuo storico.</span>');
+      }
+
+      loadAlertsData();
     </script>
 </body>
 </html>
