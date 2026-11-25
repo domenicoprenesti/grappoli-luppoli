@@ -1286,6 +1286,42 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
                                     ${scadenze.map((s, idx) => {
+                                        // Fattura senza termini di pagamento (o fornitore non in anagrafica): nessuna data scadenza calcolabile
+                                        if (s.terminiMancanti || !s.dataScadenza) {
+                                            return `
+                                            <tr class="bg-yellow-50 hover:bg-yellow-100 transition-colors">
+                                                <td class="px-3 py-2">
+                                                    <p class="text-sm font-semibold text-yellow-800">⚠️ Da definire</p>
+                                                    <p class="text-xs text-yellow-700">Termini mancanti</p>
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    <p class="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer hover:underline"
+                                                       onclick="openFornitoreModalFromReport('${s.fornitoreId}', '${s.fornitoreNome.replace(/'/g, "\\'")}', '${s.id}')"
+                                                       title="Clicca per impostare i termini di pagamento">
+                                                        ${s.ced.nm}
+                                                    </p>
+                                                    ${!s.fornitoreMatch ? '<p class="text-xs text-orange-600">⚠️ Non in anagrafica</p>' : ''}
+                                                </td>
+                                                <td class="px-3 py-2 font-mono text-xs text-gray-700">${s.num}</td>
+                                                <td class="px-3 py-2 text-center text-xs text-gray-600">${new Date(s.dt).toLocaleDateString('it-IT')}</td>
+                                                <td class="px-3 py-2 text-center">
+                                                    <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-yellow-100 text-yellow-800 border border-yellow-300">Non specificati</span>
+                                                </td>
+                                                <td class="px-3 py-2 text-center">
+                                                    <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700 border border-gray-300">${s.tipoPagamento}</span>
+                                                </td>
+                                                <td class="px-3 py-2 text-right">
+                                                    <p class="text-sm font-bold text-yellow-800">€${s.tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                                </td>
+                                                <td class="px-3 py-2 text-center">
+                                                    <input type="checkbox"
+                                                        ${s.pagato ? 'checked' : ''}
+                                                        onchange="togglePagatoFromReport('${s.id}')"
+                                                        class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer">
+                                                </td>
+                                            </tr>
+                                        `;
+                                        }
                                         const oggi = new Date();
                                         oggi.setHours(0, 0, 0, 0);
                                         const isScaduta = s.dataScadenza < oggi;
